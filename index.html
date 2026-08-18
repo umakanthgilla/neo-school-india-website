@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,87 +8,102 @@
 <title>Neo School India | Learn • Grow • Lead</title>
 
 <meta name="description"
-content="Neo School India - Learn • Grow • Lead. A child-centric preschool and learning ecosystem powered by IMLS.">
+content="Neo School India – A modern child-centric preschool and learning ecosystem powered by IMLS. Learn • Grow • Lead.">
 
 <style>
 
 /* =========================================================
-   NEO SCHOOL INDIA — OFFICIAL BRAND SYSTEM
+   NEO SCHOOL INDIA — OFFICIAL BRAND DESIGN SYSTEM
 ========================================================= */
 
 :root{
-  --neo-blue:#0878df;
-  --neo-cyan:#09a7c6;
-  --neo-green:#43b63f;
-  --neo-yellow:#f5c400;
-  --neo-orange:#ff7a16;
-  --neo-pink:#f72672;
 
-  --neo-navy:#081b55;
-  --neo-dark:#071537;
+--blue:#0878DF;
+--cyan:#08A7C8;
+--green:#43B640;
+--yellow:#F5C400;
+--orange:#FF7A16;
+--pink:#F52572;
 
-  --white:#ffffff;
-  --soft:#f7fbff;
-  --text:#18233b;
-  --muted:#667085;
+--navy:#071B52;
+--dark:#071432;
 
-  --rainbow:
-  linear-gradient(
-    90deg,
-    #0878df 0%,
-    #09a7c6 18%,
-    #43b63f 35%,
-    #f5c400 54%,
-    #ff7a16 72%,
-    #f72672 100%
-  );
-}
+--text:#18233D;
+--muted:#68758B;
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+--white:#FFFFFF;
+--soft:#F7FAFF;
 
-html{
-  scroll-behavior:smooth;
-}
+--border:#E8EDF5;
 
-body{
-  font-family:
-  Inter,
-  Arial,
-  Helvetica,
-  sans-serif;
+--gradient:
+linear-gradient(
+90deg,
+#0878DF 0%,
+#08A7C8 18%,
+#43B640 36%,
+#F5C400 55%,
+#FF7A16 74%,
+#F52572 100%
+);
 
-  background:white;
-  color:var(--text);
-  line-height:1.6;
-}
-
-img{
-  max-width:100%;
-  display:block;
-}
-
-a{
-  text-decoration:none;
-}
-
-.container{
-  width:min(1180px,92%);
-  margin:auto;
 }
 
 
 /* =========================================================
-   BRAND RAINBOW LINE
+   GLOBAL
 ========================================================= */
 
-.brand-line{
-  height:5px;
-  width:100%;
-  background:var(--rainbow);
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+
+font-family:
+Inter,
+Arial,
+Helvetica,
+sans-serif;
+
+color:var(--text);
+background:#ffffff;
+line-height:1.65;
+
+overflow-x:hidden;
+
+}
+
+img{
+display:block;
+max-width:100%;
+}
+
+a{
+text-decoration:none;
+}
+
+.container{
+width:min(1180px,92%);
+margin:auto;
+}
+
+
+/* =========================================================
+   TOP BRAND STRIPE
+========================================================= */
+
+.brand-strip{
+
+height:6px;
+background:var(--gradient);
+
 }
 
 
@@ -96,77 +112,87 @@ a{
 ========================================================= */
 
 header{
-  position:sticky;
-  top:0;
-  z-index:1000;
 
-  background:
-  rgba(255,255,255,.96);
+position:sticky;
+top:0;
 
-  backdrop-filter:
-  blur(18px);
+z-index:1000;
 
-  border-bottom:
-  1px solid #edf1f6;
-}
+background:
+rgba(255,255,255,.95);
 
-.nav{
-  min-height:90px;
+backdrop-filter:
+blur(18px);
 
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+border-bottom:
+1px solid var(--border);
 
-  gap:30px;
 }
 
 
-/* LOGO */
+.navigation{
 
-.logo-wrap{
-  display:flex;
-  align-items:center;
+min-height:88px;
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+gap:25px;
+
 }
 
-.logo-wrap img{
-  width:220px;
-  max-height:72px;
-  object-fit:contain;
+
+.logo img{
+
+width:215px;
+height:auto;
+
+object-fit:contain;
+
 }
 
 
-/* NAV */
+.menu{
 
-.nav-links{
-  display:flex;
-  align-items:center;
-  gap:26px;
+display:flex;
+align-items:center;
+gap:26px;
+
 }
 
-.nav-links a{
-  color:var(--neo-navy);
-  font-size:14px;
-  font-weight:700;
+
+.menu a{
+
+font-size:14px;
+font-weight:700;
+
+color:var(--navy);
+
+transition:.2s;
+
 }
 
-.nav-links a:hover{
-  color:var(--neo-blue);
+
+.menu a:hover{
+color:var(--blue);
 }
 
-.nav-cta{
-  color:white!important;
 
-  padding:
-  12px 22px;
+.menu .contact-btn{
 
-  border-radius:100px;
+padding:11px 22px;
 
-  background:
-  var(--rainbow);
+border-radius:50px;
 
-  box-shadow:
-  0 10px 25px
-  rgba(8,120,223,.18);
+color:white;
+
+background:var(--gradient);
+
+box-shadow:
+0 10px 25px
+rgba(8,120,223,.18);
+
 }
 
 
@@ -175,274 +201,311 @@ header{
 ========================================================= */
 
 .hero{
-  min-height:88vh;
 
-  display:flex;
-  align-items:center;
+position:relative;
 
-  position:relative;
-  overflow:hidden;
+min-height:88vh;
 
-  background:
+display:flex;
+align-items:center;
 
-  radial-gradient(
-    circle at 12% 25%,
-    rgba(8,120,223,.12),
-    transparent 30%
-  ),
+overflow:hidden;
 
-  radial-gradient(
-    circle at 88% 80%,
-    rgba(247,38,114,.10),
-    transparent 28%
-  ),
+background:
 
-  linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #f8fbff 100%
-  );
+radial-gradient(
+circle at 15% 25%,
+rgba(8,120,223,.10),
+transparent 30%
+),
+
+radial-gradient(
+circle at 95% 85%,
+rgba(245,37,114,.10),
+transparent 30%
+),
+
+linear-gradient(
+180deg,
+#ffffff 0%,
+#F8FBFF 100%
+);
+
 }
 
 
-/* subtle rainbow wave */
+/* decorative colour cloud */
 
 .hero::after{
-  content:"";
 
-  position:absolute;
+content:"";
 
-  width:800px;
-  height:260px;
+position:absolute;
 
-  right:-220px;
-  bottom:-150px;
+right:-220px;
+bottom:-160px;
 
-  border-radius:50%;
+width:700px;
+height:330px;
 
-  background:
-  var(--rainbow);
+background:var(--gradient);
 
-  filter:
-  blur(35px);
+filter:blur(70px);
 
-  opacity:.12;
+opacity:.10;
+
+border-radius:50%;
+
 }
 
 
 .hero-grid{
-  display:grid;
 
-  grid-template-columns:
-  1.05fr .95fr;
+position:relative;
+z-index:2;
 
-  align-items:center;
+display:grid;
 
-  gap:65px;
+grid-template-columns:
+1fr 1fr;
 
-  padding:
-  80px 0;
+align-items:center;
 
-  position:relative;
+gap:70px;
 
-  z-index:2;
+padding:
+75px 0;
+
 }
 
 
-/* HERO COPY */
+/* hero text */
 
-.brand-pill{
-  display:inline-flex;
+.badge{
 
-  align-items:center;
+display:inline-flex;
+align-items:center;
 
-  gap:10px;
+gap:9px;
 
-  padding:
-  8px 16px;
+padding:
+8px 15px;
 
-  margin-bottom:20px;
+border-radius:100px;
 
-  border-radius:100px;
+background:white;
 
-  color:var(--neo-navy);
+border:
+1px solid var(--border);
 
-  background:
-  white;
+box-shadow:
+0 8px 24px
+rgba(11,35,85,.06);
 
-  border:
-  1px solid #e8edf5;
+font-size:12px;
 
-  box-shadow:
-  0 8px 24px
-  rgba(12,31,74,.06);
+font-weight:900;
 
-  font-size:12px;
+letter-spacing:1px;
 
-  font-weight:800;
+color:var(--navy);
 
-  letter-spacing:1px;
+margin-bottom:20px;
+
 }
 
-.brand-pill::before{
-  content:"";
 
-  width:10px;
-  height:10px;
+.badge::before{
 
-  border-radius:50%;
+content:"";
 
-  background:
-  var(--rainbow);
+width:10px;
+height:10px;
+
+border-radius:50%;
+
+background:var(--gradient);
+
 }
 
 
 .hero h1{
 
-  max-width:700px;
+max-width:720px;
 
-  font-size:
-  clamp(48px,6vw,78px);
+font-size:
+clamp(46px,6vw,78px);
 
-  line-height:
-  1.02;
+line-height:1.02;
 
-  color:
-  var(--neo-navy);
+letter-spacing:-2px;
 
-  letter-spacing:
-  -2px;
+color:var(--navy);
 
-  margin-bottom:
-  24px;
+margin-bottom:24px;
+
 }
 
 
-.rainbow-text{
+.gradient-text{
 
-  background:
-  var(--rainbow);
+background:var(--gradient);
 
-  -webkit-background-clip:text;
-  background-clip:text;
+-webkit-background-clip:text;
+background-clip:text;
 
-  color:
-  transparent;
+color:transparent;
+
 }
 
 
 .hero p{
 
-  max-width:650px;
+font-size:18px;
 
-  font-size:18px;
+color:var(--muted);
 
-  color:
-  var(--muted);
+max-width:620px;
 
-  margin-bottom:
-  30px;
+margin-bottom:30px;
+
 }
 
 
-.hero-buttons{
-  display:flex;
-  flex-wrap:wrap;
-  gap:14px;
+.hero-actions{
+
+display:flex;
+align-items:center;
+
+gap:14px;
+
+flex-wrap:wrap;
+
 }
 
 
-.btn-primary{
+.btn{
 
-  display:inline-block;
+display:inline-flex;
 
-  padding:
-  14px 26px;
+align-items:center;
+justify-content:center;
 
-  border-radius:
-  100px;
+padding:
+14px 26px;
 
-  color:white;
+border-radius:
+50px;
 
-  background:
-  var(--neo-navy);
+font-weight:
+800;
 
-  font-weight:
-  800;
+transition:
+.25s;
 
-  box-shadow:
-  0 14px 30px
-  rgba(8,27,85,.20);
 }
 
 
-.btn-rainbow{
+.btn:hover{
 
-  display:inline-block;
+transform:
+translateY(-2px);
 
-  padding:
-  14px 26px;
+}
 
-  border-radius:
-  100px;
 
-  color:white;
+.btn-dark{
 
-  background:
-  var(--rainbow);
+background:var(--navy);
+color:white;
 
-  font-weight:
-  800;
+box-shadow:
+0 14px 32px
+rgba(7,27,82,.20);
 
-  box-shadow:
-  0 14px 30px
-  rgba(8,120,223,.18);
+}
+
+
+.btn-brand{
+
+background:var(--gradient);
+color:white;
+
+box-shadow:
+0 14px 32px
+rgba(8,120,223,.18);
+
 }
 
 
 /* =========================================================
-   HERO CHARACTER
+   HERO OWL
 ========================================================= */
 
-.hero-character{
-  position:relative;
+.hero-visual{
 
-  display:flex;
-  justify-content:center;
+position:relative;
+
+display:flex;
+justify-content:center;
+
 }
 
 
-.owl-card{
+.owl-shell{
 
-  position:relative;
+position:relative;
 
-  padding:
-  25px;
+width:100%;
 
-  border-radius:
-  38px;
+max-width:570px;
 
-  background:
-  rgba(255,255,255,.78);
+padding:18px;
 
-  border:
-  1px solid rgba(255,255,255,.9);
+border-radius:38px;
 
-  box-shadow:
-  0 35px 90px
-  rgba(8,27,85,.14);
+background:
+rgba(255,255,255,.86);
+
+border:
+1px solid rgba(255,255,255,.90);
+
+box-shadow:
+0 35px 90px
+rgba(8,27,82,.15);
+
 }
 
 
-.owl-card img{
+.owl-shell::before{
 
-  width:100%;
+content:"";
 
-  max-height:580px;
+position:absolute;
 
-  object-fit:contain;
+inset:-4px;
 
-  border-radius:28px;
+border-radius:41px;
+
+background:var(--gradient);
+
+z-index:-1;
+
+opacity:.25;
+
+filter:blur(14px);
+
+}
+
+
+.owl-shell img{
+
+width:100%;
+
+border-radius:30px;
+
+object-fit:cover;
+
 }
 
 
@@ -451,123 +514,116 @@ header{
 ========================================================= */
 
 .promise{
-  padding:
-  22px 0;
 
-  background:
-  var(--neo-navy);
+background:var(--navy);
+color:white;
 
-  color:white;
+padding:26px 0;
+
 }
 
 
 .promise-grid{
 
-  display:grid;
+display:grid;
 
-  grid-template-columns:
-  repeat(3,1fr);
+grid-template-columns:
+repeat(4,1fr);
 
-  align-items:center;
+text-align:center;
 
-  text-align:center;
 }
 
 
 .promise-item{
 
-  padding:
-  12px;
+font-size:15px;
 
-  font-size:
-  18px;
+font-weight:900;
 
-  font-weight:
-  800;
+letter-spacing:2px;
 
-  letter-spacing:
-  2px;
+padding:8px;
+
 }
 
 
-.learn{
-  color:#35a7ff;
+.promise-item:nth-child(1){
+color:#3BA7FF;
 }
 
-.grow{
-  color:#4ec347;
+.promise-item:nth-child(2){
+color:#56C74F;
 }
 
-.lead{
-  color:#ff8050;
+.promise-item:nth-child(3){
+color:#FFC928;
+}
+
+.promise-item:nth-child(4){
+color:#FF758F;
 }
 
 
 /* =========================================================
-   GENERAL SECTIONS
+   GENERAL SECTION
 ========================================================= */
 
 section{
-  padding:
-  100px 0;
+
+padding:
+100px 0;
+
 }
 
 
-.section-title{
+.section-heading{
 
-  max-width:
-  760px;
+max-width:790px;
 
-  margin:
-  0 auto 55px;
+margin:
+0 auto 55px;
 
-  text-align:
-  center;
+text-align:center;
+
 }
 
 
-.section-title span{
+.eyebrow{
 
-  font-size:
-  12px;
+font-size:12px;
 
-  letter-spacing:
-  2px;
+letter-spacing:2px;
 
-  font-weight:
-  900;
+font-weight:900;
 
-  color:
-  var(--neo-blue);
+color:var(--blue);
+
 }
 
 
-.section-title h2{
+.section-heading h2{
 
-  margin-top:
-  10px;
+font-size:
+clamp(34px,4vw,52px);
 
-  font-size:
-  clamp(34px,4vw,52px);
+line-height:1.1;
 
-  line-height:
-  1.1;
+color:var(--navy);
 
-  color:
-  var(--neo-navy);
+margin-top:10px;
+
 }
 
 
-.section-title p{
+.section-heading p{
 
-  color:
-  var(--muted);
+font-size:17px;
 
-  font-size:
-  17px;
+color:var(--muted);
 
-  margin-top:
-  16px;
+margin-top:16px;
+
 }
 
 
@@ -577,209 +633,186 @@ section{
 
 .about-grid{
 
-  display:grid;
+display:grid;
 
-  grid-template-columns:
-  .9fr 1.1fr;
+grid-template-columns:
+.95fr 1.05fr;
 
-  align-items:center;
+align-items:center;
 
-  gap:
-  70px;
+gap:70px;
+
 }
 
 
 .about-image{
 
-  padding:
-  30px;
+padding:25px;
 
-  border-radius:
-  34px;
+background:
+linear-gradient(
+145deg,
+#EEF7FF,
+#FFFFFF
+);
 
-  background:
-  linear-gradient(
-  145deg,
-  #f3f9ff,
-  #ffffff
-  );
+border-radius:34px;
 
-  box-shadow:
-  0 24px 60px
-  rgba(20,45,90,.08);
+box-shadow:
+0 25px 60px
+rgba(15,45,90,.08);
+
 }
 
 
 .about-image img{
 
-  border-radius:
-  26px;
+width:100%;
 
-  width:
-  100%;
+border-radius:26px;
+
 }
 
 
-.about-copy h2{
+.about-content h2{
 
-  font-size:
-  clamp(34px,4vw,48px);
+font-size:
+clamp(34px,4vw,50px);
 
-  line-height:
-  1.1;
+line-height:1.08;
 
-  color:
-  var(--neo-navy);
+color:var(--navy);
 
-  margin-bottom:
-  22px;
+margin:
+12px 0 22px;
+
 }
 
 
-.about-copy p{
+.about-content p{
 
-  color:
-  var(--muted);
+font-size:17px;
 
-  font-size:
-  17px;
+color:var(--muted);
 
-  margin-bottom:
-  18px;
+margin-bottom:17px;
+
 }
 
 
 /* =========================================================
-   PROGRAM CARDS
+   PROGRAMS
 ========================================================= */
 
-.soft-section{
-  background:
-  var(--soft);
+.soft{
+
+background:var(--soft);
+
 }
 
 
 .cards{
 
-  display:grid;
+display:grid;
 
-  grid-template-columns:
-  repeat(3,1fr);
+grid-template-columns:
+repeat(3,1fr);
 
-  gap:
-  24px;
+gap:24px;
+
 }
 
 
 .card{
 
-  background:
-  white;
+position:relative;
 
-  padding:
-  32px;
+overflow:hidden;
 
-  border-radius:
-  25px;
+background:white;
 
-  border:
-  1px solid #eaf0f7;
+padding:32px;
 
-  box-shadow:
-  0 12px 35px
-  rgba(10,30,70,.05);
+border:
+1px solid var(--border);
 
-  position:
-  relative;
+border-radius:26px;
 
-  overflow:
-  hidden;
+box-shadow:
+0 12px 35px
+rgba(10,30,70,.05);
 
-  transition:
-  .25s ease;
+transition:.25s;
+
 }
 
 
 .card::before{
 
-  content:"";
+content:"";
 
-  position:
-  absolute;
+position:absolute;
 
-  top:0;
-  left:0;
+top:0;
+left:0;
 
-  width:
-  100%;
+height:5px;
+width:100%;
 
-  height:
-  5px;
+background:var(--gradient);
 
-  background:
-  var(--rainbow);
 }
 
 
 .card:hover{
 
-  transform:
-  translateY(-7px);
+transform:
+translateY(-6px);
 
-  box-shadow:
-  0 25px 60px
-  rgba(10,30,70,.10);
+box-shadow:
+0 24px 55px
+rgba(10,30,70,.10);
+
 }
 
 
-.card-icon{
+.icon{
 
-  width:
-  58px;
+width:58px;
+height:58px;
 
-  height:
-  58px;
+display:grid;
 
-  display:
-  grid;
+place-items:center;
 
-  place-items:
-  center;
+border-radius:18px;
 
-  border-radius:
-  18px;
+background:#EFF7FF;
 
-  background:
-  #f0f7ff;
+font-size:27px;
 
-  font-size:
-  27px;
+margin-bottom:20px;
 
-  margin-bottom:
-  20px;
 }
 
 
 .card h3{
 
-  color:
-  var(--neo-navy);
+font-size:20px;
 
-  margin-bottom:
-  10px;
+color:var(--navy);
 
-  font-size:
-  20px;
+margin-bottom:9px;
+
 }
 
 
 .card p{
 
-  color:
-  var(--muted);
+font-size:15px;
 
-  font-size:
-  15px;
+color:var(--muted);
+
 }
 
 
@@ -789,180 +822,195 @@ section{
 
 .imls{
 
-  color:white;
+background:
 
-  background:
+radial-gradient(
+circle at 10% 10%,
+rgba(8,120,223,.20),
+transparent 30%
+),
 
-  radial-gradient(
-  circle at 10% 0%,
-  rgba(8,120,223,.22),
-  transparent 35%
-  ),
+radial-gradient(
+circle at 90% 90%,
+rgba(245,37,114,.14),
+transparent 30%
+),
 
-  radial-gradient(
-  circle at 100% 100%,
-  rgba(247,38,114,.18),
-  transparent 35%
-  ),
+var(--dark);
 
-  var(--neo-dark);
+color:white;
+
 }
 
 
-.imls .section-title h2,
-.imls .section-title p{
-  color:white;
+.imls .eyebrow{
+color:#64C4FF;
+}
+
+
+.imls .section-heading h2,
+.imls .section-heading p{
+
+color:white;
+
 }
 
 
 .imls-grid{
 
-  display:grid;
+display:grid;
 
-  grid-template-columns:
-  repeat(4,1fr);
+grid-template-columns:
+repeat(4,1fr);
 
-  gap:
-  20px;
+gap:20px;
+
 }
 
 
-.imls-box{
+.imls-card{
 
-  min-height:
-  220px;
+min-height:235px;
 
-  padding:
-  30px 24px;
+padding:30px 24px;
 
-  border-radius:
-  24px;
+border-radius:25px;
 
-  background:
-  rgba(255,255,255,.07);
+background:
+rgba(255,255,255,.07);
 
-  border:
-  1px solid rgba(255,255,255,.12);
+border:
+1px solid
+rgba(255,255,255,.12);
+
 }
 
 
 .imls-number{
 
-  font-size:
-  42px;
+font-size:44px;
 
-  font-weight:
-  900;
+font-weight:900;
 
-  background:
-  var(--rainbow);
+background:var(--gradient);
 
-  -webkit-background-clip:text;
+-webkit-background-clip:text;
 
-  color:
-  transparent;
+color:transparent;
+
 }
 
 
-.imls-box h3{
+.imls-card h3{
 
-  margin:
-  10px 0;
+font-size:22px;
 
-  font-size:
-  21px;
+margin:
+8px 0 10px;
+
 }
 
 
-.imls-box p{
+.imls-card p{
 
-  color:
-  #ced8ed;
+font-size:14px;
 
-  font-size:
-  14px;
+color:#D8E2F5;
+
 }
 
 
 /* =========================================================
-   BRAND BANNER
+   BRAND SHOWCASE
 ========================================================= */
 
-.brand-banner{
+.showcase{
 
-  margin-top:
-  20px;
+padding-top:90px;
 
-  min-height:
-  420px;
-
-  display:flex;
-
-  align-items:center;
-
-  border-radius:
-  36px;
-
-  overflow:
-  hidden;
-
-  position:
-  relative;
-
-  background:
-
-  linear-gradient(
-  90deg,
-  rgba(255,255,255,.98) 0%,
-  rgba(255,255,255,.90) 45%,
-  rgba(255,255,255,.55) 100%
-  ),
-
-  url("neo-banner.jpeg")
-  center/cover no-repeat;
-
-  box-shadow:
-  0 30px 80px
-  rgba(10,30,70,.10);
 }
 
 
-.banner-content{
+.showcase-box{
 
-  padding:
-  60px;
+min-height:420px;
 
-  max-width:
-  700px;
+display:flex;
+align-items:center;
+
+position:relative;
+
+overflow:hidden;
+
+border-radius:38px;
+
+background:
+
+linear-gradient(
+90deg,
+rgba(255,255,255,.98) 0%,
+rgba(255,255,255,.91) 46%,
+rgba(255,255,255,.50) 100%
+),
+
+url("neo-banner.jpeg")
+center/cover no-repeat;
+
+box-shadow:
+0 30px 80px
+rgba(10,30,70,.10);
+
 }
 
 
-.banner-content h2{
+.showcase-content{
 
-  font-size:
-  clamp(38px,5vw,58px);
+padding:60px;
 
-  line-height:
-  1.05;
+max-width:680px;
 
-  color:
-  var(--neo-navy);
-
-  margin-bottom:
-  18px;
 }
 
 
-.banner-content p{
+.showcase-content h2{
 
-  color:
-  #536079;
+font-size:
+clamp(38px,5vw,58px);
 
-  font-size:
-  17px;
+line-height:1.05;
 
-  margin-bottom:
-  25px;
+color:var(--navy);
+
+margin:
+10px 0 18px;
+
+}
+
+
+.showcase-content p{
+
+font-size:17px;
+
+color:#56627A;
+
+margin-bottom:26px;
+
+}
+
+
+/* =========================================================
+   WHY NEO
+========================================================= */
+
+.why-grid{
+
+display:grid;
+
+grid-template-columns:
+repeat(3,1fr);
+
+gap:24px;
+
 }
 
 
@@ -972,102 +1020,95 @@ section{
 
 .franchise{
 
-  background:
-  #f8fbff;
+background:#F7FAFF;
+
 }
 
 
 .franchise-box{
 
-  display:grid;
+position:relative;
 
-  grid-template-columns:
-  1fr .65fr;
+overflow:hidden;
 
-  align-items:center;
+display:grid;
 
-  gap:
-  40px;
+grid-template-columns:
+1fr .70fr;
 
-  border-radius:
-  36px;
+align-items:center;
 
-  overflow:
-  hidden;
+gap:40px;
 
-  padding:
-  60px;
+padding:60px;
 
-  color:white;
+border-radius:38px;
 
-  background:
-  var(--neo-navy);
+background:
+var(--navy);
 
-  position:
-  relative;
+color:white;
+
 }
 
 
-.franchise-box::before{
+.franchise-box::after{
 
-  content:"";
+content:"";
 
-  position:
-  absolute;
+position:absolute;
 
-  bottom:0;
-  left:0;
+left:0;
+bottom:0;
 
-  width:
-  100%;
+height:7px;
+width:100%;
 
-  height:
-  7px;
+background:var(--gradient);
 
-  background:
-  var(--rainbow);
 }
 
 
-.franchise-box h2{
+.franchise-copy h2{
 
-  font-size:
-  clamp(36px,5vw,56px);
+font-size:
+clamp(38px,5vw,58px);
 
-  line-height:
-  1.08;
+line-height:1.06;
 
-  margin-bottom:
-  20px;
+margin:
+12px 0 20px;
+
 }
 
 
-.franchise-box p{
+.franchise-copy p{
 
-  color:
-  #dce5f7;
+color:#D7E2F6;
 
-  font-size:
-  17px;
+font-size:17px;
 
-  max-width:
-  700px;
+max-width:680px;
 
-  margin-bottom:
-  28px;
+margin-bottom:27px;
+
 }
 
 
-.franchise-owl img{
+.franchise-image{
 
-  max-height:
-  350px;
+display:flex;
+justify-content:center;
 
-  object-fit:
-  contain;
+}
 
-  border-radius:
-  30px;
+
+.franchise-image img{
+
+max-height:350px;
+
+border-radius:28px;
+
 }
 
 
@@ -1077,94 +1118,84 @@ section{
 
 .contact-grid{
 
-  display:grid;
+display:grid;
 
-  grid-template-columns:
-  .85fr 1.15fr;
+grid-template-columns:
+.85fr 1.15fr;
 
-  gap:
-  30px;
+gap:30px;
+
 }
 
 
 .contact-brand{
 
-  padding:
-  42px;
+padding:42px;
 
-  border-radius:
-  30px;
+border-radius:30px;
 
-  color:white;
+background:var(--navy);
 
-  background:
-  var(--neo-navy);
+color:white;
+
 }
 
 
 .contact-brand img{
 
-  width:
-  230px;
+width:230px;
 
-  margin-bottom:
-  25px;
+margin-bottom:25px;
 
-  border-radius:
-  14px;
+border-radius:14px;
+
 }
 
 
 .contact-brand h2{
 
-  font-size:
-  38px;
+font-size:38px;
 
-  line-height:
-  1.1;
+line-height:1.1;
 
-  margin-bottom:
-  20px;
+margin-bottom:20px;
+
 }
 
 
 .contact-brand p{
 
-  color:
-  #dce5f7;
+color:#D8E2F5;
 
-  margin-bottom:
-  16px;
+margin-bottom:15px;
+
 }
 
 
 .contact-form{
 
-  padding:
-  40px;
+padding:40px;
 
-  border-radius:
-  30px;
+border-radius:30px;
 
-  background:
-  white;
+background:white;
 
-  border:
-  1px solid #e6ecf4;
+border:
+1px solid var(--border);
 
-  box-shadow:
-  0 18px 50px
-  rgba(12,30,70,.07);
+box-shadow:
+0 18px 50px
+rgba(12,30,70,.07);
+
 }
 
 
 .contact-form h2{
 
-  color:
-  var(--neo-navy);
+color:var(--navy);
 
-  margin-bottom:
-  22px;
+margin-bottom:22px;
+
 }
 
 
@@ -1172,107 +1203,98 @@ section{
 .contact-form select,
 .contact-form textarea{
 
-  width:
-  100%;
+width:100%;
 
-  padding:
-  15px 16px;
+padding:
+15px 16px;
 
-  margin-bottom:
-  15px;
+margin-bottom:
+15px;
 
-  border:
-  1px solid #dbe3ed;
+border:
+1px solid #DCE4EF;
 
-  border-radius:
-  13px;
+border-radius:
+13px;
 
-  background:
-  #fbfdff;
+background:#FBFDFF;
 
-  font:
-  inherit;
+font:inherit;
+
+outline:none;
+
+}
+
+
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus{
+
+border-color:var(--blue);
+
 }
 
 
 .contact-form textarea{
 
-  min-height:
-  130px;
+min-height:130px;
 
-  resize:
-  vertical;
+resize:vertical;
+
 }
 
 
 .contact-form button{
 
-  border:
-  none;
+width:100%;
 
-  cursor:
-  pointer;
+border:none;
 
-  width:
-  100%;
+cursor:pointer;
 
-  font-size:
-  16px;
+font-size:16px;
+
 }
 
 
 /* =========================================================
-   FLOATING NEO OWL
+   FLOATING OWL
 ========================================================= */
 
-.neo-float{
+.floating-owl{
 
-  position:
-  fixed;
+position:fixed;
 
-  right:
-  18px;
+right:18px;
+bottom:18px;
 
-  bottom:
-  20px;
+width:72px;
+height:72px;
 
-  width:
-  74px;
+border-radius:50%;
 
-  height:
-  74px;
+overflow:hidden;
 
-  border-radius:
-  50%;
+border:4px solid white;
 
-  overflow:
-  hidden;
+box-shadow:
+0 12px 35px
+rgba(7,27,82,.25);
 
-  border:
-  4px solid white;
+z-index:900;
 
-  box-shadow:
-  0 12px 35px
-  rgba(8,27,85,.25);
+background:white;
 
-  z-index:
-  800;
-
-  background:
-  white;
 }
 
 
-.neo-float img{
+.floating-owl img{
 
-  width:
-  100%;
+width:100%;
+height:100%;
 
-  height:
-  100%;
+object-fit:cover;
 
-  object-fit:
-  cover;
 }
 
 
@@ -1282,70 +1304,167 @@ section{
 
 footer{
 
-  text-align:
-  center;
+background:var(--dark);
 
-  color:
-  #cbd5e1;
+color:#CBD5E7;
 
-  background:
-  var(--neo-dark);
+text-align:center;
 
-  padding:
-  50px 0 30px;
+padding:
+48px 0 30px;
+
 }
 
 
 .footer-logo{
 
-  width:
-  250px;
+width:240px;
 
-  margin:
-  0 auto 18px;
+margin:
+0 auto 16px;
 
-  border-radius:
-  10px;
+border-radius:12px;
+
 }
 
 
-.footer-tagline{
+.footer-brand{
 
-  display:
-  inline-block;
+display:inline-block;
 
-  margin:
-  10px 0 20px;
+font-weight:900;
 
-  font-size:
-  12px;
+font-size:12px;
 
-  font-weight:
-  900;
+letter-spacing:2px;
 
-  letter-spacing:
-  2px;
+margin:
+8px 0 18px;
 
-  background:
-  var(--rainbow);
+background:var(--gradient);
 
-  -webkit-background-clip:text;
+-webkit-background-clip:text;
 
-  color:
-  transparent;
+color:transparent;
+
 }
 
 
-.copyright{
+footer p{
 
-  margin-top:
-  22px;
+font-size:14px;
 
-  color:
-  #8290ad;
+}
 
-  font-size:
-  13px;
+
+.copy{
+
+font-size:12px;
+
+color:#7887A4;
+
+margin-top:20px;
+
+}
+
+
+/* =========================================================
+   MOBILE NAV
+========================================================= */
+
+.mobile-title{
+
+display:none;
+
+font-weight:800;
+
+color:var(--navy);
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media(max-width:920px){
+
+.menu{
+display:none;
+}
+
+.hero-grid,
+.about-grid,
+.contact-grid,
+.franchise-box{
+
+grid-template-columns:1fr;
+
+}
+
+
+.hero{
+
+min-height:auto;
+
+}
+
+
+.hero-grid{
+
+padding:
+55px 0;
+
+}
+
+
+.hero-copy{
+
+text-align:center;
+
+}
+
+
+.hero p{
+
+margin-left:auto;
+margin-right:auto;
+
+}
+
+
+.hero-actions{
+
+justify-content:center;
+
+}
+
+
+.cards,
+.why-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.imls-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.franchise-image{
+
+max-width:450px;
+
+margin:auto;
+
+}
+
 }
 
 
@@ -1353,170 +1472,144 @@ footer{
    MOBILE
 ========================================================= */
 
-@media(max-width:900px){
+@media(max-width:600px){
 
-  .nav-links{
-    display:none;
-  }
+.navigation{
 
-  .logo-wrap img{
-    width:180px;
-  }
-
-  .hero-grid,
-  .about-grid,
-  .contact-grid,
-  .franchise-box{
-
-    grid-template-columns:
-    1fr;
-  }
-
-  .hero-grid{
-    padding:
-    55px 0;
-  }
-
-  .hero-copy{
-    text-align:center;
-  }
-
-  .hero p{
-    margin-left:auto;
-    margin-right:auto;
-  }
-
-  .hero-buttons{
-    justify-content:center;
-  }
-
-  .cards{
-    grid-template-columns:
-    repeat(2,1fr);
-  }
-
-  .imls-grid{
-    grid-template-columns:
-    repeat(2,1fr);
-  }
-
-  .franchise-owl{
-    max-width:450px;
-    margin:auto;
-  }
+min-height:74px;
 
 }
 
 
-@media(max-width:600px){
+.logo img{
 
-  .nav{
-    min-height:
-    76px;
-  }
+width:165px;
 
-  .logo-wrap img{
-    width:
-    160px;
-  }
+}
 
-  section{
-    padding:
-    72px 0;
-  }
 
-  .hero h1{
-    font-size:
-    44px;
-  }
+section{
 
-  .hero p{
-    font-size:
-    16px;
-  }
+padding:
+70px 0;
 
-  .cards,
-  .imls-grid,
-  .promise-grid{
+}
 
-    grid-template-columns:
-    1fr;
-  }
 
-  .promise-item{
-    padding:
-    6px;
-  }
+.hero h1{
 
-  .banner-content,
-  .franchise-box,
-  .contact-brand,
-  .contact-form{
+font-size:43px;
 
-    padding:
-    30px 23px;
-  }
+letter-spacing:-1px;
 
-  .brand-banner{
-    min-height:
-    500px;
-  }
+}
 
-  .neo-float{
 
-    width:
-    60px;
+.hero p{
 
-    height:
-    60px;
-  }
+font-size:16px;
+
+}
+
+
+.promise-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+gap:6px;
+
+}
+
+
+.promise-item{
+
+font-size:13px;
+
+}
+
+
+.cards,
+.why-grid,
+.imls-grid{
+
+grid-template-columns:1fr;
+
+}
+
+
+.showcase-box{
+
+min-height:520px;
+
+background-position:center;
+
+}
+
+
+.showcase-content,
+.franchise-box,
+.contact-brand,
+.contact-form{
+
+padding:
+30px 23px;
+
+}
+
+
+.floating-owl{
+
+width:58px;
+height:58px;
+
+}
+
 }
 
 </style>
+
 </head>
 
 
 <body>
 
-<div class="brand-line"></div>
+<div class="brand-strip"></div>
 
 
 <!-- HEADER -->
 
 <header>
 
-<div class="container nav">
+<div class="container navigation">
 
-<a href="#home" class="logo-wrap">
-<img src="neo-logo.jpeg"
-alt="Neo School India">
+<a href="#home" class="logo">
+
+<img
+src="neo-logo.jpeg"
+alt="Neo School India Official Logo">
+
 </a>
 
 
-<div class="nav-links">
+<nav class="menu">
 
-<a href="#about">
-About
-</a>
+<a href="#about">About</a>
 
-<a href="#programs">
-Programs
-</a>
+<a href="#programs">Programs</a>
 
-<a href="#imls">
-IMLS
-</a>
+<a href="#imls">IMLS</a>
 
-<a href="#franchise">
-Franchise
-</a>
+<a href="#whyneo">Why Neo</a>
+
+<a href="#franchise">Franchise</a>
 
 <a href="#contact"
-class="nav-cta">
-Contact Us
+class="contact-btn">
+Contact
 </a>
 
-</div>
+</nav>
 
 </div>
 
@@ -1533,16 +1626,21 @@ Contact Us
 
 <div class="hero-copy">
 
-<div class="brand-pill">
+<div class="badge">
 POWERED BY IMLS
 </div>
+
 
 <h1>
 
 A New Way to
 
-<span class="rainbow-text">
-Learn. Grow. Lead.
+<span class="gradient-text">
+
+Learn.
+Grow.
+Lead.
+
 </span>
 
 </h1>
@@ -1551,24 +1649,31 @@ Learn. Grow. Lead.
 <p>
 
 Neo School India is a modern,
-child-centric learning ecosystem
-where curiosity, creativity,
-confidence and strong academic
-foundations grow together.
+child-centric early-learning ecosystem
+designed to help children learn happily,
+grow confidently and develop strong
+foundations for life.
 
 </p>
 
 
-<div class="hero-buttons">
+<div class="hero-actions">
 
-<a href="#programs"
-class="btn-primary">
+<a
+href="#programs"
+class="btn btn-dark">
+
 Explore Neo School
+
 </a>
 
-<a href="#franchise"
-class="btn-rainbow">
+
+<a
+href="#franchise"
+class="btn btn-brand">
+
 Partner With Us
+
 </a>
 
 </div>
@@ -1576,9 +1681,10 @@ Partner With Us
 </div>
 
 
-<div class="hero-character">
 
-<div class="owl-card">
+<div class="hero-visual">
+
+<div class="owl-shell">
 
 <img
 src="neo-owl.jpeg"
@@ -1588,28 +1694,33 @@ alt="Neo School India Official Neo Owl">
 
 </div>
 
+
 </div>
 
 </section>
 
 
 
-<!-- LEARN GROW LEAD BAR -->
+<!-- PROMISE BAR -->
 
 <div class="promise">
 
 <div class="container promise-grid">
 
-<div class="promise-item learn">
+<div class="promise-item">
 LEARN
 </div>
 
-<div class="promise-item grow">
+<div class="promise-item">
 GROW
 </div>
 
-<div class="promise-item lead">
+<div class="promise-item">
 LEAD
+</div>
+
+<div class="promise-item">
+POWERED BY IMLS
 </div>
 
 </div>
@@ -1629,62 +1740,64 @@ LEAD
 
 <img
 src="neo-banner.jpeg"
-alt="Neo School India">
+alt="Neo School India Brand">
 
 </div>
 
 
-<div class="about-copy">
 
-<div class="brand-pill">
-THE NEO WAY
+<div class="about-content">
+
+<div class="eyebrow">
+WELCOME TO NEO SCHOOL INDIA
 </div>
+
 
 <h2>
+
 Where Children
-Love to Learn
+Love to Learn.
+
 </h2>
 
 
 <p>
 
 At Neo School India,
-learning is designed around
-the child — not around pressure,
-rote learning or memorisation.
+we believe early education should
+create curiosity, confidence,
+happiness and a genuine love
+for learning.
 
 </p>
 
 
 <p>
 
-Children explore,
-experience and understand
-concepts through meaningful
-activities, movement,
-communication and play.
+Our approach moves beyond
+rote learning and unnecessary pressure.
+Children understand concepts through
+play, exploration, communication,
+movement and meaningful activities.
 
 </p>
 
 
 <p>
 
-Our approach supports
-language development,
-phonics, pre-math concepts,
-fine motor skills,
-gross motor development,
-social-emotional growth
-and confident communication.
+Every learning experience supports
+academic readiness together with
+language, physical, social,
+emotional and cognitive development.
 
 </p>
 
 
 <a
 href="#programs"
-class="btn-rainbow">
+class="btn btn-brand">
 
-Discover Our Approach
+Discover the Neo Way
 
 </a>
 
@@ -1699,29 +1812,30 @@ Discover Our Approach
 <!-- PROGRAMS -->
 
 <section
-class="soft-section"
-id="programs">
+id="programs"
+class="soft">
 
 <div class="container">
 
 
-<div class="section-title">
+<div class="section-heading">
 
-<span>
-OUR LEARNING ECOSYSTEM
-</span>
+<div class="eyebrow">
+OUR LEARNING WORLD
+</div>
 
 <h2>
+
 Strong Foundations.
 Happy Childhood.
+
 </h2>
 
 <p>
 
-Thoughtfully designed
-learning experiences
-for the complete development
-of every child.
+Age-appropriate experiences
+designed for the complete
+development of every child.
 
 </p>
 
@@ -1734,9 +1848,7 @@ of every child.
 
 <div class="card">
 
-<div class="card-icon">
-🔤
-</div>
+<div class="icon">🔤</div>
 
 <h3>
 Phonics & Reading
@@ -1745,9 +1857,8 @@ Phonics & Reading
 <p>
 
 Systematic phonics develops
-strong reading,
-speaking and language
-foundations.
+strong English reading,
+speaking and communication foundations.
 
 </p>
 
@@ -1757,9 +1868,7 @@ foundations.
 
 <div class="card">
 
-<div class="card-icon">
-🧩
-</div>
+<div class="icon">🧩</div>
 
 <h3>
 Activity-Based Learning
@@ -1767,9 +1876,9 @@ Activity-Based Learning
 
 <p>
 
-Children learn concepts
-by doing,
-exploring and experiencing.
+Children understand concepts
+through hands-on experiences,
+exploration and play.
 
 </p>
 
@@ -1779,9 +1888,7 @@ exploring and experiencing.
 
 <div class="card">
 
-<div class="card-icon">
-🔢
-</div>
+<div class="icon">🔢</div>
 
 <h3>
 Early Mathematics
@@ -1789,10 +1896,11 @@ Early Mathematics
 
 <p>
 
-Numbers,
+Number sense,
 patterns,
-logic and problem-solving
-are introduced naturally.
+logic,
+shapes and problem-solving
+made meaningful and engaging.
 
 </p>
 
@@ -1802,9 +1910,7 @@ are introduced naturally.
 
 <div class="card">
 
-<div class="card-icon">
-✋
-</div>
+<div class="icon">✋</div>
 
 <h3>
 Fine Motor Skills
@@ -1812,10 +1918,9 @@ Fine Motor Skills
 
 <p>
 
-Developing hand control,
+Activities develop hand control,
 coordination,
-creativity and
-pre-writing readiness.
+creativity and writing readiness.
 
 </p>
 
@@ -1825,20 +1930,17 @@ pre-writing readiness.
 
 <div class="card">
 
-<div class="card-icon">
-🏃
-</div>
+<div class="icon">🏃</div>
 
 <h3>
-Gross Motor Skills
+Gross Motor Development
 </h3>
 
 <p>
 
-Physical movement develops
-balance,
-strength,
-coordination and confidence.
+Movement strengthens balance,
+coordination,
+physical confidence and wellbeing.
 
 </p>
 
@@ -1848,9 +1950,7 @@ coordination and confidence.
 
 <div class="card">
 
-<div class="card-icon">
-❤️
-</div>
+<div class="icon">❤️</div>
 
 <h3>
 Social & Emotional Growth
@@ -1858,15 +1958,13 @@ Social & Emotional Growth
 
 <p>
 
-Children learn to
-communicate,
-collaborate and
-understand emotions.
+Children develop confidence,
+communication,
+relationships and emotional awareness.
 
 </p>
 
 </div>
-
 
 </div>
 
@@ -1879,29 +1977,31 @@ understand emotions.
 <!-- IMLS -->
 
 <section
-class="imls"
-id="imls">
+id="imls"
+class="imls">
 
 <div class="container">
 
 
-<div class="section-title">
+<div class="section-heading">
 
-<span>
+<div class="eyebrow">
 POWERED BY IMLS
-</span>
+</div>
 
 <h2>
+
 Integrated Modern
 Learning System
+
 </h2>
 
 <p>
 
-A structured learning
-methodology designed
-to connect knowledge,
-experience and
+A structured learning methodology
+connecting knowledge,
+experience,
+communication and
 whole-child development.
 
 </p>
@@ -1913,7 +2013,7 @@ whole-child development.
 <div class="imls-grid">
 
 
-<div class="imls-box">
+<div class="imls-card">
 
 <div class="imls-number">
 01
@@ -1925,8 +2025,9 @@ Explore
 
 <p>
 
-Curiosity begins
-the learning journey.
+Learning begins with
+curiosity,
+questions and discovery.
 
 </p>
 
@@ -1934,7 +2035,7 @@ the learning journey.
 
 
 
-<div class="imls-box">
+<div class="imls-card">
 
 <div class="imls-number">
 02
@@ -1947,8 +2048,8 @@ Experience
 <p>
 
 Children understand
-through meaningful
-activities and experiences.
+by doing,
+observing and experiencing.
 
 </p>
 
@@ -1956,7 +2057,7 @@ activities and experiences.
 
 
 
-<div class="imls-box">
+<div class="imls-card">
 
 <div class="imls-number">
 03
@@ -1969,8 +2070,8 @@ Express
 <p>
 
 Children communicate
-ideas with confidence
-and creativity.
+ideas confidently
+through language and creativity.
 
 </p>
 
@@ -1978,7 +2079,7 @@ and creativity.
 
 
 
-<div class="imls-box">
+<div class="imls-card">
 
 <div class="imls-number">
 04
@@ -1990,14 +2091,13 @@ Evolve
 
 <p>
 
-Every experience
-helps children grow
+Continuous experiences help
+every child grow
 towards their potential.
 
 </p>
 
 </div>
-
 
 </div>
 
@@ -2007,25 +2107,26 @@ towards their potential.
 
 
 
-<!-- BRAND BANNER -->
+<!-- BRAND SHOWCASE -->
 
-<section>
+<section class="showcase">
 
 <div class="container">
 
-<div class="brand-banner">
+<div class="showcase-box">
 
-<div class="banner-content">
+<div class="showcase-content">
 
-<div class="brand-pill">
+<div class="badge">
 NEO SCHOOL INDIA
 </div>
+
 
 <h2>
 
 Education for
 
-<span class="rainbow-text">
+<span class="gradient-text">
 Tomorrow's Children.
 </span>
 
@@ -2035,8 +2136,8 @@ Tomorrow's Children.
 <p>
 
 Modern learning.
-Strong foundations.
 Happy children.
+Strong foundations.
 Confident teachers.
 Connected parents.
 
@@ -2045,7 +2146,7 @@ Connected parents.
 
 <a
 href="#contact"
-class="btn-primary">
+class="btn btn-dark">
 
 Connect With Neo
 
@@ -2063,33 +2164,44 @@ Connect With Neo
 
 <!-- WHY NEO -->
 
-<section class="soft-section">
+<section
+id="whyneo"
+class="soft">
 
 <div class="container">
 
 
-<div class="section-title">
+<div class="section-heading">
 
-<span>
-WHY NEO SCHOOL INDIA
-</span>
+<div class="eyebrow">
+WHY NEO SCHOOL INDIA?
+</div>
 
 <h2>
-A Complete
-Learning Ecosystem
+
+More Than
+a Preschool.
+
 </h2>
+
+<p>
+
+A complete learning ecosystem
+built around children,
+teachers and families.
+
+</p>
 
 </div>
 
 
-<div class="cards">
+
+<div class="why-grid">
 
 
 <div class="card">
 
-<div class="card-icon">
-👶
-</div>
+<div class="icon">👶</div>
 
 <h3>
 Child-Centric
@@ -2097,22 +2209,20 @@ Child-Centric
 
 <p>
 
-Every learning experience
-respects the child's
-age,
-curiosity and
-development.
+Learning respects
+the child's age,
+ability,
+curiosity and pace.
 
 </p>
 
 </div>
 
 
+
 <div class="card">
 
-<div class="card-icon">
-🧠
-</div>
+<div class="icon">🧠</div>
 
 <h3>
 Psychology-Informed
@@ -2120,20 +2230,19 @@ Psychology-Informed
 
 <p>
 
-Emotional wellbeing
-and confidence are
-central to learning.
+Confidence,
+emotional security and
+developmental readiness matter.
 
 </p>
 
 </div>
 
 
+
 <div class="card">
 
-<div class="card-icon">
-👩‍🏫
-</div>
+<div class="icon">👩‍🏫</div>
 
 <h3>
 Teacher Development
@@ -2141,20 +2250,18 @@ Teacher Development
 
 <p>
 
-Continuous academic
-and classroom training
-for educators.
+Teachers receive academic,
+classroom and methodology support.
 
 </p>
 
 </div>
 
 
+
 <div class="card">
 
-<div class="card-icon">
-👨‍👩‍👧
-</div>
+<div class="icon">👨‍👩‍👧</div>
 
 <h3>
 Parent Partnership
@@ -2162,20 +2269,19 @@ Parent Partnership
 
 <p>
 
-Helping parents
-understand and support
-their child's development.
+Parents become meaningful
+partners in their child's
+learning journey.
 
 </p>
 
 </div>
 
 
+
 <div class="card">
 
-<div class="card-icon">
-📚
-</div>
+<div class="icon">📚</div>
 
 <h3>
 Modern Curriculum
@@ -2184,20 +2290,18 @@ Modern Curriculum
 <p>
 
 Structured,
-age-appropriate
-and activity-driven
-academic planning.
+age-appropriate and
+activity-driven learning plans.
 
 </p>
 
 </div>
 
 
+
 <div class="card">
 
-<div class="card-icon">
-🌱
-</div>
+<div class="icon">🌱</div>
 
 <h3>
 Whole Child Growth
@@ -2205,16 +2309,15 @@ Whole Child Growth
 
 <p>
 
-Cognitive,
-language,
+Academic,
 physical,
-social and emotional
-development together.
+social,
+emotional and
+language development together.
 
 </p>
 
 </div>
-
 
 </div>
 
@@ -2227,23 +2330,25 @@ development together.
 <!-- FRANCHISE -->
 
 <section
-class="franchise"
-id="franchise">
+id="franchise"
+class="franchise">
 
 <div class="container">
 
 <div class="franchise-box">
 
 
-<div>
+<div class="franchise-copy">
 
-<div class="brand-pill">
+<div class="badge">
 PARTNER WITH NEO
 </div>
 
+
 <h2>
 
-Bring Neo School India
+Bring
+Neo School India
 to Your City.
 
 </h2>
@@ -2252,7 +2357,7 @@ to Your City.
 <p>
 
 Build a modern preschool
-supported by Neo School India's
+with Neo School India's
 curriculum,
 academic systems,
 teacher training,
@@ -2265,7 +2370,7 @@ continuous support.
 
 <a
 href="#contact"
-class="btn-rainbow">
+class="btn btn-brand">
 
 Franchise Enquiry
 
@@ -2275,7 +2380,7 @@ Franchise Enquiry
 
 
 
-<div class="franchise-owl">
+<div class="franchise-image">
 
 <img
 src="neo-owl.jpeg"
@@ -2303,7 +2408,7 @@ alt="Neo School India Brand Ambassador">
 
 <img
 src="neo-logo.jpeg"
-alt="Neo School India Logo">
+alt="Neo School India">
 
 <h2>
 
@@ -2312,16 +2417,19 @@ the Future of Learning.
 
 </h2>
 
+
 <p>
 
 For preschool admissions,
-franchise partnerships,
+franchise opportunities,
 teacher training,
-phonics training
+phonics training,
+academic partnerships
 and school services,
 connect with Neo School India.
 
 </p>
+
 
 <p>
 <strong>
@@ -2369,7 +2477,7 @@ required>
 
 <select id="interest">
 
-<option>
+<option value="General Enquiry">
 Select Enquiry Type
 </option>
 
@@ -2402,13 +2510,13 @@ School Services
 
 <textarea
 id="message"
-placeholder="Your Message">
+placeholder="Tell us how we can help you">
 </textarea>
 
 
 <button
-class="btn-rainbow"
-type="submit">
+type="submit"
+class="btn btn-brand">
 
 Send Enquiry on WhatsApp
 
@@ -2431,12 +2539,12 @@ Send Enquiry on WhatsApp
 
 
 <img
-class="footer-logo"
 src="neo-logo.jpeg"
-alt="Neo School India">
+class="footer-logo"
+alt="Neo School India Logo">
 
 
-<div class="footer-tagline">
+<div class="footer-brand">
 
 LEARN • GROW • LEAD
 &nbsp; | &nbsp;
@@ -2453,13 +2561,12 @@ of joyful learning.
 </p>
 
 
-<div class="copyright">
+<div class="copy">
 
 © 2026 Neo School India.
 All Rights Reserved.
 
 </div>
-
 
 </div>
 
@@ -2467,11 +2574,11 @@ All Rights Reserved.
 
 
 
-<!-- FLOATING NEO OWL -->
+<!-- FLOATING NEO -->
 
 <a
-class="neo-float"
 href="#contact"
+class="floating-owl"
 title="Connect with Neo">
 
 <img
@@ -2505,17 +2612,13 @@ document.getElementById("message").value;
 
 
 /*
-IMPORTANT:
-
-Next stepలో
-ఇక్కడ Neo School India
-official WhatsApp number
-నేను పెట్టిస్తాను.
+Replace YOURNUMBER
+with official Neo School India
+WhatsApp number.
 
 Example:
 919876543210
 */
-
 
 const whatsappNumber =
 "YOURNUMBER";
@@ -2526,9 +2629,7 @@ const text =
 `Hello Neo School India,
 
 Name: ${name}
-
 Phone: ${phone}
-
 City: ${city}
 
 Enquiry:
@@ -2546,15 +2647,11 @@ whatsappNumber +
 encodeURIComponent(text);
 
 
-window.open(
-url,
-"_blank"
-);
+window.open(url,"_blank");
 
 }
 
 </script>
-
 
 </body>
 </html>
