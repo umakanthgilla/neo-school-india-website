@@ -1,1236 +1,3093 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Neo School India | Learn • Grow • Lead</title>
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-<meta name="description"
-content="Neo School India - A modern child-centric preschool and learning ecosystem powered by IMLS.">
+<title>
+Neo School India | Learn • Grow • Lead
+</title>
+
+<meta
+name="description"
+content="Neo School India - A modern child-centric preschool and learning ecosystem powered by IMLS. Learn • Grow • Lead.">
 
 <style>
 
-/* =========================================================
-   NEO SCHOOL INDIA — OFFICIAL WEBSITE
-========================================================= */
+/* =====================================================
+   NEO SCHOOL INDIA
+   OFFICIAL WEBSITE DESIGN SYSTEM
+===================================================== */
 
 :root{
-  --blue:#0878DF;
-  --cyan:#00A7C7;
-  --green:#43B640;
-  --yellow:#F5C400;
-  --orange:#FF7A16;
-  --pink:#F52572;
 
-  --navy:#071B52;
-  --dark:#06132E;
+--blue:#0878DF;
+--cyan:#00A7C7;
+--green:#43B640;
+--yellow:#F5C400;
+--orange:#FF7A16;
+--pink:#F52572;
 
-  --white:#FFFFFF;
-  --soft:#F7FAFF;
-  --text:#18233D;
-  --muted:#667085;
-  --border:#E7EDF5;
+--navy:#071B52;
+--navy2:#0A255F;
+--dark:#06132E;
 
-  --gradient:
-  linear-gradient(
-    90deg,
-    #0878DF 0%,
-    #00A7C7 18%,
-    #43B640 36%,
-    #F5C400 54%,
-    #FF7A16 73%,
-    #F52572 100%
-  );
+--white:#FFFFFF;
+--soft:#F7FAFF;
+
+--text:#18233D;
+--muted:#667085;
+
+--border:#E7EDF5;
+
+--brand-gradient:
+linear-gradient(
+90deg,
+#0878DF 0%,
+#00A7C7 18%,
+#43B640 36%,
+#F5C400 54%,
+#FF7A16 73%,
+#F52572 100%
+);
+
 }
 
+
+/* RESET */
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
 html{
-  scroll-behavior:smooth;
+scroll-behavior:smooth;
 }
 
 body{
-  font-family:Arial,Helvetica,sans-serif;
-  color:var(--text);
-  background:white;
-  line-height:1.65;
-  overflow-x:hidden;
+
+font-family:
+Arial,
+Helvetica,
+sans-serif;
+
+background:#fff;
+color:var(--text);
+
+line-height:1.65;
+
+overflow-x:hidden;
+
 }
 
-img,
-video{
-  max-width:100%;
-  display:block;
+img{
+max-width:100%;
+display:block;
 }
 
 a{
-  text-decoration:none;
+text-decoration:none;
 }
 
 .container{
-  width:min(1200px,92%);
-  margin:auto;
+
+width:min(1180px,92%);
+margin:auto;
+
 }
 
-/* =========================================================
-   BRAND STRIP
-========================================================= */
 
-.brand-strip{
-  height:6px;
-  background:var(--gradient);
+/* TOP BRAND LINE */
+
+.brand-line{
+
+height:6px;
+background:var(--brand-gradient);
+
 }
 
-/* =========================================================
+
+/* =====================================================
    HEADER
-========================================================= */
+===================================================== */
 
 header{
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:rgba(255,255,255,.97);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
+
+position:sticky;
+top:0;
+
+z-index:999;
+
+background:
+rgba(255,255,255,.96);
+
+backdrop-filter:
+blur(15px);
+
+border-bottom:
+1px solid var(--border);
+
 }
+
 
 .navbar{
-  min-height:112px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:30px;
+
+min-height:90px;
+
+display:flex;
+
+align-items:center;
+justify-content:space-between;
+
+gap:25px;
+
 }
 
-.logo{
-  display:flex;
-  align-items:center;
-  flex-shrink:0;
-}
 
 .logo img{
-  width:300px;
-  height:95px;
-  object-fit:contain;
-  object-position:left center;
+
+width:220px;
+height:70px;
+
+object-fit:contain;
+
 }
+
 
 .nav-links{
-  display:flex;
-  align-items:center;
-  gap:28px;
+
+display:flex;
+
+align-items:center;
+
+gap:25px;
+
 }
+
 
 .nav-links a{
-  color:var(--navy);
-  font-size:14px;
-  font-weight:800;
+
+font-size:14px;
+
+font-weight:700;
+
+color:var(--navy);
+
 }
+
 
 .nav-links a:hover{
-  color:var(--blue);
+
+color:var(--blue);
+
 }
+
 
 .nav-contact{
-  padding:12px 24px;
-  color:white!important;
-  border-radius:50px;
-  background:var(--gradient);
-  box-shadow:0 10px 28px rgba(0,120,223,.18);
+
+padding:
+11px 22px;
+
+border-radius:
+50px;
+
+color:white!important;
+
+background:
+var(--brand-gradient);
+
 }
 
-/* =========================================================
+
+/* =====================================================
    HERO
-========================================================= */
+===================================================== */
 
 .hero{
-  position:relative;
-  min-height:82vh;
-  display:flex;
-  align-items:center;
-  overflow:hidden;
 
-  background:
-    radial-gradient(circle at 10% 15%,rgba(8,120,223,.12),transparent 30%),
-    radial-gradient(circle at 95% 80%,rgba(245,37,114,.10),transparent 30%),
-    linear-gradient(180deg,#fff 0%,#f7fbff 100%);
+position:relative;
+
+min-height:87vh;
+
+display:flex;
+align-items:center;
+
+overflow:hidden;
+
+background:
+
+radial-gradient(
+circle at 12% 20%,
+rgba(8,120,223,.12),
+transparent 32%
+),
+
+radial-gradient(
+circle at 90% 85%,
+rgba(245,37,114,.10),
+transparent 30%
+),
+
+linear-gradient(
+180deg,
+#FFFFFF 0%,
+#F7FAFF 100%
+);
+
 }
+
 
 .hero-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  align-items:center;
-  gap:60px;
-  padding:65px 0;
+
+display:grid;
+
+grid-template-columns:
+1fr 1fr;
+
+align-items:center;
+
+gap:70px;
+
+padding:
+70px 0;
+
 }
+
 
 .badge{
-  display:inline-flex;
-  align-items:center;
-  gap:9px;
 
-  padding:8px 16px;
-  margin-bottom:20px;
+display:inline-flex;
 
-  border:1px solid var(--border);
-  border-radius:50px;
+align-items:center;
 
-  background:white;
-  color:var(--navy);
+gap:9px;
 
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:1px;
+padding:
+8px 15px;
 
-  box-shadow:0 8px 24px rgba(7,27,82,.07);
+border-radius:
+50px;
+
+background:white;
+
+border:
+1px solid var(--border);
+
+box-shadow:
+0 7px 20px
+rgba(7,27,82,.06);
+
+font-size:
+12px;
+
+font-weight:
+900;
+
+letter-spacing:
+1px;
+
+color:
+var(--navy);
+
+margin-bottom:
+20px;
+
 }
 
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:var(--gradient);
+
+.badge-dot{
+
+width:10px;
+height:10px;
+
+border-radius:50%;
+
+background:
+var(--brand-gradient);
+
 }
+
 
 .hero h1{
-  font-size:clamp(48px,6vw,78px);
-  line-height:1.02;
-  letter-spacing:-2px;
-  color:var(--navy);
-  margin-bottom:24px;
+
+font-size:
+clamp(46px,6vw,78px);
+
+line-height:
+1.02;
+
+letter-spacing:
+-2px;
+
+color:
+var(--navy);
+
+margin-bottom:
+24px;
+
 }
+
 
 .gradient-text{
-  background:var(--gradient);
-  background-clip:text;
-  -webkit-background-clip:text;
-  color:transparent;
+
+background:
+var(--brand-gradient);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:
+transparent;
+
 }
+
 
 .hero p{
-  max-width:640px;
-  margin-bottom:30px;
-  color:var(--muted);
-  font-size:18px;
+
+font-size:
+18px;
+
+color:
+var(--muted);
+
+max-width:
+630px;
+
+margin-bottom:
+30px;
+
 }
+
 
 .hero-buttons{
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
+
+display:flex;
+
+gap:14px;
+
+flex-wrap:wrap;
+
 }
+
 
 .btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
 
-  padding:14px 27px;
-  border-radius:50px;
+display:inline-flex;
 
-  font-weight:800;
-  transition:.25s;
+align-items:center;
+justify-content:center;
+
+padding:
+14px 26px;
+
+border-radius:
+50px;
+
+font-weight:
+800;
+
+transition:
+.25s;
+
 }
+
 
 .btn:hover{
-  transform:translateY(-2px);
+
+transform:
+translateY(-2px);
+
 }
+
 
 .btn-dark{
-  background:var(--navy);
-  color:white;
-  box-shadow:0 14px 34px rgba(7,27,82,.20);
+
+background:
+var(--navy);
+
+color:white;
+
+box-shadow:
+0 14px 32px
+rgba(7,27,82,.20);
+
 }
+
 
 .btn-brand{
-  background:var(--gradient);
-  color:white;
-  box-shadow:0 14px 34px rgba(8,120,223,.18);
+
+background:
+var(--brand-gradient);
+
+color:white;
+
+box-shadow:
+0 14px 32px
+rgba(8,120,223,.17);
+
 }
 
-/* HERO VIDEO */
 
-.hero-character{
-  display:flex;
-  justify-content:center;
-  align-items:center;
+/* HERO CHARACTER */
+
+.hero-visual{
+
+display:flex;
+
+justify-content:center;
+
 }
 
-.video-shell{
-  position:relative;
-  width:100%;
-  max-width:570px;
 
-  padding:12px;
+.owl-frame{
 
-  border-radius:38px;
-  background:white;
+position:relative;
 
-  box-shadow:0 30px 80px rgba(7,27,82,.14);
-  overflow:hidden;
+width:100%;
+
+max-width:590px;
+
+padding:15px;
+
+border-radius:38px;
+
+background:
+white;
+
+box-shadow:
+0 30px 80px
+rgba(7,27,82,.15);
+
 }
 
-.video-shell::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:38px;
-  border:1px solid rgba(8,120,223,.10);
+
+.owl-frame::before{
+
+content:"";
+
+position:absolute;
+
+inset:-4px;
+
+z-index:-1;
+
+border-radius:
+40px;
+
+background:
+var(--brand-gradient);
+
+opacity:.22;
+
+filter:
+blur(16px);
+
 }
 
-.character-video{
-  width:100%;
-  aspect-ratio:1 / 1;
-  object-fit:contain;
 
-  background:white;
-  border-radius:28px;
+.owl-frame img{
+
+width:100%;
+
+border-radius:
+29px;
+
 }
 
-/* =========================================================
+
+/* =====================================================
    PROMISE BAR
-========================================================= */
+===================================================== */
 
 .promise{
-  background:var(--navy);
-  padding:26px 0;
+
+background:
+var(--navy);
+
+padding:
+24px 0;
+
 }
+
 
 .promise-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
+
+display:grid;
+
+grid-template-columns:
+repeat(4,1fr);
+
+text-align:center;
+
 }
+
 
 .promise-item{
-  text-align:center;
-  padding:5px 12px;
-  font-size:14px;
-  font-weight:900;
-  letter-spacing:1.5px;
+
+font-size:
+14px;
+
+font-weight:
+900;
+
+letter-spacing:
+2px;
+
 }
 
-.promise-item:nth-child(1){color:#39A9FF;}
-.promise-item:nth-child(2){color:#57C94D;}
-.promise-item:nth-child(3){color:#FFC928;}
-.promise-item:nth-child(4){color:#FF6A8B;}
 
-/* =========================================================
-   COMMON
-========================================================= */
+.promise-item:nth-child(1){
+color:#36A7FF;
+}
+
+.promise-item:nth-child(2){
+color:#56C74F;
+}
+
+.promise-item:nth-child(3){
+color:#FFC928;
+}
+
+.promise-item:nth-child(4){
+color:#FF6C8C;
+}
+
+
+/* =====================================================
+   GENERAL SECTIONS
+===================================================== */
 
 section{
-  padding:95px 0;
+
+padding:
+95px 0;
+
 }
 
-.soft{
-  background:var(--soft);
-}
 
 .section-title{
-  max-width:790px;
-  margin:0 auto 52px;
-  text-align:center;
+
+max-width:
+790px;
+
+margin:
+0 auto 50px;
+
+text-align:center;
+
 }
 
-.eyebrow{
-  color:var(--blue);
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:2px;
+
+.section-title small{
+
+font-size:
+12px;
+
+font-weight:
+900;
+
+letter-spacing:
+2px;
+
+color:
+var(--blue);
+
 }
+
 
 .section-title h2{
-  margin-top:9px;
-  font-size:clamp(34px,4vw,52px);
-  line-height:1.1;
-  color:var(--navy);
+
+font-size:
+clamp(34px,4vw,52px);
+
+line-height:
+1.1;
+
+color:
+var(--navy);
+
+margin-top:
+10px;
+
 }
+
 
 .section-title p{
-  margin-top:15px;
-  color:var(--muted);
-  font-size:17px;
+
+font-size:
+17px;
+
+color:
+var(--muted);
+
+margin-top:
+16px;
+
 }
 
-/* =========================================================
+
+/* =====================================================
    ABOUT
-========================================================= */
+===================================================== */
 
-.two-column{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:65px;
-  align-items:center;
+.about-grid{
+
+display:grid;
+
+grid-template-columns:
+1fr 1fr;
+
+gap:
+65px;
+
+align-items:center;
+
 }
 
-.character-panel{
-  padding:14px;
-  background:white;
-  border:1px solid var(--border);
-  border-radius:32px;
-  box-shadow:0 20px 55px rgba(10,30,70,.08);
+
+.about-image{
+
+padding:
+22px;
+
+border-radius:
+34px;
+
+background:
+linear-gradient(
+145deg,
+#EDF7FF,
+#FFFFFF
+);
+
+box-shadow:
+0 22px 60px
+rgba(15,45,90,.08);
+
 }
 
-.character-panel video{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:contain;
-  background:white;
-  border-radius:24px;
+
+.about-image img{
+
+border-radius:
+26px;
+
+width:100%;
+
 }
 
-.copy h2{
-  margin:10px 0 20px;
-  color:var(--navy);
-  font-size:clamp(34px,4vw,50px);
-  line-height:1.08;
+
+.about-content small{
+
+font-size:
+12px;
+
+font-weight:
+900;
+
+letter-spacing:
+2px;
+
+color:
+var(--blue);
+
 }
 
-.copy p{
-  margin-bottom:17px;
-  color:var(--muted);
-  font-size:17px;
+
+.about-content h2{
+
+font-size:
+clamp(34px,4vw,50px);
+
+line-height:
+1.08;
+
+color:
+var(--navy);
+
+margin:
+12px 0 22px;
+
 }
 
-/* =========================================================
+
+.about-content p{
+
+font-size:
+17px;
+
+color:
+var(--muted);
+
+margin-bottom:
+17px;
+
+}
+
+
+/* =====================================================
    PROGRAMS
-========================================================= */
+===================================================== */
+
+.soft{
+
+background:
+var(--soft);
+
+}
+
 
 .cards{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:24px;
+
+display:grid;
+
+grid-template-columns:
+repeat(3,1fr);
+
+gap:
+24px;
+
 }
+
 
 .card{
-  position:relative;
-  overflow:hidden;
 
-  padding:31px;
-  border:1px solid var(--border);
-  border-radius:25px;
+position:relative;
 
-  background:white;
+overflow:hidden;
 
-  box-shadow:0 12px 35px rgba(10,30,70,.05);
-  transition:.25s;
+background:white;
+
+padding:
+31px;
+
+border-radius:
+25px;
+
+border:
+1px solid var(--border);
+
+box-shadow:
+0 12px 35px
+rgba(10,30,70,.05);
+
+transition:
+.25s;
+
 }
+
 
 .card::before{
-  content:"";
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:5px;
-  background:var(--gradient);
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:0;
+
+width:100%;
+height:5px;
+
+background:
+var(--brand-gradient);
+
 }
+
 
 .card:hover{
-  transform:translateY(-6px);
-  box-shadow:0 24px 52px rgba(10,30,70,.10);
+
+transform:
+translateY(-6px);
+
+box-shadow:
+0 24px 50px
+rgba(10,30,70,.10);
+
 }
+
 
 .icon{
-  width:58px;
-  height:58px;
-  display:grid;
-  place-items:center;
 
-  margin-bottom:18px;
-  border-radius:17px;
+width:58px;
+height:58px;
 
-  background:#eef7ff;
-  font-size:27px;
+display:grid;
+
+place-items:center;
+
+border-radius:
+18px;
+
+background:
+#EEF7FF;
+
+font-size:
+27px;
+
+margin-bottom:
+20px;
+
 }
+
 
 .card h3{
-  margin-bottom:8px;
-  color:var(--navy);
-  font-size:20px;
+
+font-size:
+20px;
+
+color:
+var(--navy);
+
+margin-bottom:
+9px;
+
 }
+
 
 .card p{
-  color:var(--muted);
-  font-size:15px;
+
+font-size:
+15px;
+
+color:
+var(--muted);
+
 }
 
-/* =========================================================
-   ACTIVITY CHARACTER STRIP
-========================================================= */
 
-.activity-strip{
-  padding:75px 0;
-  overflow:hidden;
-}
-
-.activity-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:24px;
-}
-
-.motion-card{
-  text-align:center;
-  overflow:hidden;
-
-  padding:18px;
-  border-radius:28px;
-
-  background:white;
-  border:1px solid var(--border);
-
-  box-shadow:0 16px 45px rgba(10,30,70,.06);
-}
-
-.motion-card video{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:contain;
-  background:white;
-  border-radius:20px;
-}
-
-.motion-card h3{
-  margin:16px 0 5px;
-  color:var(--navy);
-}
-
-.motion-card p{
-  color:var(--muted);
-  font-size:14px;
-}
-
-/* =========================================================
+/* =====================================================
    IMLS
-========================================================= */
+===================================================== */
 
 .imls{
-  color:white;
 
-  background:
-    radial-gradient(circle at 10% 10%,rgba(8,120,223,.20),transparent 30%),
-    radial-gradient(circle at 90% 90%,rgba(245,37,114,.17),transparent 30%),
-    var(--dark);
+background:
+
+radial-gradient(
+circle at 10% 10%,
+rgba(8,120,223,.20),
+transparent 30%
+),
+
+radial-gradient(
+circle at 90% 90%,
+rgba(245,37,114,.16),
+transparent 30%
+),
+
+var(--dark);
+
+color:white;
+
 }
 
-.imls .eyebrow{
-  color:#57C3FF;
+
+.imls .section-title small{
+
+color:
+#55BEFF;
+
 }
+
 
 .imls .section-title h2,
 .imls .section-title p{
-  color:white;
+
+color:white;
+
 }
 
-.imls-layout{
-  display:grid;
-  grid-template-columns:.75fr 1.25fr;
-  gap:38px;
-  align-items:center;
-}
-
-.imls-video{
-  overflow:hidden;
-  border-radius:30px;
-  background:white;
-}
-
-.imls-video video{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:contain;
-  background:white;
-}
 
 .imls-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
+
+display:grid;
+
+grid-template-columns:
+repeat(4,1fr);
+
+gap:
+20px;
+
 }
+
 
 .imls-card{
-  min-height:185px;
-  padding:25px 22px;
 
-  border-radius:23px;
-  border:1px solid rgba(255,255,255,.13);
+min-height:
+230px;
 
-  background:rgba(255,255,255,.07);
+padding:
+28px 23px;
+
+border-radius:
+24px;
+
+background:
+rgba(255,255,255,.07);
+
+border:
+1px solid
+rgba(255,255,255,.13);
+
 }
+
 
 .imls-number{
-  font-size:40px;
-  font-weight:900;
 
-  background:var(--gradient);
-  -webkit-background-clip:text;
-  color:transparent;
+font-size:
+43px;
+
+font-weight:
+900;
+
+background:
+var(--brand-gradient);
+
+-webkit-background-clip:text;
+
+color:
+transparent;
+
 }
+
 
 .imls-card h3{
-  margin:5px 0 8px;
-  font-size:20px;
+
+font-size:
+21px;
+
+margin:
+7px 0 9px;
+
 }
+
 
 .imls-card p{
-  color:#d8e2f4;
-  font-size:14px;
+
+font-size:
+14px;
+
+color:
+#D7E2F5;
+
 }
 
-/* =========================================================
+
+/* =====================================================
    BRAND BANNER
-========================================================= */
+===================================================== */
+
+.brand-showcase{
+
+padding-top:
+90px;
+
+}
+
 
 .banner-box{
-  min-height:430px;
 
-  display:flex;
-  align-items:center;
+min-height:
+430px;
 
-  border-radius:36px;
-  overflow:hidden;
+display:flex;
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(255,255,255,.98) 0%,
-      rgba(255,255,255,.92) 48%,
-      rgba(255,255,255,.45) 100%
-    ),
-    url("neo banner.jpeg") center/cover no-repeat;
+align-items:center;
 
-  box-shadow:0 28px 75px rgba(10,30,70,.10);
+position:relative;
+
+overflow:hidden;
+
+border-radius:
+38px;
+
+background:
+
+linear-gradient(
+90deg,
+rgba(255,255,255,.97) 0%,
+rgba(255,255,255,.92) 45%,
+rgba(255,255,255,.42) 100%
+),
+
+url("neo banner.jpeg")
+center center / cover
+no-repeat;
+
+box-shadow:
+0 28px 75px
+rgba(10,30,70,.10);
+
 }
+
 
 .banner-copy{
-  max-width:670px;
-  padding:60px;
+
+max-width:
+670px;
+
+padding:
+60px;
+
 }
+
 
 .banner-copy h2{
-  margin:10px 0 18px;
-  color:var(--navy);
-  font-size:clamp(38px,5vw,58px);
-  line-height:1.05;
+
+font-size:
+clamp(38px,5vw,58px);
+
+line-height:
+1.06;
+
+color:
+var(--navy);
+
+margin:
+12px 0 18px;
+
 }
+
 
 .banner-copy p{
-  margin-bottom:25px;
-  color:#56627A;
-  font-size:17px;
+
+font-size:
+17px;
+
+color:
+#56627A;
+
+margin-bottom:
+26px;
+
 }
 
-/* =========================================================
+
+/* =====================================================
+   BRAND GALLERY
+===================================================== */
+
+.gallery{
+
+display:grid;
+
+grid-template-columns:
+1.2fr .8fr .8fr;
+
+gap:
+20px;
+
+}
+
+
+.gallery-item{
+
+background:white;
+
+border:
+1px solid var(--border);
+
+border-radius:
+28px;
+
+padding:
+15px;
+
+overflow:hidden;
+
+box-shadow:
+0 15px 38px
+rgba(10,30,70,.06);
+
+}
+
+
+.gallery-item img{
+
+width:100%;
+height:320px;
+
+object-fit:cover;
+
+border-radius:
+20px;
+
+}
+
+
+.gallery-item.logo-art img{
+
+object-fit:contain;
+
+background:white;
+
+}
+
+
+/* =====================================================
    WHY NEO
-========================================================= */
-
-.why-layout{
-  display:grid;
-  grid-template-columns:1.25fr .75fr;
-  gap:35px;
-  align-items:center;
-}
+===================================================== */
 
 .why-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+
+display:grid;
+
+grid-template-columns:
+repeat(3,1fr);
+
+gap:
+24px;
+
 }
 
-.why-video{
-  overflow:hidden;
 
-  padding:12px;
-  border-radius:30px;
-  background:white;
-  border:1px solid var(--border);
-
-  box-shadow:0 20px 55px rgba(10,30,70,.08);
-}
-
-.why-video video{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:contain;
-  border-radius:22px;
-  background:white;
-}
-
-/* =========================================================
+/* =====================================================
    FRANCHISE
-========================================================= */
+===================================================== */
 
 .franchise{
-  background:#f7faff;
+
+background:
+#F7FAFF;
+
 }
+
 
 .franchise-box{
-  position:relative;
-  overflow:hidden;
 
-  display:grid;
-  grid-template-columns:1fr .75fr;
-  gap:42px;
-  align-items:center;
+position:relative;
 
-  padding:58px;
+overflow:hidden;
 
-  border-radius:38px;
-  background:var(--navy);
-  color:white;
+display:grid;
+
+grid-template-columns:
+1fr .7fr;
+
+align-items:center;
+
+gap:
+40px;
+
+padding:
+58px;
+
+border-radius:
+38px;
+
+background:
+var(--navy);
+
+color:white;
+
 }
+
 
 .franchise-box::after{
-  content:"";
-  position:absolute;
-  left:0;
-  bottom:0;
-  width:100%;
-  height:7px;
-  background:var(--gradient);
+
+content:"";
+
+position:absolute;
+
+left:0;
+bottom:0;
+
+width:100%;
+height:7px;
+
+background:
+var(--brand-gradient);
+
 }
+
+
+.franchise-copy small{
+
+font-size:
+12px;
+
+letter-spacing:
+2px;
+
+font-weight:
+900;
+
+color:
+#69C8FF;
+
+}
+
 
 .franchise-copy h2{
-  margin:10px 0 20px;
-  font-size:clamp(38px,5vw,58px);
-  line-height:1.06;
+
+font-size:
+clamp(38px,5vw,58px);
+
+line-height:
+1.06;
+
+margin:
+12px 0 20px;
+
 }
+
 
 .franchise-copy p{
-  margin-bottom:27px;
-  color:#d7e2f6;
-  font-size:17px;
+
+font-size:
+17px;
+
+color:
+#D7E2F6;
+
+margin-bottom:
+27px;
+
 }
 
-.franchise-video{
-  overflow:hidden;
-  border-radius:28px;
-  background:white;
+
+.franchise-image img{
+
+max-height:
+350px;
+
+margin:auto;
+
+border-radius:
+30px;
+
 }
 
-.franchise-video video{
-  width:100%;
-  aspect-ratio:1/1;
-  object-fit:contain;
-  background:white;
-}
 
-/* =========================================================
+/* =====================================================
    CONTACT
-========================================================= */
+===================================================== */
 
 .contact-grid{
-  display:grid;
-  grid-template-columns:.85fr 1.15fr;
-  gap:30px;
+
+display:grid;
+
+grid-template-columns:
+.85fr 1.15fr;
+
+gap:
+30px;
+
 }
+
 
 .contact-brand{
-  padding:42px;
-  border-radius:30px;
-  background:var(--navy);
-  color:white;
+
+padding:
+42px;
+
+border-radius:
+30px;
+
+background:
+var(--navy);
+
+color:white;
+
 }
+
 
 .contact-brand img{
-  width:285px;
-  margin-bottom:28px;
-  object-fit:contain;
+
+width:
+240px;
+
+margin-bottom:
+25px;
+
+border-radius:
+15px;
+
 }
+
 
 .contact-brand h2{
-  margin-bottom:20px;
-  font-size:38px;
-  line-height:1.1;
+
+font-size:
+38px;
+
+line-height:
+1.1;
+
+margin-bottom:
+20px;
+
 }
+
 
 .contact-brand p{
-  margin-bottom:15px;
-  color:#d7e2f6;
+
+color:
+#D7E2F6;
+
+margin-bottom:
+15px;
+
 }
+
 
 .contact-form{
-  padding:40px;
-  border-radius:30px;
 
-  background:white;
-  border:1px solid var(--border);
+padding:
+40px;
 
-  box-shadow:0 18px 50px rgba(12,30,70,.07);
+border-radius:
+30px;
+
+background:white;
+
+border:
+1px solid var(--border);
+
+box-shadow:
+0 18px 50px
+rgba(12,30,70,.07);
+
 }
+
 
 .contact-form h2{
-  margin-bottom:22px;
-  color:var(--navy);
+
+color:
+var(--navy);
+
+margin-bottom:
+22px;
+
 }
+
 
 .contact-form input,
 .contact-form select,
 .contact-form textarea{
-  width:100%;
-  padding:15px 16px;
-  margin-bottom:15px;
 
-  border:1px solid #dce4ee;
-  border-radius:13px;
+width:100%;
 
-  background:#fbfdff;
-  font:inherit;
+padding:
+15px 16px;
+
+margin-bottom:
+15px;
+
+border:
+1px solid
+#DCE4EE;
+
+border-radius:
+13px;
+
+background:
+#FBFDFF;
+
+font:
+inherit;
+
 }
+
 
 .contact-form textarea{
-  min-height:125px;
-  resize:vertical;
+
+min-height:
+125px;
+
+resize:
+vertical;
+
 }
+
 
 .contact-form button{
-  width:100%;
-  border:0;
-  cursor:pointer;
-  font-size:16px;
+
+width:100%;
+
+border:none;
+
+cursor:pointer;
+
+font-size:
+16px;
+
 }
 
-/* =========================================================
-   FLOATING ASSISTANT
-========================================================= */
 
-.neo-assistant{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  z-index:950;
+/* =====================================================
+   FLOATING OWL
+===================================================== */
 
-  width:105px;
-  height:105px;
+.floating-owl{
 
-  overflow:hidden;
-  border-radius:50%;
+position:fixed;
 
-  background:white;
-  border:4px solid white;
+right:18px;
+bottom:18px;
 
-  box-shadow:0 12px 36px rgba(7,27,82,.25);
+width:72px;
+height:72px;
 
-  cursor:pointer;
+border-radius:50%;
+
+overflow:hidden;
+
+background:white;
+
+border:
+4px solid white;
+
+box-shadow:
+0 12px 35px
+rgba(7,27,82,.25);
+
+z-index:
+900;
+
 }
 
-.neo-assistant video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  background:white;
+
+.floating-owl img{
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
 }
 
-.neo-assistant-label{
-  position:fixed;
-  right:132px;
-  bottom:45px;
-  z-index:949;
 
-  padding:10px 15px;
-
-  border-radius:16px 16px 4px 16px;
-
-  background:var(--navy);
-  color:white;
-
-  font-size:12px;
-  font-weight:700;
-
-  box-shadow:0 10px 28px rgba(7,27,82,.18);
-}
-
-/* =========================================================
+/* =====================================================
    FOOTER
-========================================================= */
+===================================================== */
 
 footer{
-  padding:50px 0 32px;
-  text-align:center;
 
-  background:var(--dark);
-  color:#cbd5e7;
+background:
+var(--dark);
+
+color:
+#CBD5E7;
+
+text-align:center;
+
+padding:
+48px 0 30px;
+
 }
+
 
 .footer-logo{
-  width:290px;
-  margin:0 auto 15px;
+
+width:
+250px;
+
+margin:
+0 auto 15px;
+
+border-radius:
+14px;
+
 }
+
 
 .footer-tag{
-  display:inline-block;
-  margin:8px 0 17px;
 
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:2px;
+display:inline-block;
 
-  background:var(--gradient);
-  -webkit-background-clip:text;
-  color:transparent;
+font-size:
+12px;
+
+font-weight:
+900;
+
+letter-spacing:
+2px;
+
+margin:
+7px 0 17px;
+
+background:
+var(--brand-gradient);
+
+-webkit-background-clip:text;
+
+color:
+transparent;
+
 }
+
+
+footer p{
+
+font-size:
+14px;
+
+}
+
 
 .copyright{
-  margin-top:20px;
-  color:#7d8ba7;
-  font-size:12px;
+
+font-size:
+12px;
+
+color:
+#7D8BA7;
+
+margin-top:
+20px;
+
 }
 
-/* =========================================================
-   SCROLL REVEAL
-========================================================= */
 
-.reveal{
-  opacity:0;
-  transform:translateY(40px);
-  transition:opacity .8s ease,transform .8s ease;
-}
-
-.reveal.visible{
-  opacity:1;
-  transform:translateY(0);
-}
-
-/* =========================================================
+/* =====================================================
    TABLET
-========================================================= */
+===================================================== */
 
-@media(max-width:950px){
+@media(max-width:920px){
 
-  .nav-links{
-    display:none;
-  }
+.nav-links{
 
-  .logo img{
-    width:255px;
-    height:82px;
-  }
+display:none;
 
-  .hero-grid,
-  .two-column,
-  .imls-layout,
-  .why-layout,
-  .franchise-box,
-  .contact-grid{
-    grid-template-columns:1fr;
-  }
-
-  .hero{
-    min-height:auto;
-  }
-
-  .hero-copy{
-    text-align:center;
-  }
-
-  .hero p{
-    margin-left:auto;
-    margin-right:auto;
-  }
-
-  .hero-buttons{
-    justify-content:center;
-  }
-
-  .cards{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .activity-grid{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .activity-grid .motion-card:last-child{
-    grid-column:1/-1;
-    max-width:500px;
-    width:100%;
-    margin:auto;
-  }
 }
 
-/* =========================================================
+
+.hero-grid,
+.about-grid,
+.franchise-box,
+.contact-grid{
+
+grid-template-columns:
+1fr;
+
+}
+
+
+.hero{
+
+min-height:auto;
+
+}
+
+
+.hero-grid{
+
+padding:
+55px 0;
+
+}
+
+
+.hero-copy{
+
+text-align:center;
+
+}
+
+
+.hero p{
+
+margin-left:auto;
+margin-right:auto;
+
+}
+
+
+.hero-buttons{
+
+justify-content:center;
+
+}
+
+
+.cards,
+.why-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.imls-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.gallery{
+
+grid-template-columns:
+1fr 1fr;
+
+}
+
+
+.gallery-item:first-child{
+
+grid-column:
+1 / -1;
+
+}
+
+}
+
+
+/* =====================================================
    MOBILE
-========================================================= */
+===================================================== */
 
 @media(max-width:600px){
 
-  .navbar{
-    min-height:88px;
-  }
+.navbar{
 
-  .logo img{
-    width:225px;
-    height:72px;
-  }
+min-height:
+74px;
 
-  section{
-    padding:70px 0;
-  }
+}
 
-  .hero-grid{
-    padding:50px 0;
-  }
 
-  .hero h1{
-    font-size:43px;
-    letter-spacing:-1px;
-  }
+.logo img{
 
-  .hero p{
-    font-size:16px;
-  }
+width:
+165px;
 
-  .promise-grid{
-    grid-template-columns:1fr 1fr;
-    row-gap:10px;
-  }
+height:
+60px;
 
-  .cards,
-  .activity-grid,
-  .imls-grid,
-  .why-grid{
-    grid-template-columns:1fr;
-  }
+}
 
-  .activity-grid .motion-card:last-child{
-    grid-column:auto;
-  }
 
-  .banner-box{
-    min-height:500px;
-  }
+section{
 
-  .banner-copy,
-  .franchise-box,
-  .contact-brand,
-  .contact-form{
-    padding:30px 23px;
-  }
+padding:
+70px 0;
 
-  .neo-assistant{
-    width:76px;
-    height:76px;
-  }
+}
 
-  .neo-assistant-label{
-    display:none;
-  }
+
+.hero h1{
+
+font-size:
+43px;
+
+letter-spacing:
+-1px;
+
+}
+
+
+.hero p{
+
+font-size:
+16px;
+
+}
+
+
+.promise-grid{
+
+grid-template-columns:
+repeat(2,1fr);
+
+gap:
+8px;
+
+}
+
+
+.promise-item{
+
+font-size:
+12px;
+
+}
+
+
+.cards,
+.why-grid,
+.imls-grid,
+.gallery{
+
+grid-template-columns:
+1fr;
+
+}
+
+
+.gallery-item:first-child{
+
+grid-column:auto;
+
+}
+
+
+.gallery-item img{
+
+height:
+260px;
+
+}
+
+
+.banner-box{
+
+min-height:
+510px;
+
+background-position:center;
+
+}
+
+
+.banner-copy,
+.franchise-box,
+.contact-brand,
+.contact-form{
+
+padding:
+30px 23px;
+
+}
+
+
+.floating-owl{
+
+width:
+58px;
+
+height:
+58px;
+
+}
+
 }
 
 </style>
+
 </head>
+
 
 <body>
 
-<div class="brand-strip"></div>
 
-<!-- HEADER -->
+<div class="brand-line"></div>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
 <header>
 
-  <div class="container navbar">
+<div class="container navbar">
 
-    <a href="#home" class="logo">
-      <img
-        src="neo logo.jpeg"
-        alt="Neo School India Official Logo">
-    </a>
 
-    <nav class="nav-links">
-      <a href="#about">About</a>
-      <a href="#programs">Programs</a>
-      <a href="#imls">IMLS</a>
-      <a href="#whyneo">Why Neo</a>
-      <a href="#franchise">Franchise</a>
-      <a href="#contact" class="nav-contact">Contact</a>
-    </nav>
+<a
+href="#home"
+class="logo">
 
-  </div>
+<img
+src="neo logo.jpeg"
+alt="Neo School India Official Logo">
 
-</header>
+</a>
 
-<!-- HERO -->
 
-<section class="hero" id="home">
+<nav class="nav-links">
 
-  <div class="container hero-grid">
+<a href="#about">
+About
+</a>
 
-    <div class="hero-copy">
+<a href="#programs">
+Programs
+</a>
 
-      <div class="badge">
-        <span class="dot"></span>
-        POWERED BY IMLS
-      </div>
+<a href="#imls">
+IMLS
+</a>
 
-      <h1>
-        A New Way to
-        <span class="gradient-text">
-          Learn. Grow. Lead.
-        </span>
-      </h1>
+<a href="#whyneo">
+Why Neo
+</a>
 
-      <p>
-        Neo School India is a modern, child-centric
-        early-learning ecosystem designed to help
-        children learn happily, grow confidently and
-        build strong foundations for life.
-      </p>
+<a href="#franchise">
+Franchise
+</a>
 
-      <div class="hero-buttons">
+<a
+href="#contact"
+class="nav-contact">
 
-        <a href="#programs" class="btn btn-dark">
-          Explore Neo School
-        </a>
+Contact
 
-        <a href="#franchise" class="btn btn-brand">
-          Partner With Us
-        </a>
+</a>
 
-      </div>
+</nav>
 
-    </div>
-
-    <div class="hero-character">
-
-      <div class="video-shell">
-
-        <video
-          class="character-video auto-video"
-          autoplay
-          muted
-          playsinline
-          loop
-          preload="metadata">
-
-          <source
-            src="neo-welcoming.mp4"
-            type="video/mp4">
-
-        </video>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-<!-- PROMISE -->
-
-<div class="promise">
-
-  <div class="container promise-grid">
-
-    <div class="promise-item">LEARN WITH CURIOSITY</div>
-    <div class="promise-item">GROW WITH CONFIDENCE</div>
-    <div class="promise-item">LEAD WITH VALUES</div>
-    <div class="promise-item">POWERED BY IMLS</div>
-
-  </div>
 
 </div>
 
-<!-- ABOUT -->
+</header>
 
-<section id="about">
 
-  <div class="container two-column">
 
-    <div class="character-panel reveal">
+<!-- =====================================================
+     HERO
+===================================================== -->
 
-      <video
-        class="scroll-video"
-        muted
-        playsinline
-        preload="metadata">
+<section
+class="hero"
+id="home">
 
-        <source
-          src="neo-sitting.mp4"
-          type="video/mp4">
+<div class="container hero-grid">
 
-      </video>
 
-    </div>
+<div class="hero-copy">
 
-    <div class="copy reveal">
 
-      <div class="eyebrow">
-        WELCOME TO NEO SCHOOL INDIA
-      </div>
+<div class="badge">
 
-      <h2>
-        Where Children
-        Love to Learn.
-      </h2>
+<span class="badge-dot"></span>
 
-      <p>
-        Early education should create curiosity,
-        confidence, happiness and a genuine love
-        for learning.
-      </p>
+POWERED BY IMLS
 
-      <p>
-        Children understand through play,
-        exploration, movement, communication
-        and meaningful experiences — not
-        unnecessary pressure or rote learning.
-      </p>
+</div>
 
-      <p>
-        Every Neo learning experience supports
-        academic readiness together with language,
-        physical, cognitive, social and emotional growth.
-      </p>
 
-      <a href="#programs" class="btn btn-brand">
-        Discover the Neo Way
-      </a>
+<h1>
 
-    </div>
+A New Way to
 
-  </div>
+<span class="gradient-text">
+
+Learn.
+Grow.
+Lead.
+
+</span>
+
+</h1>
+
+
+<p>
+
+Neo School India is a modern,
+child-centric early-learning ecosystem
+designed to help children learn happily,
+grow confidently and build strong
+foundations for life.
+
+</p>
+
+
+<div class="hero-buttons">
+
+
+<a
+href="#programs"
+class="btn btn-dark">
+
+Explore Neo School
+
+</a>
+
+
+<a
+href="#franchise"
+class="btn btn-brand">
+
+Partner With Us
+
+</a>
+
+
+</div>
+
+</div>
+
+
+
+<div class="hero-visual">
+
+<div class="owl-frame">
+
+<img
+src="neo owl.jpeg"
+alt="Neo School India Official Neo Owl">
+
+</div>
+
+</div>
+
+
+</div>
 
 </section>
 
-<!-- PROGRAMS -->
 
-<section class="soft" id="programs">
 
-  <div class="container">
+<!-- =====================================================
+     PROMISE BAR
+===================================================== -->
 
-    <div class="section-title reveal">
+<div class="promise">
 
-      <div class="eyebrow">
-        OUR LEARNING WORLD
-      </div>
+<div class="container promise-grid">
 
-      <h2>
-        Strong Foundations.
-        Happy Childhood.
-      </h2>
+<div class="promise-item">
+LEARN
+</div>
 
-      <p>
-        Thoughtfully designed,
-        age-appropriate experiences for
-        complete child development.
-      </p>
+<div class="promise-item">
+GROW
+</div>
 
-    </div>
+<div class="promise-item">
+LEAD
+</div>
 
-    <div class="cards">
+<div class="promise-item">
+POWERED BY IMLS
+</div>
 
-      <div class="card reveal">
-        <div class="icon">🔤</div>
-        <h3>Phonics & Reading</h3>
-        <p>
-          Strong English reading, speaking
-          and communication founda
+</div>
+
+</div>
+
+
+
+<!-- =====================================================
+     ABOUT
+===================================================== -->
+
+<section id="about">
+
+<div class="container about-grid">
+
+
+<div class="about-image">
+
+<img
+src="neo banner.jpeg"
+alt="Neo School India Brand">
+
+</div>
+
+
+<div class="about-content">
+
+
+<small>
+WELCOME TO NEO SCHOOL INDIA
+</small>
+
+
+<h2>
+
+Where Children
+Love to Learn.
+
+</h2>
+
+
+<p>
+
+Neo School India believes
+that early education should create
+curiosity, confidence,
+happiness and a genuine
+love for learning.
+
+</p>
+
+
+<p>
+
+Our approach moves beyond
+rote learning and unnecessary pressure.
+Children understand concepts through
+play, exploration,
+communication, movement
+and meaningful activities.
+
+</p>
+
+
+<p>
+
+Every experience supports
+academic readiness together with
+language, physical,
+social, emotional
+and cognitive development.
+
+</p>
+
+
+<a
+href="#programs"
+class="btn btn-brand">
+
+Discover the Neo Way
+
+</a>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     PROGRAMS
+===================================================== -->
+
+<section
+class="soft"
+id="programs">
+
+<div class="container">
+
+
+<div class="section-title">
+
+<small>
+OUR LEARNING WORLD
+</small>
+
+
+<h2>
+
+Strong Foundations.
+Happy Childhood.
+
+</h2>
+
+
+<p>
+
+Thoughtfully designed,
+age-appropriate learning experiences
+for the complete development
+of every child.
+
+</p>
+
+
+</div>
+
+
+
+<div class="cards">
+
+
+<div class="card">
+
+<div class="icon">
+🔤
+</div>
+
+<h3>
+Phonics & Reading
+</h3>
+
+<p>
+
+Strong English reading,
+speaking and communication
+foundations through systematic phonics.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+🧩
+</div>
+
+<h3>
+Activity-Based Learning
+</h3>
+
+<p>
+
+Children understand concepts
+through hands-on experiences,
+exploration and play.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+🔢
+</div>
+
+<h3>
+Early Mathematics
+</h3>
+
+<p>
+
+Number sense,
+patterns,
+logic,
+shapes and problem-solving
+made meaningful.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+✋
+</div>
+
+<h3>
+Fine Motor Skills
+</h3>
+
+<p>
+
+Developing coordination,
+hand control,
+creativity and
+writing readiness.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+🏃
+</div>
+
+<h3>
+Gross Motor Skills
+</h3>
+
+<p>
+
+Movement develops
+balance,
+coordination,
+strength and confidence.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+❤️
+</div>
+
+<h3>
+Social & Emotional Growth
+</h3>
+
+<p>
+
+Helping children develop
+confidence,
+communication,
+relationships and emotional awareness.
+
+</p>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     IMLS
+===================================================== -->
+
+<section
+class="imls"
+id="imls">
+
+<div class="container">
+
+
+<div class="section-title">
+
+<small>
+POWERED BY IMLS
+</small>
+
+
+<h2>
+
+Integrated Modern
+Learning System
+
+</h2>
+
+
+<p>
+
+A structured learning methodology
+connecting knowledge,
+experience,
+communication and
+whole-child development.
+
+</p>
+
+
+</div>
+
+
+
+<div class="imls-grid">
+
+
+<div class="imls-card">
+
+<div class="imls-number">
+01
+</div>
+
+<h3>
+Explore
+</h3>
+
+<p>
+
+Learning begins
+with curiosity,
+questions and discovery.
+
+</p>
+
+</div>
+
+
+
+<div class="imls-card">
+
+<div class="imls-number">
+02
+</div>
+
+<h3>
+Experience
+</h3>
+
+<p>
+
+Children understand
+by doing,
+observing and experiencing.
+
+</p>
+
+</div>
+
+
+
+<div class="imls-card">
+
+<div class="imls-number">
+03
+</div>
+
+<h3>
+Express
+</h3>
+
+<p>
+
+Children communicate ideas
+with confidence,
+language and creativity.
+
+</p>
+
+</div>
+
+
+
+<div class="imls-card">
+
+<div class="imls-number">
+04
+</div>
+
+<h3>
+Evolve
+</h3>
+
+<p>
+
+Continuous learning experiences
+help every child
+grow towards potential.
+
+</p>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     BRAND BANNER
+===================================================== -->
+
+<section class="brand-showcase">
+
+<div class="container">
+
+<div class="banner-box">
+
+<div class="banner-copy">
+
+
+<div class="badge">
+
+<span class="badge-dot"></span>
+
+NEO SCHOOL INDIA
+
+</div>
+
+
+<h2>
+
+Education for
+
+<span class="gradient-text">
+
+Tomorrow's Children.
+
+</span>
+
+</h2>
+
+
+<p>
+
+Modern learning.
+Happy children.
+Strong foundations.
+Confident teachers.
+Connected parents.
+
+</p>
+
+
+<a
+href="#contact"
+class="btn btn-dark">
+
+Connect With Neo
+
+</a>
+
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     OFFICIAL BRAND ASSETS
+===================================================== -->
+
+<section class="soft">
+
+<div class="container">
+
+
+<div class="section-title">
+
+<small>
+OUR BRAND WORLD
+</small>
+
+
+<h2>
+
+One Identity.
+One Neo Experience.
+
+</h2>
+
+
+<p>
+
+Neo School India maintains
+a consistent visual identity
+across schools,
+learning materials,
+digital platforms and communication.
+
+</p>
+
+</div>
+
+
+
+<div class="gallery">
+
+
+<div class="gallery-item">
+
+<img
+src="neo banner.jpeg"
+alt="Neo School India Official Banner">
+
+</div>
+
+
+
+<div class="gallery-item">
+
+<img
+src="neo owl.jpeg"
+alt="Neo Owl Brand Ambassador">
+
+</div>
+
+
+
+<div class="gallery-item logo-art">
+
+<img
+src="neo logo wink.jpeg"
+alt="Neo School India Alternate Official Creative">
+
+</div>
+
+
+
+<div class="gallery-item logo-art">
+
+<img
+src="neo logo.jpeg"
+alt="Neo School India Logo">
+
+</div>
+
+
+
+<div class="gallery-item">
+
+<img
+src="neo dp.jpeg"
+alt="Neo School India Profile Brand Image">
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     WHY NEO
+===================================================== -->
+
+<section
+id="whyneo">
+
+<div class="container">
+
+
+<div class="section-title">
+
+
+<small>
+WHY NEO SCHOOL INDIA?
+</small>
+
+
+<h2>
+
+More Than
+a Preschool.
+
+</h2>
+
+
+<p>
+
+A complete learning ecosystem
+built around children,
+teachers and parents.
+
+</p>
+
+
+</div>
+
+
+
+<div class="why-grid">
+
+
+<div class="card">
+
+<div class="icon">
+👶
+</div>
+
+<h3>
+Child-Centric
+</h3>
+
+<p>
+
+Learning respects
+the child's age,
+ability,
+curiosity and pace.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+🧠
+</div>
+
+<h3>
+Psychology-Informed
+</h3>
+
+<p>
+
+Confidence,
+emotional security
+and developmental readiness
+remain central.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+👩‍🏫
+</div>
+
+<h3>
+Teacher Development
+</h3>
+
+<p>
+
+Continuous academic,
+classroom and methodology
+support for educators.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+👨‍👩‍👧
+</div>
+
+<h3>
+Parent Partnership
+</h3>
+
+<p>
+
+Parents become
+meaningful partners
+in their child's development.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+📚
+</div>
+
+<h3>
+Modern Curriculum
+</h3>
+
+<p>
+
+Structured,
+age-appropriate
+and activity-driven
+learning plans.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="icon">
+🌱
+</div>
+
+<h3>
+Whole Child Growth
+</h3>
+
+<p>
+
+Academic,
+physical,
+social,
+emotional and language
+development together.
+
+</p>
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FRANCHISE
+===================================================== -->
+
+<section
+class="franchise"
+id="franchise">
+
+<div class="container">
+
+
+<div class="franchise-box">
+
+
+<div class="franchise-copy">
+
+
+<small>
+PARTNER WITH NEO
+</small>
+
+
+<h2>
+
+Bring
+Neo School India
+to Your City.
+
+</h2>
+
+
+<p>
+
+Build a modern preschool
+with Neo School India's curriculum,
+academic systems,
+teacher training,
+branding,
+technology and
+continuous support.
+
+</p>
+
+
+<a
+href="#contact"
+class="btn btn-brand">
+
+Franchise Enquiry
+
+</a>
+
+
+</div>
+
+
+
+<div class="franchise-image">
+
+<img
+src="neo owl.jpeg"
+alt="Neo School India Brand Ambassador">
+
+</div>
+
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CONTACT
+===================================================== -->
+
+<section id="contact">
+
+<div class="container contact-grid">
+
+
+<div class="contact-brand">
+
+
+<img
+src="neo logo.jpeg"
+alt="Neo School India Official Logo">
+
+
+<h2>
+
+Let's Build
+the Future of Learning.
+
+</h2>
+
+
+<p>
+
+For preschool admissions,
+franchise opportunities,
+teacher training,
+phonics training,
+academic partnerships
+and school services,
+connect with Neo School India.
+
+</p>
+
+
+<p>
+<strong>
+LEARN • GROW • LEAD
+</strong>
+</p>
+
+
+<p>
+POWERED BY IMLS
+</p>
+
+
+</div>
+
+
+
+<form
+class="contact-form"
+onsubmit="sendWhatsApp(event)">
+
+
+<h2>
+Send an Enquiry
+</h2>
+
+
+<input
+id="name"
+type="text"
+placeholder="Your Name"
+required>
+
+
+<input
+id="phone"
+type="tel"
+placeholder="Phone Number"
+required>
+
+
+<input
+id="city"
+type="text"
+placeholder="City / Town"
+required>
+
+
+<select id="interest">
+
+<option value="General Enquiry">
+Select Enquiry Type
+</option>
+
+<option>
+Preschool Admission
+</option>
+
+<option>
+Franchise Enquiry
+</option>
+
+<option>
+Teacher Training
+</option>
+
+<option>
+Phonics Training
+</option>
+
+<option>
+Academic Partnership
+</option>
+
+<option>
+School Services
+</option>
+
+</select>
+
+
+<textarea
+id="message"
+placeholder="Tell us how we can help you">
+</textarea>
+
+
+<button
+type="submit"
+class="btn btn-brand">
+
+Send Enquiry on WhatsApp
+
+</button>
+
+
+</form>
+
+
+</div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+<div class="container">
+
+
+<img
+src="neo logo.jpeg"
+class="footer-logo"
+alt="Neo School India">
+
+
+<div class="footer-tag">
+
+LEARN • GROW • LEAD
+&nbsp; | &nbsp;
+POWERED BY IMLS
+
+</div>
+
+
+<p>
+
+A new generation
+of joyful learning.
+
+</p>
+
+
+<div class="copyright">
+
+© 2026 Neo School India.
+All Rights Reserved.
+
+</div>
+
+
+</div>
+
+</footer>
+
+
+
+<!-- FLOATING NEO OWL -->
+
+<a
+href="#contact"
+class="floating-owl"
+title="Connect with Neo School India">
+
+<img
+src="neo owl.jpeg"
+alt="Neo Owl">
+
+</a>
+
+
+
+<script>
+
+function sendWhatsApp(event){
+
+event.preventDefault();
+
+
+const name =
+document.getElementById("name").value;
+
+
+const phone =
+document.getElementById("phone").value;
+
+
+const city =
+document.getElementById("city").value;
+
+
+const interest =
+document.getElementById("interest").value;
+
+
+const message =
+document.getElementById("message").value;
+
+
+/*
+IMPORTANT
+
+Replace YOURNUMBER
+with Neo School India
+official WhatsApp number.
+
+Example:
+
+919876543210
+
+Do not use + symbol.
+*/
+
+
+const whatsappNumber =
+"YOURNUMBER";
+
+
+const text =
+
+`Hello Neo School India,
+
+Name: ${name}
+
+Phone: ${phone}
+
+City: ${city}
+
+Enquiry:
+${interest}
+
+Message:
+${message}`;
+
+
+const url =
+
+"https://wa.me/" +
+whatsappNumber +
+"?text=" +
+encodeURIComponent(text);
+
+
+window.open(
+url,
+"_blank"
+);
+
+}
+
+</script>
+
+
+</body>
+
+</html>
