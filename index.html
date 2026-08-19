@@ -2302,7 +2302,39 @@ section.neo-section:not([id]) .neo-mascot.scene-walk{
   #contact .neo-mascot.scene-peek{right:-8% !important;}
   #about .neo-mascot.scene-peek{right:-30% !important;}
 }
+.footer-brand-row{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:30px;
+  margin-bottom:18px;
+}
 
+.footer-brand-row .footer-logo{
+  width:260px;
+  margin:0;
+}
+
+.footer-logo-animation{
+  width:260px;
+  height:auto;
+  margin:0;
+  display:block;
+  object-fit:contain;
+  border-radius:18px;
+}
+
+@media(max-width:600px){
+  .footer-brand-row{
+    gap:16px;
+  }
+
+  .footer-brand-row .footer-logo,
+  .footer-logo-animation{
+    width:46%;
+  }
+}
 </style>
 
 </head>
@@ -3356,10 +3388,24 @@ Send Enquiry on WhatsApp
 <div class="container">
 
 
-<img
-src="neo logo.jpeg"
-class="footer-logo"
-alt="Neo School India">
+<div class="footer-brand-row">
+
+  <img
+    src="neo logo.jpeg"
+    class="footer-logo"
+    alt="Neo School India">
+
+  <video
+    class="footer-logo-animation"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto">
+    <source src="Neo final logo animation.mp4" type="video/mp4">
+  </video>
+
+</div>
 
 
 <div class="footer-tag">
