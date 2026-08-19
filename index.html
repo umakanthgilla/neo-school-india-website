@@ -1476,24 +1476,78 @@ color:
 
 
 /* =========================================================
-   NEO WEBSITE MASCOT — PROFESSIONAL 3-SCENE VERSION
+   NEO WEBSITE MASCOT — FINAL PROFESSIONAL SYSTEM
 ========================================================= */
+
+/*
+   Only 3 contextual appearances:
+   1) Programs  -> Walk
+   2) Why Neo   -> Peek from LEFT edge
+   3) Contact   -> Wave
+
+   The WebM canvas itself is transparent.
+   We deliberately use a large 16:9 canvas so the visible owl
+   feels 3x larger without adding any box or visible boundary.
+*/
+
 #neoMascot{
- position:fixed; z-index:850; pointer-events:none;
- width:150px; height:150px; right:4%; bottom:7%;
- transition:left .65s ease,right .65s ease,top .65s ease,bottom .65s ease,
- width .45s ease,height .45s ease,transform .55s ease,opacity .3s ease;
- filter:drop-shadow(0 10px 12px rgba(7,27,82,.14));
+  position:fixed;
+  z-index:850;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .28s ease;
+  overflow:visible;
 }
-#neoVideo{width:100%;height:100%;object-fit:contain;background:transparent!important;}
-#neoMascot.scene-hero{width:180px;height:180px;right:5%;bottom:7%;left:auto;top:auto;}
-#neoMascot.scene-walk{width:145px;height:145px;left:8%;bottom:4%;right:auto;top:auto;}
-#neoMascot.scene-peek{width:155px;height:155px;right:-45px;top:42%;left:auto;bottom:auto;transform:rotate(-4deg);}
-#neoMascot.scene-hidden{opacity:0;visibility:hidden;}
-@media(max-width:600px){
- #neoMascot.scene-hero{width:132px;height:132px;right:2%;bottom:5%;}
- #neoMascot.scene-walk{width:118px;height:118px;left:4%;bottom:3%;}
- #neoMascot.scene-peek{width:125px;height:125px;right:-38px;top:43%;}
+
+#neoMascot.is-visible{
+  opacity:1;
+  visibility:visible;
+}
+
+#neoVideo{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  background:transparent !important;
+}
+
+/* PROGRAMS — source video already walks left to right.
+   No extra CSS movement is added, so motion stays natural. */
+#neoMascot.scene-walk{
+  width:100vw;
+  height:36vw;
+  max-height:410px;
+  left:0;
+  right:auto;
+  bottom:0;
+  top:auto;
+}
+
+/* WHY NEO — the source character lives at the RIGHT side
+   of its transparent 16:9 frame. Shifting that transparent
+   frame left makes Neo appear naturally from the LEFT screen
+   edge without mirroring the character/logo. */
+#neoMascot.scene-peek{
+  width:100vw;
+  height:56.25vw;
+  left:-80vw;
+  right:auto;
+  top:26%;
+  bottom:auto;
+}
+
+/* CONTACT — a large friendly wave near the enquiry area. */
+#neoMascot.scene-wave{
+  width:78vw;
+  height:43.875vw;
+  max-width:900px;
+  max-height:506px;
+  right:-10vw;
+  left:auto;
+  bottom:1.5%;
+  top:auto;
 }
 
 /* =========================================================
@@ -1724,116 +1778,28 @@ padding:
 }
 
 
-/* MOBILE MASCOT SIZE */
-
-#neoMascot{
-
-width:
-88px;
-
-height:
-88px;
-
-}
-
-
-#neoMascot.scene-hero{
-
-width:
-108px;
-
-height:
-108px;
-
-right:
-2%;
-
-bottom:
-8%;
-
-}
-
-
-#neoMascot.scene-fly{
-
-width:
-76px;
-
-height:
-76px;
-
-}
-
+/* FINAL MOBILE MASCOT TUNING */
 
 #neoMascot.scene-walk{
-
-width:
-76px;
-
-height:
-76px;
-
+  width:100vw;
+  height:58vw;
+  max-height:none;
+  left:0;
+  bottom:-2vw;
 }
 
-
-#neoMascot.scene-closeup{
-
-width:
-82px;
-
-height:
-82px;
-
-right:
--3px;
-
+#neoMascot.scene-peek{
+  width:118vw;
+  height:66.375vw;
+  left:-94vw;
+  top:24%;
 }
 
-
-#neoMascot.scene-hide{
-
-width:
-82px;
-
-height:
-82px;
-
-right:
--31px;
-
-}
-
-
-#neoMascot.scene-hop{
-
-width:
-76px;
-
-height:
-76px;
-
-}
-
-
-#neoMascot.scene-hi{
-
-width:
-88px;
-
-height:
-88px;
-
-}
-
-
-#neoMascot.scene-land{
-
-width:
-78px;
-
-height:
-78px;
-
+#neoMascot.scene-wave{
+  width:112vw;
+  height:63vw;
+  right:-24vw;
+  bottom:0;
 }
 
 }
@@ -1971,10 +1937,8 @@ id="mobileMenu">
 ========================================================= -->
 
 <section
-class="hero neo-section"
-id="home"
-data-scene="hero"
-data-video="neo-enter.webm">
+class="hero"
+id="home">
 
 <div class="container hero-grid">
 
@@ -2102,10 +2066,7 @@ POWERED BY IMLS
 ========================================================= -->
 
 <section
-id="about"
-class="neo-section"
-data-scene="fly"
-data-video="neo-fly.webm">
+id="about">
 
 <div class="container about-grid">
 
@@ -2381,10 +2342,8 @@ relationships and emotional awareness.
 ========================================================= -->
 
 <section
-class="imls neo-section"
-id="imls"
-data-scene="closeup"
-data-video="neo-closeup.webm">
+class="imls"
+id="imls">
 
 <div class="container">
 
@@ -2525,9 +2484,7 @@ toward their potential.
 ========================================================= -->
 
 <section
-class="neo-section"
-data-scene="hop"
-data-video="neo-hop.webm">
+>
 
 <div class="container">
 
@@ -2596,8 +2553,8 @@ Connect With Neo
 <section
 class="soft neo-section"
 id="whyneo"
-data-scene="hide"
-data-video="neo-hide.webm">
+data-scene="peek"
+data-video="neo-peek.webm">
 
 <div class="container">
 
@@ -2782,10 +2739,8 @@ language development together.
 ========================================================= -->
 
 <section
-class="franchise neo-section"
-id="franchise"
-data-scene="hi"
-data-video="neo-hi.webm">
+class="franchise"
+id="franchise">
 
 <div class="container">
 
@@ -2861,8 +2816,8 @@ alt="Neo School India Brand Ambassador">
 <section
 class="neo-section"
 id="contact"
-data-scene="land"
-data-video="neo-land.webm">
+data-scene="wave"
+data-video="neo-wave.webm">
 
 <div class="container contact-grid">
 
@@ -3059,22 +3014,8 @@ All Rights Reserved.
      TRANSPARENT NEO MASCOT
 ========================================================= -->
 
-<div
-id="neoMascot"
-class="scene-hero">
-
-<video
-id="neoVideo"
-muted
-playsinline
-preload="auto">
-
-<source
-src="neo-enter.webm"
-type="video/webm">
-
-</video>
-
+<div id="neoMascot" aria-hidden="true">
+<video id="neoVideo" muted playsinline preload="metadata"></video>
 </div>
 
 
@@ -3196,179 +3137,62 @@ url,
 
 
 /* =========================================================
-   NEO CHARACTER ENGINE
+   NEO CHARACTER ENGINE — FINAL 3-SCENE VERSION
 ========================================================= */
 
-const neoMascot =
-document.getElementById("neoMascot");
+const neoMascot = document.getElementById("neoMascot");
+const neoVideo = document.getElementById("neoVideo");
+const neoSections = document.querySelectorAll(".neo-section[data-scene]");
 
-
-const neoVideo =
-document.getElementById("neoVideo");
-
-
+let activeNeoSection = null;
 let currentVideo = "";
 
+function showNeo(section){
+  if(!section) return;
 
-function changeNeoScene(
-scene,
-video
-){
+  const scene = section.dataset.scene;
+  const video = section.dataset.video;
+  if(!scene || !video) return;
 
-if(
-!scene ||
-!video
-){
-return;
+  activeNeoSection = section;
+  neoMascot.className = "scene-" + scene + " is-visible";
+
+  if(currentVideo !== video){
+    currentVideo = video;
+    neoVideo.pause();
+    neoVideo.src = video;
+    neoVideo.loop = (scene === "walk");
+    neoVideo.load();
+    neoVideo.currentTime = 0;
+    const p = neoVideo.play();
+    if(p) p.catch(() => {});
+  }else if(neoVideo.paused){
+    const p = neoVideo.play();
+    if(p) p.catch(() => {});
+  }
 }
 
-
-/* CHANGE POSITION */
-
-neoMascot.className =
-"scene-" + scene;
-
-
-/* CHANGE VIDEO */
-
-if(
-currentVideo !== video
-){
-
-currentVideo =
-video;
-
-neoVideo.pause();
-
-neoVideo.src =
-video;
-
-neoVideo.load();
-
-neoVideo.currentTime =
-0;
-
-
-/*
-Walk and Fly can loop while
-the user remains in that section.
-*/
-
-if(
-scene === "walk" ||
-scene === "fly"
-){
-
-neoVideo.loop =
-true;
-
-}
-else{
-
-neoVideo.loop =
-false;
-
+function hideNeo(section){
+  if(activeNeoSection !== section) return;
+  activeNeoSection = null;
+  neoMascot.className = "";
+  neoVideo.pause();
 }
 
+const neoObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if(entry.isIntersecting){
+      showNeo(entry.target);
+    }else{
+      hideNeo(entry.target);
+    }
+  });
+},{
+  threshold:0.28,
+  rootMargin:"-8% 0px -8% 0px"
+});
 
-const playPromise =
-neoVideo.play();
-
-
-if(
-playPromise !== undefined
-){
-
-playPromise.catch(
-() => {}
-);
-
-}
-
-}
-
-}
-
-
-/* =========================================================
-   SECTION OBSERVER
-========================================================= */
-
-const neoSections =
-document.querySelectorAll(
-".neo-section"
-);
-
-
-const sceneObserver =
-new IntersectionObserver(
-
-entries => {
-
-entries.forEach(
-entry => {
-
-if(
-entry.isIntersecting
-){
-
-const scene =
-entry.target.dataset.scene;
-
-
-const video =
-entry.target.dataset.video;
-
-
-changeNeoScene(
-scene,
-video
-);
-
-}
-
-}
-);
-
-},
-
-{
-
-threshold:
-0.35
-
-}
-
-);
-
-
-neoSections.forEach(
-section => {
-
-sceneObserver.observe(
-section
-);
-
-}
-);
-
-
-/* =========================================================
-   INITIAL HERO
-========================================================= */
-
-window.addEventListener(
-"load",
-() => {
-
-changeNeoScene(
-"hero",
-"neo-enter.webm"
-);
-
-}
-);
-
+neoSections.forEach(section => neoObserver.observe(section));
 
 /* =========================================================
    REVEAL ANIMATION
