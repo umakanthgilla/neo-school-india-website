@@ -16,10 +16,12 @@ Neo School India | Learn • Grow • Lead
 <meta
 name="description"
 content="Neo School India – A modern child-centric preschool and learning ecosystem powered by IMLS.">
+
+
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#071a4a">
 <link rel="apple-touch-icon" href="/neo-icon-192.png">
-   
+
 <style>
 
 /* =========================================================
@@ -3217,6 +3219,1501 @@ footer .container{
   letter-spacing:1.2px !important;
 }
 
+
+/* =========================================================
+   NEO SCHOOL INDIA — INTERACTIVE PROGRAMS HUB V1
+   Preserves the approved brand, mascot engine and footer.
+========================================================= */
+.program-card{
+  position:relative;
+  cursor:pointer;
+  transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.program-card:hover{
+  transform:translateY(-7px);
+  box-shadow:0 18px 38px rgba(7,27,82,.13);
+  border-color:rgba(8,120,223,.25);
+}
+.program-card:focus-within{
+  outline:3px solid rgba(8,120,223,.18);
+  outline-offset:4px;
+}
+.program-card .program-open{
+  margin-top:18px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:0;
+  background:transparent;
+  color:var(--blue);
+  font-weight:800;
+  cursor:pointer;
+  padding:0;
+}
+.program-card .program-open::after{content:"→";font-size:18px;}
+.program-card.daycare-card .program-open{color:var(--green);}
+.program-card.other-card .program-open{color:var(--orange);}
+
+.program-detail{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:5000;
+  overflow-y:auto;
+  background:#F7FAFF;
+  color:var(--text);
+}
+.program-detail.open{display:block;}
+.program-detail-top{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.program-detail-nav{
+  width:min(1120px,92%);
+  min-height:74px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+.program-back{
+  border:0;
+  border-radius:999px;
+  padding:11px 18px;
+  background:#EEF5FF;
+  color:var(--navy);
+  font-weight:800;
+  cursor:pointer;
+}
+.program-detail-brand{
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:1px;
+  color:var(--navy);
+}
+.program-detail-hero{
+  background:#071B52;
+  color:#fff;
+  padding:70px 0 64px;
+  position:relative;
+  overflow:hidden;
+}
+.program-detail-hero::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;height:7px;
+  background:var(--gradient);
+}
+.program-detail-inner{width:min(1120px,92%);margin:auto;}
+.program-detail-hero .eyebrow{color:#8ED4FF;}
+.program-detail-hero h2{
+  color:#fff;
+  font-size:clamp(34px,5vw,62px);
+  line-height:1.06;
+  max-width:780px;
+  margin:12px 0 16px;
+}
+.program-detail-hero p{
+  max-width:760px;
+  color:#DCE8FF;
+  font-size:18px;
+}
+.program-quick-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:30px;
+  max-width:820px;
+}
+.program-quick{
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:16px;
+}
+.program-quick span{display:block;color:#9FC5FF;font-size:12px;font-weight:800;letter-spacing:.8px;}
+.program-quick strong{display:block;margin-top:4px;color:#fff;font-size:16px;}
+
+.program-content{padding:62px 0 80px;}
+.program-block{margin-bottom:58px;}
+.program-block h3{
+  color:var(--navy);
+  font-size:clamp(25px,3vw,36px);
+  line-height:1.18;
+  margin-bottom:14px;
+}
+.program-block > p{max-width:900px;color:var(--muted);font-size:16px;}
+.program-flow{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:10px;
+  margin-top:24px;
+}
+.program-flow span{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px 10px;
+  text-align:center;
+  font-weight:800;
+  color:var(--navy);
+}
+.learning-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-top:26px;
+}
+.learning-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:22px;
+}
+.learning-card b{display:block;color:var(--navy);margin-bottom:7px;font-size:16px;}
+.learning-card p{font-size:14px;color:var(--muted);line-height:1.6;}
+.activity-cloud{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:22px;
+}
+.activity-cloud span{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:10px 14px;
+  color:var(--navy);
+  font-weight:700;
+  font-size:14px;
+}
+.day-journey{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-top:24px;
+}
+.day-step{
+  background:#fff;
+  border-left:4px solid var(--blue);
+  border-radius:16px;
+  padding:18px;
+  font-weight:750;
+  color:var(--navy);
+}
+.neo-difference{
+  background:#071B52;
+  border-radius:30px;
+  padding:34px;
+  color:#fff;
+}
+.neo-difference h3{color:#fff;}
+.neo-difference p{color:#DCE8FF;}
+.neo-difference-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:24px;
+}
+.neo-difference-grid div{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;
+  padding:18px;
+}
+.neo-difference-grid b{display:block;color:#fff;margin-bottom:5px;}
+.neo-difference-grid span{color:#C8D8F3;font-size:14px;}
+.program-cta{
+  text-align:center;
+  padding:42px 24px;
+  border-radius:28px;
+  background:#fff;
+  border:1px solid var(--border);
+}
+.program-cta h3{margin-bottom:8px;}
+.program-cta p{margin:0 auto 20px;max-width:650px;color:var(--muted);}
+.program-cta-actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+
+.other-program-list{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  margin-top:26px;
+}
+.other-program-item{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:24px;
+}
+.other-program-item h4{color:var(--navy);font-size:19px;margin-bottom:8px;}
+.other-program-item p{color:var(--muted);font-size:14px;}
+.weekend-list{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;}
+.weekend-list span{
+  background:#F2F7FF;
+  color:var(--navy);
+  border-radius:999px;
+  padding:8px 11px;
+  font-size:12px;
+  font-weight:750;
+}
+
+body.program-detail-open{overflow:hidden;}
+
+@media(max-width:900px){
+  .program-quick-grid{grid-template-columns:1fr 1fr 1fr;}
+  .learning-grid{grid-template-columns:1fr 1fr;}
+  .program-flow{grid-template-columns:repeat(3,1fr);}
+  .day-journey{grid-template-columns:1fr 1fr;}
+  .neo-difference-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:600px){
+  .program-detail-hero{padding:48px 0 48px;}
+  .program-detail-hero p{font-size:16px;}
+  .program-quick-grid{grid-template-columns:1fr;}
+  .learning-grid,.day-journey,.neo-difference-grid,.other-program-list{grid-template-columns:1fr;}
+  .program-flow{grid-template-columns:1fr 1fr;}
+  .program-detail-brand{font-size:11px;}
+}
+
+
+/* =========================================================
+   PLAYGROUP / PROGRAM DETAIL — COLORFUL NEO BRAND POLISH V2
+   Keeps the existing structure and content intact.
+========================================================= */
+
+.program-detail{
+  background:
+    radial-gradient(circle at 8% 12%, rgba(8,120,223,.08), transparent 24%),
+    radial-gradient(circle at 92% 18%, rgba(245,37,114,.07), transparent 22%),
+    radial-gradient(circle at 12% 82%, rgba(67,182,64,.07), transparent 24%),
+    linear-gradient(180deg,#FFFFFF 0%,#F8FBFF 100%) !important;
+}
+
+/* Top bar */
+.program-detail-top{
+  border-bottom:1px solid rgba(8,120,223,.15) !important;
+  box-shadow:0 8px 24px rgba(7,27,82,.05);
+}
+
+.program-detail-brand{
+  background:var(--gradient);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent !important;
+}
+
+/* Hero gets richer Neo-brand accents */
+.program-detail-hero{
+  background:
+    radial-gradient(circle at 12% 20%, rgba(8,120,223,.28), transparent 28%),
+    radial-gradient(circle at 88% 18%, rgba(245,37,114,.20), transparent 24%),
+    radial-gradient(circle at 75% 85%, rgba(245,196,0,.12), transparent 24%),
+    #071B52 !important;
+}
+
+.program-detail-hero .eyebrow{
+  color:#FFFFFF !important;
+}
+
+.program-detail-hero h2{
+  color:#FFFFFF !important;
+}
+
+/* Hero tagline: LEARN / GROW / LEAD style chips */
+.program-detail-hero::before{
+  content:"LEARN   •   GROW   •   LEAD";
+  position:absolute;
+  right:5%;
+  top:28px;
+  font-weight:900;
+  letter-spacing:3px;
+  font-size:13px;
+  background:linear-gradient(90deg,#19A7F2 0 30%,#62C83F 30% 66%,#FF7A16 66% 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  opacity:.95;
+}
+
+/* Quick cards become individually branded */
+.program-quick:nth-child(1){
+  border-top:4px solid #19A7F2 !important;
+}
+.program-quick:nth-child(2){
+  border-top:4px solid #62C83F !important;
+}
+.program-quick:nth-child(3){
+  border-top:4px solid #FF7A16 !important;
+}
+.program-quick:nth-child(1) span{color:#6FC7FF !important;}
+.program-quick:nth-child(2) span{color:#89DD78 !important;}
+.program-quick:nth-child(3) span{color:#FFB66D !important;}
+
+/* Section eyebrow colors rotate through Neo palette */
+.program-content .program-block:nth-child(1) .eyebrow{color:#0878DF !important;}
+.program-content .program-block:nth-child(2) .eyebrow{color:#43B640 !important;}
+.program-content .program-block:nth-child(3) .eyebrow{color:#FF7A16 !important;}
+.program-content .program-block:nth-child(4) .eyebrow{color:#F52572 !important;}
+.program-content .program-block:nth-child(5) .eyebrow{color:#00A7C7 !important;}
+.program-content .program-block:nth-child(6) .eyebrow{color:#F5A400 !important;}
+.program-content .program-block:nth-child(7) .eyebrow{color:#0878DF !important;}
+.program-content .program-block:nth-child(8) .eyebrow{color:#43B640 !important;}
+
+/* Learning cards with Neo-brand top accents */
+.learning-card{
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 10px 28px rgba(7,27,82,.06);
+}
+.learning-card::before{
+  content:"";
+  position:absolute;
+  left:0;top:0;width:100%;height:5px;
+}
+.learning-card:nth-child(6n+1)::before{background:#0878DF;}
+.learning-card:nth-child(6n+2)::before{background:#43B640;}
+.learning-card:nth-child(6n+3)::before{background:#F5C400;}
+.learning-card:nth-child(6n+4)::before{background:#FF7A16;}
+.learning-card:nth-child(6n+5)::before{background:#F52572;}
+.learning-card:nth-child(6n+6)::before{background:#00A7C7;}
+
+.learning-card:nth-child(6n+1) b{color:#0878DF;}
+.learning-card:nth-child(6n+2) b{color:#43B640;}
+.learning-card:nth-child(6n+3) b{color:#B58A00;}
+.learning-card:nth-child(6n+4) b{color:#FF7A16;}
+.learning-card:nth-child(6n+5) b{color:#F52572;}
+.learning-card:nth-child(6n+6) b{color:#008AA5;}
+
+/* Flow steps become colorful instead of plain white */
+.program-flow span{
+  border:0 !important;
+  color:#071B52 !important;
+  box-shadow:0 8px 20px rgba(7,27,82,.06);
+}
+.program-flow span:nth-child(6n+1){background:#EAF5FF !important;border-bottom:4px solid #0878DF !important;}
+.program-flow span:nth-child(6n+2){background:#EFFBEA !important;border-bottom:4px solid #43B640 !important;}
+.program-flow span:nth-child(6n+3){background:#FFF9DD !important;border-bottom:4px solid #F5C400 !important;}
+.program-flow span:nth-child(6n+4){background:#FFF1E5 !important;border-bottom:4px solid #FF7A16 !important;}
+.program-flow span:nth-child(6n+5){background:#FFF0F6 !important;border-bottom:4px solid #F52572 !important;}
+.program-flow span:nth-child(6n+6){background:#EAFBFE !important;border-bottom:4px solid #00A7C7 !important;}
+
+/* Activity pills */
+.activity-cloud span:nth-child(6n+1){border-color:#87C9FF;background:#F1F8FF;}
+.activity-cloud span:nth-child(6n+2){border-color:#8EDB7A;background:#F4FFF1;}
+.activity-cloud span:nth-child(6n+3){border-color:#F5D86E;background:#FFFBEA;}
+.activity-cloud span:nth-child(6n+4){border-color:#FFB573;background:#FFF5EC;}
+.activity-cloud span:nth-child(6n+5){border-color:#F58AB0;background:#FFF3F8;}
+.activity-cloud span:nth-child(6n+6){border-color:#7AD3E0;background:#F0FCFE;}
+
+/* A Day at Neo */
+.day-step{
+  border-left:0 !important;
+  border-top:4px solid var(--blue);
+  box-shadow:0 8px 20px rgba(7,27,82,.06);
+}
+.day-step:nth-child(6n+1){border-top-color:#0878DF;}
+.day-step:nth-child(6n+2){border-top-color:#43B640;}
+.day-step:nth-child(6n+3){border-top-color:#F5C400;}
+.day-step:nth-child(6n+4){border-top-color:#FF7A16;}
+.day-step:nth-child(6n+5){border-top-color:#F52572;}
+.day-step:nth-child(6n+6){border-top-color:#00A7C7;}
+
+/* Why Neo dark block: richer, but still premium */
+.neo-difference{
+  background:
+    radial-gradient(circle at 10% 20%, rgba(8,120,223,.25), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(245,37,114,.16), transparent 28%),
+    #071B52 !important;
+  border:2px solid rgba(18,135,240,.42);
+}
+.neo-difference-grid div:nth-child(6n+1){border-top:4px solid #0878DF;}
+.neo-difference-grid div:nth-child(6n+2){border-top:4px solid #43B640;}
+.neo-difference-grid div:nth-child(6n+3){border-top:4px solid #F5C400;}
+.neo-difference-grid div:nth-child(6n+4){border-top:4px solid #FF7A16;}
+.neo-difference-grid div:nth-child(6n+5){border-top:4px solid #F52572;}
+.neo-difference-grid div:nth-child(6n+6){border-top:4px solid #00A7C7;}
+
+/* CTA */
+.program-cta{
+  position:relative;
+  overflow:hidden;
+  border:2px solid rgba(8,120,223,.16) !important;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    var(--gradient) border-box !important;
+}
+.program-cta::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:6px;
+  background:var(--gradient);
+}
+
+/* Other Programs also gets brand-color cards */
+.other-program-item{
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 10px 26px rgba(7,27,82,.06);
+}
+.other-program-item::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;width:100%;height:5px;
+}
+.other-program-item:nth-child(1)::before{background:#0878DF;}
+.other-program-item:nth-child(2)::before{background:#43B640;}
+.other-program-item:nth-child(3)::before{background:#F5C400;}
+.other-program-item:nth-child(4)::before{background:#FF7A16;}
+.other-program-item:nth-child(5)::before{background:#F52572;}
+
+/* Weekend pills */
+.weekend-list span:nth-child(5n+1){background:#EAF5FF;color:#0878DF;}
+.weekend-list span:nth-child(5n+2){background:#EFFBEA;color:#2B8E2C;}
+.weekend-list span:nth-child(5n+3){background:#FFF9DD;color:#9B7500;}
+.weekend-list span:nth-child(5n+4){background:#FFF1E5;color:#D95A00;}
+.weekend-list span:nth-child(5n+5){background:#FFF0F6;color:#C81D5A;}
+
+@media(max-width:600px){
+  .program-detail-hero::before{
+    position:static;
+    display:block;
+    margin-bottom:14px;
+    text-align:left;
+    font-size:11px;
+    letter-spacing:2px;
+  }
+}
+
+
+/* =========================================================
+   NEO SCHOOL INDIA — PROGRAM DETAIL CLASSY REFINEMENT V3
+   Goal: calm, premium, spacious, professional.
+   No button-like learning blocks. No over-colouring.
+========================================================= */
+
+/* Calm page canvas */
+.program-detail{
+  background:
+    linear-gradient(180deg,#FFFFFF 0%,#FBFCFE 52%,#F8FAFD 100%) !important;
+}
+
+/* Consistent elegant gradient separator */
+.program-block{
+  position:relative;
+  padding-top:34px;
+  margin-bottom:58px !important;
+}
+.program-block::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:118px;
+  height:3px;
+  border-radius:999px;
+  background:var(--gradient);
+  opacity:.9;
+}
+
+/* The dark Why Neo block should not receive the white-page separator */
+.program-block.neo-difference{
+  padding-top:34px;
+}
+.program-block.neo-difference::before{
+  left:34px;
+  top:18px;
+  width:110px;
+}
+
+/* Eyebrows: brand accent only, not rainbow all over */
+.program-content .program-block .eyebrow{
+  color:#0878DF !important;
+  letter-spacing:2px !important;
+}
+.program-content .program-block:nth-child(2n) .eyebrow{
+  color:#2F9D4A !important;
+}
+.program-content .program-block:nth-child(3n) .eyebrow{
+  color:#D88900 !important;
+}
+.neo-difference .eyebrow{
+  color:#8FD4FF !important;
+}
+
+/* =========================================================
+   FOUNDATION FLOW
+   Remove card/button appearance; use elegant editorial steps.
+========================================================= */
+.program-flow{
+  display:flex !important;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0 !important;
+  margin-top:28px !important;
+  padding:22px 0 4px;
+  border-top:1px solid #E7ECF4;
+  border-bottom:1px solid #E7ECF4;
+}
+.program-flow span{
+  position:relative;
+  flex:1 1 150px;
+  min-width:140px;
+  background:transparent !important;
+  border:0 !important;
+  border-bottom:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:10px 30px 20px 0 !important;
+  text-align:left !important;
+  color:#071B52 !important;
+  font-size:15px;
+  font-weight:800;
+}
+.program-flow span::after{
+  content:"→";
+  position:absolute;
+  right:10px;
+  top:8px;
+  color:#B7C2D4;
+  font-weight:700;
+}
+.program-flow span:last-child::after{display:none;}
+
+/* Small brand dot, sophisticated rather than colourful panels */
+.program-flow span::before{
+  content:"";
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  margin-right:10px;
+  background:#0878DF;
+  vertical-align:1px;
+}
+.program-flow span:nth-child(2)::before{background:#43B640;}
+.program-flow span:nth-child(3)::before{background:#D9A900;}
+.program-flow span:nth-child(4)::before{background:#FF7A16;}
+.program-flow span:nth-child(5)::before{background:#F52572;}
+.program-flow span:nth-child(6)::before{background:#00A7C7;}
+
+/* =========================================================
+   WHAT WE DEVELOP
+   Premium white editorial cards with very subtle accents.
+========================================================= */
+.learning-grid{
+  gap:18px !important;
+}
+.learning-card{
+  background:#FFFFFF !important;
+  border:1px solid #E5EAF2 !important;
+  border-radius:18px !important;
+  padding:24px 22px !important;
+  box-shadow:0 8px 24px rgba(7,27,82,.045) !important;
+}
+.learning-card::before{
+  left:22px !important;
+  top:0 !important;
+  width:42px !important;
+  height:3px !important;
+  border-radius:0 0 3px 3px;
+  opacity:.8;
+}
+.learning-card b{
+  color:#071B52 !important;
+  font-size:16px !important;
+}
+.learning-card p{
+  color:#6A7588 !important;
+}
+
+/* =========================================================
+   LEARNING THROUGH PLAY
+   Convert "button pills" into a clean text taxonomy.
+========================================================= */
+.activity-cloud{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:0 !important;
+  margin-top:28px !important;
+  border-top:1px solid #E7ECF4;
+}
+.activity-cloud span{
+  position:relative;
+  background:transparent !important;
+  border:0 !important;
+  border-bottom:1px solid #E7ECF4 !important;
+  border-radius:0 !important;
+  padding:17px 12px 17px 22px !important;
+  color:#071B52 !important;
+  font-size:14px !important;
+  font-weight:750 !important;
+}
+.activity-cloud span::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  transform:translateY(-50%);
+  background:#9CB0C9;
+}
+.activity-cloud span:nth-child(3n+1)::before{background:#0878DF;}
+.activity-cloud span:nth-child(3n+2)::before{background:#43B640;}
+.activity-cloud span:nth-child(3n+3)::before{background:#E49A00;}
+
+/* =========================================================
+   A DAY AT NEO
+   Replace stacked colourful cards with premium timeline.
+========================================================= */
+.day-journey{
+  display:block !important;
+  position:relative;
+  margin-top:30px !important;
+  padding-left:30px;
+}
+.day-journey::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:8px;
+  bottom:8px;
+  width:2px;
+  background:linear-gradient(
+    180deg,
+    #0878DF 0%,
+    #43B640 32%,
+    #F5C400 58%,
+    #FF7A16 78%,
+    #F52572 100%
+  );
+  border-radius:999px;
+  opacity:.7;
+}
+.day-step{
+  position:relative;
+  background:transparent !important;
+  border:0 !important;
+  border-top:0 !important;
+  border-bottom:1px solid #E8EDF4 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  padding:17px 0 17px 18px !important;
+  color:#071B52 !important;
+  font-size:15px;
+  font-weight:750;
+}
+.day-step::before{
+  content:"";
+  position:absolute;
+  left:-29px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  transform:translateY(-50%);
+  background:#FFFFFF;
+  border:3px solid #0878DF;
+  box-shadow:0 0 0 4px #F8FAFD;
+}
+.day-step:nth-child(2)::before{border-color:#43B640;}
+.day-step:nth-child(3)::before{border-color:#C9A000;}
+.day-step:nth-child(4)::before{border-color:#FF7A16;}
+.day-step:nth-child(5)::before{border-color:#F52572;}
+.day-step:nth-child(6)::before{border-color:#00A7C7;}
+.day-step:nth-child(7)::before{border-color:#0878DF;}
+.day-step:nth-child(8)::before{border-color:#43B640;}
+
+/* =========================================================
+   WHY NEO — calmer premium dark panel
+========================================================= */
+.neo-difference{
+  background:#071B52 !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  box-shadow:0 18px 46px rgba(7,27,82,.14) !important;
+}
+.neo-difference-grid{
+  gap:12px !important;
+}
+.neo-difference-grid div{
+  background:rgba(255,255,255,.055) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  border-top:0 !important;
+  border-radius:14px !important;
+  padding:18px !important;
+}
+.neo-difference-grid div::before{
+  content:"";
+  display:block;
+  width:34px;
+  height:3px;
+  margin-bottom:12px;
+  border-radius:999px;
+  background:var(--gradient);
+}
+.neo-difference-grid b{
+  color:#FFFFFF !important;
+}
+
+/* =========================================================
+   OTHER PROGRAMS
+========================================================= */
+.other-program-item{
+  background:#FFFFFF !important;
+  border:1px solid #E5EAF2 !important;
+  border-radius:18px !important;
+  box-shadow:0 8px 24px rgba(7,27,82,.045) !important;
+}
+.other-program-item::before{
+  width:46px !important;
+  left:24px !important;
+  height:3px !important;
+  background:var(--gradient) !important;
+}
+.weekend-list{
+  gap:0 !important;
+  border-top:1px solid #E8EDF4;
+  margin-top:16px !important;
+}
+.weekend-list span{
+  background:transparent !important;
+  border-radius:0 !important;
+  color:#526077 !important;
+  border-bottom:1px solid #EEF2F7;
+  padding:10px 12px 10px 0 !important;
+  margin-right:16px;
+}
+
+/* CTA remains a focal point, but not over-coloured */
+.program-cta{
+  background:#FFFFFF !important;
+  border:1px solid #E4EAF2 !important;
+  box-shadow:0 12px 32px rgba(7,27,82,.06);
+}
+.program-cta::before{
+  height:4px !important;
+}
+
+/* Keep hero branding sophisticated */
+.program-detail-hero::before{
+  opacity:.9 !important;
+}
+
+/* Mobile refinements */
+@media(max-width:700px){
+  .program-flow{
+    display:block !important;
+    padding:12px 0 0;
+  }
+  .program-flow span{
+    display:block;
+    min-width:0 !important;
+    width:100%;
+    padding:14px 28px 14px 0 !important;
+    border-bottom:1px solid #E8EDF4 !important;
+  }
+  .program-flow span::after{
+    content:"";
+    width:18px;
+    height:1px;
+    right:0;
+    top:50%;
+    background:#D7DEE8;
+  }
+  .program-flow span:last-child{
+    border-bottom:0 !important;
+  }
+
+  .activity-cloud{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  .learning-card{
+    padding:22px 20px !important;
+  }
+
+  .day-journey{
+    padding-left:26px;
+  }
+
+  .program-block{
+    padding-top:30px;
+  }
+
+  .program-block::before{
+    width:86px;
+  }
+}
+
+@media(max-width:430px){
+  .activity-cloud{
+    grid-template-columns:1fr !important;
+  }
+  .activity-cloud span{
+    padding:15px 10px 15px 20px !important;
+  }
+}
+
+
+/* === V3.1 ICON ENHANCEMENT — V3 DESIGN REMAINS LOCKED === */
+.neo-icon{
+  width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 42px;border-radius:50%;background:#f7faff;border:1px solid #e7edf6;
+  color:#0b2a68;margin-bottom:12px;
+}
+.neo-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.learning-card .neo-icon{margin-bottom:14px}
+.learning-card:nth-child(6n+1) .neo-icon{color:#0878DF;background:#f4f9ff}
+.learning-card:nth-child(6n+2) .neo-icon{color:#43A947;background:#f7fcf5}
+.learning-card:nth-child(6n+3) .neo-icon{color:#D79B00;background:#fffaf0}
+.learning-card:nth-child(6n+4) .neo-icon{color:#E96C16;background:#fff8f2}
+.learning-card:nth-child(6n+5) .neo-icon{color:#D94A83;background:#fff7fa}
+.learning-card:nth-child(6n+6) .neo-icon{color:#159CAF;background:#f4fcfd}
+
+.activity-cloud span{
+  display:inline-flex !important;align-items:center !important;gap:9px !important;
+}
+.activity-cloud .neo-mini-icon{
+  width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;background:#fff;border:1px solid #e7edf6;color:#0b2a68;flex:0 0 26px;
+}
+.activity-cloud .neo-mini-icon svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+
+/* =========================================================
+   V3.2 — LARGER "LEARNING THROUGH PLAY" ACTIVITY ICONS
+   Only icon sizing is changed. All other V3.1 design remains locked.
+========================================================= */
+.activity-cloud span{
+  gap:12px !important;
+  align-items:center !important;
+}
+
+.activity-cloud .neo-mini-icon{
+  width:38px !important;
+  height:38px !important;
+  flex:0 0 38px !important;
+  border-radius:50% !important;
+  background:#FFFFFF !important;
+  border:1px solid #DCE5F0 !important;
+  box-shadow:0 4px 12px rgba(7,27,82,.05) !important;
+}
+
+.activity-cloud .neo-mini-icon svg{
+  width:22px !important;
+  height:22px !important;
+  stroke-width:1.9 !important;
+}
+
+@media(max-width:600px){
+  .activity-cloud .neo-mini-icon{
+    width:36px !important;
+    height:36px !important;
+    flex-basis:36px !important;
+  }
+
+  .activity-cloud .neo-mini-icon svg{
+    width:21px !important;
+    height:21px !important;
+  }
+}
+
+
+/* =========================================================
+   V3.3 — PLAYGROUP HERO NEO MASCOT
+   Adds existing Neo "hi/wave" character into the top-right hero space.
+   All approved V3.2 styling remains unchanged.
+========================================================= */
+#program-playgroup .program-detail-hero{
+  position:relative !important;
+  overflow:hidden !important;
+}
+
+#program-playgroup .program-detail-hero .program-detail-inner{
+  position:relative !important;
+  z-index:2 !important;
+  padding-right:260px !important;
+}
+
+.playgroup-hero-neo{
+  position:absolute;
+  right:3.5%;
+  bottom:-8px;
+  width:230px;
+  height:230px;
+  z-index:1;
+  pointer-events:none;
+  filter:drop-shadow(0 14px 20px rgba(7,27,82,.16));
+}
+
+.playgroup-hero-neo video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  display:block;
+  background:transparent;
+}
+
+@media(max-width:900px){
+  #program-playgroup .program-detail-hero .program-detail-inner{
+    padding-right:190px !important;
+  }
+
+  .playgroup-hero-neo{
+    width:175px;
+    height:175px;
+    right:2%;
+    bottom:-6px;
+  }
+}
+
+@media(max-width:650px){
+  #program-playgroup .program-detail-hero{
+    min-height:390px;
+  }
+
+  #program-playgroup .program-detail-hero .program-detail-inner{
+    padding-right:0 !important;
+    padding-bottom:140px !important;
+  }
+
+  .playgroup-hero-neo{
+    width:150px;
+    height:150px;
+    right:4%;
+    bottom:-5px;
+  }
+}
+
+
+/* =========================================================
+   V3.4 — NURSERY DETAIL PAGE
+   Uses the locked V3/V3.3 design language.
+========================================================= */
+#program-nursery .program-detail-hero{
+  position:relative !important;
+  overflow:hidden !important;
+}
+#program-nursery .program-detail-hero .program-detail-inner{
+  position:relative !important;
+  z-index:2 !important;
+  padding-right:260px !important;
+}
+.nursery-hero-neo{
+  position:absolute;
+  right:3.5%;
+  bottom:-8px;
+  width:230px;
+  height:230px;
+  z-index:1;
+  pointer-events:none;
+  filter:drop-shadow(0 14px 20px rgba(7,27,82,.16));
+}
+.nursery-hero-neo video{
+  width:100%;height:100%;object-fit:contain;object-position:center bottom;
+  display:block;background:transparent;
+}
+@media(max-width:900px){
+  #program-nursery .program-detail-hero .program-detail-inner{padding-right:190px !important;}
+  .nursery-hero-neo{width:175px;height:175px;right:2%;bottom:-6px;}
+}
+@media(max-width:650px){
+  #program-nursery .program-detail-hero{min-height:390px;}
+  #program-nursery .program-detail-hero .program-detail-inner{
+    padding-right:0 !important;padding-bottom:140px !important;
+  }
+  .nursery-hero-neo{width:150px;height:150px;right:4%;bottom:-5px;}
+}
+
+
+/* =========================================================
+   V3.5 — LKG / UKG / DAYCARE DETAIL PAGES
+   Uses the locked V3/V3.3 design language.
+========================================================= */
+#program-lkg .program-detail-hero,
+#program-ukg .program-detail-hero,
+#program-daycare .program-detail-hero{
+  position:relative !important;
+  overflow:hidden !important;
+}
+
+#program-lkg .program-detail-hero .program-detail-inner,
+#program-ukg .program-detail-hero .program-detail-inner,
+#program-daycare .program-detail-hero .program-detail-inner{
+  position:relative !important;
+  z-index:2 !important;
+  padding-right:260px !important;
+}
+
+.lkg-hero-neo,
+.ukg-hero-neo,
+.daycare-hero-neo{
+  position:absolute;
+  right:3.5%;
+  bottom:-8px;
+  width:230px;
+  height:230px;
+  z-index:1;
+  pointer-events:none;
+  filter:drop-shadow(0 14px 20px rgba(7,27,82,.16));
+}
+
+.lkg-hero-neo video,
+.ukg-hero-neo video,
+.daycare-hero-neo video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  display:block;
+  background:transparent;
+}
+
+@media(max-width:900px){
+  #program-lkg .program-detail-hero .program-detail-inner,
+  #program-ukg .program-detail-hero .program-detail-inner,
+  #program-daycare .program-detail-hero .program-detail-inner{
+    padding-right:190px !important;
+  }
+
+  .lkg-hero-neo,
+  .ukg-hero-neo,
+  .daycare-hero-neo{
+    width:175px;
+    height:175px;
+    right:2%;
+    bottom:-6px;
+  }
+}
+
+@media(max-width:650px){
+  #program-lkg .program-detail-hero,
+  #program-ukg .program-detail-hero,
+  #program-daycare .program-detail-hero{
+    min-height:390px;
+  }
+
+  #program-lkg .program-detail-hero .program-detail-inner,
+  #program-ukg .program-detail-hero .program-detail-inner,
+  #program-daycare .program-detail-hero .program-detail-inner{
+    padding-right:0 !important;
+    padding-bottom:140px !important;
+  }
+
+  .lkg-hero-neo,
+  .ukg-hero-neo,
+  .daycare-hero-neo{
+    width:150px;
+    height:150px;
+    right:4%;
+    bottom:-5px;
+  }
+}
+
+
+/* =========================================================
+   V3.6 — OTHER PROGRAMS + FRANCHISE DETAIL
+   Locked V3 visual system preserved.
+========================================================= */
+#program-franchise .program-detail-hero{
+  position:relative !important; overflow:hidden !important;
+}
+#program-franchise .program-detail-hero .program-detail-inner{
+  position:relative !important; z-index:2 !important; padding-right:260px !important;
+}
+.franchise-hero-neo{
+  position:absolute; right:3.5%; bottom:-8px; width:230px; height:230px;
+  z-index:1; pointer-events:none; filter:drop-shadow(0 14px 20px rgba(7,27,82,.16));
+}
+.franchise-hero-neo video{
+  width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block;background:transparent;
+}
+.franchise-strength{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:26px;
+}
+.franchise-strength article{
+  background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:22px;
+  box-shadow:0 8px 24px rgba(7,27,82,.045);position:relative;overflow:hidden;
+}
+.franchise-strength article::before{
+  content:"";position:absolute;left:22px;top:0;width:42px;height:3px;background:var(--gradient);
+}
+.franchise-strength b{display:block;color:#071B52;font-size:16px;margin-bottom:8px}
+.franchise-strength p{margin:0;color:#6a7588;font-size:14px;line-height:1.7}
+.franchise-path{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:26px;
+}
+.franchise-path div{
+  background:#fff;border:1px solid #e6ebf3;border-radius:16px;padding:18px 14px;
+  text-align:center;color:#071B52;font-weight:800;font-size:14px;
+}
+.franchise-path strong{
+  display:flex;width:30px;height:30px;margin:0 auto 10px;border-radius:50%;
+  align-items:center;justify-content:center;background:#f2f7ff;color:#0878DF;font-size:13px;
+}
+@media(max-width:900px){
+  #program-franchise .program-detail-hero .program-detail-inner{padding-right:190px !important}
+  .franchise-hero-neo{width:175px;height:175px;right:2%;bottom:-6px}
+  .franchise-strength{grid-template-columns:1fr 1fr}
+  .franchise-path{grid-template-columns:1fr 1fr}
+}
+@media(max-width:650px){
+  #program-franchise .program-detail-hero{min-height:390px}
+  #program-franchise .program-detail-hero .program-detail-inner{padding-right:0 !important;padding-bottom:140px !important}
+  .franchise-hero-neo{width:150px;height:150px;right:4%;bottom:-5px}
+  .franchise-strength{grid-template-columns:1fr}
+  .franchise-path{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   V3.7 — COMPLETE NEO ECOSYSTEM
+   Adds missing strategic layers while preserving locked V3.
+========================================================= */
+.neo-story-grid,.support-grid,.faq-grid{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:26px
+}
+.neo-story-card,.support-card,.faq-card{
+  background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:22px;
+  box-shadow:0 8px 24px rgba(7,27,82,.045);position:relative;overflow:hidden
+}
+.neo-story-card::before,.support-card::before{
+  content:"";position:absolute;left:22px;top:0;width:42px;height:3px;background:var(--gradient)
+}
+.neo-story-card b,.support-card b,.faq-card b{display:block;color:#071B52;font-size:16px;margin-bottom:8px}
+.neo-story-card p,.support-card p,.faq-card p{margin:0;color:#6a7588;font-size:14px;line-height:1.7}
+.journey-roadmap{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:28px
+}
+.journey-stage{
+  background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:22px;position:relative;
+  box-shadow:0 8px 24px rgba(7,27,82,.04)
+}
+.journey-stage::before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:var(--gradient)}
+.journey-stage small{display:block;color:#0878DF;font-weight:900;letter-spacing:1.2px;margin-bottom:8px}
+.journey-stage b{display:block;color:#071B52;font-size:17px;margin-bottom:8px}
+.journey-stage p{margin:0;color:#68758a;font-size:14px;line-height:1.65}
+.imls-flow{
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:25px
+}
+.imls-flow span{
+  background:#fff;border:1px solid #e5eaf2;border-radius:14px;padding:17px 10px;text-align:center;
+  color:#071B52;font-weight:850;font-size:14px;box-shadow:0 6px 18px rgba(7,27,82,.035)
+}
+.trust-strip{
+  background:#071B52;border-radius:24px;padding:32px;color:#fff;margin-top:28px;
+  box-shadow:0 18px 46px rgba(7,27,82,.14)
+}
+.trust-strip h3{color:#fff;margin-top:0}.trust-strip p{color:#d9e5f8}
+.enquiry-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
+.enquiry-tabs a{
+  text-decoration:none;background:#fff;border:1px solid #e4eaf2;border-radius:16px;padding:20px;
+  color:#071B52;font-weight:850;box-shadow:0 7px 20px rgba(7,27,82,.04)
+}
+.enquiry-tabs a small{display:block;color:#718096;font-weight:600;margin-top:6px;line-height:1.5}
+@media(max-width:900px){
+ .neo-story-grid,.support-grid,.faq-grid{grid-template-columns:1fr 1fr}
+ .journey-roadmap{grid-template-columns:1fr 1fr}
+ .imls-flow{grid-template-columns:repeat(3,1fr)}
+ .enquiry-tabs{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .neo-story-grid,.support-grid,.faq-grid,.journey-roadmap{grid-template-columns:1fr}
+ .imls-flow{grid-template-columns:1fr 1fr}
+}
+
+
+/* =========================================================
+   V3.8 FINAL — SHORT-FORM HOME + SECOND-LEVEL EXPLORE PAGES
+   Locked V3 visual language: premium, calm, branded, icon-led.
+========================================================= */
+
+/* HOME EXPLORE HUB */
+.explore-hub{
+  padding:72px 0;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(8,120,223,.045), transparent 22%),
+    radial-gradient(circle at 92% 18%, rgba(245,37,114,.035), transparent 20%),
+    linear-gradient(180deg,#FFFFFF 0%,#FAFCFF 100%);
+}
+.explore-head{
+  text-align:center;
+  max-width:820px;
+  margin:0 auto 34px;
+}
+.explore-head .eyebrow{margin-bottom:8px}
+.explore-head h2{
+  color:var(--navy);
+  font-size:clamp(30px,4vw,46px);
+  line-height:1.1;
+  margin-bottom:12px;
+}
+.explore-head p{
+  color:var(--muted);
+  font-size:16px;
+}
+.explore-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+}
+.explore-card{
+  position:relative;
+  min-height:250px;
+  padding:26px;
+  border-radius:22px;
+  background:#FFFFFF;
+  border:1px solid #E5ECF5;
+  box-shadow:0 12px 30px rgba(7,27,82,.055);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.explore-card::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;
+  height:4px;
+  background:var(--gradient);
+}
+.explore-card .explore-icon{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#F4F8FF;
+  border:1px solid #E4EBF5;
+  color:var(--navy);
+  margin-bottom:16px;
+}
+.explore-card .explore-icon svg{
+  width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.explore-card h3{
+  color:var(--navy);
+  font-size:19px;
+  margin-bottom:9px;
+}
+.explore-card p{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.65;
+  margin-bottom:18px;
+}
+.explore-card button{
+  margin-top:auto;
+  border:0;
+  background:transparent;
+  color:var(--blue);
+  font-weight:850;
+  padding:0;
+  text-align:left;
+  cursor:pointer;
+}
+.explore-card button::after{
+  content:" →";
+}
+.explore-card:hover{
+  transform:translateY(-5px);
+  transition:.22s ease;
+  box-shadow:0 18px 38px rgba(7,27,82,.08);
+}
+
+/* SECOND-LEVEL STRATEGIC PAGE HERO */
+.strategy-page .program-detail-hero{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(8,120,223,.28), transparent 27%),
+    radial-gradient(circle at 88% 22%, rgba(67,182,64,.13), transparent 22%),
+    radial-gradient(circle at 82% 86%, rgba(255,122,22,.10), transparent 24%),
+    #071B52!important;
+}
+.strategy-page .program-detail-hero .program-detail-inner{
+  position:relative!important;
+  z-index:2!important;
+  padding-right:265px!important;
+}
+.strategy-neo{
+  position:absolute;
+  right:3.5%;
+  bottom:-7px;
+  width:235px;
+  height:235px;
+  z-index:1;
+  pointer-events:none;
+  filter:drop-shadow(0 14px 20px rgba(7,27,82,.18));
+}
+.strategy-neo video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  background:transparent;
+  display:block;
+}
+
+/* BRANDED SECTION DIVIDERS */
+.strategy-page .program-block{
+  position:relative;
+  padding-top:34px;
+}
+.strategy-page .program-block::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:112px;
+  height:3px;
+  border-radius:999px;
+  background:var(--gradient);
+}
+.strategy-page .program-block.neo-difference::before{
+  left:34px;
+  top:18px;
+}
+
+/* ICON-LED FEATURE GRID */
+.strategy-features{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:26px;
+}
+.strategy-feature{
+  background:#fff;
+  border:1px solid #E5EAF2;
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 8px 24px rgba(7,27,82,.045);
+  position:relative;
+  overflow:hidden;
+}
+.strategy-feature::before{
+  content:"";
+  position:absolute;
+  top:0;left:22px;
+  width:42px;height:3px;
+  background:var(--gradient);
+}
+.strategy-feature .s-icon{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:#F5F9FF;border:1px solid #E5ECF5;color:var(--navy);
+  margin-bottom:14px;
+}
+.strategy-feature .s-icon svg{
+  width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.strategy-feature b{
+  display:block;
+  color:var(--navy);
+  font-size:16px;
+  margin-bottom:7px;
+}
+.strategy-feature p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.65;
+}
+
+/* Premium compact flow */
+.strategy-flow{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:10px;
+  margin-top:25px;
+}
+.strategy-flow span{
+  background:#fff;
+  border:1px solid #E5EAF2;
+  border-radius:14px;
+  padding:16px 10px;
+  text-align:center;
+  color:var(--navy);
+  font-weight:850;
+  font-size:13px;
+  box-shadow:0 6px 18px rgba(7,27,82,.035);
+}
+.strategy-flow span:nth-child(1){border-top:3px solid #0878DF}
+.strategy-flow span:nth-child(2){border-top:3px solid #43B640}
+.strategy-flow span:nth-child(3){border-top:3px solid #F5C400}
+.strategy-flow span:nth-child(4){border-top:3px solid #FF7A16}
+.strategy-flow span:nth-child(5){border-top:3px solid #F52572}
+.strategy-flow span:nth-child(6){border-top:3px solid #00A7C7}
+
+/* FAQ */
+.faq-list{
+  display:grid;
+  gap:12px;
+  margin-top:24px;
+}
+.faq-item{
+  background:#fff;
+  border:1px solid #E5EAF2;
+  border-radius:16px;
+  padding:20px 22px;
+}
+.faq-item b{
+  color:var(--navy);
+  display:block;
+  margin-bottom:7px;
+}
+.faq-item p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+
+/* Better CTA */
+.strategy-cta{
+  position:relative;
+  overflow:hidden;
+  background:#fff;
+  border:1px solid #E4EAF2;
+  border-radius:24px;
+  padding:34px;
+  text-align:center;
+  box-shadow:0 12px 32px rgba(7,27,82,.06);
+}
+.strategy-cta::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:4px;
+  background:var(--gradient);
+}
+.strategy-cta h3{color:var(--navy);margin-bottom:8px}
+.strategy-cta p{color:var(--muted);max-width:680px;margin:0 auto 20px}
+
+/* Mobile */
+@media(max-width:950px){
+  .explore-grid,.strategy-features{grid-template-columns:1fr 1fr}
+  .strategy-flow{grid-template-columns:repeat(3,1fr)}
+  .strategy-page .program-detail-hero .program-detail-inner{padding-right:190px!important}
+  .strategy-neo{width:175px;height:175px;right:2%;bottom:-6px}
+}
+@media(max-width:650px){
+  .explore-hub{padding:52px 0}
+  .explore-grid,.strategy-features{grid-template-columns:1fr}
+  .strategy-flow{grid-template-columns:1fr 1fr}
+  .strategy-page .program-detail-hero{min-height:390px}
+  .strategy-page .program-detail-hero .program-detail-inner{
+    padding-right:0!important;
+    padding-bottom:145px!important;
+  }
+  .strategy-neo{width:150px;height:150px;right:4%;bottom:-5px}
+}
+
 </style>
 
 </head>
@@ -3266,7 +4763,7 @@ IMLS
 Why Neo
 </a>
 
-<a href="#franchise">
+<a href="#franchise" data-open-program="franchise">
 Franchise
 </a>
 
@@ -3306,7 +4803,7 @@ id="mobileMenu">
 
 <a href="#whyneo">Why Neo</a>
 
-<a href="#franchise">Franchise</a>
+<a href="#franchise" data-open-program="franchise">Franchise</a>
 
 <a href="#contact">Contact</a>
 
@@ -3379,7 +4876,7 @@ Explore Neo School
 
 
 <a
-href="#franchise"
+href="#franchise" data-open-program="franchise"
 class="btn btn-brand">
 
 Partner With Us
@@ -3540,93 +5037,1090 @@ Discover the Neo Way
 
 
 <!-- =========================================================
-     PROGRAMS
+     PROGRAMS — INTERACTIVE HUB
 ========================================================= -->
+<section class="soft neo-section" id="programs" data-scene="walk" data-video="neo-walk.webm">
+  <div class="container">
+    <div class="section-title reveal">
+      <div class="eyebrow">OUR PROGRAMS</div>
+      <h2>Every Stage Designed With Purpose.</h2>
+      <p>Thoughtfully designed learning and care experiences that help every child Learn • Grow • Lead.</p>
+    </div>
 
-<section
-class="soft neo-section"
-id="programs"
-data-scene="walk"
-data-video="neo-walk.webm">
+    <div class="program-cards">
+      <div class="program-card reveal" data-program="playgroup">
+        <div class="program-icon">🎈</div>
+        <h3>Playgroup</h3>
+        <span class="program-age">AGE 2+ YEARS</span>
+        <p>Explore • Play • Connect — a joyful first step into school through movement, language, sensory discovery and social interaction.</p>
+        <button class="program-open" type="button">Explore Program</button>
+      </div>
 
-<div class="container">
+      <div class="program-card reveal" data-program="nursery">
+        <div class="program-icon">🌱</div>
+        <h3>Nursery</h3>
+        <span class="program-age">AGE 3+ YEARS</span>
+        <p>Discover • Communicate • Create — building language readiness, phonics foundations, pre-writing, early numeracy and independence.</p>
+        <button class="program-open" type="button">Explore Program</button>
+      </div>
 
+      <div class="program-card reveal" data-program="lkg">
+        <div class="program-icon">🔤</div>
+        <h3>LKG</h3>
+        <span class="program-age">AGE 4+ YEARS</span>
+        <p>Understand • Read • Think — structured phonics, reading readiness, writing, mathematical thinking and meaningful concept learning.</p>
+        <button class="program-open" type="button">Explore Program</button>
+      </div>
 
-<div class="section-title reveal">
+      <div class="program-card reveal" data-program="ukg">
+        <div class="program-icon">🚀</div>
+        <h3>UKG</h3>
+        <span class="program-age">AGE 5+ YEARS</span>
+        <p>Apply • Express • Lead — strengthening reading, writing, numeracy, confidence, communication and school readiness.</p>
+        <button class="program-open" type="button">Explore Program</button>
+      </div>
 
+      <div class="program-card daycare-card reveal" data-program="daycare">
+        <div class="program-icon">🏡</div>
+        <h3>Daycare</h3>
+        <span class="program-age">EXTENDED CARE</span>
+        <p>Care • Play • Belong — a warm, supervised environment with play, rest, routines, creative engagement and age-appropriate experiences.</p>
+        <button class="program-open" type="button">Explore Program</button>
+      </div>
 
-<div class="eyebrow">
+      <div class="program-card other-card reveal" data-program="other">
+        <div class="program-icon">✨</div>
+        <h3>Other Programs</h3>
+        <span class="program-age">BEYOND THE CLASSROOM</span>
+        <p>Weekend Club, Phonics Program, Summer Camp, Parent Workshops and Teacher Training — designed for continued learning and enrichment.</p>
+        <button class="program-open" type="button">Explore Programs</button>
+      </div>
+    </div>
+  </div>
+</section>
 
-OUR LEARNING WORLD
+<!-- PLAYGROUP — FULL INTERACTIVE PROGRAM PAGE -->
+<section class="program-detail" id="program-playgroup" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • POWERED BY IMLS</div>
+    </div>
+  </div>
 
-</div>
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">PLAYGROUP • AGE 2+ YEARS</div>
+      <h2>Little Steps. Big Discoveries.</h2>
+      <p>The beginning of a joyful learning journey — designed to help young children feel secure, explore freely, communicate confidently and develop readiness for future learning.</p>
 
+      <div class="program-quick-grid">
+        <div class="program-quick"><span>LEARNING APPROACH</span><strong>Play & Experience Led</strong></div>
+        <div class="program-quick"><span>CORE FOCUS</span><strong>Whole Child Development</strong></div>
+        <div class="program-quick"><span>ADMISSIONS</span><strong>Enquire for Current Details</strong></div>
+      </div>
+    </div>
 
-<h2>
+    <div class="playgroup-hero-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
 
-Strong Foundations.
-Happy Childhood.
+  <div class="program-content">
+    <div class="program-detail-inner">
 
-</h2>
+      <div class="program-block">
+        <div class="eyebrow">THE FIRST FOUNDATION</div>
+        <h3>More Than ABCs. A Confident Beginning.</h3>
+        <p>At Neo Playgroup, the goal is not to rush children into formal academics. We create a secure, language-rich and engaging environment where children gradually learn to explore, interact, express themselves, follow simple routines and enjoy being part of a learning community.</p>
+        <div class="program-flow">
+          <span>Feel Safe</span><span>Explore</span><span>Communicate</span><span>Socialise</span><span>Become Independent</span><span>Build Readiness</span>
+        </div>
+      </div>
 
+      <div class="program-block">
+        <div class="eyebrow">WHAT WE DEVELOP</div>
+        <h3>A Whole-Child Learning Framework.</h3>
+        <p>Every experience is planned around developmental readiness rather than isolated worksheets or memorisation.</p>
+        <div class="learning-grid">
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Language & Communication</b><p>Listening, vocabulary, rhymes, sound awareness, conversation and confident expression.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Physical Development</b><p>Gross-motor movement, balance, coordination and fine-motor control through purposeful play.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Cognitive Development</b><p>Observation, matching, sorting, simple patterns, cause-and-effect and early problem solving.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Social & Emotional Growth</b><p>Sharing, turn-taking, interaction, emotional security, empathy and classroom confidence.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 11V5a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v8c0 5-3 8-7 8-3 0-5-2-6-5l-1-4a1.5 1.5 0 0 1 3-.8L9 14"/></svg></span><b>Sensory Development</b><p>Learning through touch, sound, colour, texture, movement and hands-on exploration.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h2a6 6 0 0 0-3-11z"/><circle cx="7.5" cy="10" r=".8"/><circle cx="10" cy="6.8" r=".8"/><circle cx="15" cy="7.5" r=".8"/></svg></span><b>Creative Expression</b><p>Art, music, movement, imagination, pretend play and opportunities to make choices.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></span><b>Independence & Life Skills</b><p>Simple routines, self-help habits, responsibility and age-appropriate independence.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5M14 12h5M14 17h5"/><path d="M5 14l4 4m0-4-4 4"/></svg></span><b>Early Numeracy Readiness</b><p>Quantity awareness, shapes, sizes, comparison, sequence and patterns through real experiences.</p></div>
+        </div>
+      </div>
 
-<p>
+      <div class="program-block">
+        <div class="eyebrow">THE NEO WAY</div>
+        <h3>How Children Learn at Neo.</h3>
+        <p>Instead of starting with explanation and worksheets, learning begins with meaningful experience. Children see, touch, move, talk, try and express — helping concepts become understandable and memorable.</p>
+        <div class="program-flow">
+          <span>Experience</span><span>Explore</span><span>Engage</span><span>Understand</span><span>Practice</span><span>Express</span>
+        </div>
+      </div>
 
-Age-appropriate learning experiences
-designed for complete
-child development.
+      <div class="program-block">
+        <div class="eyebrow">LEARNING THROUGH PLAY</div>
+        <h3>Purposeful Experiences Every Day.</h3>
+        <div class="activity-cloud">
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><path d="M4 18c.5-3 2-5 4-5s3.5 2 4 5m0 0c.5-3 2-5 4-5s3.5 2 4 5"/></svg></i>Circle Time</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></i>Rhymes</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H4z"/><path d="M20 5h-3a3 3 0 0 0-3 3v11a3 3 0 0 1 3-3h3z"/></svg></i>Storytelling</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M8 11V6m3 5V4m3 7V5m3 7V8"/><path d="M8 10c-2-2-4 0-3 2l3 6c1 2 3 3 5 3 4 0 6-3 6-7v-2"/></svg></i>Sensory Play</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 7c3-2 5-2 8 0v7c-2 4-6 4-8 0zM12 7c3-2 5-2 8 0v7c-2 4-6 4-8 0"/><path d="M6 10h2m6 0h2"/></svg></i>Pretend Play</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="7"/><rect x="13" y="12" width="7" height="7"/><rect x="8.5" y="5" width="7" height="7"/></svg></i>Blocks</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7v3a2 2 0 1 0 4 0V4h5v6h-3a2 2 0 1 0 0 4h3v6h-7v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/></svg></i>Puzzles</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></i>Art</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M10 17V6l9-2v11"/><circle cx="7" cy="17" r="3"/><circle cx="16" cy="15" r="3"/></svg></i>Music & Movement</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-4 3m4-3 4 3m-4-3v7M7 9l5 3 5-3"/></svg></i>Outdoor Play</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M6 18l5-5m-2-2 2 2 7-7-2-2z"/><circle cx="6" cy="18" r="2"/></svg></i>Fine-Motor Stations</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></i>Conversation Time</span><span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16c6 1 12-3 14-12z"/><path d="M5 20c2-5 6-8 11-11"/></svg></i>Nature Exploration</span>
+        </div>
+      </div>
 
-</p>
+      <div class="program-block">
+        <div class="eyebrow">LANGUAGE FOUNDATION</div>
+        <h3>Preparing for Phonics Without Pressure.</h3>
+        <p>Playgroup builds the listening and oral-language foundation that later supports structured phonics. Children experience rich vocabulary, rhymes, sound awareness, stories and conversation before formal reading expectations are introduced.</p>
+      </div>
 
+      <div class="program-block">
+        <div class="eyebrow">A DAY AT NEO</div>
+        <h3>A Balanced Rhythm of Learning, Play and Care.</h3>
+        <div class="day-journey">
+          <div class="day-step">Welcome & Free Exploration</div>
+          <div class="day-step">Circle Time & Conversation</div>
+          <div class="day-step">Language, Rhymes & Stories</div>
+          <div class="day-step">Concept-Based Activity</div>
+          <div class="day-step">Snack & Life Skills</div>
+          <div class="day-step">Motor & Movement Play</div>
+          <div class="day-step">Creative / Sensory Experience</div>
+          <div class="day-step">Reflection, Music & Goodbye</div>
+        </div>
+      </div>
 
-</div>
+      <div class="program-block">
+        <div class="eyebrow">PROGRESS WITHOUT PRESSURE</div>
+        <h3>We Observe Growth, Not Rank Children.</h3>
+        <p>Teachers observe participation, communication, motor development, social behaviour, independence, cognitive readiness and emotional growth. The purpose is to understand each child's journey and support the next step — not to create pressure through marks or ranking.</p>
+      </div>
 
+      <div class="program-block">
+        <div class="eyebrow">PARENT PARTNERSHIP</div>
+        <h3>School + Teacher + Parent.</h3>
+        <p>Meaningful parent communication helps learning continue beyond the classroom. Progress updates, simple home-extension ideas, orientations and developmental feedback can help families understand and support the child's growth.</p>
+      </div>
 
+      <div class="program-block neo-difference">
+        <div class="eyebrow">WHY NEO PLAYGROUP?</div>
+        <h3>Not Just ABCs. Not Just Worksheets. Not Just Daycare.</h3>
+        <p>A thoughtfully designed beginning that combines emotional security, play, language, movement, exploration and developmental readiness.</p>
+        <div class="neo-difference-grid">
+          <div><b>Child-Centric</b><span>Learning respects age, readiness, curiosity and individual pace.</span></div>
+          <div><b>Play & Activity Led</b><span>Children learn by doing, exploring, communicating and experiencing.</span></div>
+          <div><b>Psychology-Informed</b><span>Confidence, emotional security and developmental readiness remain central.</span></div>
+          <div><b>Language Rich</b><span>Conversation, vocabulary, stories, rhymes and sound awareness build strong foundations.</span></div>
+          <div><b>Whole Child Growth</b><span>Academic readiness grows together with physical, social, emotional and cognitive development.</span></div>
+          <div><b>Parent Connected</b><span>Families become meaningful partners in the child's learning journey.</span></div>
+        </div>
+      </div>
 
-<div class="program-cards">
+      <div class="program-cta">
+        <h3>Ready for Your Child's First Joyful Learning Journey?</h3>
+        <p>Connect with Neo School India for admissions, program details and a school visit.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="#contact" data-close-program>Admission Enquiry</a>
+          <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20the%20Playgroup%20program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a>
+        </div>
+      </div>
 
-<div class="program-card reveal">
-<div class="program-icon">🎈</div>
-<h3>Play Group</h3>
-<span class="program-age">AGE 2+ YEARS</span>
-<p>A joyful first step into school through play, movement, language, sensory exploration and social interaction.</p>
-</div>
-
-<div class="program-card reveal">
-<div class="program-icon">🌱</div>
-<h3>Nursery</h3>
-<span class="program-age">AGE 3+ YEARS</span>
-<p>Building communication, early literacy, pre-math, fine-motor skills, confidence and independent learning habits.</p>
-</div>
-
-<div class="program-card reveal">
-<div class="program-icon">🔤</div>
-<h3>LKG</h3>
-<span class="program-age">AGE 4+ YEARS</span>
-<p>Strong foundations in phonics, reading readiness, numbers, concepts, creativity and meaningful classroom experiences.</p>
-</div>
-
-<div class="program-card reveal">
-<div class="program-icon">🚀</div>
-<h3>UKG</h3>
-<span class="program-age">AGE 5+ YEARS</span>
-<p>Confident reading, writing, mathematical thinking, communication and school-readiness through activity-based learning.</p>
-</div>
-
-<div class="program-card reveal">
-<div class="program-icon">🏡</div>
-<h3>Daycare</h3>
-<span class="program-age">SAFE • CARING • ENGAGING</span>
-<p>A warm, secure and engaging environment with age-appropriate routines, play, rest, interaction and guided activities.</p>
-</div>
-
-</div>
-
-</div>
-
+    </div>
+  </div>
 </section>
 
 
+<!-- NURSERY — FULL INTERACTIVE PROGRAM PAGE -->
+<section class="program-detail" id="program-nursery" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • POWERED BY IMLS</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">NURSERY • AGE 3+ YEARS</div>
+      <h2>Curious Minds. Confident Beginnings.</h2>
+      <p>A joyful transition from exploration to purposeful early learning — strengthening language, phonics readiness, pre-writing, early numeracy, thinking, creativity and independence through meaningful experiences.</p>
+
+      <div class="program-quick-grid">
+        <div class="program-quick"><span>LEARNING APPROACH</span><strong>Activity & Experience Led</strong></div>
+        <div class="program-quick"><span>CORE FOCUS</span><strong>Foundation Skills & Confidence</strong></div>
+        <div class="program-quick"><span>ADMISSIONS</span><strong>Enquire for Current Details</strong></div>
+      </div>
+    </div>
+
+    <div class="nursery-hero-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+
+      <div class="program-block">
+        <div class="eyebrow">WELCOME TO NURSERY</div>
+        <h3>From Curiosity to Confident Learning.</h3>
+        <p>Nursery is where children's natural curiosity begins to connect with structured early-learning experiences. At Neo, we introduce concepts gently through conversation, stories, movement, hands-on activities and purposeful play — helping children become more expressive, attentive, independent and ready to learn.</p>
+        <div class="program-flow">
+          <span>Explore</span><span>Listen</span><span>Communicate</span><span>Recognise</span><span>Practice</span><span>Build Confidence</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">WHAT WE DEVELOP</div>
+        <h3>Strong Foundations Across Every Developmental Area.</h3>
+        <p>Nursery learning balances early academic readiness with language, physical, cognitive, social, emotional and creative development.</p>
+        <div class="learning-grid">
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Language & Communication</b><p>Vocabulary, listening, conversation, storytelling, rhymes and confident oral expression.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><b>Phonics Foundation</b><p>Sound awareness, listening discrimination and a systematic introduction to early letter-sound relationships.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></span><b>Pre-Writing Readiness</b><p>Grip, hand strength, eye-hand coordination, patterns, strokes and fine-motor preparation for writing.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5M14 12h5M14 17h5"/><path d="M5 14l4 4m0-4-4 4"/></svg></span><b>Early Numeracy</b><p>Number sense, quantity, comparison, shapes, sorting, patterns, sequence and mathematical vocabulary.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Cognitive & Concept Skills</b><p>Observation, classification, matching, memory, sequencing, reasoning and simple problem solving.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Physical Development</b><p>Balance, coordination, body control, gross-motor movement and refined fine-motor skills.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Social & Emotional Growth</b><p>Sharing, cooperation, classroom routines, emotional expression, empathy and positive peer interaction.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h2a6 6 0 0 0-3-11z"/><circle cx="7.5" cy="10" r=".8"/><circle cx="10" cy="6.8" r=".8"/><circle cx="15" cy="7.5" r=".8"/></svg></span><b>Creativity & Independence</b><p>Art, music, imagination, choice-making, self-help routines and growing responsibility.</p></div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">THE NEO WAY OF LEARNING</div>
+        <h3>Experience First. Understanding Next.</h3>
+        <p>Neo Nursery connects every new idea to an experience children can see, hear, touch, discuss or do. Teachers guide children from exploration toward understanding and then provide age-appropriate opportunities to practise and express what they have learned.</p>
+        <div class="program-flow">
+          <span>Experience</span><span>Explore</span><span>Engage</span><span>Understand</span><span>Practice</span><span>Express</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">LEARNING THROUGH PLAY</div>
+        <h3>Purposeful Experiences Every Day.</h3>
+        <div class="activity-cloud">
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><path d="M4 18c.5-3 2-5 4-5s3.5 2 4 5m0 0c.5-3 2-5 4-5s3.5 2 4 5"/></svg></i>Circle Time</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></i>Phonics & Sound Play</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H4z"/><path d="M20 5h-3a3 3 0 0 0-3 3v11a3 3 0 0 1 3-3h3z"/></svg></i>Storytelling</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></i>Pre-Writing Play</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5M14 12h5M14 17h5"/></svg></i>Number & Shape Games</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="7"/><rect x="13" y="12" width="7" height="7"/><rect x="8.5" y="5" width="7" height="7"/></svg></i>Blocks & Construction</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7v3a2 2 0 1 0 4 0V4h5v6h-3a2 2 0 1 0 0 4h3v6h-7v-3a2 2 0 1 0-4 0v3H4v-6h3a2 2 0 1 0 0-4H4z"/></svg></i>Puzzles & Thinking Games</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></i>Music & Movement</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-4 3m4-3 4 3m-4-3v7M7 9l5 3 5-3"/></svg></i>Outdoor Play</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16c6 1 12-3 14-12z"/><path d="M5 20c2-5 6-8 11-11"/></svg></i>Nature & Discovery</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h2a6 6 0 0 0-3-11z"/></svg></i>Art & Creativity</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></i>Life Skills & Routines</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">EARLY PHONICS</div>
+        <h3>Building the Path Toward Reading.</h3>
+        <p>Nursery moves from the listening and sound-awareness foundation of Playgroup toward a more systematic phonics introduction. Children strengthen auditory discrimination, recognise sounds in spoken language and begin connecting selected letter forms with their sounds through multi-sensory activities.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">A DAY AT NEO</div>
+        <h3>Learning, Movement, Creativity and Connection.</h3>
+        <div class="day-journey">
+          <div class="day-step">Welcome & Independent Exploration</div>
+          <div class="day-step">Circle Time & Conversation</div>
+          <div class="day-step">Phonics / Language Experience</div>
+          <div class="day-step">Concept & Numeracy Activity</div>
+          <div class="day-step">Snack, Routines & Life Skills</div>
+          <div class="day-step">Movement / Outdoor Learning</div>
+          <div class="day-step">Creative, Fine-Motor or Discovery Time</div>
+          <div class="day-step">Story, Reflection & Goodbye</div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PROGRESS WITHOUT PRESSURE</div>
+        <h3>Understanding Each Child's Learning Journey.</h3>
+        <p>Teachers observe language development, phonics readiness, pre-writing control, early numeracy, participation, thinking skills, motor development, independence and social-emotional growth. Progress information helps teachers plan the next learning experience and helps parents understand development beyond marks.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PARENT PARTNERSHIP</div>
+        <h3>Growing Together, School and Home.</h3>
+        <p>Parents receive meaningful communication about classroom learning and development, along with practical ways to reinforce language, routines, reading readiness and independence at home without creating unnecessary academic pressure.</p>
+      </div>
+
+      <div class="program-block neo-difference">
+        <div class="eyebrow">WHY NEO NURSERY?</div>
+        <h3>Strong Foundations Without Taking the Joy Out of Childhood.</h3>
+        <p>Neo Nursery combines purposeful early academics with play, communication, movement, creativity and whole-child development.</p>
+        <div class="neo-difference-grid">
+          <div><b>Phonics Foundation</b><span>Sound awareness and early phonics develop progressively rather than through rote letter memorisation.</span></div>
+          <div><b>Concept Before Worksheet</b><span>Children experience and understand ideas before being asked to represent or practise them.</span></div>
+          <div><b>Pre-Writing With Purpose</b><span>Fine-motor strength and control are developed before expecting extended pencil work.</span></div>
+          <div><b>Thinking & Communication</b><span>Children are encouraged to observe, question, speak, explain and solve simple problems.</span></div>
+          <div><b>Whole-Child Balance</b><span>Language and numeracy grow alongside physical, creative, social and emotional development.</span></div>
+          <div><b>Confidence & Independence</b><span>Daily routines and positive classroom experiences help children become increasingly capable learners.</span></div>
+        </div>
+      </div>
+
+      <div class="program-cta">
+        <h3>Ready to Discover Neo Nursery?</h3>
+        <p>Connect with Neo School India for admissions, program details and a school visit.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="#contact" data-close-program>Admission Enquiry</a>
+          <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20the%20Nursery%20program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- LKG — FULL INTERACTIVE PROGRAM PAGE -->
+<section class="program-detail" id="program-lkg" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • POWERED BY IMLS</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">LKG • AGE 4+ YEARS</div>
+      <h2>Think. Read. Create. Grow.</h2>
+      <p>A purposeful stage where children begin connecting phonics, early reading, writing, numeracy, concepts, creativity and communication into a more confident learning experience.</p>
+
+      <div class="program-quick-grid">
+        <div class="program-quick"><span>LEARNING APPROACH</span><strong>Concept & Skill Integrated</strong></div>
+        <div class="program-quick"><span>CORE FOCUS</span><strong>Reading, Writing & Thinking</strong></div>
+        <div class="program-quick"><span>ADMISSIONS</span><strong>Enquire for Current Details</strong></div>
+      </div>
+    </div>
+
+    <div class="lkg-hero-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+
+      <div class="program-block">
+        <div class="eyebrow">WELCOME TO LKG</div>
+        <h3>Where Foundations Become Real Learning Skills.</h3>
+        <p>LKG moves children from early readiness toward more structured learning while preserving curiosity and joy. At Neo, children strengthen phonics, reading readiness, writing control, number concepts, reasoning, general awareness and communication through activities that connect experience with understanding.</p>
+        <div class="program-flow">
+          <span>Observe</span><span>Connect</span><span>Read</span><span>Write</span><span>Reason</span><span>Express</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">WHAT WE DEVELOP</div>
+        <h3>Balanced Readiness for Confident Learning.</h3>
+        <p>LKG develops literacy and numeracy foundations together with thinking, creativity, communication, physical development and independence.</p>
+        <div class="learning-grid">
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Language & Communication</b><p>Sentence building, listening comprehension, vocabulary, storytelling, conversation and confident expression.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><b>Structured Phonics</b><p>Sound-symbol relationships, blending readiness, segmenting awareness and progressive early reading skills.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></span><b>Writing Readiness</b><p>Letter formation, pencil control, patterning, word-level writing readiness and neat written habits.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5M14 12h5M14 17h5"/><path d="M5 14l4 4m0-4-4 4"/></svg></span><b>Numeracy & Mathematical Thinking</b><p>Number concepts, quantity, comparison, sequence, operations readiness, shapes, patterns and problem solving.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Thinking & Reasoning</b><p>Classification, memory, sequencing, inference, pattern recognition and age-appropriate logical thinking.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16c6 1 12-3 14-12z"/><path d="M5 20c2-5 6-8 11-11"/></svg></span><b>Environmental Awareness</b><p>Understanding self, family, community, nature, living things, routines and the world around us.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Physical & Fine-Motor Growth</b><p>Coordination, balance, movement, hand strength, visual-motor control and refined classroom skills.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Confidence & Social Growth</b><p>Responsibility, cooperation, classroom participation, emotional regulation and growing independence.</p></div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">THE NEO WAY OF LEARNING</div>
+        <h3>Experience. Understand. Apply.</h3>
+        <p>Children first interact with a concept, discuss and explore it, then move toward guided practice and application. This helps learning feel meaningful rather than mechanical.</p>
+        <div class="program-flow">
+          <span>Experience</span><span>Explore</span><span>Understand</span><span>Practice</span><span>Apply</span><span>Express</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">LEARNING THROUGH PLAY</div>
+        <h3>Purposeful Learning With Active Participation.</h3>
+        <div class="activity-cloud">
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i>Language Games</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></i>Phonics Practice</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/></svg></i>Guided Reading</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2"/></svg></i>Writing Stations</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5"/></svg></i>Math Manipulatives</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7v3a2 2 0 1 0 4 0V4"/></svg></i>Puzzles & Logic</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16"/></svg></i>Nature & EVS</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></i>Art & Creativity</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></i>Music & Movement</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/></svg></i>Outdoor Learning</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></i>Life Skills</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i>Show & Tell</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">READING & PHONICS</div>
+        <h3>Building Meaningful Early Reading Skills.</h3>
+        <p>LKG develops a stronger phonics base through progressive sound-symbol understanding, blending readiness, oral segmentation, word awareness and guided early reading experiences.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">A DAY AT NEO</div>
+        <h3>Balanced Learning Across the Day.</h3>
+        <div class="day-journey">
+          <div class="day-step">Welcome & Conversation</div>
+          <div class="day-step">Phonics / Language Learning</div>
+          <div class="day-step">Reading or Writing Experience</div>
+          <div class="day-step">Numeracy / Concept Activity</div>
+          <div class="day-step">Snack & Life Skills</div>
+          <div class="day-step">Movement / Outdoor Learning</div>
+          <div class="day-step">Creative / EVS / Discovery Time</div>
+          <div class="day-step">Story, Reflection & Goodbye</div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PROGRESS WITHOUT PRESSURE</div>
+        <h3>Tracking Growth Across Skills, Not Just Worksheets.</h3>
+        <p>Teachers observe reading readiness, phonics progress, writing control, numeracy understanding, concept learning, participation, communication, independence and social-emotional development.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PARENT PARTNERSHIP</div>
+        <h3>Supporting Learning Beyond the Classroom.</h3>
+        <p>Parents receive meaningful updates and simple guidance to reinforce language, reading habits, routines, numeracy thinking and independence at home without creating unnecessary pressure.</p>
+      </div>
+
+      <div class="program-block neo-difference">
+        <div class="eyebrow">WHY NEO LKG?</div>
+        <h3>Stronger Skills. Deeper Understanding. Happier Learning.</h3>
+        <p>Neo LKG connects structured early academics with activity-based learning, communication, creativity and whole-child development.</p>
+        <div class="neo-difference-grid">
+          <div><b>Phonics With Progression</b><span>Reading foundations build step by step rather than through memorisation alone.</span></div>
+          <div><b>Concept Before Repetition</b><span>Children understand ideas before moving into repeated practice.</span></div>
+          <div><b>Writing With Readiness</b><span>Writing expectations grow with motor control, confidence and age-appropriate skill development.</span></div>
+          <div><b>Thinking Matters</b><span>Reasoning, observation, questioning and expression are encouraged throughout learning.</span></div>
+          <div><b>Balanced Development</b><span>Academic learning grows alongside creativity, movement, social and emotional development.</span></div>
+          <div><b>School Confidence</b><span>Children gradually become more independent, communicative and ready for higher learning demands.</span></div>
+        </div>
+      </div>
+
+      <div class="program-cta">
+        <h3>Ready to Explore Neo LKG?</h3>
+        <p>Connect with Neo School India for admissions, program details and a school visit.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="#contact" data-close-program>Admission Enquiry</a>
+          <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20the%20LKG%20program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- UKG — FULL INTERACTIVE PROGRAM PAGE -->
+<section class="program-detail" id="program-ukg" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • POWERED BY IMLS</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">UKG • AGE 5+ YEARS</div>
+      <h2>Ready to Learn. Ready to Lead.</h2>
+      <p>A school-readiness stage that strengthens reading, writing, numeracy, communication, reasoning, independence and confidence while keeping learning meaningful and joyful.</p>
+
+      <div class="program-quick-grid">
+        <div class="program-quick"><span>LEARNING APPROACH</span><strong>Apply & Express</strong></div>
+        <div class="program-quick"><span>CORE FOCUS</span><strong>School Readiness & Independence</strong></div>
+        <div class="program-quick"><span>ADMISSIONS</span><strong>Enquire for Current Details</strong></div>
+      </div>
+    </div>
+
+    <div class="ukg-hero-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+
+      <div class="program-block">
+        <div class="eyebrow">WELCOME TO UKG</div>
+        <h3>Building Independent and School-Ready Learners.</h3>
+        <p>UKG helps children bring together the foundations built in earlier years. Children strengthen reading, writing, numeracy, concept understanding, communication and independent work habits while continuing to learn through meaningful activities, exploration and discussion.</p>
+        <div class="program-flow">
+          <span>Read</span><span>Write</span><span>Think</span><span>Apply</span><span>Communicate</span><span>Lead</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">WHAT WE DEVELOP</div>
+        <h3>Confident Readiness for the Next Stage of Schooling.</h3>
+        <p>UKG balances academic preparedness with thinking, communication, creativity, independence and emotional confidence.</p>
+        <div class="learning-grid">
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Reading & Language</b><p>Progressive phonics application, word reading, sentence understanding, vocabulary and comprehension readiness.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/></svg></span><b>Writing & Expression</b><p>Letter formation, word writing, sentence readiness, written expression and improved pencil control.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5"/></svg></span><b>Numeracy & Operations</b><p>Number sense, quantity, operations readiness, comparison, sequence, shapes, measurement ideas and problem solving.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Reasoning & Problem Solving</b><p>Logic, sequencing, patterns, inference, classification and age-appropriate reasoning across learning situations.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16"/></svg></span><b>EVS & General Awareness</b><p>Understanding people, places, nature, community, health, safety, environment and everyday life.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Communication & Confidence</b><p>Speaking clearly, presenting ideas, listening actively, asking questions and participating confidently.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10"/></svg></span><b>Social & Emotional Readiness</b><p>Responsibility, cooperation, self-regulation, resilience and positive peer interaction.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></span><b>Independence & Life Skills</b><p>Organisation, self-help routines, task completion, classroom responsibility and growing learner independence.</p></div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">THE NEO WAY OF LEARNING</div>
+        <h3>Understand. Apply. Express.</h3>
+        <p>UKG children are encouraged not only to know an answer, but to explain, apply and use what they learn. Concepts move from experience to understanding and then into purposeful practice and expression.</p>
+        <div class="program-flow">
+          <span>Experience</span><span>Understand</span><span>Practice</span><span>Apply</span><span>Reflect</span><span>Express</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">LEARNING THROUGH PLAY</div>
+        <h3>Active Learning for School Readiness.</h3>
+        <div class="activity-cloud">
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></i>Phonics & Reading</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/></svg></i>Story Comprehension</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2"/></svg></i>Writing Practice</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M5 7h4M7 5v4M14 6h5"/></svg></i>Math Games</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7v3a2 2 0 1 0 4 0V4"/></svg></i>Logic & Puzzles</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16"/></svg></i>EVS & Discovery</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i>Show & Tell</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></i>Art & Projects</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></i>Music & Movement</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/></svg></i>Outdoor Learning</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></i>Life Skills</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i>Group Discussion</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">SCHOOL READINESS</div>
+        <h3>Prepared for the Next Classroom, Without Losing Curiosity.</h3>
+        <p>Neo UKG builds readiness in reading, writing, numeracy, communication, routines, attention, independence and classroom confidence so children can transition smoothly into the next stage of formal schooling.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">A DAY AT NEO</div>
+        <h3>A Purposeful Rhythm for Independent Learners.</h3>
+        <div class="day-journey">
+          <div class="day-step">Welcome & Independent Start</div>
+          <div class="day-step">Reading / Phonics Learning</div>
+          <div class="day-step">Writing / Language Application</div>
+          <div class="day-step">Math / Problem-Solving Activity</div>
+          <div class="day-step">Snack & Life Skills</div>
+          <div class="day-step">EVS / Project / Discovery</div>
+          <div class="day-step">Movement / Creative Learning</div>
+          <div class="day-step">Reflection, Sharing & Goodbye</div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PROGRESS WITHOUT PRESSURE</div>
+        <h3>Readiness Is More Than Marks.</h3>
+        <p>Progress is observed across reading, writing, numeracy, comprehension, communication, problem solving, independence, routines and social-emotional readiness.</p>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PARENT PARTNERSHIP</div>
+        <h3>A Smooth Transition to the Next Stage.</h3>
+        <p>Parents receive clear communication about readiness, strengths and areas for support, along with practical guidance that helps children become confident without excessive academic pressure.</p>
+      </div>
+
+      <div class="program-block neo-difference">
+        <div class="eyebrow">WHY NEO UKG?</div>
+        <h3>School Ready. Confident. Curious.</h3>
+        <p>Neo UKG prepares children for formal schooling while protecting the confidence, curiosity and joy that make learning meaningful.</p>
+        <div class="neo-difference-grid">
+          <div><b>Reading With Meaning</b><span>Phonics and reading development focus on understanding, not mechanical repetition alone.</span></div>
+          <div><b>Writing With Confidence</b><span>Writing progresses with readiness, control and opportunities for meaningful expression.</span></div>
+          <div><b>Math With Thinking</b><span>Children build number understanding and problem-solving habits, not only answer recall.</span></div>
+          <div><b>Communication Matters</b><span>Children speak, share, explain and participate actively in learning.</span></div>
+          <div><b>Independent Learners</b><span>Routines, responsibility and task completion support a smoother transition to school.</span></div>
+          <div><b>Whole-Child Readiness</b><span>Academic, emotional, social, physical and communication readiness develop together.</span></div>
+        </div>
+      </div>
+
+      <div class="program-cta">
+        <h3>Ready to Explore Neo UKG?</h3>
+        <p>Connect with Neo School India for admissions, program details and a school visit.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="#contact" data-close-program>Admission Enquiry</a>
+          <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20the%20UKG%20program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- DAYCARE — FULL INTERACTIVE PROGRAM PAGE -->
+<section class="program-detail" id="program-daycare" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • CARE • PLAY • BELONG</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">DAYCARE • EXTENDED CARE</div>
+      <h2>Safe Care. Happy Days. Meaningful Play.</h2>
+      <p>A warm, supervised extended-care environment where children feel secure, follow healthy routines, play, rest, communicate and enjoy age-appropriate creative and developmental experiences.</p>
+
+      <div class="program-quick-grid">
+        <div class="program-quick"><span>CARE APPROACH</span><strong>Warm, Structured & Child-Centric</strong></div>
+        <div class="program-quick"><span>CORE FOCUS</span><strong>Safety, Routine & Engagement</strong></div>
+        <div class="program-quick"><span>AVAILABILITY</span><strong>Enquire for Timings & Plans</strong></div>
+      </div>
+    </div>
+
+    <div class="daycare-hero-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+
+      <div class="program-block">
+        <div class="eyebrow">WELCOME TO NEO DAYCARE</div>
+        <h3>A Place to Feel Safe, Comfortable and Connected.</h3>
+        <p>Neo Daycare is designed as more than supervision after school hours. Children are supported through predictable routines, caring adult interaction, age-appropriate play, rest, social engagement, creative experiences and opportunities to build independence.</p>
+        <div class="program-flow">
+          <span>Arrive</span><span>Settle</span><span>Play</span><span>Eat</span><span>Rest</span><span>Engage</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">WHAT WE SUPPORT</div>
+        <h3>Care That Supports the Whole Child.</h3>
+        <p>Our daycare rhythm balances physical comfort, emotional security, social connection, movement, creativity and age-appropriate learning experiences.</p>
+        <div class="learning-grid">
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10"/></svg></span><b>Emotional Security</b><p>Warm routines, caring interaction and a predictable environment help children feel safe and comfortable.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></span><b>Healthy Routines</b><p>Snack, meals, rest, hygiene, transitions and self-help habits are supported consistently.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/></svg></span><b>Movement & Outdoor Play</b><p>Children get opportunities for movement, gross-motor play and active engagement.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></span><b>Creative Engagement</b><p>Art, music, stories, pretend play and simple projects make extended care meaningful and enjoyable.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Language & Social Interaction</b><p>Conversation, stories, peer interaction and guided play support communication and social confidence.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/></svg></span><b>Quiet Learning Time</b><p>Simple books, puzzles, table activities and calm independent tasks are available when appropriate.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10"/></svg></span><b>Friendship & Belonging</b><p>Children learn to share space, cooperate, communicate and build positive relationships.</p></div>
+          <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></span><b>Independence & Self-Help</b><p>Age-appropriate responsibility, belongings management and simple self-care habits are encouraged.</p></div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">THE NEO WAY OF CARE</div>
+        <h3>Routine With Warmth. Engagement Without Pressure.</h3>
+        <p>Our daycare environment combines predictable routines with flexible, child-sensitive care. Children are not kept continuously busy or academically pressured; the day includes active play, quiet time, rest, interaction and meaningful engagement.</p>
+        <div class="program-flow">
+          <span>Welcome</span><span>Care</span><span>Play</span><span>Connect</span><span>Rest</span><span>Grow</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">LEARNING THROUGH PLAY</div>
+        <h3>Engaging Experiences Beyond School Hours.</h3>
+        <div class="activity-cloud">
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/></svg></i>Story Time</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></i>Art & Craft</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></i>Music & Rhythm</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/></svg></i>Outdoor Play</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><rect x="4" y="12" width="7" height="7"/></svg></i>Blocks & Construction</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 4h7v3a2 2 0 1 0 4 0V4"/></svg></i>Puzzles & Table Games</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></i>Life Skills</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></i>Conversation Time</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M19 4C10 4 5 9 5 16"/></svg></i>Nature Exploration</span>
+          <span><i class="neo-mini-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10"/></svg></i>Friendship Games</span>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">A DAY AT NEO DAYCARE</div>
+        <h3>A Calm and Balanced Extended-Care Rhythm.</h3>
+        <div class="day-journey">
+          <div class="day-step">Arrival & Transition</div>
+          <div class="day-step">Snack / Meal Routine</div>
+          <div class="day-step">Free Play & Conversation</div>
+          <div class="day-step">Creative / Table Activity</div>
+          <div class="day-step">Rest / Quiet Time</div>
+          <div class="day-step">Outdoor / Movement Play</div>
+          <div class="day-step">Story / Music / Group Time</div>
+          <div class="day-step">Pack-Up & Parent Handover</div>
+        </div>
+      </div>
+
+      <div class="program-block">
+        <div class="eyebrow">PARENT COMMUNICATION</div>
+        <h3>Clear, Reassuring and Consistent.</h3>
+        <p>Parents can receive important updates related to meals, rest, participation, routines and overall well-being, helping families feel connected and informed.</p>
+      </div>
+
+      <div class="program-block neo-difference">
+        <div class="eyebrow">WHY NEO DAYCARE?</div>
+        <h3>More Than a Place to Wait.</h3>
+        <p>Neo Daycare combines safe care, emotional comfort, healthy routines, purposeful play and meaningful engagement.</p>
+        <div class="neo-difference-grid">
+          <div><b>Child-Centric Care</b><span>Routines are structured while remaining sensitive to age and individual needs.</span></div>
+          <div><b>Meaningful Engagement</b><span>Children experience stories, art, music, play, conversation and discovery.</span></div>
+          <div><b>Balanced Rhythm</b><span>Active play, quiet time, rest and social interaction are all part of the day.</span></div>
+          <div><b>Life Skills</b><span>Self-help, hygiene, responsibility and routine habits are naturally encouraged.</span></div>
+          <div><b>Emotional Comfort</b><span>Warm interactions and predictable routines support security and belonging.</span></div>
+          <div><b>Parent Connection</b><span>Clear communication helps parents stay informed about the child's extended day.</span></div>
+        </div>
+      </div>
+
+      <div class="program-cta">
+        <h3>Looking for a Warm and Meaningful Daycare Experience?</h3>
+        <p>Connect with Neo School India for timings, availability and current daycare plans.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="#contact" data-close-program>Daycare Enquiry</a>
+          <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20the%20Daycare%20program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail" id="program-weekend" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Programs</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+  </div></div>
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">WEEKEND CLUB • ENRICHMENT</div><h2>Weekends That Inspire.</h2><p>An enrichment space where children explore interests beyond the regular classroom through phonics, music, movement, creativity, communication, discovery and life skills.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>DESIGNED FOR</span><strong>Children & Young Learners</strong></div>
+      <div class="program-quick"><span>CORE FOCUS</span><strong>Skills, Creativity & Confidence</strong></div>
+      <div class="program-quick"><span>DETAILS</span><strong>Enquire for Current Schedule</strong></div>
+    </div>
+  </div></div>
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block"><div class="eyebrow">WELCOME TO WEEKEND CLUB</div>
+      <h3>More Than a Weekend Activity.</h3><p>Weekend Club gives children meaningful exposure to multiple skills in a relaxed, joyful format.</p>
+      <div class="program-flow"><span>Discover</span><span>Engage</span><span>Practice</span><span>Create</span><span>Connect</span><span>Grow</span></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">WHAT YOU EXPERIENCE</div>
+      <h3>Purposeful Experiences With a Clear Outcome.</h3>
+      <div class="learning-grid"><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Phonics Fun</b><p>Playful sound, reading and language experiences.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/></svg></span><b>Music & Rhythm</b><p>Beat, listening, rhythm and joyful musical expression.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-4 3m4-3 4 3m-4-3v7"/></svg></span><b>Dance & Movement</b><p>Coordination, expression, fitness and confidence through movement.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></span><b>Art & Craft</b><p>Hands-on creativity, imagination and fine-motor engagement.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Storytelling & Communication</b><p>Speaking, listening, imagination and confident expression.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>STEM & Discovery</b><p>Simple challenges, observation and curiosity-led exploration.</p></div></div>
+    </div>
+    
+      <div class="program-block">
+        <div class="eyebrow">BEYOND THE CLASSROOM</div>
+        <h3>Every Activity Has a Purpose.</h3>
+        <div class="support-grid">
+          <div class="support-card"><b>Phonics Fun</b><p><strong>Develops:</strong> sound awareness, decoding readiness, vocabulary and reading confidence.</p></div>
+          <div class="support-card"><b>Music & Rhythm</b><p><strong>Develops:</strong> listening, rhythm, memory, coordination and joyful expression.</p></div>
+          <div class="support-card"><b>Dance & Movement</b><p><strong>Develops:</strong> body coordination, confidence, fitness and expressive movement.</p></div>
+          <div class="support-card"><b>Art & Craft</b><p><strong>Develops:</strong> creativity, fine-motor control, planning and imagination.</p></div>
+          <div class="support-card"><b>Storytelling & Speaking</b><p><strong>Develops:</strong> vocabulary, sequencing, imagination and confident communication.</p></div>
+          <div class="support-card"><b>STEM & Discovery</b><p><strong>Develops:</strong> curiosity, observation, questioning and simple problem solving.</p></div>
+          <div class="support-card"><b>Creative Games</b><p><strong>Develops:</strong> teamwork, thinking, attention, flexibility and social participation.</p></div>
+          <div class="support-card"><b>Life Skills</b><p><strong>Develops:</strong> independence, responsibility, practical awareness and confidence.</p></div>
+          <div class="support-card"><b>Seasonal Experiences</b><p><strong>Develops:</strong> cultural connection, creativity, participation and memorable learning.</p></div>
+        </div>
+      </div>
+
+    <div class="program-block"><div class="eyebrow">THE NEO DIFFERENCE</div>
+      <h3>Designed With Purpose, Delivered With Joy.</h3>
+      <p>Every experience is planned to be age-appropriate, engaging and meaningful — with participation, confidence and real skill development at the centre.</p>
+    </div>
+    <div class="program-block neo-difference"><div class="eyebrow">WHY CHOOSE THIS PROGRAM?</div>
+      <h3>More Than a Weekend Activity.</h3><p>Weekend Club gives children meaningful exposure to multiple skills in a relaxed, joyful format.</p><div class="neo-difference-grid"><div><b>Multi-Skill Exposure</b><span>Children can discover interests beyond regular academics.</span></div><div><b>Confidence Building</b><span>Performance, communication and participation are encouraged.</span></div><div><b>Creative Freedom</b><span>Children explore ideas through making, movement and imagination.</span></div><div><b>Purposeful Fun</b><span>Activities are enjoyable while still building real skills.</span></div><div><b>Social Connection</b><span>Group experiences encourage friendship and teamwork.</span></div><div><b>Flexible Enrichment</b><span>A strong umbrella for varied weekend experiences.</span></div></div>
+    </div>
+    <div class="program-cta"><h3>Want to Know More?</h3><p>Connect with Neo School India for schedule, availability and enrolment details.</p>
+      <div class="program-cta-actions"><a class="btn btn-brand" href="#contact" data-close-program>Enquire Now</a>
+      <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20details%20about%20Weekend%20Club." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="program-detail" id="program-phonics" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Programs</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+  </div></div>
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">PHONICS PROGRAM • READING FOUNDATION</div><h2>Hear the Sound. Build the Word. Love Reading.</h2><p>A focused phonics pathway designed to strengthen sound awareness, decoding readiness, blending, reading confidence and early literacy through systematic, child-friendly practice.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>DESIGNED FOR</span><strong>Early & Emerging Readers</strong></div>
+      <div class="program-quick"><span>CORE FOCUS</span><strong>Phonics, Decoding & Reading Confidence</strong></div>
+      <div class="program-quick"><span>DETAILS</span><strong>Enquire for Current Schedule</strong></div>
+    </div>
+  </div></div>
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block"><div class="eyebrow">WELCOME TO PHONICS PROGRAM</div>
+      <h3>A Stronger Route to Reading.</h3><p>The program focuses on understanding the sound system rather than memorising whole words without strategy.</p>
+      <div class="program-flow"><span>Discover</span><span>Engage</span><span>Practice</span><span>Create</span><span>Connect</span><span>Grow</span></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">WHAT YOU EXPERIENCE</div>
+      <h3>Purposeful Experiences With a Clear Outcome.</h3>
+      <div class="learning-grid"><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/></svg></span><b>Sound Awareness</b><p>Listening carefully to sounds in spoken language.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Letter-Sound Connection</b><p>Building clear sound-symbol relationships progressively.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Blending</b><p>Combining sounds to support word-reading development.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Segmenting</b><p>Hearing and separating sounds to support spelling readiness.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Reading Practice</b><p>Applying phonics through age-appropriate words and text.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Confidence & Fluency</b><p>Building willingness, accuracy and enjoyment in reading.</p></div></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">THE NEO DIFFERENCE</div>
+      <h3>Designed With Purpose, Delivered With Joy.</h3>
+      <p>Every experience is planned to be age-appropriate, engaging and meaningful — with participation, confidence and real skill development at the centre.</p>
+    </div>
+    <div class="program-block neo-difference"><div class="eyebrow">WHY CHOOSE THIS PROGRAM?</div>
+      <h3>A Stronger Route to Reading.</h3><p>The program focuses on understanding the sound system rather than memorising whole words without strategy.</p><div class="neo-difference-grid"><div><b>Systematic Progression</b><span>Skills build in a planned sequence.</span></div><div><b>Multi-Sensory Practice</b><span>Children hear, say, see and use sounds.</span></div><div><b>Reading Application</b><span>Phonics is connected to actual reading.</span></div><div><b>Child-Friendly Pace</b><span>Practice grows with readiness.</span></div><div><b>Confidence First</b><span>Success experiences encourage children to read.</span></div><div><b>Parent Guidance</b><span>Families can reinforce skills more effectively.</span></div></div>
+    </div>
+    <div class="program-cta"><h3>Want to Know More?</h3><p>Connect with Neo School India for schedule, availability and enrolment details.</p>
+      <div class="program-cta-actions"><a class="btn btn-brand" href="#contact" data-close-program>Enquire Now</a>
+      <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20details%20about%20the%20Phonics%20Program." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="program-detail" id="program-summer" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Programs</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+  </div></div>
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">SUMMER CAMP • SEASONAL EXPERIENCE</div><h2>A Summer Full of Discovery.</h2><p>A vibrant seasonal program that blends creativity, movement, stories, games, communication, discovery and memorable social experiences.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>DESIGNED FOR</span><strong>Children During School Breaks</strong></div>
+      <div class="program-quick"><span>CORE FOCUS</span><strong>Fun, Creativity & New Experiences</strong></div>
+      <div class="program-quick"><span>DETAILS</span><strong>Enquire for Current Schedule</strong></div>
+    </div>
+  </div></div>
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block"><div class="eyebrow">WELCOME TO SUMMER CAMP</div>
+      <h3>A Break Children Look Forward To.</h3><p>Summer Camp turns holiday time into joyful experiences that create memories while building skills.</p>
+      <div class="program-flow"><span>Discover</span><span>Engage</span><span>Practice</span><span>Create</span><span>Connect</span><span>Grow</span></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">WHAT YOU EXPERIENCE</div>
+      <h3>Purposeful Experiences With a Clear Outcome.</h3>
+      <div class="learning-grid"><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></span><b>Creative Projects</b><p>Art, making and imaginative project experiences.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/></svg></span><b>Music & Movement</b><p>Rhythm, dance and energetic participation.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Games & Challenges</b><p>Team games, thinking challenges and playful competition.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Story & Drama</b><p>Imagination, role play and expressive communication.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Discovery Activities</b><p>Simple science, nature and curiosity-led exploration.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Friendship & Confidence</b><p>Group participation, social connection and self-expression.</p></div></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">THE NEO DIFFERENCE</div>
+      <h3>Designed With Purpose, Delivered With Joy.</h3>
+      <p>Every experience is planned to be age-appropriate, engaging and meaningful — with participation, confidence and real skill development at the centre.</p>
+    </div>
+    <div class="program-block neo-difference"><div class="eyebrow">WHY CHOOSE THIS PROGRAM?</div>
+      <h3>A Break Children Look Forward To.</h3><p>Summer Camp turns holiday time into joyful experiences that create memories while building skills.</p><div class="neo-difference-grid"><div><b>Variety Every Day</b><span>A mix of creative, active and thinking experiences.</span></div><div><b>Screen-Light Engagement</b><span>Hands-on participation takes centre stage.</span></div><div><b>New Interests</b><span>Children discover activities they may want to pursue further.</span></div><div><b>Social Confidence</b><span>Group experiences support communication and friendship.</span></div><div><b>Creative Expression</b><span>Children get space to imagine and create.</span></div><div><b>Joyful Memories</b><span>The program is designed to feel special and celebratory.</span></div></div>
+    </div>
+    <div class="program-cta"><h3>Want to Know More?</h3><p>Connect with Neo School India for schedule, availability and enrolment details.</p>
+      <div class="program-cta-actions"><a class="btn btn-brand" href="#contact" data-close-program>Enquire Now</a>
+      <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20details%20about%20Summer%20Camp." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="program-detail" id="program-parents" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Programs</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+  </div></div>
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">PARENT WORKSHOPS • PARTNERSHIP</div><h2>Understand Better. Support Better.</h2><p>Practical parent sessions designed to make child development, learning, routines, communication and school readiness easier to understand and support at home.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>DESIGNED FOR</span><strong>Parents & Caregivers</strong></div>
+      <div class="program-quick"><span>CORE FOCUS</span><strong>Understanding, Communication & Home Support</strong></div>
+      <div class="program-quick"><span>DETAILS</span><strong>Enquire for Current Schedule</strong></div>
+    </div>
+  </div></div>
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block"><div class="eyebrow">WELCOME TO PARENT WORKSHOPS</div>
+      <h3>Parents Are Part of the Learning Team.</h3><p>When parents understand how children develop and learn, home support becomes calmer, clearer and more effective.</p>
+      <div class="program-flow"><span>Discover</span><span>Engage</span><span>Practice</span><span>Create</span><span>Connect</span><span>Grow</span></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">WHAT YOU EXPERIENCE</div>
+      <h3>Purposeful Experiences With a Clear Outcome.</h3>
+      <div class="learning-grid"><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Child Development</b><p>Understanding age-appropriate behaviour and developmental expectations.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Positive Communication</b><p>Practical ways to listen, guide and communicate with children.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Learning at Home</b><p>Simple ways to support language, reading, numeracy and curiosity.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-4 3m4-3 4 3m-4-3v7"/></svg></span><b>Routines & Independence</b><p>Helping children develop habits and age-appropriate responsibility.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>School Readiness</b><p>Understanding readiness beyond worksheets and marks.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Parent-School Partnership</b><p>Creating consistency between home and school.</p></div></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">THE NEO DIFFERENCE</div>
+      <h3>Designed With Purpose, Delivered With Joy.</h3>
+      <p>Every experience is planned to be age-appropriate, engaging and meaningful — with participation, confidence and real skill development at the centre.</p>
+    </div>
+    <div class="program-block neo-difference"><div class="eyebrow">WHY CHOOSE THIS PROGRAM?</div>
+      <h3>Parents Are Part of the Learning Team.</h3><p>When parents understand how children develop and learn, home support becomes calmer, clearer and more effective.</p><div class="neo-difference-grid"><div><b>Practical Guidance</b><span>Sessions focus on usable strategies.</span></div><div><b>Age-Appropriate Expectations</b><span>Parents understand what is realistic at each stage.</span></div><div><b>Less Pressure</b><span>Support can become more purposeful and positive.</span></div><div><b>Better Communication</b><span>Parent-child interaction becomes more intentional.</span></div><div><b>Home-School Alignment</b><span>Shared understanding supports the child.</span></div><div><b>Stronger Partnership</b><span>Families become active partners in development.</span></div></div>
+    </div>
+    <div class="program-cta"><h3>Want to Know More?</h3><p>Connect with Neo School India for schedule, availability and enrolment details.</p>
+      <div class="program-cta-actions"><a class="btn btn-brand" href="#contact" data-close-program>Enquire Now</a>
+      <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20details%20about%20Parent%20Workshops." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="program-detail" id="program-teachers" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Programs</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+  </div></div>
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">TEACHER TRAINING • PROFESSIONAL DEVELOPMENT</div><h2>Teach With Purpose. Inspire With Confidence.</h2><p>Professional development experiences for early-years educators focused on child-centred teaching, phonics, classroom practice, activity-based learning, observation and purposeful lesson delivery.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>DESIGNED FOR</span><strong>Teachers & Early-Years Educators</strong></div>
+      <div class="program-quick"><span>CORE FOCUS</span><strong>Pedagogy, Phonics & Classroom Practice</strong></div>
+      <div class="program-quick"><span>DETAILS</span><strong>Enquire for Current Schedule</strong></div>
+    </div>
+  </div></div>
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block"><div class="eyebrow">WELCOME TO TEACHER TRAINING</div>
+      <h3>Better Teaching Creates Better Learning.</h3><p>Neo training focuses on classroom implementation — helping teachers understand not only what to teach, but why and how.</p>
+      <div class="program-flow"><span>Discover</span><span>Engage</span><span>Practice</span><span>Create</span><span>Connect</span><span>Grow</span></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">WHAT YOU EXPERIENCE</div>
+      <h3>Purposeful Experiences With a Clear Outcome.</h3>
+      <div class="learning-grid"><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Child-Centred Pedagogy</b><p>Planning learning around developmental needs and active participation.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Phonics Practice</b><p>Strengthening systematic and practical early-literacy teaching.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></span><b>Activity-Based Learning</b><p>Turning concepts into meaningful classroom experiences.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Classroom Communication</b><p>Questioning, storytelling, instructions and learner interaction.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Observation & Assessment</b><p>Understanding progress through meaningful evidence.</p></div><div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Planning & Reflection</b><p>Improving lesson intent, execution and teacher reflection.</p></div></div>
+    </div>
+    <div class="program-block"><div class="eyebrow">THE NEO DIFFERENCE</div>
+      <h3>Designed With Purpose, Delivered With Joy.</h3>
+      <p>Every experience is planned to be age-appropriate, engaging and meaningful — with participation, confidence and real skill development at the centre.</p>
+    </div>
+    <div class="program-block neo-difference"><div class="eyebrow">WHY CHOOSE THIS PROGRAM?</div>
+      <h3>Better Teaching Creates Better Learning.</h3><p>Neo training focuses on classroom implementation — helping teachers understand not only what to teach, but why and how.</p><div class="neo-difference-grid"><div><b>Practical Focus</b><span>Training connects directly to classroom practice.</span></div><div><b>Clear Methodology</b><span>Teachers understand the purpose behind activities.</span></div><div><b>Phonics Capability</b><span>Early-literacy instruction becomes more systematic.</span></div><div><b>Engaging Classrooms</b><span>Participation and meaningful learning are prioritised.</span></div><div><b>Observation Skills</b><span>Teachers learn to notice development and respond.</span></div><div><b>Professional Confidence</b><span>Better preparation supports stronger teaching.</span></div></div>
+    </div>
+    <div class="program-cta"><h3>Want to Know More?</h3><p>Connect with Neo School India for schedule, availability and enrolment details.</p>
+      <div class="program-cta-actions"><a class="btn btn-brand" href="#contact" data-close-program>Enquire Now</a>
+      <a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20details%20about%20Teacher%20Training." target="_blank" rel="noopener noreferrer">Talk to Us on WhatsApp</a></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="program-detail" id="program-franchise" aria-hidden="true">
+  <div class="program-detail-top"><div class="program-detail-nav">
+    <button class="program-back" type="button">← Back to Website</button>
+    <div class="program-detail-brand">NEO SCHOOL INDIA • FRANCHISE PARTNERSHIP</div>
+  </div></div>
+
+  <div class="program-detail-hero"><div class="program-detail-inner">
+    <div class="eyebrow">FRANCHISE OPPORTUNITY • NEO SCHOOL INDIA</div>
+    <h2>Build a Preschool Parents Can Believe In.</h2>
+    <p>Neo School India is being built around a clear early-years philosophy: joyful learning, strong phonics foundations, whole-child development, parent partnership and a consistent brand experience — supported by IMLS.</p>
+    <div class="program-quick-grid">
+      <div class="program-quick"><span>POSITIONING</span><strong>Modern Child-Centric Preschool</strong></div>
+      <div class="program-quick"><span>ACADEMIC ENGINE</span><strong>Powered by IMLS</strong></div>
+      <div class="program-quick"><span>PARTNERSHIP</span><strong>Enquire for Franchise Details</strong></div>
+    </div>
+  </div>
+  <div class="franchise-hero-neo" aria-hidden="true"><video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video></div>
+  </div>
+
+  <div class="program-content"><div class="program-detail-inner">
+    <div class="program-block">
+      <div class="eyebrow">WHY NEO SCHOOL INDIA?</div>
+      <h3>A Clear Educational Identity — Not Just a Name on a Board.</h3>
+      <p>Our strength is the combination of brand, curriculum philosophy, classroom methodology and parent-facing clarity. The learning journey is designed around age-appropriate development, phonics, fine and gross motor growth, communication, early numeracy, creativity, social-emotional development and purposeful play.</p>
+      <div class="franchise-strength">
+        <article><b>Child-Centric Philosophy</b><p>Learning is designed around development, curiosity and participation rather than forced rote work.</p></article>
+        <article><b>Strong Phonics Focus</b><p>Early English reading foundations are treated as a core capability, not an occasional activity.</p></article>
+        <article><b>Whole-Child Development</b><p>Language, numeracy, motor, creative, social and emotional growth are planned together.</p></article>
+        <article><b>IMLS Learning Approach</b><p>Experiences move children from engagement and understanding toward practice and expression.</p></article>
+        <article><b>Parent Partnership</b><p>The school explains what children are learning, why it matters and how parents can support them.</p></article>
+        <article><b>Distinctive Brand Experience</b><p>Neo's visual identity and ambassador create a recognisable, child-friendly and modern presence.</p></article>
+      </div>
+    </div>
+
+    <div class="program-block">
+      <div class="eyebrow">WHAT MAKES US DIFFERENT?</div>
+      <h3>We Are Building a System, Not a Collection of Worksheets.</h3>
+      <p>Neo School India connects curriculum intent, teacher practice, classroom experiences, developmental observation and parent communication into one coherent preschool experience. That consistency is what we want every Neo centre to represent.</p>
+      <div class="program-flow"><span>Philosophy</span><span>Curriculum</span><span>Teacher Practice</span><span>Child Experience</span><span>Parent Trust</span><span>Brand Consistency</span></div>
+    </div>
+
+    <div class="program-block">
+      <div class="eyebrow">PARTNER SUPPORT VISION</div>
+      <h3>Designed to Help a Centre Deliver the Neo Experience Consistently.</h3>
+      <div class="learning-grid">
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Academic Framework</b><p>Program structure and learning direction from Playgroup through UKG.</p></div>
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Teacher Enablement</b><p>Training direction and classroom methodology aligned to the Neo philosophy.</p></div>
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18"/></svg></span><b>Brand System</b><p>A consistent Neo identity for school presentation, communication and promotion.</p></div>
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Parent Communication</b><p>Clear messaging around programs, development and the value of the learning approach.</p></div>
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v5l-4 3m4-3 4 3m-4-3v7"/></svg></span><b>Program Extensions</b><p>Daycare, Weekend Club, phonics, camps and workshops broaden the centre experience.</p></div>
+        <div class="learning-card"><span class="neo-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span><b>Growth Direction</b><p>A modern preschool proposition designed to build recognition and parent confidence over time.</p></div>
+      </div>
+    </div>
+
+    <div class="program-block">
+      <div class="eyebrow">THE PARTNERSHIP JOURNEY</div>
+      <h3>From Enquiry to a Neo School Experience.</h3>
+      <div class="franchise-path">
+        <div><strong>01</strong>Enquiry</div><div><strong>02</strong>Discussion</div><div><strong>03</strong>Location & Fit Review</div><div><strong>04</strong>Commercial & Setup Details</div><div><strong>05</strong>Launch Planning</div>
+      </div>
+    </div>
+
+    <div class="program-block neo-difference">
+      <div class="eyebrow">THE NEO PROMISE</div>
+      <h3>A Brand With Educational Substance.</h3>
+      <p>We want every partner to understand the reason behind the brand: children should love to learn, parents should understand the value they receive, and teachers should have a clear purpose behind what they do.</p>
+      <div class="neo-difference-grid">
+        <div><b>Learn</b><span>Meaningful, age-appropriate experiences create strong foundations.</span></div>
+        <div><b>Grow</b><span>Development is viewed across academic, physical, creative, social and emotional domains.</span></div>
+        <div><b>Lead</b><span>Confidence, communication, independence and curiosity prepare children for what comes next.</span></div>
+        <div><b>Clarity for Parents</b><span>The learning philosophy is visible and understandable, not hidden behind jargon.</span></div>
+        <div><b>Consistency for Partners</b><span>A clear brand and program framework helps centres represent Neo coherently.</span></div>
+        <div><b>Purpose for Teachers</b><span>Teaching is connected to developmental outcomes and meaningful classroom practice.</span></div>
+      </div>
+    </div>
+
+    <div class="program-cta">
+      <h3>Interested in Bringing Neo School India to Your City?</h3>
+      <p>Start a conversation with us. Share your city and interest, and our team can discuss the current franchise opportunity, requirements and next steps.</p>
+      <div class="program-cta-actions">
+        <a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20am%20interested%20in%20a%20franchise.%20My%20Name%3A%20____%20City%3A%20____%20Preferred%20Location%3A%20____%20Please%20share%20the%20franchise%20details." target="_blank" rel="noopener noreferrer">Start Franchise Enquiry</a>
+        <a class="btn btn-outline" href="#contact" data-close-program>Contact Neo School India</a>
+      </div>
+    </div>
+  </div></div>
+</section>
+<!-- OTHER PROGRAMS — EXPANDABLE CATALOG -->
+<section class="program-detail" id="program-other" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Programs</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • BEYOND THE CLASSROOM</div>
+    </div>
+  </div>
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">OTHER PROGRAMS</div>
+      <h2>Learning Beyond the Classroom.</h2>
+      <p>Flexible enrichment programs that can grow with the needs of children, parents, teachers and the wider learning community.</p>
+    </div>
+  </div>
+  <div class="program-content">
+    <div class="program-detail-inner">
+      <div class="program-block">
+        <div class="eyebrow">ENRICHMENT & COMMUNITY</div>
+        <h3>Programs Designed to Keep Growing.</h3>
+        <div class="other-program-list">
+          <div class="other-program-item">
+            <h4>Weekend Club</h4>
+            <p>Our umbrella enrichment program for engaging weekend experiences.</p>
+            <div class="weekend-list">
+              <span>Phonics Fun</span><span>Music & Rhythm</span><span>Dance & Movement</span><span>Art & Craft</span><span>Storytelling</span><span>Communication Skills</span><span>Creative Games</span><span>Life Skills</span><span>STEM / Discovery</span><span>Seasonal Activities</span>
+            </div>
+          </div>
+          <div class="other-program-item"><h4>Phonics Program</h4><p>A focused language and reading-foundation program offered separately from the Weekend Club.</p></div>
+          <div class="other-program-item"><h4>Summer Camp</h4><p>Seasonal, activity-rich experiences combining creativity, movement, communication, discovery and fun.</p></div>
+          <div class="other-program-item"><h4>Parent Workshops</h4><p>Practical sessions that help parents understand early learning, development and positive learning support at home.</p></div>
+          <div class="other-program-item"><h4>Teacher Training</h4><p>Professional development in classroom practice, phonics, child-centred learning and Neo methodology.</p></div>
+        </div>
+      </div>
+      <div class="program-cta">
+        <h3>Interested in a Neo Enrichment Program?</h3>
+        <p>Ask us about current batches, schedules and availability.</p>
+        <div class="program-cta-actions">
+          <a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20your%20Other%20Programs%20and%20Weekend%20Club." target="_blank" rel="noopener noreferrer">Enquire on WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- =========================================================
      IMLS
@@ -4263,6 +6757,454 @@ Send Enquiry on WhatsApp
      FOOTER
 ========================================================= -->
 
+
+
+<!-- =========================================================
+     V3.8 — SHORT-FORM EXPLORE HUB
+========================================================= -->
+<section class="explore-hub" id="explore-neo">
+  <div class="container">
+    <div class="explore-head">
+      <div class="eyebrow">EXPLORE NEO SCHOOL INDIA</div>
+      <h2>Understand the Idea. Explore the Details.</h2>
+      <p>Start with a clear overview, then open the area that matters most to you — learning, parents, enrichment or partnership.</p>
+    </div>
+
+    <div class="explore-grid">
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span>
+        <h3>Why Neo?</h3>
+        <p>Discover the child-centric philosophy, phonics strength, whole-child approach and parent partnership behind the brand.</p>
+        <button type="button" data-open-program="whyneo">Explore Why Neo</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9"/></svg></span>
+        <h3>Powered by IMLS</h3>
+        <p>See how Neo moves children from experience and exploration toward understanding, practice and expression.</p>
+        <button type="button" data-open-program="imls">Explore IMLS</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span>
+        <h3>Curriculum Journey</h3>
+        <p>Follow the connected progression from Playgroup to Nursery, LKG and UKG in one clear learning roadmap.</p>
+        <button type="button" data-open-program="journey">View Learning Journey</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span>
+        <h3>Parent Experience</h3>
+        <p>Understand child progress, parent communication, teacher practice, care and how learning is supported beyond worksheets.</p>
+        <button type="button" data-open-program="parentsneo">Explore Parent Experience</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/></svg></span>
+        <h3>Weekend Club</h3>
+        <p>Explore Neo's enrichment USP — phonics, music, dance, art, storytelling, STEM, life skills and more.</p>
+        <button type="button" data-open-program="weekend">Explore Weekend Club</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></span>
+        <h3>Franchise Opportunity</h3>
+        <p>See Neo's support ecosystem, partner journey, academic support, teacher training, branding, operations and digital guidance.</p>
+        <button type="button" data-open-program="franchisehub">Explore Franchise</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.2 2.3c-.8.3-1 .9-1 1.7"/><path d="M12 17h.01"/></svg></span>
+        <h3>Frequently Asked Questions</h3>
+        <p>Quick answers for parents and partners about programs, progress, phonics, Weekend Club and franchise support.</p>
+        <button type="button" data-open-program="faqs">View FAQs</button>
+      </article>
+
+      <article class="explore-card">
+        <span class="explore-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span>
+        <h3>Start a Conversation</h3>
+        <p>Choose Admission, Weekend Club or Franchise and connect directly with Neo School India.</p>
+        <button type="button" data-open-program="connect">Choose Enquiry</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-whyneo" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">WHY NEO SCHOOL INDIA?</div>
+      <h2>A Preschool Built Around How Children Grow.</h2>
+      <p>Understand the philosophy, learning approach and developmental thinking that make Neo different.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>FOCUS</span><strong>Child-Centric Learning</strong></div><div class="program-quick"><span>STRENGTH</span><strong>Phonics + Whole Child</strong></div><div class="program-quick"><span>PROMISE</span><strong>Learn • Grow • Lead</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">THE NEO DNA</div>
+  <h3>A Preschool Built Around How Children Grow.</h3>
+  <p>Neo School India combines joyful learning, purposeful teaching, phonics, whole-child development and parent partnership into one connected early-years experience.</p>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Child-Centric</b><p>Learning respects age, readiness, curiosity and individual pace.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Psychology-Informed</b><p>Confidence, emotional security and developmental readiness remain central.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><b>Strong Phonics Foundation</b><p>Listening, sound awareness and progressive phonics support reading readiness.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Experience-Led Learning</b><p>Children learn through movement, play, discussion, exploration and purposeful activity.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Whole-Child Development</b><p>Language, numeracy, physical, creative, cognitive and social-emotional growth develop together.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Parent Partnership</b><p>Parents understand what children learn, why it matters and how to support growth.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">WHAT MAKES NEO DIFFERENT?</div>
+  <h3>Not Just Worksheets. Not Just Rote. Not Just Daycare.</h3>
+  <div class="strategy-flow"><span>Curiosity</span><span>Experience</span><span>Understanding</span><span>Practice</span><span>Confidence</span><span>Expression</span></div>
+</div>
+<div class="program-block neo-difference">
+  <div class="eyebrow">LEARN • GROW • LEAD</div>
+  <h3>One Simple Promise Behind the Brand.</h3>
+  <div class="neo-difference-grid">
+    <div><b>Learn</b><span>Children build meaningful foundations through active learning.</span></div>
+    <div><b>Grow</b><span>Development is supported across multiple domains, not academics alone.</span></div>
+    <div><b>Lead</b><span>Confidence, communication, independence and curiosity prepare children for what comes next.</span></div>
+  </div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Ready to Explore a Neo Program?</h3>
+        <p>Choose a program or connect with us for admissions.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="#programs" data-close-program>View Programs</a><a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20Neo." target="_blank" rel="noopener noreferrer">Talk to Us</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-imls" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">POWERED BY IMLS</div>
+      <h2>The Learning Engine Behind Neo.</h2>
+      <p>See how meaningful experience is connected to understanding, practice and expression.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>METHOD</span><strong>Experience Led</strong></div><div class="program-quick"><span>ROLE</span><strong>Teacher as Guide</strong></div><div class="program-quick"><span>OUTCOME</span><strong>Understanding + Expression</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">THE LEARNING ENGINE</div>
+  <h3>From Experience to Expression.</h3>
+  <p>IMLS is the learning approach that helps children engage with an idea, understand it, practise it and eventually use or express it meaningfully.</p>
+  <div class="strategy-flow"><span>Experience</span><span>Explore</span><span>Engage</span><span>Understand</span><span>Practice</span><span>Express</span></div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">HOW IT CHANGES THE CLASSROOM</div>
+  <h3>Purpose Before Activity.</h3>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Clear Learning Purpose</b><p>Activities connect to a developmental or academic reason.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Teacher as Guide</b><p>Teachers observe, question, demonstrate, encourage and extend thinking.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Progressive Learning</b><p>Children move from readiness toward increasingly independent application.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Active Participation</b><p>Movement, talk, play and exploration are used as learning tools.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></span><b>Practice With Meaning</b><p>Practice follows understanding rather than replacing it.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Confidence & Expression</b><p>Children are encouraged to communicate what they know and can do.</p></div>
+  </div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Want to Understand the Neo Learning Approach Better?</h3>
+        <p>Connect with us for curriculum and academic information.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more%20about%20IMLS." target="_blank" rel="noopener noreferrer">Ask About IMLS</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-journey" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">NEO CURRICULUM JOURNEY</div>
+      <h2>Four Stages. One Connected Foundation.</h2>
+      <p>Follow how children progress from Playgroup exploration to UKG school readiness.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>START</span><strong>Playgroup</strong></div><div class="program-quick"><span>PROGRESSION</span><strong>Nursery → LKG</strong></div><div class="program-quick"><span>READINESS</span><strong>UKG</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">THE CONNECTED JOURNEY</div>
+  <h3>Four Stages. One Strong Foundation.</h3>
+  <div class="journey-roadmap">
+    <div class="journey-stage"><small>PLAYGROUP</small><b>Discover & Belong</b><p>Safety, language, sensory exploration, movement, social connection and independence.</p></div>
+    <div class="journey-stage"><small>NURSERY</small><b>Build Foundations</b><p>Phonics readiness, pre-writing, early numeracy, concepts, communication and confidence.</p></div>
+    <div class="journey-stage"><small>LKG</small><b>Connect & Apply</b><p>Structured phonics, early reading, writing, numeracy, reasoning and environmental awareness.</p></div>
+    <div class="journey-stage"><small>UKG</small><b>Become School Ready</b><p>Reading, writing, mathematical thinking, comprehension, independence and confident expression.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">WHY THE PROGRESSION MATTERS</div>
+  <h3>Every Stage Builds on the One Before It.</h3>
+  <p>The goal is to avoid disconnected learning. Language, phonics, numeracy, motor development, thinking, communication and independence grow progressively through the preschool years.</p>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Explore Each Program in Detail.</h3>
+        <p>Open Playgroup, Nursery, LKG or UKG from the Programs section.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="#programs" data-close-program>Explore Programs</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-parentsneo" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">PARENT EXPERIENCE</div>
+      <h2>Parents Should Understand the Learning Journey.</h2>
+      <p>See how Neo approaches child progress, teacher practice, communication, care and home-school partnership.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>PROGRESS</span><strong>Whole Child</strong></div><div class="program-quick"><span>COMMUNICATION</span><strong>Clear & Meaningful</strong></div><div class="program-quick"><span>PARTNERSHIP</span><strong>School + Home</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">PARENT EXPERIENCE</div>
+  <h3>Parents Should Understand the Learning Journey.</h3>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Meaningful Updates</b><p>Communication focuses on learning and development, not only announcements.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Child Progress</b><p>Growth is observed across language, reading readiness, numeracy, motor, cognitive, social and emotional areas.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Parent Orientation</b><p>Parents understand the philosophy, age-appropriate expectations and learning approach.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></span><b>Home Support</b><p>Simple guidance helps families reinforce reading, routines, numeracy thinking and independence.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Care & Well-Being</b><p>Emotional comfort, predictable routines and respectful adult interaction matter.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Teacher Quality</b><p>Neo teachers observe, engage, question, guide, encourage and reflect.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">PROGRESS WITHOUT PRESSURE</div>
+  <h3>We Observe Growth, Not Just Worksheets.</h3>
+  <div class="strategy-flow"><span>Language</span><span>Phonics</span><span>Numeracy</span><span>Motor Skills</span><span>Social-Emotional</span><span>Independence</span></div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Have a Question About Your Child's Learning Journey?</h3>
+        <p>Connect with Neo School India for admissions and parent information.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20have%20a%20parent%20or%20admission%20enquiry." target="_blank" rel="noopener noreferrer">Parent / Admission Enquiry</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-franchisehub" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">FRANCHISE OPPORTUNITY</div>
+      <h2>Build a Preschool Parents Can Believe In.</h2>
+      <p>Explore Neo's educational identity, support ecosystem and partner journey.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>MODEL</span><strong>Modern Preschool</strong></div><div class="program-quick"><span>SUPPORT</span><strong>Academic + Operations</strong></div><div class="program-quick"><span>PARTNERSHIP</span><strong>Structured Framework</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">WHY PARTNER WITH NEO?</div>
+  <h3>A Brand With Educational Substance.</h3>
+  <p>Neo is being built as a connected preschool system — combining curriculum philosophy, teacher practice, parent communication, enrichment and brand consistency.</p>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 0 1 3 3v11"/><path d="M20 5h-3a3 3 0 0 0-3 3v11"/></svg></span><b>Academic Support</b><p>Program framework, curriculum direction, learning outcomes and classroom guidance.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Teacher Training</b><p>Induction direction, phonics, pedagogy, classroom practice and refresher support.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></span><b>School Setup Guidance</b><p>Learning-space, classroom presentation and Neo brand implementation guidance.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Operations & SOP Direction</b><p>Structured routines, process guidance, documentation direction and school workflows.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Admissions & Parent Communication</b><p>Program presentation, enquiry conversation and parent-orientation direction.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M5 19l3-1 10-10-2-2L6 16z"/><path d="M14 6l2 2"/></svg></span><b>Brand & Digital Media</b><p>Brand standards, launch communication, social-media direction and campaign frameworks.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">PARTNER SUPPORT ECOSYSTEM</div>
+  <h3>Designed to Make the Model Easier to Understand and Operate.</h3>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg></span><b>Parent Engagement</b><p>Orientation themes, workshops and communication frameworks.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4"/><path d="M8 14c-2-1.5-3-3.3-3-5.5A7 7 0 0 1 19 9c0 2.2-1 4-3 5.5-.8.6-1 1.3-1 2.5H9c0-1.2-.2-1.9-1-3z"/></svg></span><b>Academic Review</b><p>A framework for reviewing classroom delivery and improvement areas.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></span><b>Weekend Club & Enrichment</b><p>Phonics, arts, movement, communication, discovery and seasonal programs.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/><path d="M9 20v-6h6v6"/></svg></span><b>Technology Direction</b><p>A roadmap toward more structured operations, communication and reporting as capabilities roll out.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg></span><b>Ongoing Partnership</b><p>Continued focus on quality, consistency, academic clarity and brand development.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 0-4 7m4-7 5 6M8 9l-4 3m8-3 5 2"/></svg></span><b>Non-Education Background Friendly</b><p>An education background can help, but the structured framework is designed to support committed partners in understanding the model.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">BECOME A NEO PARTNER</div>
+  <h3>A Clear Journey From Interest to Launch.</h3>
+  <div class="franchise-path">
+    <div><strong>01</strong>Explore Neo</div><div><strong>02</strong>Share Your City</div><div><strong>03</strong>Partner Discussion</div><div><strong>04</strong>Location & Fit Review</div><div><strong>05</strong>Setup & Launch Planning</div>
+  </div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Interested in Bringing Neo School India to Your City?</h3>
+        <p>Share your city and preferred location to begin a franchise discussion.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20am%20interested%20in%20a%20franchise.%20My%20Name%3A%20____%20City%3A%20____%20Preferred%20Location%3A%20____" target="_blank" rel="noopener noreferrer">Start Franchise Enquiry</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-faqs" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">FREQUENTLY ASKED QUESTIONS</div>
+      <h2>Clear Answers for Parents and Partners.</h2>
+      <p>Quick answers to the questions people naturally ask before admissions, enrichment or partnership.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>FOR</span><strong>Parents</strong></div><div class="program-quick"><span>FOR</span><strong>Franchise Partners</strong></div><div class="program-quick"><span>STYLE</span><strong>Clear & Practical</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">PARENTS</div>
+  <h3>Common Questions About Learning and Programs.</h3>
+  <div class="faq-list">
+    <div class="faq-item"><b>What makes Neo different?</b><p>Neo combines child-centred early education, phonics, whole-child development, purposeful activity and parent partnership within one connected approach.</p></div>
+    <div class="faq-item"><b>Is learning only play-based?</b><p>Play and experience are important tools, but the purpose is structured development and progressive readiness — not unplanned play.</p></div>
+    <div class="faq-item"><b>How is progress understood?</b><p>Teachers observe development across language, reading readiness, numeracy, motor, cognitive, social-emotional, creative and independence areas.</p></div>
+    <div class="faq-item"><b>What is Weekend Club?</b><p>An enrichment umbrella for phonics, music, dance, art, storytelling, communication, STEM, life skills and seasonal experiences.</p></div>
+  </div>
+</div>
+<div class="program-block">
+  <div class="eyebrow">FRANCHISE PARTNERS</div>
+  <h3>Common Questions About Partnership.</h3>
+  <div class="faq-list">
+    <div class="faq-item"><b>Can a non-education professional explore a franchise?</b><p>Yes. A prospective partner can begin a discussion, and suitability, location, requirements and the support model can then be explored together.</p></div>
+    <div class="faq-item"><b>What support does a partner receive?</b><p>The intended ecosystem spans academics, teacher development, setup guidance, operations, admissions, brand, digital media, parent engagement and ongoing review.</p></div>
+    <div class="faq-item"><b>Are investment and commercial details shown here?</b><p>Commercial terms should be discussed directly so the information reflects the current franchise model rather than outdated or generic figures.</p></div>
+  </div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Still Have a Question?</h3>
+        <p>Connect directly with Neo School India.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20have%20a%20question." target="_blank" rel="noopener noreferrer">Ask on WhatsApp</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="program-detail strategy-page" id="program-connect" aria-hidden="true">
+  <div class="program-detail-top">
+    <div class="program-detail-nav">
+      <button class="program-back" type="button">← Back to Explore</button>
+      <div class="program-detail-brand">NEO SCHOOL INDIA • LEARN • GROW • LEAD</div>
+    </div>
+  </div>
+
+  <div class="program-detail-hero">
+    <div class="program-detail-inner">
+      <div class="eyebrow">START A CONVERSATION</div>
+      <h2>Choose What You Want to Explore.</h2>
+      <p>Connect directly for admissions, Weekend Club or franchise partnership.</p>
+      <div class="program-quick-grid"><div class="program-quick"><span>ADMISSIONS</span><strong>Programs & School Visit</strong></div><div class="program-quick"><span>ENRICHMENT</span><strong>Weekend Club</strong></div><div class="program-quick"><span>PARTNERSHIP</span><strong>Franchise</strong></div></div>
+    </div>
+    <div class="strategy-neo" aria-hidden="true">
+      <video src="neo-hi.webm" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+  </div>
+
+  <div class="program-content">
+    <div class="program-detail-inner">
+      
+<div class="program-block">
+  <div class="eyebrow">CHOOSE YOUR ENQUIRY</div>
+  <h3>Connect With the Right Neo Conversation.</h3>
+  <div class="strategy-features">
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg></span><b>Admission Enquiry</b><p>Program, age group, admissions and school-visit information.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/></svg></span><b>Weekend Club Enquiry</b><p>Activities, age suitability, batches and current schedule.</p></div>
+    <div class="strategy-feature"><span class="s-icon"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6v10H4z"/></svg></span><b>Franchise Enquiry</b><p>Share your city and preferred location to begin a partner discussion.</p></div>
+  </div>
+</div>
+
+      <div class="strategy-cta">
+        <h3>Choose Your Next Step.</h3>
+        <p>We will take the conversation forward based on your enquiry.</p>
+        <div class="program-cta-actions"><a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20admission%20details." target="_blank" rel="noopener noreferrer">Admission</a><a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20Weekend%20Club%20details." target="_blank" rel="noopener noreferrer">Weekend Club</a><a class="btn btn-outline" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20am%20interested%20in%20a%20franchise." target="_blank" rel="noopener noreferrer">Franchise</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer>
 
   <div class="container">
@@ -4657,19 +7599,83 @@ item
 
 </script>
 
-   <script>
+
+
+<script>
+(function(){
+  const details = document.querySelectorAll(".program-detail");
+
+  function closePrograms(){
+    details.forEach(panel => {
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden","true");
+    });
+    document.body.classList.remove("program-detail-open");
+  }
+
+  function openProgram(name){
+    const panel = document.getElementById("program-" + name);
+    if(!panel) return;
+    closePrograms();
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden","false");
+    document.body.classList.add("program-detail-open");
+    panel.scrollTop = 0;
+  }
+  }
+
+  document.querySelectorAll(".program-card").forEach(card => {
+    card.addEventListener("click", function(event){
+      if(event.target.closest("a")) return;
+      openProgram(card.dataset.program);
+    });
+  });
+
+  document.querySelectorAll(".program-back").forEach(button => {
+    button.addEventListener("click", closePrograms);
+  });
+
+  document.querySelectorAll("[data-close-program]").forEach(link => {
+    link.addEventListener("click", closePrograms);
+  });
+
+  document.addEventListener("keydown", function(event){
+    if(event.key === "Escape") closePrograms();
+  });
+})();
+</script>
+
+
+<script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then(function (registration) {
-        console.log("Neo School India Service Worker registered successfully.");
-      })
-      .catch(function (error) {
-        console.log("Service Worker registration failed:", error);
-      });
+    navigator.serviceWorker.register("/service-worker.js").catch(function () {});
   });
 }
+</script>
+
+
+<script>
+(function(){
+  document.querySelectorAll("[data-open-program]").forEach(el=>{
+    if(el.dataset.neoBound === "1") return;
+    el.dataset.neoBound = "1";
+    el.addEventListener("click", function(event){
+      event.preventDefault();
+      const name = el.dataset.openProgram;
+      const panel = document.getElementById("program-" + name);
+      if(!panel) return;
+      document.querySelectorAll(".program-detail").forEach(p=>{
+        p.classList.remove("open");
+        p.setAttribute("aria-hidden","true");
+      });
+      panel.classList.add("open");
+      panel.setAttribute("aria-hidden","false");
+      document.body.classList.add("program-detail-open");
+      panel.scrollTop = 0;
+    });
+  });
+})();
 </script>
 
 </body>
