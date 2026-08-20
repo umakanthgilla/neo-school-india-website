@@ -4654,6 +4654,20 @@ item
 
 </script>
 
+   <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then(function (registration) {
+        console.log("Neo School India Service Worker registered successfully.");
+      })
+      .catch(function (error) {
+        console.log("Service Worker registration failed:", error);
+      });
+  });
+}
+</script>
 
 </body>
 
