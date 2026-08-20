@@ -736,7 +736,6 @@ font-size:
 17px;
 
 color:
-
 var(--muted);
 
 }
@@ -2274,7 +2273,7 @@ section.neo-section:not([id]) .neo-mascot.scene-walk{
 /* CONTACT:
    Keep the peek character at the outside right edge so form fields remain clear. */
 #contact .neo-mascot.scene-peek{
-  right:0% !important;
+  right:-8% !important;
   left:auto !important;
   bottom:-3px !important;
   top:auto !important;
@@ -2283,7 +2282,7 @@ section.neo-section:not([id]) .neo-mascot.scene-walk{
 /* ABOUT:
    Preserve clean official-logo area and keep Neo toward the outside edge. */
 #about .neo-mascot.scene-peek{
-  right:0% !important;
+  right:-7% !important;
   left:auto !important;
   bottom:-3px !important;
   top:auto !important;
@@ -2291,500 +2290,19 @@ section.neo-section:not([id]) .neo-mascot.scene-walk{
 
 @media(max-width:950px){
   #imls .neo-mascot.scene-hero{right:-14% !important;}
-  #franchise .neo-mascot.scene-hero{left:-3% !important;}
-  #contact .neo-mascot.scene-peek{right:-3% !important;}
+  #franchise .neo-mascot.scene-hero{left:-14% !important;}
+  #contact .neo-mascot.scene-peek{right:-15% !important;}
   #about .neo-mascot.scene-peek{right:-14% !important;}
 }
 
 @media(max-width:600px){
   #imls .neo-mascot.scene-hero{right:-30% !important;}
   #franchise .neo-mascot.scene-hero{left:-30% !important;}
-  #contact .neo-mascot.scene-peek{right:-8% !important;}
+  #contact .neo-mascot.scene-peek{right:-30% !important;}
   #about .neo-mascot.scene-peek{right:-30% !important;}
 }
-.footer-brand-row{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:30px;
-  margin-bottom:18px;
-}
 
-.footer-brand-row .footer-logo{
-  width:260px;
-  margin:0;
-}
-
-.footer-logo-animation{
-  width:320px;
-  height:180px;
-  margin:0;
-  display:block;
-  object-fit:contain;
-  border-radius:18px;
-  background:white;
-  flex-shrink:0;
-}
-}
-}
-
-@media(max-width:600px){
-  .footer-brand-row{
-    gap:16px;
-  }
-
-  .footer-brand-row .footer-logo,
-  .footer-logo-animation{
-    width:46%;
-  }
-}/* FINAL FOOTER FIX */
-
-.footer-premium-layout{
-  display:grid !important;
-  grid-template-columns:1fr 1.1fr 1fr !important;
-  align-items:center !important;
-  gap:35px !important;
-  padding:30px 35px !important;
-  border:3px solid #0878DF !important;
-  border-radius:36px !important;
-  background:#071B52 !important;
-}
-
-.footer-side{
-  text-align:center !important;
-}
-
-.footer-media-card{
-  width:100% !important;
-  max-width:300px !important;
-  height:190px !important;
-  margin:0 auto 16px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  background:#fff !important;
-  border-radius:22px !important;
-  overflow:hidden !important;
-}
-
-.footer-static-logo{
-  width:85% !important;
-  height:85% !important;
-  max-width:260px !important;
-  object-fit:contain !important;
-  display:block !important;
-}
-
-.footer-video-card{
-  max-width:340px !important;
-  height:210px !important;
-}
-
-.footer-logo-animation{
-  width:100% !important;
-  height:100% !important;
-  max-width:none !important;
-  margin:0 !important;
-  display:block !important;
-  object-fit:cover !important;
-  background:#fff !important;
-}
-
-.footer-center{
-  text-align:center !important;
-}
-
-.footer-main-tag{
-  display:flex !important;
-  justify-content:center !important;
-  gap:14px !important;
-  font-weight:900 !important;
-  letter-spacing:3px !important;
-  margin-bottom:14px !important;
-}
-
-.footer-powered{
-  font-weight:900 !important;
-  letter-spacing:2px !important;
-}
-
-.footer-center h2{
-  color:#fff !important;
-  font-size:26px !important;
-  line-height:1.25 !important;
-  margin-top:18px !important;
-}
-
-.footer-bottom-row{
-  display:flex !important;
-  justify-content:space-between !important;
-  align-items:center !important;
-  gap:20px !important;
-  padding:20px 20px 0 !important;
-}
-
-.footer-social{
-  display:flex !important;
-  gap:12px !important;
-}
-
-.footer-social a{
-  width:40px !important;
-  height:40px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  border:1px solid #0878DF !important;
-  border-radius:50% !important;
-  color:#fff !important;
-}
-
-@media(max-width:950px){
-  .footer-premium-layout{
-    grid-template-columns:1fr 1fr !important;
-  }
-
-  .footer-center{
-    grid-column:1 / -1 !important;
-    grid-row:1 !important;
-  }
-}
-
-@media(max-width:600px){
-  .footer-premium-layout{
-    grid-template-columns:1fr !important;
-    padding:22px 16px !important;
-  }
-
-  .footer-center{
-    grid-column:auto !important;
-    grid-row:auto !important;
-  }
-
-  .footer-media-card,
-  .footer-video-card{
-    max-width:290px !important;
-    height:185px !important;
-  }
-
-  .footer-bottom-row{
-    flex-direction:column !important;
-  }
-}/* ==========================================
-   NEO FOOTER — FINAL PREMIUM TEXT STYLING
-========================================== */
-
-/* CENTER — LEARN • GROW • LEAD */
-
-.footer-main-tag span:nth-of-type(1){
-  color:#22A8F6 !important;
-}
-
-.footer-main-tag span:nth-of-type(2){
-  color:#63C94C !important;
-}
-
-.footer-main-tag span:nth-of-type(3){
-  color:#FF8A22 !important;
-}
-
-.footer-main-tag b{
-  color:#F5C928 !important;
-}
-
-
-/* POWERED BY IMLS — BRAND GRADIENT */
-
-.footer-powered{
-  font-size:15px !important;
-  font-weight:900 !important;
-  letter-spacing:2.5px !important;
-
-  background:linear-gradient(
-    90deg,
-    #0878DF 0%,
-    #00A7C7 22%,
-    #43B640 42%,
-    #F5C400 60%,
-    #FF7A16 78%,
-    #F52572 100%
-  ) !important;
-
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  color:transparent !important;
-}
-
-
-/* CENTER HEADLINE — CLEAN CORPORATE LOOK */
-
-.footer-center h2{
-  color:#FFFFFF !important;
-  font-family:Arial, Helvetica, sans-serif !important;
-  font-size:27px !important;
-  font-weight:700 !important;
-  line-height:1.22 !important;
-  letter-spacing:-0.5px !important;
-  margin-top:18px !important;
-  text-shadow:0 4px 18px rgba(0,0,0,.20) !important;
-}
-
-
-/* LEFT — NEO SCHOOL INDIA */
-
-.footer-left h3{
-  font-size:20px !important;
-  font-weight:800 !important;
-  letter-spacing:.2px !important;
-
-  background:linear-gradient(
-    90deg,
-    #0878DF,
-    #00A7C7,
-    #43B640,
-    #F5C400,
-    #FF7A16,
-    #F52572
-  ) !important;
-
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  color:transparent !important;
-}
-
-.footer-left p{
-  font-size:13px !important;
-  font-weight:700 !important;
-  letter-spacing:.7px !important;
-
-  background:linear-gradient(
-    90deg,
-    #22A8F6,
-    #63C94C,
-    #F5C928,
-    #FF8A22
-  ) !important;
-
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  color:transparent !important;
-}
-
-
-/* RIGHT — MEET NEO */
-
-.footer-right h3{
-  font-size:20px !important;
-  font-weight:800 !important;
-
-  background:linear-gradient(
-    90deg,
-    #21A8F6,
-    #43B640,
-    #F5C400,
-    #FF7A16
-  ) !important;
-
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  color:transparent !important;
-}
-
-.footer-right p{
-  color:#CFD9EC !important;
-  font-size:13px !important;
-  font-weight:500 !important;
-  letter-spacing:.3px !important;
-}
-
-
-/* COPYRIGHT */
-
-.footer-copyright{
-  font-size:12px !important;
-  font-weight:600 !important;
-  letter-spacing:.2px !important;
-
-  background:linear-gradient(
-    90deg,
-    #AAB6CC,
-    #21A8F6,
-    #43B640,
-    #F5C400,
-    #FF7A16,
-    #F52572,
-    #AAB6CC
-  ) !important;
-
-  -webkit-background-clip:text !important;
-  background-clip:text !important;
-  -webkit-text-fill-color:transparent !important;
-  color:transparent !important;
-}
-
-
-/* SOCIAL BUTTON BRAND COLORS */
-
-.footer-social a:nth-child(1){
-  background:linear-gradient(
-    135deg,
-    #833AB4,
-    #FD1D1D,
-    #FCAF45
-  ) !important;
-  border:none !important;
-}
-
-.footer-social a:nth-child(2){
-  background:#1877F2 !important;
-  border:none !important;
-}
-
-.footer-social a:nth-child(3){
-  background:#25D366 !important;
-  border:none !important;
-}
-
-.footer-social a:nth-child(4){
-  background:#FF0000 !important;
-  border:none !important;
-}
-
-.footer-social a{
-  color:#FFFFFF !important;
-  font-weight:900 !important;
-  box-shadow:0 5px 14px rgba(0,0,0,.22) !important;
-}
-
-.footer-social a:hover{
-  transform:translateY(-3px) scale(1.06) !important;
-}
 </style>
-/* ==========================================
-   FOOTER FINAL COLOR + FONT CORRECTION
-========================================== */
-
-/* LEARN • GROW • LEAD — INDIVIDUAL COLORS */
-
-.footer-main-tag span:nth-of-type(1){
-  color:#21A8F6 !important;
-  background:none !important;
-  -webkit-text-fill-color:initial !important;
-}
-
-.footer-main-tag span:nth-of-type(2){
-  color:#63C94C !important;
-  background:none !important;
-  -webkit-text-fill-color:initial !important;
-}
-
-.footer-main-tag span:nth-of-type(3){
-  color:#FF8A22 !important;
-  background:none !important;
-  -webkit-text-fill-color:initial !important;
-}
-
-.footer-main-tag b{
-  color:#F5C928 !important;
-}
-
-
-/* POWERED BY IMLS — CLEAN SINGLE COLOR */
-
-.footer-powered{
-  background:none !important;
-  -webkit-background-clip:initial !important;
-  background-clip:initial !important;
-  -webkit-text-fill-color:initial !important;
-
-  color:#F5C928 !important;
-  font-weight:700 !important;
-  letter-spacing:2px !important;
-}
-
-
-/* CENTER HEADLINE — LIGHTER, CLEANER, PREMIUM */
-
-.footer-center h2{
-  color:#FFFFFF !important;
-
-  font-family:
-  Arial,
-  Helvetica,
-  sans-serif !important;
-
-  font-size:25px !important;
-  font-weight:500 !important;
-
-  line-height:1.3 !important;
-  letter-spacing:-0.2px !important;
-
-  text-shadow:none !important;
-}
-
-
-/* LEFT TITLE — NO GRADIENT */
-
-.footer-left h3{
-  background:none !important;
-  -webkit-background-clip:initial !important;
-  background-clip:initial !important;
-  -webkit-text-fill-color:initial !important;
-
-  color:#FFFFFF !important;
-  font-weight:700 !important;
-}
-
-
-/* LEFT MINI TAG — EACH WORD DIFFERENT COLOR */
-
-.footer-left p{
-  background:none !important;
-  -webkit-background-clip:initial !important;
-  background-clip:initial !important;
-  -webkit-text-fill-color:initial !important;
-
-  color:#C9D4E6 !important;
-  font-weight:500 !important;
-}
-
-
-/* RIGHT TITLE — CLEAN */
-
-.footer-right h3{
-  background:none !important;
-  -webkit-background-clip:initial !important;
-  background-clip:initial !important;
-  -webkit-text-fill-color:initial !important;
-
-  color:#FFFFFF !important;
-  font-weight:700 !important;
-}
-
-.footer-right p{
-  color:#C9D4E6 !important;
-  font-weight:400 !important;
-}
-
-
-/* COPYRIGHT — SIMPLE + CLASSY */
-
-.footer-copyright{
-  background:none !important;
-  -webkit-background-clip:initial !important;
-  background-clip:initial !important;
-  -webkit-text-fill-color:initial !important;
-
-  color:#C5D0E2 !important;
-  font-weight:400 !important;
-  letter-spacing:.2px !important;
-}
-   
 
 </head>
 
@@ -3836,96 +3354,37 @@ Send Enquiry on WhatsApp
 
 <div class="container">
 
-  <div class="footer-premium-layout">
 
-    <div class="footer-side footer-left">
-      <div class="footer-media-card">
-        <img
-          src="neo logo.jpeg"
-          class="footer-static-logo"
-          alt="Neo School India">
-      </div>
+<img
+src="neo logo.jpeg"
+class="footer-logo"
+alt="Neo School India">
 
-   <h3 class="footer-brand-title">
-  <span class="neo-blue">Neo</span>
-  <span class="neo-green">School</span>
-  <span class="neo-orange">India</span>
-</h3>
 
-<p class="footer-mini-colors">
-  <span class="learn">Learn</span>
-  <b>•</b>
-  <span class="grow">Grow</span>
-  <b>•</b>
-  <span class="lead">Lead</span>
+<div class="footer-tag">
+
+LEARN • GROW • LEAD
+&nbsp; | &nbsp;
+POWERED BY IMLS
+
+</div>
+
+
+<p>
+
+A new generation
+of joyful learning.
+
 </p>
-    </div>
 
 
-    <div class="footer-center">
+<div class="copyright">
 
-      <div class="footer-main-tag">
-        <span>LEARN</span>
-        <b>•</b>
-        <span>GROW</span>
-        <b>•</b>
-        <span>LEAD</span>
-      </div>
+© 2026 Neo School India.
+All Rights Reserved.
 
-      <div class="footer-powered">
-        POWERED BY IMLS
-      </div>
+</div>
 
-      <div class="footer-small-line"></div>
-
-      <h2>
-        A new generation of<br>
-        joyful learning.
-      </h2>
-
-    </div>
-
-
-    <div class="footer-side footer-right">
-
-      <div class="footer-media-card footer-video-card">
-        <video
-          class="footer-logo-animation"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="auto">
-          <source
-            src="neo.logo.animation.mp4"
-            type="video/mp4">
-        </video>
-      </div>
-
-      <h3>Meet Neo</h3>
-      <p>Our joyful learning companion</p>
-
-    </div>
-
-  </div>
-
-
-  <div class="footer-bottom-row">
-
-    <div class="footer-copyright">
-      © 2026 Neo School India. All Rights Reserved.
-    </div>
-
-    <div class="footer-social">
-
-      <a href="#" aria-label="Instagram">◎</a>
-      <a href="#" aria-label="Facebook">f</a>
-      <a href="#" aria-label="WhatsApp">◉</a>
-      <a href="#" aria-label="YouTube">▶</a>
-
-    </div>
-
-  </div>
 
 </div>
 
