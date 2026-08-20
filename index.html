@@ -2049,259 +2049,6 @@ transform:none;
  #neoMascot.scene-peek{width:350px !important;height:350px !important;}
 }
 
-
-/* =========================================================
-   FINAL NEO SCHOOL INDIA WEBSITE FIX
-   - approved mascot sizes preserved
-   - one permanent mascot per main section
-   - continuous loop, no disappearing on scroll
-   - grounded on dark-blue edge
-   - compact hero spacing
-   - hero brand artwork slightly larger and higher
-========================================================= */
-
-.hero{
-  min-height:0 !important;
-  padding-top:0 !important;
-  margin-top:0 !important;
-  align-items:flex-start !important;
-}
-
-.hero-grid{
-  padding:8px 0 30px !important;
-  min-height:0 !important;
-  align-items:center !important;
-}
-
-.hero-copy{
-  padding-top:0 !important;
-  margin-top:0 !important;
-  align-self:start !important;
-  position:relative;
-  z-index:3;
-}
-
-.hero-copy .badge{
-  margin-top:0 !important;
-}
-
-.hero-art{
-  min-height:430px !important;
-  position:relative;
-  z-index:2;
-  align-items:flex-start !important;
-  padding-top:4px !important;
-}
-
-.hero-banner{
-  width:100% !important;
-  max-width:585px !important;
-  transform:translateY(-8px) !important;
-}
-
-.neo-section{
-  position:relative !important;
-  overflow:hidden !important;
-  border-bottom:8px solid var(--navy) !important;
-}
-
-.neo-mascot{
-  position:absolute !important;
-  z-index:40 !important;
-  pointer-events:none !important;
-  overflow:visible !important;
-  background:transparent !important;
-  opacity:1 !important;
-  visibility:visible !important;
-  display:block !important;
-  filter:drop-shadow(0 12px 16px rgba(7,27,82,.12));
-  transition:none !important;
-}
-
-.neo-video{
-  width:100% !important;
-  height:100% !important;
-  display:block !important;
-  object-fit:contain !important;
-  object-position:center bottom !important;
-  background:transparent !important;
-  opacity:1 !important;
-  visibility:visible !important;
-}
-
-/* HERO / WAVE — approved current size */
-.neo-mascot.scene-hero{
-  width:clamp(417px,33.75vw,552px) !important;
-  height:clamp(417px,33.75vw,552px) !important;
-  right:3% !important;
-  left:auto !important;
-  top:auto !important;
-  bottom:-3px !important;
-  transform:none !important;
-}
-.neo-mascot.scene-hero .neo-video{
-  transform:scale(1.10) translateY(4%) !important;
-  transform-origin:center bottom !important;
-}
-
-/* WALK — approved current size */
-.neo-mascot.scene-walk{
-  width:clamp(395px,31.5vw,507px) !important;
-  height:clamp(395px,31.5vw,507px) !important;
-  left:3% !important;
-  right:auto !important;
-  top:auto !important;
-  bottom:-3px !important;
-  transform:none !important;
-}
-.neo-mascot.scene-walk .neo-video{
-  transform:scale(1.12) translateY(4%) !important;
-  transform-origin:center bottom !important;
-}
-
-/* PEEK / HIDE — approved current size */
-.neo-mascot.scene-peek{
-  width:clamp(428px,36vw,563px) !important;
-  height:clamp(428px,36vw,563px) !important;
-  right:2.5% !important;
-  left:auto !important;
-  top:auto !important;
-  bottom:-3px !important;
-  transform:none !important;
-}
-.neo-mascot.scene-peek .neo-video{
-  object-position:center bottom !important;
-  transform:scale(1.10) translateY(4%) !important;
-  transform-origin:center bottom !important;
-}
-
-#whyneo .neo-mascot.scene-peek{
-  right:calc(2.5% - 6px) !important;
-}
-
-#about .about-image{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:340px;
-  background:#fff;
-}
-#about .about-image img{
-  width:min(88%,520px);
-  height:auto;
-  object-fit:contain;
-  border-radius:0;
-}
-
-@media(max-width:950px){
-  .hero-grid{padding:7px 0 24px !important;}
-  .hero-banner{max-width:540px !important;transform:translateY(-6px) !important;}
-
-  .neo-mascot.scene-hero{
-    width:428px !important;
-    height:428px !important;
-  }
-  .neo-mascot.scene-walk{
-    width:395px !important;
-    height:395px !important;
-  }
-  .neo-mascot.scene-peek{
-    width:462px !important;
-    height:462px !important;
-  }
-}
-
-@media(max-width:600px){
-  .hero-grid{padding:6px 0 20px !important;}
-  .hero-banner{max-width:100% !important;transform:translateY(-4px) !important;}
-  .neo-section{border-bottom-width:6px !important;}
-
-  .neo-mascot.scene-hero{
-    width:327px !important;
-    height:327px !important;
-    right:-4px !important;
-  }
-  .neo-mascot.scene-walk{
-    width:327px !important;
-    height:327px !important;
-    left:-5px !important;
-  }
-  .neo-mascot.scene-peek{
-    width:350px !important;
-    height:350px !important;
-    right:-5px !important;
-  }
-  #whyneo .neo-mascot.scene-peek{
-    right:-11px !important;
-  }
-  #about .about-image{min-height:220px;}
-}
-
-
-/* =========================================================
-   FINAL VIDEO-REVIEW PLACEMENT CORRECTIONS
-   IMPORTANT: mascot sizes and continuous-loop engine unchanged.
-========================================================= */
-
-/* IMLS:
-   Keep Neo away from the 04 / Evolve card and on the section edge. */
-#imls .neo-mascot.scene-hero{
-  right:-7% !important;
-  left:auto !important;
-  bottom:-3px !important;
-  top:auto !important;
-}
-
-/* BRAND:
-   Keep walking Neo grounded without covering the banner copy/CTA. */
-section.neo-section:not([id]) .neo-mascot.scene-walk{
-  left:-4% !important;
-  right:auto !important;
-  bottom:-3px !important;
-}
-
-/* FRANCHISE:
-   The card already contains a large static Neo on the right.
-   Put the animated Neo on the opposite outer edge to avoid duplication/clutter. */
-#franchise .neo-mascot.scene-hero{
-  left:-8% !important;
-  right:auto !important;
-  bottom:-3px !important;
-  top:auto !important;
-}
-
-/* CONTACT:
-   Keep the peek character at the outside right edge so form fields remain clear. */
-#contact .neo-mascot.scene-peek{
-  right:-8% !important;
-  left:auto !important;
-  bottom:-3px !important;
-  top:auto !important;
-}
-
-/* ABOUT:
-   Preserve clean official-logo area and keep Neo toward the outside edge. */
-#about .neo-mascot.scene-peek{
-  right:-7% !important;
-  left:auto !important;
-  bottom:-3px !important;
-  top:auto !important;
-}
-
-@media(max-width:950px){
-  #imls .neo-mascot.scene-hero{right:-14% !important;}
-  #franchise .neo-mascot.scene-hero{left:-14% !important;}
-  #contact .neo-mascot.scene-peek{right:-15% !important;}
-  #about .neo-mascot.scene-peek{right:-14% !important;}
-}
-
-@media(max-width:600px){
-  #imls .neo-mascot.scene-hero{right:-30% !important;}
-  #franchise .neo-mascot.scene-hero{left:-30% !important;}
-  #contact .neo-mascot.scene-peek{right:-30% !important;}
-  #about .neo-mascot.scene-peek{right:-30% !important;}
-}
-
 </style>
 
 </head>
@@ -3392,7 +3139,30 @@ All Rights Reserved.
 
 
 
-<!-- Permanent Neo mascots are created per section by JavaScript -->
+<!-- =========================================================
+     TRANSPARENT NEO MASCOT
+========================================================= -->
+
+<div
+id="neoMascot"
+class="scene-hero">
+
+<video
+id="neoVideo"
+muted
+playsinline
+preload="auto">
+
+<source
+src="neo-wave.webm"
+type="video/webm">
+
+</video>
+
+</div>
+
+
+
 <script>
 
 /* =========================================================
@@ -3510,91 +3280,166 @@ url,
 
 
 /* =========================================================
-   NEO CHARACTER ENGINE — PERMANENT PER SECTION
+   NEO CHARACTER ENGINE
 ========================================================= */
 
-const neoSections = document.querySelectorAll(".neo-section");
+const neoMascot =
+document.getElementById("neoMascot");
 
-neoSections.forEach(section => {
-  const scene = section.dataset.scene || "hero";
-  const videoFile = section.dataset.video || "neo-wave.webm";
 
-  const mascot = document.createElement("div");
-  mascot.className = "neo-mascot scene-" + scene;
-  mascot.setAttribute("aria-hidden", "true");
+const neoVideo =
+document.getElementById("neoVideo");
 
-  const video = document.createElement("video");
-  video.className = "neo-video";
-  video.src = videoFile;
-  video.muted = true;
-  video.defaultMuted = true;
-  video.loop = true;
-  video.autoplay = true;
-  video.playsInline = true;
-  video.preload = "auto";
 
-  video.setAttribute("muted", "");
-  video.setAttribute("loop", "");
-  video.setAttribute("autoplay", "");
-  video.setAttribute("playsinline", "");
+let currentVideo = "";
 
-  mascot.appendChild(video);
-  section.appendChild(mascot);
 
-  const playNeo = () => {
-    if (video.paused) {
-      const p = video.play();
-      if (p !== undefined) p.catch(() => {});
-    }
-  };
+function changeNeoScene(
+scene,
+video,
+targetSection = null
+){
 
-  video.addEventListener("loadeddata", playNeo);
-  video.addEventListener("canplay", playNeo);
-  video.addEventListener("ended", () => {
-    video.currentTime = 0;
-    playNeo();
-  });
+if(
+!scene ||
+!video
+){
+return;
+}
 
-  playNeo();
-});
 
-const neoPlaybackObserver = new IntersectionObserver(
-  entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
+/* ATTACH NEO TO THIS SECTION — NOT TO THE SCREEN */
+const activeSection = targetSection || document.querySelector('.neo-section[data-scene="' + scene + '"]');
+if(activeSection && neoMascot.parentElement !== activeSection){
+  activeSection.appendChild(neoMascot);
+}
 
-      entry.target.querySelectorAll(".neo-video").forEach(video => {
-        if (video.paused) {
-          const p = video.play();
-          if (p !== undefined) p.catch(() => {});
-        }
-      });
-    });
-  },
-  { threshold:0.01 }
+/* CHANGE POSITION INSIDE THAT SECTION */
+neoMascot.className = "scene-" + scene;
+
+
+/* CHANGE VIDEO */
+
+if(
+currentVideo !== video
+){
+
+currentVideo =
+video;
+
+neoVideo.pause();
+
+neoVideo.src =
+video;
+
+neoVideo.load();
+
+neoVideo.currentTime =
+0;
+
+
+/*
+Walk and Fly can loop while
+the user remains in that section.
+*/
+
+if(
+scene === "walk"
+){
+
+neoVideo.loop =
+true;
+
+}
+else{
+
+neoVideo.loop =
+false;
+
+}
+
+
+const playPromise =
+neoVideo.play();
+
+
+if(
+playPromise !== undefined
+){
+
+playPromise.catch(
+() => {}
 );
 
-neoSections.forEach(section => neoPlaybackObserver.observe(section));
+}
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) return;
+}
 
-  document.querySelectorAll(".neo-video").forEach(video => {
-    if (video.paused) {
-      const p = video.play();
-      if (p !== undefined) p.catch(() => {});
-    }
-  });
-});
+}
 
-window.addEventListener("pageshow", () => {
-  document.querySelectorAll(".neo-video").forEach(video => {
-    if (video.paused) {
-      const p = video.play();
-      if (p !== undefined) p.catch(() => {});
-    }
-  });
-});
+
+/* =========================================================
+   SECTION OBSERVER
+========================================================= */
+
+const neoSections =
+document.querySelectorAll(
+".neo-section"
+);
+
+
+const sceneObserver =
+new IntersectionObserver(
+
+entries => {
+
+const visible = entries
+.filter(entry => entry.isIntersecting)
+.sort((a,b) => b.intersectionRatio - a.intersectionRatio);
+
+if(visible.length){
+ const active = visible[0].target;
+ changeNeoScene(active.dataset.scene, active.dataset.video);
+}
+
+},
+
+{
+
+threshold:
+0.12
+
+}
+
+);
+
+
+neoSections.forEach(
+section => {
+
+sceneObserver.observe(
+section
+);
+
+}
+);
+
+
+/* =========================================================
+   INITIAL HERO
+========================================================= */
+
+window.addEventListener(
+"load",
+() => {
+
+changeNeoScene(
+"hero",
+"neo-wave.webm"
+);
+
+}
+);
 
 
 /* =========================================================
