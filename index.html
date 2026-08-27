@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Neo School India | Learn • Grow • Lead</title>
+  <meta name="description" content="Neo School India — joyful, child-centric preschool learning powered by IMLS. Explore programs, videos, admissions and franchise opportunities.">
+  <meta name="theme-color" content="#071b52">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/neo-icon-192.png">
+
+  <style>
+    :root{
+      --navy:#071b52;
+      --blue:#118be8;
+      --green:#4dbb42;
+      --yellow:#f4c400;
+      --orange:#ff7a16;
+      --pink:#ef3b78;
+      --cyan:#18b3ce;
+      --text:#12213c;
+      --muted:#6c7890;
+      --line:#e6edf6;
+      --soft:#f7faff;
+      --grad:linear-gradient(90deg,var(--blue),var(--green),var(--yellow),var(--orange),var(--pink));
+      --shadow:0 14px 38px rgba(7,27,82,.08);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:#fff;
+      line-height:1.55;
+    }
+    img,video{max-width:100%;display:block}
+    a{text-decoration:none;color:inherit}
+    button{font:inherit}
+    .container{width:min(1160px,92%);margin:auto}
+
+    /* HEADER */
+    header{
+      position:sticky;top:0;z-index:1000;
+      background:rgba(255,255,255,.95);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);
+    }
+    .nav{
+      min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    }
+    .brand img{width:152px;height:auto}
+    .links{display:flex;align-items:center;gap:22px;font-size:14px;font-weight:750;color:var(--navy)}
+    .links a:hover{color:var(--blue)}
+    .nav-cta{
+      padding:10px 16px;border-radius:999px;color:#fff!important;
+      background:var(--navy);
+    }
+
+    /* HERO */
+    .hero{
+      position:relative;overflow:hidden;
+      background:
+        radial-gradient(circle at 10% 10%,rgba(17,139,232,.08),transparent 26%),
+        radial-gradient(circle at 92% 20%,rgba(77,187,66,.07),transparent 20%),
+        linear-gradient(180deg,#fff,#f8fbff);
+      border-bottom:1px solid var(--line);
+    }
+    .hero::after{
+      content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--grad);
+    }
+    .hero-grid{
+      min-height:620px;display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:46px;
+      padding:54px 0;
+    }
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;background:#eef6ff;color:var(--blue);
+      font-size:12px;font-weight:900;letter-spacing:1.3px;
+    }
+    .badge-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+    h1{
+      font-size:clamp(44px,6vw,78px);line-height:.98;margin:18px 0 20px;color:var(--navy);
+      letter-spacing:-2px;
+    }
+    .gradient-text{
+      display:block;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+    }
+    .hero p{max-width:660px;color:var(--muted);font-size:18px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-height:48px;padding:12px 20px;border-radius:14px;border:1px solid var(--line);
+      font-weight:850;cursor:pointer;
+    }
+    .btn-dark{background:var(--navy);color:#fff;border-color:var(--navy)}
+    .btn-brand{background:var(--grad);color:#fff;border:0}
+    .btn-light{background:#fff;color:var(--navy)}
+    .hero-art{
+      min-height:420px;display:flex;align-items:center;justify-content:center;
+      background:#071b52;border-radius:34px;overflow:hidden;box-shadow:var(--shadow);position:relative;
+    }
+    .hero-art::after{content:"";position:absolute;inset:auto 0 0;height:5px;background:var(--grad)}
+    .hero-art video{width:100%;height:100%;min-height:420px;object-fit:contain}
+
+    /* GENERAL */
+    section{padding:72px 0}
+    .section-head{text-align:center;max-width:800px;margin:0 auto 32px}
+    .eyebrow{font-size:12px;font-weight:900;letter-spacing:1.7px;color:var(--blue);text-transform:uppercase}
+    h2{font-size:clamp(30px,4vw,46px);line-height:1.08;margin:9px 0 12px;color:var(--navy)}
+    .section-head p{color:var(--muted);margin:0}
+
+    /* SIMPLE PROMISE */
+    .promise{background:var(--navy);color:#fff;padding:30px 0}
+    .promise-row{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:0;text-align:center
+    }
+    .promise-item{padding:14px 20px;border-right:1px solid rgba(255,255,255,.12)}
+    .promise-item:last-child{border-right:0}
+    .promise-item b{display:block;color:#fff;font-size:16px;margin-bottom:4px}
+    .promise-item span{font-size:12px;color:#cbd8ee}
+
+    /* PROGRAMS */
+    .programs{background:#fff}
+    .cards{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:14px;
+    }
+    .card{
+      background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px 18px;
+      box-shadow:0 8px 22px rgba(7,27,82,.045);position:relative;overflow:hidden;
+    }
+    .card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad)}
+    .card .icon{
+      width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:#f3f8ff;font-size:22px;margin-bottom:13px;
+    }
+    .card h3{margin:0 0 6px;color:var(--navy);font-size:17px}
+    .card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+
+    /* WHY NEO */
+    .why{background:var(--soft)}
+    .why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .why-card{
+      background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;
+      box-shadow:0 8px 22px rgba(7,27,82,.045)
+    }
+    .why-card b{display:block;color:var(--navy);margin-bottom:7px}
+    .why-card p{margin:0;color:var(--muted);font-size:14px}
+
+    /* VIDEOS */
+    .videos{background:#fff}
+    .video-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .video-card{
+      border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;box-shadow:var(--shadow)
+    }
+    .thumb{aspect-ratio:16/9;background:var(--navy);position:relative;overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .play{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:48px;height:48px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+      color:#ff0000;font-size:18px;font-weight:900;box-shadow:0 8px 20px rgba(0,0,0,.18)
+    }
+    .video-copy{padding:16px}
+    .video-copy b{display:block;color:var(--navy);font-size:14px;margin-bottom:5px}
+    .video-copy span{font-size:12px;color:var(--blue);font-weight:800}
+
+    /* FRANCHISE */
+    .franchise{
+      background:
+        radial-gradient(circle at 10% 10%,rgba(17,139,232,.2),transparent 28%),
+        radial-gradient(circle at 90% 90%,rgba(239,59,120,.12),transparent 25%),
+        var(--navy);
+      color:#fff;
+    }
+    .franchise-box{
+      display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:30px;
+      border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:36px;background:rgba(255,255,255,.05)
+    }
+    .franchise h2{color:#fff;margin-top:8px}
+    .franchise p{color:#d4e0f3;max-width:650px}
+    .mini-points{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
+    .mini-points span{
+      padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);font-size:13px
+    }
+    .franchise-neo{
+      display:flex;justify-content:center;align-items:center
+    }
+    .franchise-neo img{max-width:260px;filter:drop-shadow(0 16px 20px rgba(0,0,0,.2))}
+
+    /* CONTACT */
+    .contact{background:var(--soft)}
+    .contact-box{
+      display:flex;justify-content:space-between;align-items:center;gap:26px;
+      background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)
+    }
+    .contact-box h3{margin:0 0 5px;color:var(--navy);font-size:24px}
+    .contact-box p{margin:0;color:var(--muted)}
+    .contact-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* FOOTER */
+    footer{
+      background:#061744;color:#fff;padding:42px 0 24px;position:relative
+    }
+    footer::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--grad)}
+    .footer-main{
+      display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:30px;align-items:center
+    }
+    .footer-brand h3{font-size:22px;margin:0 0 7px}
+    .mini-colors{font-size:14px;font-weight:800}
+    .mini-colors .l{color:#19a7f2}.mini-colors .g{color:#62c83f}.mini-colors .d{color:#ff7a16}
+    .footer-center{text-align:center}
+    .footer-center .tag{font-weight:900;letter-spacing:2px}
+    .footer-center .tag .l{color:#19a7f2}.footer-center .tag .g{color:#62c83f}.footer-center .tag .d{color:#ff7a16}
+    .footer-center .powered{font-size:12px;color:#f4c400;letter-spacing:1.6px;margin-top:5px}
+    .footer-center .line{height:3px;background:var(--grad);border-radius:99px;margin:14px auto;width:75%}
+    .footer-center h3{margin:0;font-size:22px}
+    .footer-video{
+      width:210px;margin-left:auto;border-radius:20px;overflow:hidden;background:#fff;
+      border:1px solid rgba(255,255,255,.16)
+    }
+    .footer-video video{width:100%;aspect-ratio:16/10;object-fit:cover}
+    .socials{
+      margin-top:26px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);
+      display:flex;align-items:center;justify-content:center;gap:12px
+    }
+    .socials a{
+      width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:#fff;color:var(--navy);font-weight:900;border:2px solid transparent;
+      background:linear-gradient(#fff,#fff) padding-box,var(--grad) border-box;
+    }
+    .socials svg{width:23px;height:23px;fill:currentColor}
+    .copyright{text-align:center;margin-top:16px;color:#b9c7dd;font-size:12px}
+
+    /* FLOATING NAV */
+    .float-nav{
+      position:fixed;right:16px;bottom:18px;z-index:1500;display:flex;flex-direction:column;gap:9px
+    }
+    .float-btn{
+      width:48px;height:48px;border-radius:50%;border:2px solid transparent;
+      background:linear-gradient(#fff,#fff) padding-box,var(--grad) border-box;
+      color:var(--navy);display:flex;align-items:center;justify-content:center;
+      box-shadow:0 8px 24px rgba(7,27,82,.14);cursor:pointer;font-size:20px;font-weight:900
+    }
+    .wa-float{
+      position:fixed;left:16px;bottom:18px;z-index:1500;width:48px;height:48px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;background:#25d366;color:#fff;
+      border:2px solid transparent;
+      box-shadow:0 8px 24px rgba(7,27,82,.14)
+    }
+    .wa-float svg{width:24px;height:24px;fill:currentColor}
+
+    /* MOBILE */
+    @media(max-width:900px){
+      .links{display:none}
+      .hero-grid{grid-template-columns:1fr;min-height:auto;padding:40px 0}
+      .hero-copy{text-align:center}
+      .hero p{margin-left:auto;margin-right:auto}
+      .actions{justify-content:center}
+      .hero-art{min-height:300px}
+      .hero-art video{min-height:300px}
+      .promise-row{grid-template-columns:repeat(2,1fr)}
+      .promise-item:nth-child(2){border-right:0}
+      .cards,.why-grid,.video-grid{
+        display:flex;overflow-x:auto;gap:14px;scroll-snap-type:x mandatory;
+        padding:4px 4px 16px;scrollbar-width:none
+      }
+      .cards::-webkit-scrollbar,.why-grid::-webkit-scrollbar,.video-grid::-webkit-scrollbar{display:none}
+      .card,.why-card,.video-card{flex:0 0 82%;scroll-snap-align:center}
+      .franchise-box{grid-template-columns:1fr;text-align:center}
+      .mini-points{grid-template-columns:1fr 1fr}
+      .franchise-neo{display:none}
+      .contact-box{flex-direction:column;text-align:center}
+      .contact-actions{justify-content:center}
+      .footer-main{grid-template-columns:1fr;text-align:center}
+      .footer-brand{display:none}
+      .footer-video{margin:auto;width:min(330px,100%)}
+      section{padding:52px 0}
+    }
+    @media(max-width:520px){
+      h1{font-size:48px}
+      .hero-grid{padding:28px 0 36px}
+      .hero-art{min-height:250px;border-radius:26px}
+      .hero-art video{min-height:250px}
+      .promise-row{grid-template-columns:1fr 1fr}
+      .promise-item{padding:11px 8px}
+      .mini-points{grid-template-columns:1fr}
+      .card,.why-card,.video-card{flex-basis:84%}
+      .contact-actions .btn{width:100%}
+      .float-nav{right:12px;bottom:14px}
+      .wa-float{left:12px;bottom:14px}
+      .float-btn,.wa-float{width:46px;height:46px}
+    }
+  
+/* ULTRA-LIGHT PREMIUM additions */
+.latest-lite{
+  max-width:900px;margin:auto;
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:28px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:var(--shadow);
+}
+.latest-lite h3{margin:0 0 8px;color:var(--navy);font-size:26px}
+.latest-lite p{margin:0;color:var(--muted)}
+.latest-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.enquiry-lite{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.enquiry-lite-card{
+  background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.enquiry-lite-card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--grad)}
+.enquiry-lite-card h3{font-size:24px;color:var(--navy);margin:8px 0 8px}
+.enquiry-lite-card p{color:var(--muted);margin:0 0 18px}
+
+/* concise modal */
+.neo-modal{position:fixed;inset:0;z-index:3000;background:rgba(5,18,52,.58);display:none;align-items:center;justify-content:center;padding:18px}
+.neo-modal.open{display:flex}
+.neo-modal-card{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:24px;padding:26px;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.22)}
+.neo-modal-card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--grad)}
+.neo-modal-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--navy);font-size:20px}
+.neo-modal-card h3{font-size:25px;color:var(--navy);margin:6px 0 7px}
+.neo-modal-card p{color:var(--muted);margin:0 0 17px}
+.neo-form{display:grid;gap:12px}
+.neo-form input,.neo-form select,.neo-form textarea{width:100%;padding:13px 14px;border:1px solid #dce5ef;border-radius:12px;background:#fff;color:var(--text)}
+.neo-form textarea{min-height:100px;resize:vertical}
+
+@media(max-width:900px){
+  .latest-lite{flex-direction:column;text-align:center}
+  .latest-links{justify-content:center}
+  .enquiry-lite{grid-template-columns:1fr}
+}
+
+
+/* =========================================================
+   ULTRA-LIGHT PREMIUM V2 — VISUAL POLISH
+   Adds subtle Neo gradient accents without adding content.
+========================================================= */
+
+/* WHY NEO swipe cards: premium gradient top line */
+.why-card{
+  position:relative;
+  overflow:hidden;
+}
+.why-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:4px;
+  background:var(--grad);
+}
+
+/* Latest section: subtle premium gradient accents */
+.latest-card{
+  position:relative;
+  overflow:hidden;
+}
+.latest-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:4px;
+  background:var(--grad);
+}
+
+/* Social links: single clean row + Neo gradient borders */
+.latest-links,
+.social-gateway{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:12px !important;
+  width:100%;
+  margin-top:20px;
+}
+
+.latest-links a,
+.social-gateway a{
+  min-width:0 !important;
+  width:100% !important;
+  min-height:48px;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  padding:11px 12px !important;
+  border:2px solid transparent !important;
+  border-radius:14px !important;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    var(--grad) border-box !important;
+  color:var(--navy) !important;
+  font-weight:850 !important;
+  box-shadow:0 8px 20px rgba(7,27,82,.05);
+}
+
+/* Keep text/content calm but add small Neo line below section labels */
+.section-head .eyebrow{
+  position:relative;
+  display:inline-block;
+  padding-bottom:10px;
+}
+.section-head .eyebrow::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:0;
+  width:72px;
+  height:3px;
+  border-radius:999px;
+  background:var(--grad);
+}
+
+/* Mobile: still keep all 3 social buttons on ONE line */
+@media(max-width:700px){
+  .latest-links,
+  .social-gateway{
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:8px !important;
+  }
+
+  .latest-links a,
+  .social-gateway a{
+    min-height:46px;
+    padding:9px 6px !important;
+    font-size:13px !important;
+    border-radius:13px !important;
+    white-space:nowrap;
+  }
+
+  .why-card{
+    padding-top:26px !important;
+  }
+}
+
+@media(max-width:390px){
+  .latest-links a,
+  .social-gateway a{
+    font-size:12px !important;
+    padding-left:4px !important;
+    padding-right:4px !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL POLISH — CENTERED ACCENT + MUSIC CONTROL
+========================================================= */
+
+/* Remove full-width top accent on Latest card */
+.latest-card::before,
+.latest-lite::before{
+  display:none !important;
+}
+
+/* Short centered Neo gradient line */
+.latest-card::after,
+.latest-lite::after{
+  content:"";
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  width:92px;
+  height:4px;
+  border-radius:999px;
+  background:var(--grad);
+}
+
+/* Give content enough breathing room below the accent */
+.latest-card,
+.latest-lite{
+  position:relative;
+  padding-top:42px !important;
+}
+
+/* Music control appearance */
+#musicBtn.active{
+  color:#159BEA;
+  box-shadow:0 8px 24px rgba(7,27,82,.18), 0 0 0 3px rgba(21,155,234,.08);
+}
+#musicBtn .music-off{display:none}
+#musicBtn:not(.active) .music-on{display:none}
+#musicBtn:not(.active) .music-off{display:inline}
+
+/* Keep footer logo animation visually silent unless sound is enabled */
+
+</style>
+</head>
+
+<body>
+<header>
+  <div class="container nav">
+    <a class="brand" href="#home"><img src="neo-top-logo.jpeg" alt="Neo School India"></a>
+    <nav class="links">
+      <a href="#programs">Programs</a>
+      <a href="#why">Why Neo</a>
+      <a href="#videos">Videos</a>
+      <a href="#franchise">Franchise</a>
+      <a href="#contact" class="nav-cta">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="home">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="badge"><span class="badge-dot"></span> POWERED BY IMLS</div>
+        <h1>A New Way to <span class="gradient-text">Learn. Grow. Lead.</span></h1>
+        <p>Neo School India is a modern, child-centric preschool ecosystem built around joyful learning, strong foundations, confident children and connected parents.</p>
+        <div class="actions">
+          <button class="btn btn-dark" type="button" data-enquiry="admission">Admission Enquiry</button>
+          <button class="btn btn-brand" type="button" data-enquiry="franchise">Franchise Enquiry</button>
+        </div>
+      </div>
+      <div class="hero-art">
+        <video autoplay muted loop playsinline preload="metadata" poster="neo owl.jpeg">
+          <source src="neo-wave.webm" type="video/webm">
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <div class="promise">
+    <div class="container promise-row">
+      <div class="promise-item"><b>Child-Centric</b><span>Age-appropriate joyful learning</span></div>
+      <div class="promise-item"><b>Phonics Strong</b><span>Early reading foundations</span></div>
+      <div class="promise-item"><b>Whole-Child Growth</b><span>Learn beyond worksheets</span></div>
+      <div class="promise-item"><b>Parent Connected</b><span>Clear learning partnership</span></div>
+    </div>
+  </div>
+
+  <section class="programs" id="programs">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">OUR PROGRAMS</div>
+        <h2>Simple. Purposeful. Progressive.</h2>
+        <p>Choose the stage that fits your child’s learning journey.</p>
+      </div>
+      <div class="cards">
+        <div class="card"><div class="icon">🎈</div><h3>Playgroup</h3><p>Explore, communicate and build early confidence.</p></div>
+        <div class="card"><div class="icon">🌱</div><h3>Nursery</h3><p>Phonics readiness, pre-writing and early numeracy.</p></div>
+        <div class="card"><div class="icon">🔤</div><h3>LKG</h3><p>Reading, writing, thinking and concept development.</p></div>
+        <div class="card"><div class="icon">🚀</div><h3>UKG</h3><p>School readiness, communication and independence.</p></div>
+        <div class="card"><div class="icon">🏡</div><h3>Daycare</h3><p>Safe care, routines and meaningful engagement.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="why" id="why">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">WHY NEO?</div>
+        <h2>More Than a Preschool.</h2>
+        <p>A clear learning philosophy without unnecessary complexity.</p>
+      </div>
+      <div class="why-grid">
+        <div class="why-card"><b>Child-Centric Learning</b><p>Learning respects age, readiness, curiosity and pace.</p></div>
+        <div class="why-card"><b>Powered by IMLS</b><p>Purposeful learning through experience, understanding and expression.</p></div>
+        <div class="why-card"><b>Strong Foundations</b><p>Language, phonics, early numeracy and communication grow progressively.</p></div>
+        <div class="why-card"><b>Whole-Child Development</b><p>Academic, physical, creative, social and emotional growth together.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="videos" id="videos">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">LATEST AT NEO</div>
+        <h2>Watch. Follow. Stay Connected.</h2>
+        <p>For new videos, parent updates and announcements, follow Neo School India on our social channels.</p>
+      </div>
+
+      <div class="latest-lite">
+        <div>
+          <h3>Follow Our Learning Journey.</h3>
+          <p>We keep the website simple. Our latest videos and updates live on YouTube, Instagram and Facebook.</p>
+        </div>
+        <div class="latest-links">
+          <a class="btn btn-light" href="https://youtube.com/@neoschoolindia?si=XnrUzJMD9vQ0oyn6" target="_blank" rel="noopener">YouTube</a>
+          <a class="btn btn-light" href="https://www.instagram.com/neoschool.india?igsh=a3lyN2t2M2V4Yzgz" target="_blank" rel="noopener">Instagram</a>
+          <a class="btn btn-light" href="https://www.facebook.com/share/19RTTtDUm9/" target="_blank" rel="noopener">Facebook</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="franchise" id="franchise">
+    <div class="container">
+      <div class="franchise-box">
+        <div>
+          <div class="eyebrow" style="color:#8fd4ff">PARTNER WITH NEO</div>
+          <h2>Bring Neo School India to Your City.</h2>
+          <p>A structured preschool model with academic direction, brand guidance and ongoing support.</p>
+          <div class="mini-points">
+            <span>Academic Direction</span><span>Brand Guidance</span>
+            <span>Parent Communication</span><span>Ongoing Support</span>
+          </div>
+          <div class="actions">
+            <a class="btn btn-brand" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20am%20interested%20in%20a%20franchise.%20My%20Name%3A%20____%20City%3A%20____%20Preferred%20Location%3A%20____" target="_blank" rel="noopener">Start Franchise Enquiry</a>
+          </div>
+        </div>
+        <div class="franchise-neo"><img src="neo owl.jpeg" alt="Neo School India Brand Ambassador"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">START A CONVERSATION</div>
+        <h2>Choose Your Enquiry.</h2>
+        <p>We’ll ask only what is relevant to you.</p>
+      </div>
+
+      <div class="enquiry-lite">
+        <div class="enquiry-lite-card">
+          <div class="eyebrow">FOR PARENTS</div>
+          <h3>Admission Enquiry</h3>
+          <p>Tell us your child’s age and preferred program.</p>
+          <button class="btn btn-dark" type="button" data-enquiry="admission">Start Admission Enquiry</button>
+        </div>
+
+        <div class="enquiry-lite-card">
+          <div class="eyebrow">FOR PARTNERS</div>
+          <h3>Franchise Enquiry</h3>
+          <p>Share your city and preferred location to begin a conversation.</p>
+          <button class="btn btn-brand" type="button" data-enquiry="franchise">Start Franchise Enquiry</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <h3>Neo School India</h3>
+        <div class="mini-colors"><span class="l">Learn</span> • <span class="g">Grow</span> • <span class="d">Lead</span></div>
+      </div>
+
+      <div class="footer-center">
+        <div class="tag"><span class="l">LEARN</span> • <span class="g">GROW</span> • <span class="d">LEAD</span></div>
+        <div class="powered">POWERED BY IMLS</div>
+        <div class="line"></div>
+        <h3>A new generation of joyful learning.</h3>
+      </div>
+
+      <div class="footer-video">
+        <video autoplay muted loop playsinline preload="metadata">
+          <source src="neo.logo.animation.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+
+    <div class="socials">
+      <a href="https://www.instagram.com/neoschool.india?igsh=a3lyN2t2M2V4Yzgz" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+      </a>
+      <a href="https://www.facebook.com/share/19RTTtDUm9/" target="_blank" rel="noopener" aria-label="Facebook">
+        <svg viewBox="0 0 24 24"><path d="M14 8h3V4.5c-.5-.1-2-.2-3.4-.2-3.3 0-5.6 2-5.6 5.8V13H5v4h3v7h4v-7h3.3l.7-4H12v-2.5C12 8.9 12.7 8 14 8z"/></svg>
+      </a>
+      <a href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more." target="_blank" rel="noopener" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24"><path d="M20.5 3.5A11.7 11.7 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.5 4.1 1.6 5.9L.2 24l6.5-1.7a11.8 11.8 0 0 0 5.4 1.4h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.4zM12.2 21.7h-.1c-1.7 0-3.4-.5-4.9-1.3l-.4-.2-3.9 1 1-3.8-.2-.4a9.7 9.7 0 1 1 8.5 4.7z"/></svg>
+      </a>
+      <a href="https://youtube.com/@neoschoolindia?si=XnrUzJMD9vQ0oyn6" target="_blank" rel="noopener" aria-label="YouTube">
+        <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.7V8.3L16 12l-6.4 3.7z"/></svg>
+      </a>
+    </div>
+    <div class="copyright">© 2026 Neo School India. All Rights Reserved.</div>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/918008436363?text=Hi%20Neo%20School%20India%2C%20I%20would%20like%20to%20know%20more." target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M20.5 3.5A11.7 11.7 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.5 4.1 1.6 5.9L.2 24l6.5-1.7a11.8 11.8 0 0 0 5.4 1.4h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.4zM12.2 21.7h-.1c-1.7 0-3.4-.5-4.9-1.3l-.4-.2-3.9 1 1-3.8-.2-.4a9.7 9.7 0 1 1 8.5 4.7z"/></svg>
+</a>
+
+
+<audio id="neoBgMusic" loop preload="metadata">
+  <source src="neo-bg-music.mp3" type="audio/mpeg">
+</audio>
+
+<div class="float-nav">
+  <button class="float-btn" id="musicBtn" aria-label="Music">
+      <span class="music-on">♫</span><span class="music-off">♪</span>
+    </button>
+  <button class="float-btn" id="homeBtn" aria-label="Home">⌂</button>
+  <button class="float-btn" id="downBtn" aria-label="Next section">↓</button>
+</div>
+
+<script>
+  const sections = [...document.querySelectorAll("main section")];
+
+  document.getElementById("backBtn").addEventListener("click", () => {
+    if (history.length > 1) history.back();
+    else window.scrollTo({top:0,behavior:"smooth"});
+  });
+
+  document.getElementById("homeBtn").addEventListener("click", () => {
+    document.getElementById("home").scrollIntoView({behavior:"smooth"});
+  });
+
+  document.getElementById("downBtn").addEventListener("click", () => {
+    const y = window.scrollY + 120;
+    const next = sections.find(s => s.offsetTop > y);
+    if(next) next.scrollIntoView({behavior:"smooth",block:"start"});
+    else document.querySelector("footer").scrollIntoView({behavior:"smooth"});
+  });
+
+  /* Keep the two lightweight animations running on mobile browsers */
+  function playLiteVideos(){
+    document.querySelectorAll("video").forEach(v=>{
+      v.muted=true;v.loop=true;v.playsInline=true;
+      const p=v.play(); if(p && p.catch) p.catch(()=>{});
+    });
+  }
+  document.addEventListener("DOMContentLoaded",playLiteVideos);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)playLiteVideos()});
+  document.addEventListener("touchstart",playLiteVideos,{once:true,passive:true});
+
+
+  /* =======================================================
+     FINAL SOUND CONTROL
+     Browsers block autoplay with sound, so music starts OFF.
+     User taps the music button once to enable sound.
+     When a Neo character video with audio is visible, its voice
+     is allowed and the background music gently ducks.
+  ======================================================= */
+  const musicBtn = document.getElementById("musicBtn");
+  const bgMusic = document.getElementById("neoBgMusic");
+  let soundEnabled = false;
+
+  if(bgMusic){
+    bgMusic.volume = 0.22; // mild background level
+  }
+
+  function setSoundState(on){
+    soundEnabled = on;
+    musicBtn?.classList.toggle("active", on);
+    musicBtn?.setAttribute("aria-pressed", on ? "true" : "false");
+
+    if(on){
+      if(bgMusic){
+        const p = bgMusic.play();
+        if(p && p.catch) p.catch(()=>{});
+      }
+    }else{
+      if(bgMusic) bgMusic.pause();
+      document.querySelectorAll("video").forEach(v => {
+        v.muted = true;
+      });
+    }
+  }
+
+  musicBtn?.addEventListener("click", ()=>{
+    setSoundState(!soundEnabled);
+  });
+
+  /* Character voice: unmute a visible Neo video if it actually has audio.
+     Footer logo animation stays muted. */
+  const voiceObserver = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      const v = entry.target;
+
+      if(!soundEnabled){
+        v.muted = true;
+        return;
+      }
+
+      const isFooterLogo = v.classList.contains("footer-logo-animation") ||
+                           v.closest("footer");
+
+      if(isFooterLogo){
+        v.muted = true;
+        return;
+      }
+
+      if(entry.isIntersecting && entry.intersectionRatio > 0.45){
+        v.muted = false;
+        if(bgMusic) bgMusic.volume = 0.08; // duck under Neo voice
+        const p = v.play();
+        if(p && p.catch) p.catch(()=>{});
+      }else{
+        v.muted = true;
+        if(bgMusic) bgMusic.volume = 0.22;
+      }
+    });
+  }, {threshold:[0,.45,.8]});
+
+  document.querySelectorAll("video").forEach(v=>{
+    v.muted = true;
+    voiceObserver.observe(v);
+  });
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>navigator.serviceWorker.register("/service-worker.js").catch(()=>{}));
+  }
+</script>
+
+<div class="neo-modal" id="admissionModal" aria-hidden="true">
+  <div class="neo-modal-card">
+    <button class="neo-modal-close" type="button" data-close-modal="admission">×</button>
+    <div class="eyebrow">ADMISSION ENQUIRY</div>
+    <h3>Tell us about your child.</h3>
+    <p>Only the essential details. We’ll continue the conversation on WhatsApp.</p>
+    <form class="neo-form" id="admissionForm">
+      <input id="adParent" type="text" placeholder="Parent Name" required>
+      <input id="adPhone" type="tel" placeholder="Phone Number" required>
+      <input id="adCity" type="text" placeholder="City / Town" required>
+      <input id="adChild" type="text" placeholder="Child Name" required>
+      <input id="adAge" type="text" placeholder="Child Age" required>
+      <select id="adProgram" required>
+        <option value="" selected disabled>Select Program</option>
+        <option>Playgroup</option><option>Nursery</option><option>LKG</option><option>UKG</option><option>Daycare</option>
+      </select>
+      <button class="btn btn-brand" type="submit">Continue on WhatsApp</button>
+    </form>
+  </div>
+</div>
+
+<div class="neo-modal" id="franchiseModal" aria-hidden="true">
+  <div class="neo-modal-card">
+    <button class="neo-modal-close" type="button" data-close-modal="franchise">×</button>
+    <div class="eyebrow">FRANCHISE ENQUIRY</div>
+    <h3>Bring Neo to your city.</h3>
+    <p>Share the basics. We’ll discuss the opportunity in detail with you directly.</p>
+    <form class="neo-form" id="franchiseForm">
+      <input id="frName" type="text" placeholder="Your Name" required>
+      <input id="frPhone" type="tel" placeholder="Phone Number" required>
+      <input id="frCity" type="text" placeholder="Current City" required>
+      <input id="frLocation" type="text" placeholder="Preferred Franchise Location" required>
+      <textarea id="frMessage" placeholder="Anything you would like us to know?"></textarea>
+      <button class="btn btn-brand" type="submit">Continue on WhatsApp</button>
+    </form>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  function openModal(type){
+    const m=document.getElementById(type+"Modal"); if(!m) return;
+    m.classList.add("open"); m.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+  }
+  function closeModal(type){
+    const m=document.getElementById(type+"Modal"); if(!m) return;
+    m.classList.remove("open"); m.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+  }
+
+  document.querySelectorAll("[data-enquiry]").forEach(b=>b.addEventListener("click",()=>openModal(b.dataset.enquiry)));
+  document.querySelectorAll("[data-close-modal]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.closeModal)));
+  document.querySelectorAll(".neo-modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m){m.classList.remove("open");document.body.style.overflow="";}}));
+
+  document.getElementById("admissionForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    const msg=[
+      "Hello Neo School India,","","Admission Enquiry",
+      "Parent Name: "+document.getElementById("adParent").value,
+      "Phone: "+document.getElementById("adPhone").value,
+      "City: "+document.getElementById("adCity").value,
+      "Child Name: "+document.getElementById("adChild").value,
+      "Child Age: "+document.getElementById("adAge").value,
+      "Program: "+document.getElementById("adProgram").value
+    ].join("\n");
+    window.open("https://wa.me/918008436363?text="+encodeURIComponent(msg),"_blank");
+  });
+
+  document.getElementById("franchiseForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    const msg=[
+      "Hello Neo School India,","","Franchise Enquiry",
+      "Name: "+document.getElementById("frName").value,
+      "Phone: "+document.getElementById("frPhone").value,
+      "Current City: "+document.getElementById("frCity").value,
+      "Preferred Location: "+document.getElementById("frLocation").value,
+      "Message: "+document.getElementById("frMessage").value
+    ].join("\n");
+    window.open("https://wa.me/918008436363?text="+encodeURIComponent(msg),"_blank");
+  });
+})();
+</script>
+
+
+<!-- ASK NEO LIVE CHAT — ONLY ADDITION -->
+<style>
+#askNeoWidget{position:fixed;right:18px;bottom:82px;z-index:2600;font-family:inherit}
+#askNeoLauncher{position:relative;width:78px;height:78px;border:0;border-radius:50%;padding:0;cursor:pointer;background:#fff;box-shadow:0 12px 34px rgba(7,27,82,.24);overflow:visible}
+#askNeoLauncher::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:var(--grad);z-index:-1;animation:askNeoPulse 2.6s ease-in-out infinite}
+#askNeoLauncher video{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center 30%;background:#fff}
+.askNeoLabel{position:absolute;right:68px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--navy);color:#fff;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:850;box-shadow:0 8px 22px rgba(7,27,82,.22)}
+.askNeoLabel::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);border-left:7px solid var(--navy);border-top:6px solid transparent;border-bottom:6px solid transparent}
+#askNeoPanel{position:absolute;right:0;bottom:94px;width:min(390px,calc(100vw - 28px));height:min(560px,calc(100vh - 150px));background:#fff;border:1px solid rgba(7,27,82,.12);border-radius:22px;box-shadow:0 24px 65px rgba(3,28,70,.25);overflow:hidden;display:none;flex-direction:column;transform-origin:bottom right}
+#askNeoPanel.open{display:flex;animation:askNeoOpen .2s ease-out}
+.askNeoHead{display:flex;align-items:center;gap:10px;padding:13px 14px;background:linear-gradient(135deg,#071b52,#118be8);color:#fff}
+.askNeoHead video{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:center 30%;background:#fff;border:2px solid rgba(255,255,255,.9)}
+.askNeoHeadCopy{min-width:0;flex:1}.askNeoHeadCopy strong{display:block;font-size:16px}.askNeoHeadCopy small{display:block;font-size:11px;opacity:.9;margin-top:3px}
+#askNeoClose{width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.13);color:#fff;font-size:22px;cursor:pointer}
+#askNeoMessages{flex:1;overflow:auto;padding:15px;background:linear-gradient(#f8fbff,#fff)}
+.askNeoRow{display:flex;margin-bottom:11px}.askNeoRow.user{justify-content:flex-end}
+.askNeoMsg{max-width:84%;padding:11px 13px;border-radius:15px;font-size:14px;line-height:1.48;white-space:pre-wrap;word-break:break-word}
+.askNeoRow.bot .askNeoMsg{background:#fff;color:#17365f;border:1px solid #e5edf6;box-shadow:0 4px 14px rgba(6,50,105,.06);border-top-left-radius:6px}
+.askNeoRow.user .askNeoMsg{background:#0c5fc3;color:#fff;border-top-right-radius:6px}
+.askNeoQuick{display:flex;gap:7px;overflow-x:auto;padding:9px 11px 0;background:#fff;scrollbar-width:none}.askNeoQuick::-webkit-scrollbar{display:none}
+.askNeoChip{flex:0 0 auto;border:1px solid #dce8f5;background:#f7fbff;color:#174b86;border-radius:999px;padding:8px 10px;font-size:12px;font-weight:750;cursor:pointer}
+#askNeoForm{display:flex;align-items:flex-end;gap:8px;padding:10px 11px 12px;background:#fff;border-top:1px solid #edf2f7}
+#askNeoInput{flex:1;min-height:44px;max-height:105px;resize:none;border:1px solid #dbe6f1;border-radius:14px;padding:11px 12px;font:inherit;font-size:14px;outline:none}
+#askNeoInput:focus{border-color:#7ab7f4;box-shadow:0 0 0 3px rgba(54,139,226,.10)}
+#askNeoSend{width:44px;height:44px;flex:0 0 44px;border:0;border-radius:13px;background:#0c5fc3;color:#fff;font-size:19px;cursor:pointer}
+#askNeoSend:disabled{opacity:.55;cursor:not-allowed}
+.askNeoFoot{text-align:center;font-size:10px;color:#789;padding:0 10px 9px;background:#fff}
+.askNeoTyping{display:inline-flex;gap:4px}.askNeoTyping i{width:6px;height:6px;border-radius:50%;background:#7a8ca5;animation:askNeoDot 1s infinite}.askNeoTyping i:nth-child(2){animation-delay:.15s}.askNeoTyping i:nth-child(3){animation-delay:.3s}
+@keyframes askNeoPulse{0%,100%{transform:scale(1);opacity:.78}50%{transform:scale(1.07);opacity:.38}}
+@keyframes askNeoOpen{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes askNeoDot{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}
+@media(max-width:640px){
+  #askNeoWidget{right:12px;bottom:76px}
+  #askNeoLauncher{width:70px;height:70px}
+  .askNeoLabel{display:none}
+  #askNeoPanel{position:fixed;right:10px;left:10px;bottom:80px;width:auto;height:min(70vh,570px)}
+}
+@media(prefers-reduced-motion:reduce){#askNeoLauncher::before{animation:none}}
+</style>
+
+<div id="askNeoWidget" aria-live="polite">
+  <section id="askNeoPanel" aria-label="Ask Neo chat" aria-hidden="true">
+    <div class="askNeoHead">
+      <video autoplay muted loop playsinline preload="metadata" aria-hidden="true"><source src="neo-closeup.webm" type="video/webm"></video>
+      <div class="askNeoHeadCopy"><strong>Ask Neo</strong><small>Online • Powered by IMLS</small></div>
+      <button id="askNeoClose" type="button" aria-label="Close Ask Neo">×</button>
+    </div>
+    <div id="askNeoMessages">
+      <div class="askNeoRow bot"><div class="askNeoMsg">Hi! I’m Neo 👋 How can I help you today?</div></div>
+    </div>
+    <div class="askNeoQuick">
+      <button class="askNeoChip" type="button" data-q="What is IMLS?">What is IMLS?</button>
+      <button class="askNeoChip" type="button" data-q="Tell me about Neo School India programs.">Programs</button>
+      <button class="askNeoChip" type="button" data-q="How can I enquire about admissions?">Admissions</button>
+      <button class="askNeoChip" type="button" data-q="How can I enquire about a Neo School India franchise?">Franchise</button>
+    </div>
+    <form id="askNeoForm">
+      <textarea id="askNeoInput" maxlength="1800" rows="1" placeholder="Ask Neo a question…" aria-label="Ask Neo a question"></textarea>
+      <button id="askNeoSend" type="submit" aria-label="Send message">➤</button>
+    </form>
+    <div class="askNeoFoot">Neo School India • LEARN • GROW • LEAD</div>
+  </section>
+
+  <button id="askNeoLauncher" type="button" aria-label="Open Ask Neo chat" aria-expanded="false">
+    <span class="askNeoLabel">Ask Neo ✨</span>
+    <video autoplay muted loop playsinline preload="metadata" aria-hidden="true"><source src="neo-closeup.webm" type="video/webm"></video>
+  </button>
+</div>
+
+<script>
+(()=>{
+  const API="https://ask-neo-ai.umakanthgilla.workers.dev/";
+  const panel=document.getElementById("askNeoPanel"),launcher=document.getElementById("askNeoLauncher"),
+  closeBtn=document.getElementById("askNeoClose"),form=document.getElementById("askNeoForm"),
+  input=document.getElementById("askNeoInput"),send=document.getElementById("askNeoSend"),
+  messages=document.getElementById("askNeoMessages");
+  let busy=false;
+  const setOpen=v=>{panel.classList.toggle("open",v);panel.setAttribute("aria-hidden",String(!v));launcher.setAttribute("aria-expanded",String(v));if(v)setTimeout(()=>input.focus(),100)};
+  const add=(text,who)=>{const r=document.createElement("div");r.className="askNeoRow "+who;const m=document.createElement("div");m.className="askNeoMsg";m.textContent=text;r.appendChild(m);messages.appendChild(r);messages.scrollTop=messages.scrollHeight;return r};
+  const typing=()=>{const r=document.createElement("div");r.className="askNeoRow bot";const m=document.createElement("div");m.className="askNeoMsg";m.innerHTML='<span class="askNeoTyping"><i></i><i></i><i></i></span>';r.appendChild(m);messages.appendChild(r);messages.scrollTop=messages.scrollHeight;return r};
+  async function ask(q){
+    q=String(q||"").trim(); if(!q||busy)return;
+    setOpen(true); busy=true; send.disabled=true; add(q,"user"); input.value=""; input.style.height="auto"; const t=typing();
+    try{
+      const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q})});
+      const data=await r.json().catch(()=>({})); t.remove();
+      if(!r.ok) throw new Error(data.error||"Ask Neo unavailable");
+      add(String(data.reply||"I could not generate an answer. Please try again."),"bot");
+    }catch(e){
+      if(t.isConnected)t.remove();
+      add("I’m having trouble connecting right now. Please try again in a moment.","bot");
+      console.error("Ask Neo:",e);
+    }finally{busy=false;send.disabled=false;input.focus()}
+  }
+  launcher.addEventListener("click",()=>setOpen(!panel.classList.contains("open")));
+  closeBtn.addEventListener("click",()=>setOpen(false));
+  form.addEventListener("submit",e=>{e.preventDefault();ask(input.value)});
+  input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
+  input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,105)+"px"});
+  document.querySelectorAll(".askNeoChip").forEach(b=>b.addEventListener("click",()=>ask(b.dataset.q)));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")setOpen(false)});
+})();
+</script>
+<!-- ASK NEO LIVE CHAT END -->
+
+</body>
+</html>
