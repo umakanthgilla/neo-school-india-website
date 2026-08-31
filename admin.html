@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Neo Lead CRM | Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --navy:#071b52; --blue:#118be8; --green:#4dbb42; --yellow:#f4c400;
+  --orange:#ff7a16; --pink:#ef3b78; --text:#12213c; --muted:#6c7890;
+  --line:#e4ebf5; --soft:#f6f9fe; --danger:#c62828;
+  --grad:linear-gradient(90deg,var(--blue),var(--green),var(--yellow),var(--orange),var(--pink));
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at 15% 0%,rgba(17,139,232,.06),transparent 28%),var(--soft);color:var(--text)}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}
+.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.topbar:before{content:"";display:block;height:4px;background:var(--grad)}
+.topbar-inner{max-width:1400px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:14px}.brand-logo{height:58px;width:auto;max-width:225px;object-fit:contain;display:block}.brand-copy{display:flex;flex-direction:column;line-height:1.15}.brand strong{color:var(--navy);font-size:18px}.brand span{font-size:12px;color:var(--muted);margin-top:4px}.top-actions{display:flex;align-items:center;gap:8px}.workspace-badge{display:inline-flex;align-items:center;border-radius:999px;background:#edf4ff;color:var(--navy);padding:8px 11px;font-size:11px;font-weight:900;border:1px solid #d9e6fa}
+.logout{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:12px;padding:9px 13px;font-weight:800;cursor:pointer}
+.wrap{max-width:1400px;margin:auto;padding:24px 20px 60px}
+.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
+.hero h1{margin:0;color:var(--navy);font-size:clamp(30px,4vw,46px);letter-spacing:-.03em}.hero p{margin:5px 0 0;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(8,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:0 6px 18px rgba(7,27,82,.04)}
+.metric b{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}.metric strong{display:block;color:var(--navy);font-size:26px;margin-top:5px}
+.filters{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;margin-bottom:16px}
+.filters input,.filters select{width:100%;border:1px solid #d9e4f2;border-radius:11px;padding:10px 12px;background:#fff}
+.filters button{border:0;border-radius:11px;background:var(--navy);color:#fff;padding:10px 16px;font-weight:850;cursor:pointer}
+.table-card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.table-scroll{overflow:auto}.lead-table{width:100%;border-collapse:collapse;min-width:1120px}
+.lead-table th{position:sticky;top:0;background:#f7faff;color:var(--navy);text-align:left;padding:12px;font-size:11px;border-bottom:1px solid var(--line)}
+.lead-table td{padding:12px;border-bottom:1px solid #edf2f8;font-size:12px;vertical-align:top}.lead-table tr:hover td{background:#fbfdff}.lead-table tr.follow-today td{background:#fffbe8}.lead-table tr.follow-overdue td{background:#fff2f2}.lead-table tr.follow-overdue:hover td{background:#ffeaea}.lead-table tr.follow-today:hover td{background:#fff7cc}
+.tag{display:inline-flex;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:850;background:#eef5ff;color:var(--navy);white-space:nowrap}
+.tag.hot{background:#fff0f0;color:#b42318}.tag.warm{background:#fff8e8;color:#9a6700}.tag.cold{background:#eef6ff;color:#175cd3}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.mini{border:1px solid #d9e4f2;background:#fff;color:var(--navy);border-radius:9px;padding:7px 9px;font-size:11px;font-weight:800;cursor:pointer}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.login-shell{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 10% 10%,rgba(17,139,232,.10),transparent 30%),#f7faff}
+.login-card{width:min(420px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 22px 60px rgba(7,27,82,.12);position:relative;overflow:hidden}
+.login-card:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad)}
+.login-card h1{color:var(--navy);margin:0 0 6px}.login-card p{color:var(--muted);margin:0 0 18px}
+.login-card input{width:100%;border:1px solid #d9e4f2;border-radius:12px;padding:12px 13px;margin-bottom:10px}
+.login-card button{width:100%;border:0;background:var(--navy);color:#fff;border-radius:12px;padding:12px;font-weight:900;cursor:pointer}
+.msg{font-size:12px;margin-top:10px;color:var(--danger)}
+.modal{position:fixed;inset:0;background:rgba(3,17,52,.65);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modal.open{display:flex}.modal-card{width:min(620px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:22px;padding:22px;position:relative}
+.modal-card:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--grad)}
+.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.modal-head h2{margin:0;color:var(--navy)}
+.close{border:1px solid var(--line);background:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.field label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #d9e4f2;border-radius:10px;padding:10px}.field textarea{min-height:95px;resize:vertical}.span2{grid-column:1/-1}
+.save{width:100%;margin-top:14px;border:0;border-radius:12px;background:var(--navy);color:#fff;padding:12px;font-weight:900;cursor:pointer}
+.quick-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.detail-box{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfdff}.detail-box b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}.detail-box span{font-size:12px;color:var(--text);word-break:break-word}.follow-flag{display:inline-flex;margin-top:5px;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:900}.follow-flag.today{background:#fff3b0;color:#7a5b00}.follow-flag.overdue{background:#ffe1e1;color:#a61b1b}.quick-links a{padding:8px 10px;border-radius:10px;text-decoration:none;font-size:11px;font-weight:800}.call{background:#eef5ff;color:#175cd3}.wa{background:#eafaf0;color:#087a3e}
+.reminders{margin:18px 0;background:linear-gradient(145deg,#071b52,#0b2f78);border:1px solid #173b7c;border-radius:22px;padding:20px;box-shadow:0 16px 38px rgba(7,27,82,.18)}.reminders-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.reminders-head h2{margin:0;color:#fff;font-size:22px}.reminders-head span{font-size:12px;color:#c9d8ff}.reminder-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.reminder-col{border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:14px;background:#fff;min-height:170px}.reminder-col h3{margin:0 0 10px;color:var(--navy);font-size:13px}.reminder-item{border:1px solid #e6edf7;background:#fff;border-radius:12px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}.reminder-item b{font-size:12px}.reminder-item small{display:block;color:var(--muted);margin-top:2px}.reminder-open{border:1px solid #d9e4f2;background:#fff;border-radius:8px;padding:6px 8px;font-size:10px;font-weight:850;color:var(--navy);cursor:pointer}.reminder-empty{color:var(--muted);font-size:12px;padding:8px 0}.reminder-col.overdue-col{background:#fff7f7}.reminder-col.today-col{background:#fffdf3}.reminder-col.done-col{background:#f5fff7}
+@media(max-width:1050px){.metrics{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:720px){.reminder-grid{grid-template-columns:1fr}.brand-logo{height:46px;max-width:175px}.brand-copy span{display:none}.top-actions{gap:5px}.workspace-badge{display:none}.top-actions .logout{padding:8px 9px;font-size:11px}.detail-grid{grid-template-columns:1fr}.metrics{display:flex;overflow:auto}.metric{min-width:140px}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.hero{align-items:start;flex-direction:column}.grid{grid-template-columns:1fr}.span2{grid-column:auto}.wrap{padding:18px 12px 50px}.topbar-inner{padding:12px}}
+
+.metrics .metric{
+  background:#08245f !important;
+  border-color:#173b7c !important;
+  color:#fff !important;
+}
+.metrics .metric b{color:#cfe0ff !important;}
+.metrics .metric strong{color:#fff !important;}
+.metrics .metric:nth-child(2){background:#0b2f78 !important;}
+.metrics .metric:nth-child(3){background:#0b376f !important;}
+.metrics .metric:nth-child(4){background:#102b6a !important;}
+.metrics .metric:nth-child(5){background:#0b3c74 !important;}
+.metrics .metric:nth-child(6){background:#173263 !important;}
+.metrics .metric:nth-child(7){background:#0a3e72 !important;}
+.metrics .metric:nth-child(8){background:#223368 !important;}
+
+</style>
+</head>
+<body>
+
+<section id="loginView" class="login-shell">
+  <form id="loginForm" class="login-card">
+    <h1>Neo Lead CRM</h1>
+    <p>Secure admin access</p>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Admin password" required>
+    <button type="submit">Sign in</button>
+    <div id="loginMsg" class="msg"></div>
+  </form>
+</section>
+
+<div id="appView" class="hidden">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><img src="neo-top-logo.jpeg" alt="Neo School India" class="brand-logo"><div class="brand-copy"><strong>Neo Lead CRM</strong><span>Admissions • Franchise • Follow-up</span></div></div>
+      <div class="top-actions"><span class="workspace-badge">Main Admin</span><button id="manageAssigneesBtn" class="logout" type="button">Manage Assignees</button><button id="logoutBtn" class="logout">Logout</button></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <div><h1>Lead Dashboard</h1><p>New enquiries, follow-ups and conversions in one place.</p></div>
+      <div id="lastUpdated" style="color:var(--muted);font-size:12px"></div>
+    </div>
+
+    <section class="metrics">
+      <div class="metric"><b>Total</b><strong id="mTotal">0</strong></div>
+      <div class="metric"><b>New</b><strong id="mNew">0</strong></div>
+      <div class="metric"><b>Admissions</b><strong id="mAdmissions">0</strong></div>
+      <div class="metric"><b>Franchise</b><strong id="mFranchise">0</strong></div>
+      <div class="metric"><b>Today Follow-ups</b><strong id="mToday">0</strong></div>
+      <div class="metric"><b>Overdue</b><strong id="mOverdue">0</strong></div>
+      <div class="metric"><b>Converted</b><strong id="mConverted">0</strong></div>
+      <div class="metric"><b>Lost</b><strong id="mLost">0</strong></div>
+    </section>
+
+    <section class="reminders">
+      <div class="reminders-head">
+        <div><h2>Today’s Follow-up Tasks</h2><span>Due today, overdue and contacted today</span></div>
+      </div>
+      <div class="reminder-grid">
+        <div class="reminder-col today-col">
+          <h3>Today To Do</h3>
+          <div id="todayTasks"></div>
+        </div>
+        <div class="reminder-col overdue-col">
+          <h3>Overdue</h3>
+          <div id="overdueTasks"></div>
+        </div>
+        <div class="reminder-col done-col">
+          <h3>Contacted Today</h3>
+          <div id="doneTodayTasks"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="filters">
+      <input id="search" placeholder="Search name, mobile, city or Lead ID">
+      <select id="typeFilter">
+        <option value="">All enquiry types</option>
+        <option>Preschool Admission</option><option>Franchise Enquiry</option>
+        <option>Teacher Training</option><option>Phonics Training</option>
+        <option>Academic Partnership</option><option>School Services</option>
+      </select>
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+        <option>New</option><option>Contacted</option><option>Follow-up</option><option>Interested</option>
+        <option>Visit / Meeting</option><option>Decision Pending</option><option>Converted</option><option>Lost</option>
+      </select>
+      <button id="refreshBtn" type="button">Refresh</button>
+    </section>
+
+    <section class="table-card">
+      <div class="table-scroll">
+        <table class="lead-table">
+          <thead><tr>
+            <th>Lead</th><th>Type</th><th>Name / Contact</th><th>City</th><th>Status</th><th>Priority</th><th>Next Follow-up</th><th>Assigned</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="leadRows"></tbody>
+        </table>
+        <div id="emptyState" class="empty hidden">No leads found.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+<div id="assigneeModal" class="modal">
+  <div class="modal-card" style="width:min(520px,100%)">
+    <div class="modal-head">
+      <div><h2>Manage Assignees</h2><div style="color:var(--muted);font-size:12px">Create roles or person names for lead assignment.</div></div>
+      <button id="closeAssigneeModal" class="close">×</button>
+    </div>
+    <form id="assigneeForm" style="margin-top:16px;display:grid;grid-template-columns:1fr auto;gap:8px">
+      <input id="newAssignee" placeholder="e.g. Front Office / Main Office / Ravi" style="border:1px solid #d9e4f2;border-radius:10px;padding:10px">
+      <button class="save" type="submit" style="margin:0;width:auto;padding:10px 16px">Add</button>
+    </form>
+    <div id="assigneeList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px"></div>
+    <p style="color:var(--muted);font-size:11px;margin:16px 0 0">This version saves the list in this browser. In the next backend upgrade we can make it organization-wide for all admins/devices.</p>
+  </div>
+</div>
+
+<div id="editModal" class="modal">
+  <div class="modal-card">
+    <div class="modal-head"><div><h2 id="modalTitle">Lead</h2><div id="modalSub" style="color:var(--muted);font-size:12px"></div></div><button id="closeModal" class="close">×</button></div>
+    <div class="quick-links"><a id="callLink" class="call" href="#">Call</a><a id="waLink" class="wa" href="#" target="_blank" rel="noopener">WhatsApp</a></div><div id="leadDetails" class="detail-grid"></div>
+    <form id="editForm">
+      <div class="grid">
+        <div class="field"><label>Status</label><select id="eStatus"><option>New</option><option>Contacted</option><option>Follow-up</option><option>Interested</option><option>Visit / Meeting</option><option>Decision Pending</option><option>Converted</option><option>Lost</option></select></div>
+        <div class="field"><label>Priority</label><select id="ePriority"><option>Hot</option><option>Warm</option><option>Cold</option></select></div>
+        <div class="field"><label>Assigned To</label><select id="eAssigned"></select><button id="quickAddAssignee" type="button" class="mini" style="margin-top:7px">+ Add Assignee</button></div>
+        <div class="field"><label>Next Follow-up</label><input id="eFollow" type="datetime-local"></div>
+        <div class="field span2"><label>Follow-up Result</label><input id="eResult" placeholder="No answer / Interested / Visit planned..."></div>
+        <div class="field span2"><label>Notes</label><textarea id="eNotes"></textarea></div>
+        <div class="field span2"><label>Lost Reason</label><input id="eLost"></div>
+      </div>
+      <button class="save" type="submit">Save Lead Update</button>
+      <div id="saveMsg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const API = "https://neo-lead-crm-api.umakanthgilla.workers.dev";
+let token = sessionStorage.getItem("neo_crm_token") || "";
+let leads = [];
+let reminderLeads = [];
+let selectedLead = null;
+const DEFAULT_ASSIGNEES = ["Front Office","Main Office","Incharge"];
+let assignees = JSON.parse(localStorage.getItem("neo_crm_assignees") || "null") || DEFAULT_ASSIGNEES.slice();
+
+function saveAssignees(){
+  localStorage.setItem("neo_crm_assignees", JSON.stringify(assignees));
+  renderAssigneeOptions();
+  renderAssigneeManager();
+}
+function renderAssigneeOptions(){
+  const sel=$("#eAssigned");
+  if(!sel) return;
+  const current=sel.value;
+  sel.innerHTML='<option value="">Unassigned</option>'+assignees.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join("");
+  if(current && assignees.includes(current)) sel.value=current;
+}
+function renderAssigneeManager(){
+  const box=$("#assigneeList");
+  if(!box) return;
+  box.innerHTML=assignees.map((a,i)=>`<span class="tag" style="gap:6px">${esc(a)} <button type="button" data-remove-assignee="${i}" style="border:0;background:transparent;color:#9b1c1c;font-weight:900;cursor:pointer">×</button></span>`).join("");
+  box.querySelectorAll("[data-remove-assignee]").forEach(btn=>btn.onclick=()=>{
+    const i=Number(btn.dataset.removeAssignee);
+    assignees.splice(i,1); saveAssignees();
+  });
+}
+
+
+const $ = s => document.querySelector(s);
+
+function authHeaders(extra={}){ return {"Authorization":"Bearer "+token, ...extra}; }
+function showApp(){ $("#loginView").classList.add("hidden"); $("#appView").classList.remove("hidden"); loadAll(); }
+function showLogin(){ $("#appView").classList.add("hidden"); $("#loginView").classList.remove("hidden"); }
+
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault(); $("#loginMsg").textContent="";
+  try{
+    const r = await fetch(API+"/api/admin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:$("#password").value})});
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.error||"Login failed");
+    token=d.token; sessionStorage.setItem("neo_crm_token",token); $("#password").value=""; showApp();
+  }catch(err){ $("#loginMsg").textContent=err.message; }
+});
+
+$("#logoutBtn").onclick=()=>{token="";sessionStorage.removeItem("neo_crm_token");showLogin()};
+$("#refreshBtn").onclick=loadAll;
+$("#typeFilter").onchange=loadLeads; $("#statusFilter").onchange=loadLeads;
+let searchTimer; $("#search").oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(loadLeads,300)};
+
+async function api(path, options={}){
+  const r=await fetch(API+path,{...options,headers:authHeaders(options.headers||{})});
+  if(r.status===401){token="";sessionStorage.removeItem("neo_crm_token");showLogin();throw new Error("Session expired");}
+  const d=await r.json(); if(!r.ok||d.success===false) throw new Error(d.error||"Request failed"); return d;
+}
+
+async function loadAll(){ await Promise.all([loadMetrics(),loadReminderLeads(),loadLeads()]); $("#lastUpdated").textContent="Updated "+new Date().toLocaleTimeString(); }
+async function loadReminderLeads(){
+  try{
+    const d=await api("/api/admin/leads");
+    reminderLeads=d.leads||[];
+    renderReminders();
+  }catch(e){console.error(e)}
+}
+function localDateKey(v){
+  if(!v) return "";
+  const d=new Date(v); if(isNaN(d)) return "";
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function renderReminderList(el, items){
+  const box=$(el);
+  if(!items.length){box.innerHTML='<div class="reminder-empty">No items.</div>';return;}
+  box.innerHTML=items.slice(0,8).map(l=>`<div class="reminder-item"><div><b>${esc(l.name)}</b><small>${esc(l.enquiry_type)} • ${esc(l.mobile||"")} ${l.next_follow_up?"• "+esc(formatDateTime(l.next_follow_up)):""}</small></div><button class="reminder-open" data-reminder-open="${esc(l.lead_id)}">Open</button></div>`).join("");
+  box.querySelectorAll("[data-reminder-open]").forEach(b=>b.onclick=()=>{
+    const lead=reminderLeads.find(x=>x.lead_id===b.dataset.reminderOpen);
+    if(lead && !leads.some(x=>x.lead_id===lead.lead_id)) leads.unshift(lead);
+    openLead(b.dataset.reminderOpen);
+  });
+}
+function renderReminders(){
+  const today=localDateKey(new Date());
+  const dueToday=reminderLeads.filter(l=>localDateKey(l.next_follow_up)===today && !["Converted","Lost"].includes(l.status));
+  const overdue=reminderLeads.filter(l=>l.next_follow_up && new Date(l.next_follow_up)<new Date() && localDateKey(l.next_follow_up)!==today && !["Converted","Lost"].includes(l.status));
+  const contacted=reminderLeads.filter(l=>localDateKey(l.last_contact)===today);
+  renderReminderList("#todayTasks",dueToday);
+  renderReminderList("#overdueTasks",overdue);
+  renderReminderList("#doneTodayTasks",contacted);
+}
+
+async function loadMetrics(){
+  try{
+    const d=await api("/api/admin/dashboard"); const m=d.metrics||{};
+    $("#mTotal").textContent=m.total||0; $("#mNew").textContent=m.new_leads||0; $("#mAdmissions").textContent=m.admissions||0; $("#mFranchise").textContent=m.franchises||0;
+    $("#mToday").textContent=m.today_followups||0; $("#mOverdue").textContent=m.overdue||0; $("#mConverted").textContent=m.converted||0; $("#mLost").textContent=m.lost||0;
+  }catch(e){console.error(e)}
+}
+
+async function loadLeads(){
+  try{
+    const p=new URLSearchParams(); if($("#typeFilter").value)p.set("type",$("#typeFilter").value); if($("#statusFilter").value)p.set("status",$("#statusFilter").value); if($("#search").value.trim())p.set("search",$("#search").value.trim());
+    const d=await api("/api/admin/leads?"+p.toString()); leads=d.leads||[]; renderLeads();
+  }catch(e){console.error(e)}
+}
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function priorityClass(p){return String(p||"").toLowerCase()}
+function formatDateTime(v){
+  if(!v)return "—";
+  const d=new Date(v);
+  if(isNaN(d)) return String(v).replace("T"," ");
+  return d.toLocaleString([], {year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+function followState(v){
+  if(!v)return "";
+  const d=new Date(v); if(isNaN(d)) return "";
+  const now=new Date();
+  const ds=d.toISOString().slice(0,10), ns=now.toISOString().slice(0,10);
+  if(ds===ns) return "today";
+  if(d.getTime()<now.getTime()) return "overdue";
+  return "";
+}
+function renderLeads(){
+  const body=$("#leadRows"); body.innerHTML=""; $("#emptyState").classList.toggle("hidden",leads.length>0);
+  leads.forEach(l=>{
+    const fs=followState(l.next_follow_up);
+    const tr=document.createElement("tr");
+    if(fs==="today") tr.classList.add("follow-today");
+    if(fs==="overdue") tr.classList.add("follow-overdue");
+    const followFlag = fs ? `<span class="follow-flag ${fs}">${fs==="today"?"TODAY":"OVERDUE"}</span>` : "";
+    tr.innerHTML=`<td><b>${esc(l.lead_id)}</b><br><span style="color:var(--muted)">${esc(formatDateTime(l.created_at||""))}</span></td>
+    <td><span class="tag">${esc(l.enquiry_type)}</span></td>
+    <td><b>${esc(l.name)}</b><br>${esc(l.mobile)}${l.email?`<br><span style="color:var(--muted)">${esc(l.email)}</span>`:""}</td>
+    <td>${esc(l.city||"—")}</td>
+    <td><span class="tag">${esc(l.status||"New")}</span></td>
+    <td><span class="tag ${priorityClass(l.priority)}">${esc(l.priority||"Warm")}</span></td>
+    <td>${esc(formatDateTime(l.next_follow_up))}<br>${followFlag}</td>
+    <td>${esc(l.assigned_to||"—")}</td>
+    <td><div class="actions"><button class="mini" data-edit="${esc(l.lead_id)}">Open</button><a class="mini" href="tel:${esc(l.mobile)}">Call</a></div></td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openLead(b.dataset.edit));
+}
+function toLocalInput(v){
+  if(!v)return "";
+  const d=new Date(v); if(isNaN(d)) return String(v).slice(0,16);
+  const pad=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openLead(id){
+  selectedLead=leads.find(x=>x.lead_id===id); if(!selectedLead)return;
+  $("#modalTitle").textContent=selectedLead.name; $("#modalSub").textContent=`${selectedLead.lead_id} • ${selectedLead.enquiry_type} • ${selectedLead.city||""}`;
+  const isAdmission = selectedLead.enquiry_type === "Preschool Admission";
+  const isFranchise = selectedLead.enquiry_type === "Franchise Enquiry";
+  const detailRows = [
+    ["Mobile", selectedLead.mobile],
+    ["Email", selectedLead.email||"—"],
+    ["City / State", [selectedLead.city,selectedLead.state].filter(Boolean).join(", ")||"—"],
+    ["Source", selectedLead.source||"—"],
+  ];
+  if(isAdmission){
+    detailRows.push(["Child Name", selectedLead.child_name||"—"]);
+    detailRows.push(["Child Age", selectedLead.child_age||"—"]);
+    detailRows.push(["Program", selectedLead.program||"—"]);
+  }
+  if(isFranchise){
+    detailRows.push(["Proposed Location", selectedLead.proposed_location||"—"]);
+  }
+  detailRows.push(["Created", formatDateTime(selectedLead.created_at)]);
+  detailRows.push(["Last Contact", formatDateTime(selectedLead.last_contact)]);
+  $("#leadDetails").innerHTML = detailRows.map(([k,v])=>`<div class="detail-box"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("");
+  $("#eStatus").value=selectedLead.status||"New"; $("#ePriority").value=selectedLead.priority||"Warm";
+  if(selectedLead.assigned_to && !assignees.includes(selectedLead.assigned_to)){ assignees.push(selectedLead.assigned_to); saveAssignees(); }
+  renderAssigneeOptions(); $("#eAssigned").value=selectedLead.assigned_to||"";
+  $("#eFollow").value=toLocalInput(selectedLead.next_follow_up); $("#eResult").value=selectedLead.follow_up_result||""; $("#eNotes").value=selectedLead.notes||""; $("#eLost").value=selectedLead.lost_reason||"";
+  $("#callLink").href="tel:"+selectedLead.mobile;
+  const digits=String(selectedLead.mobile||"").replace(/\D/g,""); $("#waLink").href="https://wa.me/"+digits+"?text="+encodeURIComponent("Hello "+selectedLead.name+", this is Neo School India regarding your enquiry "+selectedLead.lead_id+".");
+  $("#saveMsg").textContent=""; $("#editModal").classList.add("open");
+}
+$("#closeModal").onclick=()=>$("#editModal").classList.remove("open");
+$("#editModal").addEventListener("click",e=>{if(e.target.id==="editModal")$("#editModal").classList.remove("open")});
+
+$("#editForm").addEventListener("submit",async e=>{
+  e.preventDefault(); if(!selectedLead)return; $("#saveMsg").textContent="Saving...";
+  try{
+    const payload={status:$("#eStatus").value,priority:$("#ePriority").value,assigned_to:$("#eAssigned").value,next_follow_up:$("#eFollow").value,follow_up_result:$("#eResult").value,notes:$("#eNotes").value,lost_reason:$("#eLost").value};
+    await api("/api/admin/leads/"+encodeURIComponent(selectedLead.lead_id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    $("#saveMsg").style.color="#087a3e"; $("#saveMsg").textContent="Saved successfully."; await loadAll(); setTimeout(()=>$("#editModal").classList.remove("open"),700);
+  }catch(err){$("#saveMsg").style.color="var(--danger)";$("#saveMsg").textContent=err.message;}
+});
+
+
+$("#manageAssigneesBtn").onclick=()=>{renderAssigneeManager();$("#assigneeModal").classList.add("open")};
+$("#closeAssigneeModal").onclick=()=>$("#assigneeModal").classList.remove("open");
+$("#assigneeModal").addEventListener("click",e=>{if(e.target.id==="assigneeModal")$("#assigneeModal").classList.remove("open")});
+$("#assigneeForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const v=$("#newAssignee").value.trim();
+  if(v && !assignees.some(a=>a.toLowerCase()===v.toLowerCase())){assignees.push(v);saveAssignees();}
+  $("#newAssignee").value="";
+});
+$("#quickAddAssignee").onclick=()=>{
+  const v=prompt("Enter role or person name");
+  if(v && v.trim()){
+    const cleanName=v.trim();
+    if(!assignees.some(a=>a.toLowerCase()===cleanName.toLowerCase())) assignees.push(cleanName);
+    saveAssignees(); $("#eAssigned").value=cleanName;
+  }
+};
+renderAssigneeOptions();
+
+if(token) showApp(); else showLogin();
+</script>
+</body>
+</html>
