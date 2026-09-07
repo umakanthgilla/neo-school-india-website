@@ -1,0 +1,28 @@
+{
+  "workspace": {
+    "name": "Neo School India",
+    "slug": "neo-school-india"
+  },
+  "channels": {
+    "whatsapp": { "enabled": true, "mode": "official_meta_api" },
+    "instagram": { "enabled": false },
+    "web": { "enabled": false },
+    "email": { "enabled": false }
+  },
+  "agent": {
+    "humanApprovalRequired": true,
+    "autoClassifyIntent": true,
+    "autoCreateLead": true,
+    "autoCreateFollowUp": true
+  },
+  "aiGateway": {
+    "routing": "task_based",
+    "fallbackEnabled": true,
+    "trackUsage": true,
+    "trackEstimatedCost": true
+  },
+  "automation": {
+    "provider": "n8n",
+    "enabled": false
+  }
+}
