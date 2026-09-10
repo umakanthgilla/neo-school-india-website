@@ -22,8 +22,32 @@ export class SupabaseAdapter {
   }
 
   async listInbox() {
-    const q = `conversations?workspace_id=eq.${encodeURIComponent(this.workspaceId)}&select=*,contacts(*),leads(*)&order=updated_at.desc`;
-    return this.request(q);
+    // conversations -> contacts is a direct FK; leads are linked through contact_id,
+    // so fetch them separately instead of asking PostgREST for a non-existent
+    // direct conversations -> leads relationship.
+    const conversations = await this.request(
+      `conversations?workspace_id=eq.${encodeURIComponent(this.workspaceId)}&select=*,contacts(*)&order=updated_at.desc`
+    );
+
+    if (!conversations?.length) return [];
+
+    const contactIds = [...new Set(conversations.map(c => c.contact_id).filter(Boolean))];
+    let leadByContact = new Map();
+
+    if (contactIds.length) {
+      const inList = contactIds.map(id => `"${id}"`).join(',');
+      const leads = await this.request(
+        `leads?workspace_id=eq.${encodeURIComponent(this.workspaceId)}&contact_id=in.(${encodeURIComponent(inList)})&select=*&order=updated_at.desc`
+      );
+      for (const lead of leads || []) {
+        if (!leadByContact.has(lead.contact_id)) leadByContact.set(lead.contact_id, lead);
+      }
+    }
+
+    return conversations.map(c => ({
+      ...c,
+      leads: leadByContact.get(c.contact_id) || null
+    }));
   }
 
   async getMessages(conversationId) {
@@ -35,6 +59,13 @@ export class SupabaseAdapter {
     return this.request('tasks', {
       method:'POST', headers:{Prefer:'return=representation'},
       body:JSON.stringify({...task, workspace_id:this.workspaceId})
+    });
+  }
+
+  async saveInboundMessage(message) {
+    return this.request('messages', {
+      method:'POST', headers:{Prefer:'return=representation'},
+      body:JSON.stringify({...message, workspace_id:this.workspaceId, direction:'inbound'})
     });
   }
 
