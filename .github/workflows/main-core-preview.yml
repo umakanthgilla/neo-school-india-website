@@ -1,0 +1,35 @@
+name: Main Core Preview
+
+on:
+  push:
+    branches: [main-core-v1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main-core-v1
+        uses: actions/checkout@v4
+
+      - name: Validate Communication Hub
+        run: |
+          test -f main-core/communication-hub/index.html
+          test -f main-core/communication-hub/app.js
+          test -f main-core/communication-hub/data.js
+          test -f main-core/communication-hub/supabase-adapter.js
+
+      - name: Package isolated preview
+        run: |
+          mkdir -p preview
+          cp -R main-core/communication-hub/. preview/
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: usha-one-main-core-preview
+          path: preview
+          retention-days: 7
