@@ -1,15 +1,15 @@
 // ONE Communication Hub V1 — Supabase REST persistence adapter
-// Uses public anon key only for browser-safe reads/writes permitted by RLS.
+// Publishable key identifies the client; authenticated access token enforces RLS.
 // Never use service_role keys in browser code.
 
 export class SupabaseAdapter {
-  constructor({url, anonKey, workspaceId}) {
-    if (!url || !anonKey || !workspaceId) throw new Error('Supabase url, anonKey and workspaceId are required');
+  constructor({url, anonKey, workspaceId, accessToken}) {
+    if (!url || !anonKey || !workspaceId || !accessToken) throw new Error('Supabase url, publishable key, workspaceId and accessToken are required');
     this.base = `${url.replace(/\/$/,'')}/rest/v1`;
     this.workspaceId = workspaceId;
     this.headers = {
       apikey: anonKey,
-      Authorization: `Bearer ${anonKey}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     };
   }
@@ -35,13 +35,6 @@ export class SupabaseAdapter {
     return this.request('tasks', {
       method:'POST', headers:{Prefer:'return=representation'},
       body:JSON.stringify({...task, workspace_id:this.workspaceId})
-    });
-  }
-
-  async saveInboundMessage(message) {
-    return this.request('messages', {
-      method:'POST', headers:{Prefer:'return=representation'},
-      body:JSON.stringify({...message, workspace_id:this.workspaceId, direction:'inbound'})
     });
   }
 
