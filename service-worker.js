@@ -1,4 +1,4 @@
-const CACHE_NAME = "neo-school-india-v1";
+const CACHE_NAME = "neo-school-india-v2";
 
 const APP_SHELL = [
   "/",
@@ -23,7 +23,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys => {
       return Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME)
+          .filter(key => key.startsWith("neo-school-india-") && key !== CACHE_NAME)
           .map(key => caches.delete(key))
       );
     })
@@ -38,13 +38,17 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  const url = new URL(event.request.url);
+  // CRM responses and admin pages must never enter the offline cache.
+  if (url.origin !== self.location.origin || !APP_SHELL.includes(url.pathname)) return;
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
 
         const copy = response.clone();
 
-        caches.open(CACHE_NAME).then(cache => {
+        if (response.ok) caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, copy);
         });
 
@@ -53,7 +57,7 @@ self.addEventListener("fetch", event => {
       .catch(() => {
         return caches.match(event.request)
           .then(cachedResponse => {
-            return cachedResponse || caches.match("/index.html");
+            return cachedResponse || (event.request.mode === "navigate" ? caches.match("/index.html") : Response.error());
           });
       })
   );
