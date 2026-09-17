@@ -7,6 +7,7 @@ const select=(name,label,rows,required=true)=>`<label>${label}<select name="${na
 const input=(name,label,type='text')=>`<label>${label}<input name="${name}" type="${type}" required ${type==='number'?'min="1" max="10000" step="1"':'maxlength="200"'}></label>`;
 let excelPromise;
 async function excel(){if(window.XLSX)return window.XLSX;if(!excelPromise)excelPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/vendor/xlsx-0.20.3.min.js';script.onload=()=>resolve(window.XLSX);script.onerror=()=>{excelPromise=null;reject(Error('Excel tools could not load. Check the internet connection and try again.'))};document.head.append(script)});return excelPromise}
+window.neoLoadExcel=excel;
 window.neoExport=async function(name,rows){const x=await excel();const flat=rows.map(row=>Object.fromEntries(Object.entries(row).map(([k,v])=>[k,v&&typeof v==='object'?JSON.stringify(v):v??''])));const sheet=x.utils.json_to_sheet(flat);sheet['!cols']=Object.keys(flat[0]||{}).map(()=>({wch:24}));const wb=x.utils.book_new();x.utils.book_append_sheet(wb,sheet,'Records');x.writeFile(wb,name+'.xlsx');};
 window.renderNeoOperations=function(area,ctx){
  const {tab,records:r,call,refresh,status}=ctx;
