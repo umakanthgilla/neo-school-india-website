@@ -239,3 +239,14 @@
   }
 }
 
+
+
+/* Calendar controls stay light; only event markers carry colour. */
+.neo-month-grid button.neo-month-day{display:block;text-align:left;margin:0;width:100%;border-radius:0;background:#fff;color:#444;box-shadow:none;font:inherit}
+.neo-month-grid button.neo-month-day:hover{background:#fafafa}
+.neo-month-grid button.neo-month-day[aria-pressed="true"]{outline:2px solid #666;outline-offset:-3px;background:#fff}
+.neo-month-grid button.neo-month-day:focus-visible{outline:3px solid #666;outline-offset:-3px}
+.neo-calendar-details th{background:#f7f7f7;color:#444}
+.neo-calendar-details td{white-space:pre-wrap;overflow-wrap:anywhere}
+.neo-report-preview{margin:16px 0;padding:16px;border:1px solid #dce3ed;border-radius:12px;background:#fff}
+.neo-report-preview table{font-size:13px}
