@@ -1,0 +1,36 @@
+/* Neo Teacher Timetable — premium daily execution view */
+body[data-role="teacher"] .timetable-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 28px;position:relative}
+body[data-role="teacher"] .timetable-list:before{content:"";position:absolute;left:42px;top:18px;bottom:18px;width:2px;background:linear-gradient(#0aa6d5,#54b85d,#f0bd19,#ef438e);opacity:.28}
+body[data-role="teacher"] .period-card{display:grid;grid-template-columns:90px minmax(0,1fr);gap:18px;align-items:start;padding:18px 20px;background:rgba(255,255,255,.96);border:1px solid #dce6f2;border-left:0;border-radius:18px;box-shadow:0 8px 24px rgba(15,43,84,.055);position:relative;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+body[data-role="teacher"] .period-card:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(15,43,84,.09);border-color:#c7d9eb}
+body[data-role="teacher"] .period-card:before{content:"";position:absolute;left:34px;top:25px;width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid #16a4d1;box-shadow:0 0 0 5px #eef8fc;z-index:2}
+body[data-role="teacher"] .period-time{padding-left:30px;font-size:18px;line-height:1.15;min-width:0;color:#0b2055}
+body[data-role="teacher"] .period-time small{font-size:12px;margin-top:5px;color:#718096}
+body[data-role="teacher"] .period-card h3{font-size:18px;margin:7px 0 3px;line-height:1.25}
+body[data-role="teacher"] .period-card p{font-size:13px;margin:4px 0}
+body[data-role="teacher"] .period-break{background:#fbfdf9;border-color:#dfe9dc}
+body[data-role="teacher"] .period-break:before{border-color:#6ab94d;box-shadow:0 0 0 5px #f0f8ec}
+body[data-role="teacher"] .period-card>.period-time+div{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}
+body[data-role="teacher"] .period-card>.period-time+div>h3,body[data-role="teacher"] .period-card>.period-time+div>p,body[data-role="teacher"] .period-card>.period-time+div>.error{grid-column:1}
+body[data-role="teacher"] .period-card>.period-time+div>.portal-pill{grid-column:1;width:max-content}
+body[data-role="teacher"] .period-card .portal-editor{grid-column:2;grid-row:1/5;margin:0;padding:0;border:0;background:transparent}
+body[data-role="teacher"] .period-card .portal-editor>summary{list-style:none;display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:9px 13px;border:1px solid #d5e3f1;border-radius:11px;background:#f7faff;color:#154b7d;font-size:13px;font-weight:750;white-space:nowrap}
+body[data-role="teacher"] .period-card .portal-editor>summary::-webkit-details-marker{display:none}
+body[data-role="teacher"] .period-card .portal-editor>summary:before{content:"View & update"}
+body[data-role="teacher"] .period-card .portal-editor>summary{font-size:0}
+body[data-role="teacher"] .period-card .portal-editor>summary:before{font-size:13px}
+body[data-role="teacher"] .period-card .portal-editor[open]>summary{background:#0b2055;color:#fff;border-color:#0b2055;padding-bottom:9px;margin:0;border-image:none}
+body[data-role="teacher"] .period-card .portal-editor[open]:after{content:"";position:fixed;inset:0;background:rgba(6,22,52,.22);backdrop-filter:blur(2px);z-index:80}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary,body[data-role="teacher"] .period-card .portal-editor[open]>.form-note{position:fixed;right:24px;width:min(520px,calc(100vw - 48px));z-index:90;background:#fff}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary{top:24px;bottom:82px;overflow:auto;display:block;margin:0;padding:24px;border-radius:24px 24px 0 0;box-shadow:0 24px 70px rgba(6,22,52,.24)}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary:before{content:"PERIOD EXECUTION";display:block;color:#16759c;font-size:11px;font-weight:850;letter-spacing:.18em;margin-bottom:6px}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary:after{content:"Prepare  →  Conduct  →  Observe  →  Record  →  Share";display:block;font-size:20px;line-height:1.35;font-weight:800;color:#0b2055;padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid #e5edf5;order:-1}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary .portal-card{box-shadow:none;border:0;border-bottom:1px solid #e6edf5;border-radius:0;padding:18px 4px;background:#fff}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary .portal-card:before{display:none}
+body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary .portal-card h4{margin:0 0 8px;font-size:16px;color:#0b2055}
+body[data-role="teacher"] .period-card .portal-editor[open]>.form-note{bottom:24px;height:58px;margin:0;padding:13px 24px;border-radius:0 0 24px 24px;border-top:1px solid #e3ebf4;box-shadow:0 18px 70px rgba(6,22,52,.18);font-size:11px;overflow:auto}
+body[data-role="teacher"] #teacherLearningBody>.learning-secondary:first-child{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 18px;background:linear-gradient(110deg,#f4fbff,#fbfff8);border:1px solid #dfeaf3;border-radius:16px;margin:0 0 18px}
+body[data-role="teacher"] #teacherLearningBody>.learning-secondary:first-child .portal-card{padding:0;border:0;box-shadow:none;background:transparent;flex:1}
+body[data-role="teacher"] #teacherLearningBody>.learning-secondary:first-child .portal-card:before{display:none}
+@media(max-width:900px){body[data-role="teacher"] .period-card>.period-time+div{grid-template-columns:1fr}body[data-role="teacher"] .period-card .portal-editor{grid-column:1;grid-row:auto;margin-top:9px}}
+@media(max-width:640px){body[data-role="teacher"] .period-card{grid-template-columns:72px minmax(0,1fr);padding:15px 12px;gap:10px}body[data-role="teacher"] .timetable-list:before{left:31px}body[data-role="teacher"] .period-card:before{left:23px}body[data-role="teacher"] .period-time{padding-left:22px;font-size:16px}body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary,body[data-role="teacher"] .period-card .portal-editor[open]>.form-note{right:10px;width:calc(100vw - 20px)}body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary{top:10px;bottom:76px;padding:18px}body[data-role="teacher"] .period-card .portal-editor[open]>.form-note{bottom:10px;height:66px;padding:11px 18px}}
