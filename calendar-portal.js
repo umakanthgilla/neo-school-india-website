@@ -1,15 +1,225 @@
-window.renderNeoCalendar=async function(area,{api,editable=false,state=null}){
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- try{state=state||await api('calendar');let events=state.events.slice(),revision=state.revision;
- area.innerHTML=`<h3>School calendar</h3><p>School events are shared with parents and teachers. Holidays added here are excluded when generating a new curriculum calendar. An already approved plan is not automatically moved.</p><div class="fields"><label>View<select id="calendarRange"><option value="week">Week</option><option value="month">Month</option><option value="all">All</option></select></label><label>Starting date<input id="calendarDate" type="date" value="${esc(state.today)}"></label></div>${editable?`<details class="portal-editor"><summary>Add event / holiday</summary><form id="calendarForm"><div class="fields"><label>Date<input name="date" type="date" required></label><label>Category<select name="type">${['Holiday','PTM','Celebration','Event','Assessment','School reopening','Other'].map(v=>'<option>'+v+'</option>').join('')}</select></label><label>Title<input name="title" required maxlength="160"></label><label>Description<textarea name="description" maxlength="2000"></textarea></label></div><button>Add to draft</button></form></details><button id="calendarTemplate" class="secondary">Download event template</button><label>Import events Excel (.xlsx)<input id="calendarImport" type="file" accept=".xlsx"></label><p>Columns: date, type, title, description. Import adds to the draft; review and Save to publish.</p><button id="calendarSave">Save calendar for families and teachers</button>`:''}<button id="calendarExport" class="secondary">Download calendar</button><p id="calendarStatus" role="status"></p><div id="calendarEvents"></div>`;
- const message=t=>area.querySelector('#calendarStatus').textContent=t;
- function draw(){const start=area.querySelector('#calendarDate').value,range=area.querySelector('#calendarRange').value;let end=start;if(range==='week')end=new Date(Date.parse(start)+6*86400000).toISOString().slice(0,10);else if(range==='month'){const d=new Date(start+'T00:00:00Z');d.setUTCMonth(d.getUTCMonth()+1);d.setUTCDate(d.getUTCDate()-1);end=d.toISOString().slice(0,10)}area.querySelector('#calendarEvents').innerHTML='<div class="portal-grid">'+events.map((e,i)=>({e,i})).filter(({e})=>range==='all'||e.date>=start&&e.date<=end).sort((a,b)=>a.e.date.localeCompare(b.e.date)).map(({e,i})=>`<article class="portal-card"><span class="portal-pill">${esc(e.date)} · ${esc(e.type)}</span><h3>${esc(e.title)}</h3><p>${esc(e.description)}</p>${editable?`<button class="secondary" data-remove-event="${i}">Remove from draft</button>`:''}</article>`).join('')+'</div>';area.querySelectorAll('[data-remove-event]').forEach(b=>b.onclick=()=>{events.splice(Number(b.dataset.removeEvent),1);draw();message('Unsaved changes. Save to publish.')})}
- area.querySelector('#calendarRange').onchange=draw;area.querySelector('#calendarDate').onchange=()=>{if(area.querySelector('#calendarDate').value)draw()};draw();
- area.querySelector('#calendarExport').onclick=async()=>{try{await window.neoExport('neo-school-calendar',events)}catch(e){message(e.message)}};
- if(!editable)return;
- area.querySelector('#calendarTemplate').onclick=async()=>{try{await window.neoExport('neo-event-template',[{date:'',type:'',title:'',description:''}])}catch(e){message(e.message)}};
- area.querySelector('#calendarForm').onsubmit=e=>{e.preventDefault();events.push(Object.fromEntries(new FormData(e.target)));area.querySelector('#calendarRange').value='all';draw();e.target.reset();message('Added to draft. Save the calendar to publish.')};
- area.querySelector('#calendarSave').onclick=async e=>{e.target.disabled=true;try{const b=await api('calendar',{revision,events});revision=b.revision;message('Calendar saved. Parents and teachers can refresh to see it.')}catch(err){message(err.message)}finally{e.target.disabled=false}};
- area.querySelector('#calendarImport').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1500000)throw Error('Maximum file size 1.5 MB.');const x=await window.neoLoadExcel(),wb=x.read(await file.arrayBuffer(),{type:'array',cellDates:true,sheetRows:502}),sheet=wb.Sheets[wb.SheetNames[0]];if(Object.values(sheet).some(c=>c&&c.f))throw Error('Use values, not formulas.');const rows=x.utils.sheet_to_json(sheet,{defval:''});if(rows.length+events.length>500)throw Error('Maximum 500 events.');const incoming=rows.map(r=>({date:r.date instanceof Date?r.date.toISOString().slice(0,10):String(r.date),type:String(r.type),title:String(r.title),description:String(r.description||'')}));if(incoming.some(e=>!/^\d{4}-\d{2}-\d{2}$/.test(e.date)||!e.title.trim()))throw Error('Check dates and event titles.');events.push(...incoming);area.querySelector('#calendarRange').value='all';draw();message('Imported to draft. Review before Save.')}catch(err){message(err.message)}};
- }catch(e){area.textContent='Calendar unavailable: '+e.message}
-};
+/* NEO School Calendar — clean month calendar */
+.neo-calendar-shell{
+  margin-top:18px;
+}
+
+.neo-calendar-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.neo-calendar-toolbar h3{
+  margin:0;
+  text-align:center;
+}
+
+.neo-calendar-toolbar button{
+  min-width:38px;
+}
+
+.neo-calendar-legend{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px 18px;
+  margin:10px 0 16px;
+  font-size:12px;
+  color:#666;
+}
+
+.neo-calendar-legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+.neo-dot,
+.neo-calendar-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  display:inline-block;
+  flex:0 0 7px;
+}
+
+/* Subtle markers only — no full-cell colour blocks */
+.neo-dot.event,
+.neo-calendar-dot.event{
+  background:#6f9f6f;
+}
+
+.neo-dot.holiday,
+.neo-calendar-dot.holiday{
+  background:#d47782;
+}
+
+.neo-dot.meeting,
+.neo-calendar-dot.meeting{
+  background:#d9954d;
+}
+
+.neo-dot.assessment,
+.neo-calendar-dot.assessment{
+  background:#c9aa42;
+}
+
+.neo-dot.academic,
+.neo-calendar-dot.academic{
+  background:#7894b3;
+}
+
+.neo-month-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  border:1px solid #e6e6e6;
+  border-radius:10px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.neo-weekday{
+  padding:9px 6px;
+  text-align:center;
+  font-size:12px;
+  font-weight:600;
+  color:#666;
+  background:#f7f7f7;
+  border-right:1px solid #e9e9e9;
+  border-bottom:1px solid #e6e6e6;
+}
+
+.neo-month-day{
+  position:relative;
+  min-height:78px;
+  padding:8px;
+  background:#fff;
+  border-right:1px solid #eeeeee;
+  border-bottom:1px solid #eeeeee;
+}
+
+.neo-month-day.empty{
+  background:#fafafa;
+}
+
+.neo-month-day.today .neo-day-number{
+  font-weight:700;
+}
+
+.neo-day-number{
+  font-size:13px;
+  line-height:1;
+  color:#444;
+}
+
+.neo-calendar-markers{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:4px;
+  margin-top:10px;
+}
+
+.neo-calendar-dot{
+  box-shadow:none;
+}
+
+.neo-calendar-details{
+  margin-top:22px;
+}
+
+.neo-calendar-details h3{
+  margin-bottom:10px;
+}
+
+.neo-calendar-detail{
+  display:flex;
+  gap:14px;
+  padding:12px 0;
+  border-bottom:1px solid #eeeeee;
+}
+
+.neo-calendar-detail-date{
+  min-width:92px;
+  font-size:13px;
+  font-weight:600;
+  color:#555;
+}
+
+.neo-calendar-detail-body{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+}
+
+.neo-calendar-detail-body strong{
+  font-size:15px;
+  font-weight:600;
+}
+
+.neo-calendar-detail-body p{
+  margin:0;
+  color:#666;
+  line-height:1.5;
+}
+
+.neo-calendar-type{
+  width:max-content;
+  padding:2px 7px;
+  border-radius:10px;
+  background:#f3f3f3;
+  color:#666;
+  font-size:11px;
+}
+
+.neo-calendar-type.holiday{
+  color:#9d4f59;
+}
+
+.neo-calendar-type.event{
+  color:#4e774e;
+}
+
+.neo-calendar-type.meeting{
+  color:#9b652d;
+}
+
+.neo-calendar-type.assessment{
+  color:#806c22;
+}
+
+.neo-calendar-type.academic{
+  color:#586f89;
+}
+
+@media(max-width:700px){
+  .neo-calendar-legend{
+    gap:8px 12px;
+  }
+
+  .neo-month-day{
+    min-height:58px;
+    padding:6px;
+  }
+
+  .neo-weekday{
+    font-size:11px;
+    padding:8px 3px;
+  }
+
+  .neo-day-number{
+    font-size:12px;
+  }
+
+  .neo-calendar-detail{
+    flex-direction:column;
+    gap:4px;
+  }
+
+  .neo-calendar-detail-date{
+    min-width:0;
+  }
+}
