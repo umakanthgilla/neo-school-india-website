@@ -599,8 +599,8 @@ function renderReminderList(el, items){
 }
 function renderReminders(){
   const today=localDateKey(new Date());
-  const dueToday=reminderLeads.filter(l=>localDateKey(l.next_follow_up)===today && !["Converted","Lost"].includes(l.status));
-  const overdue=reminderLeads.filter(l=>l.next_follow_up && new Date(l.next_follow_up)<new Date() && localDateKey(l.next_follow_up)!==today && !["Converted","Lost"].includes(l.status));
+  const dueToday=reminderLeads.filter(l=>localDateKey(l.next_follow_up)===today && !["Converted","Lost"].includes(l.status)).sort((a,b)=>new Date(a.next_follow_up)-new Date(b.next_follow_up));
+  const overdue=reminderLeads.filter(l=>l.next_follow_up && new Date(l.next_follow_up)<new Date() && localDateKey(l.next_follow_up)!==today && !["Converted","Lost"].includes(l.status)).sort((a,b)=>new Date(a.next_follow_up)-new Date(b.next_follow_up));
   const contacted=reminderLeads.filter(l=>localDateKey(l.last_contact)===today);
   renderReminderList("#todayTasks",dueToday);
   renderReminderList("#overdueTasks",overdue);
@@ -678,7 +678,8 @@ function followState(v){
 }
 function renderLeads(){
   const body=$("#leadRows"); body.innerHTML=""; $("#emptyState").classList.toggle("hidden",leads.length>0);
-  leads.forEach(l=>{
+  const ordered=leads.slice().sort((a,b)=>{const closed=l=>["Converted","Lost"].includes(l.status),ac=closed(a),bc=closed(b),rank=l=>{if(closed(l))return 3;const s=followState(l.next_follow_up);return s==="overdue"?0:s==="today"?1:2},ar=rank(a),br=rank(b);if(ar!==br)return ar-br;if(ac!==bc)return ac-bc;const ad=a.next_follow_up?new Date(a.next_follow_up).getTime():Number.MAX_SAFE_INTEGER,bd=b.next_follow_up?new Date(b.next_follow_up).getTime():Number.MAX_SAFE_INTEGER;return ad-bd});
+  ordered.forEach(l=>{
     const fs=["Converted","Lost"].includes(l.status)?"":followState(l.next_follow_up);
     const tr=document.createElement("tr");
     if(fs==="today") tr.classList.add("follow-today");
