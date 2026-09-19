@@ -67,18 +67,18 @@ function renderContent(){
  area.querySelector('#portalFilter').oninput=e=>renderCards(e.target.value);renderCards('');
 }
 function renderCards(query){
- const area=root.querySelector('#portalRecords');const list=records[tab].filter(r=>(JSON.stringify(r)+' '+label(r)).toLowerCase().includes(query.toLowerCase()));
+ const area=root.querySelector('#portalRecords');const list=records[tab].filter(r=>(JSON.stringify(r)+' '+label(r)).toLowerCase().includes(query.toLowerCase())).sort((a,b)=>{if(tab==='enquiries'){const closed=s=>['Converted','Lost'].includes(s),ac=closed(a.status),bc=closed(b.status),ad=a.follow_up||'9999-12-31',bd=b.follow_up||'9999-12-31';return ac-bc||ad.localeCompare(bd)}if(tab==='invoices'){const ab=Math.max(0,a.amount_paise-paid(a.id)),bb=Math.max(0,b.amount_paise-paid(b.id)),ao=ab>0&&a.due_date&&a.due_date<today(),bo=bb>0&&b.due_date&&b.due_date<today();return bo-ao||(bb>0)-(ab>0)||(a.due_date||'').localeCompare(b.due_date||'')}if(tab==='teacher_tasks'){const done=s=>['Completed','Not completed'].includes(s),ac=done(a.status),bc=done(b.status),ao=!ac&&a.due_date&&a.due_date<today(),bo=!bc&&b.due_date&&b.due_date<today();return ac-bc||bo-ao||(a.due_date||'').localeCompare(b.due_date||'')}return 0});
  area.innerHTML=list.length?list.map(r=>{
  const s=tab==='students'?r:student(r.student_id);const phone=tab==='enquiries'?r.mobile:s?.mobile;
  let title=r.name||r.subject||r.item||r.title||label(r)||r.reference||r.id;
  let lines=[];
- if(tab==='teacher_tasks')lines=[(records.teacher_access||[]).find(t=>t.account_id===r.teacher_id)?.name,r.instructions,'Due: '+r.due_date,r.status,...(r.history||[]).map(h=>h.date+' · '+h.status+': '+h.comment)];
+ if(tab==='teacher_tasks')lines=[(records.teacher_access||[]).find(t=>t.account_id===r.teacher_id)?.name,r.instructions,'Due: '+r.due_date,r.status,!['Completed','Not completed'].includes(r.status)&&r.due_date<today()?'OVERDUE':!['Completed','Not completed'].includes(r.status)&&r.due_date===today()?'DUE TODAY':'',...(r.history||[]).map(h=>h.date+' · '+h.status+': '+h.comment)];
  if(tab==='classrooms')lines=[r.program+' · '+r.academic_year,'Teacher: '+r.teacher,'Capacity: '+r.capacity,'Assigned students: '+(records.students||[]).filter(s=>s.classroom_id===r.id).length];
  if(tab==='fee_structures')lines=[classroomName(r.classroom_id),money(r.amount_paise),'Due: '+r.due_date];
  if(tab==='homework')lines=[classroomName(r.classroom_id),r.instructions,'Due: '+r.due_date,r.published?'Published to parents':'Draft'];
  if(tab==='announcements')lines=[r.classroom_id?classroomName(r.classroom_id):'All school parents',r.message,r.published?'Published to parents':'Draft'];
  if(tab==='students')lines=[r.program+' · '+r.academic_year,'Classroom: '+classroomName(r.classroom_id),'DOB: '+r.dob,'Parent: '+r.parent,'Phone: '+r.mobile,'Previous school: '+(r.previous_school||'Not recorded'),'Nursery: '+r.nursery_status+' · LKG: '+r.lkg_status];
- if(tab==='enquiries')lines=[r.child_name+' · '+r.program,'Follow-up: '+r.follow_up,r.status,r.notes,r.office_note];
+ if(tab==='enquiries')lines=[r.child_name+' · '+r.program,'Follow-up: '+r.follow_up,r.status,r.follow_up&&r.follow_up<today()&&!['Converted','Lost'].includes(r.status)?'FOLLOW-UP OVERDUE':r.follow_up===today()&&!['Converted','Lost'].includes(r.status)?'FOLLOW-UP TODAY':'',r.notes,r.office_note];
  if(tab==='attendance')lines=[r.date,r.status];
  if(tab==='invoices')lines=[label(r),'Due: '+r.due_date,'Fee: '+money(r.amount_paise),'Received: '+money(paid(r.id)),'Outstanding: '+money(r.amount_paise-paid(r.id)),r.amount_paise<=paid(r.id)?'Paid':r.due_date<today()?'Overdue':'Upcoming / due today'];
  if(tab==='payments')lines=[money(r.amount_paise)+' · '+r.method,r.date,'Reference: '+r.reference,'Receipt ID: '+r.id,r.status];
