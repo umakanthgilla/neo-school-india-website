@@ -6,7 +6,7 @@ const learningTabs=['calendar','curriculum','timetable','learning_report'];
 const names={dashboard:'Overview',calendar:'School calendar',curriculum:'Curriculum & calendar',timetable:'Teacher timetable',learning_report:'Learning report',students:'Students',classrooms:'Classrooms',fee_structures:'Fee structures',homework:'Homework',announcements:'Parent notices',parent_access:'Parent access',teacher_access:'Teacher access',teacher_tasks:'Teacher tasks & reports',staff:'Staff',staff_attendance:'Staff attendance',payroll:'Payroll',exams:'Exams & hall tickets',assessments:'Assessments & report cards',documents:'Documents & downloads',enquiries:'Enquiries',attendance:'Attendance',invoices:'Assigned fees',payments:'Collect payment',inventory:'Inventory',reports:'Reports & Excel',tickets:'Parent concerns',orders:'Orders',ledger:'Head-office payments',support:'Support'};
 const classes=['Playgroup','Nursery','LKG','UKG','Daycare'];
 const money=x=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(x/100);
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const today=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return v.year+'-'+v.month+'-'+v.day};
 const student=id=>records.students?.find(x=>x.id===id);
 const label=r=>student(r.student_id)?.name||r.student_id;
 const paid=id=>(records.payments||[]).filter(p=>p.invoice_id===id).reduce((n,p)=>n+p.amount_paise,0);
