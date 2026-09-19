@@ -3,16 +3,18 @@
 const root=document.createElement('section');root.id='neoWorkspace';root.hidden=true;document.querySelector('main').insertBefore(root,document.getElementById('detail'));
 let school=null,tab='dashboard',records={},errors={},generation=0,loading=false;
 const learningTabs=['calendar','curriculum','timetable','learning_report'];
-const names={dashboard:'Overview',calendar:'School calendar',curriculum:'Curriculum & calendar',timetable:'Teacher timetable',learning_report:'Learning report',students:'Students',classrooms:'Classrooms',fee_structures:'Fee structures',homework:'Homework',announcements:'Parent notices',parent_access:'Parent access',teacher_access:'Teacher access',teacher_tasks:'Teacher tasks & reports',staff:'Staff',staff_attendance:'Staff attendance',payroll:'Payroll',exams:'Exams & hall tickets',assessments:'Assessments & report cards',documents:'Documents & downloads',enquiries:'Enquiries',attendance:'Attendance',invoices:'Assigned fees',payments:'Collect payment',inventory:'Inventory & stores',reports:'Reports & Excel',tickets:'Parent concerns',orders:'Orders',ledger:'Head-office payments',support:'Support'};
+const plannedTabs=new Set(['daily_accounts','hr_workflow','transport','visitor_gate','vendors_assets']);
+const names={dashboard:'Overview',daily_accounts:'Daily accounts & vouchers',hr_workflow:'HR workflow',transport:'Transport & safety',visitor_gate:'Visitor & gate',vendors_assets:'Vendors & assets',calendar:'School calendar',curriculum:'Curriculum & calendar',timetable:'Teacher timetable',learning_report:'Learning report',students:'Students',classrooms:'Classrooms',fee_structures:'Fee structures',homework:'Homework',announcements:'Parent notices',parent_access:'Parent access',teacher_access:'Teacher access',teacher_tasks:'Teacher tasks & reports',staff:'Staff',staff_attendance:'Staff attendance',payroll:'Payroll',exams:'Exams & hall tickets',assessments:'Assessments & report cards',documents:'Documents & downloads',enquiries:'Enquiries',attendance:'Attendance',invoices:'Assigned fees',payments:'Collect payment',inventory:'Inventory & stores',reports:'Reports & Excel',tickets:'Parent concerns',orders:'Orders',ledger:'Head-office payments',support:'Support'};
 const departments=[
  ['dashboard','School overview',['dashboard']],
  ['academics','Academics',['calendar','curriculum','timetable','learning_report','classrooms','homework','exams','assessments']],
  ['students','Students & parents',['students','attendance','parent_access','tickets']],
  ['teachers','Teachers',['teacher_access','teacher_tasks']],
- ['frontoffice','Front office',['enquiries','announcements']],
- ['hr','HR & payroll',['staff','staff_attendance','payroll']],
- ['finance','Fees & accounts',['fee_structures','invoices','payments','ledger']],
- ['inventory','Inventory & stores',['inventory','orders']],
+ ['frontoffice','Front office',['enquiries','announcements','visitor_gate']],
+ ['hr','HR & payroll',['staff','staff_attendance','hr_workflow','payroll']],
+ ['finance','Fees & accounts',['fee_structures','invoices','payments','daily_accounts','ledger']],
+ ['inventory','Inventory & stores',['inventory','orders','vendors_assets']],
+ ['transport','Transport & safety',['transport']],
  ['documents','Documents & reports',['documents','reports']],
  ['support','Operations & support',['support']]
 ];
@@ -28,7 +30,7 @@ async function call(kind,method='GET',data,id=''){
  const r=await fetch(BASE+'/api/portal/'+encodeURIComponent(school.school_id)+'/'+kind+(id?'/'+encodeURIComponent(id):''),{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});
  const b=await r.json().catch(()=>({error:'The server returned an unreadable response.'}));if(!r.ok){if(r.status===401&&token===requestToken){window.closeNeoWorkspace();document.getElementById('logout').click()}throw Error(r.status===404?'This feature requires the latest CRM Worker. Ask head office to deploy portal v2.':b.error||'Request failed.');}return b;
 }
-async function loadRecords(){const stamp=++generation;loading=true;renderContent();const keys=Object.keys(names).filter(k=>k!=='dashboard'&&!learningTabs.includes(k)&&!['inventory','reports','tickets','documents'].includes(k));keys.push('stock_items','stock_moves');const results=await Promise.allSettled(keys.map(async k=>[k,await call(k)]));if(stamp!==generation)return false;errors={};results.forEach((result,i)=>{const k=keys[i];if(result.status==='fulfilled'){records[k]=result.value[1].records||result.value[1].accounts||[]}else{errors[k]=result.reason.message;delete records[k]}});loading=false;renderContent();return !errors[tab]}
+async function loadRecords(){const stamp=++generation;loading=true;renderContent();const keys=Object.keys(names).filter(k=>k!=='dashboard'&&!learningTabs.includes(k)&&!plannedTabs.has(k)&&!['inventory','reports','tickets','documents'].includes(k));keys.push('stock_items','stock_moves');const results=await Promise.allSettled(keys.map(async k=>[k,await call(k)]));if(stamp!==generation)return false;errors={};results.forEach((result,i)=>{const k=keys[i];if(result.status==='fulfilled'){records[k]=result.value[1].records||result.value[1].accounts||[]}else{errors[k]=result.reason.message;delete records[k]}});loading=false;renderContent();return !errors[tab]}
 window.openNeoWorkspace=s=>{school=s;tab='dashboard';records={};errors={};root.hidden=false;
  const departmentCards=departments.map(([id,title,tabs])=>`<details class="panel neo-department" ${id==='dashboard'?'open':''}><summary>${esc(title)}</summary><div class="actions">${tabs.map(k=>`<button class="secondary" data-tab="${k}" aria-pressed="${k===tab}">${esc(names[k])}</button>`).join('')}</div></details>`).join('');
  root.innerHTML=`<div class="portal-hero"><div><span class="eyebrow">LEARN · GROW · LEAD</span><h2>${esc(s.name)}</h2><p>Your school, organised by department.</p><span class="portal-pill">${esc(s.city)} · ${mode==='admin'?'Head-office view':'School master control'}</span></div><img src="/neo%20owl.jpeg" alt="Neo owl" width="100" height="120"></div><div aria-label="School departments">${departmentCards}</div><div id="portalStatus" role="status" aria-live="polite"></div><div id="portalContent"></div>`;
@@ -41,6 +43,13 @@ const amount=()=>'<label>Amount (INR)<input name="amount" type="number" min="0.0
 const notes=()=>'<label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label>';
 const chooseClassroom=(required=true)=>select('classroom_id','Classroom',(records.classrooms||[]).map(c=>[c.id,c.name+' · '+c.program+' · '+c.academic_year])).replace('required',required?'required':'');
 const publish=()=>'<label class="check"><input type="checkbox" name="published">Publish to parents now</label>';
+function renderPlannedModule(){const copy={
+daily_accounts:['Daily accounts & vouchers','Opening cash → income → expenses/vouchers → bank movement → counter closing. Fee collections and future payroll/inventory transactions must feed this ledger without duplicate entry.','Frontend shell ready · backend ledger required'],
+hr_workflow:['HR workflow','Late marks, configurable leave types, leave application/approval, salary advances and payroll inputs belong here. Existing Staff/Attendance/Payroll screens remain unchanged until this workflow is connected.','Frontend shell ready · backend HR workflow required'],
+transport:['Transport & safety','Route start → approaching pickup → ready → picked up → school drop, with return-trip states. GPS/CCTV stay vendor integrations behind this workflow.','Planned integration · third-party GPS/CCTV later'],
+visitor_gate:['Visitor & gate','Visitor entry/exit, purpose, host, gate status and authorised history.','Reserved · backend workflow required'],
+vendors_assets:['Vendors & assets','Suppliers, purchases, school assets, issue/maintenance history and links to Inventory/Accounts.','Reserved · backend workflow required']
+};const x=copy[tab];return `<div class="panel"><span class="eyebrow">DEPARTMENT WORKFLOW</span><h3>${esc(x[0])}</h3><p>${esc(x[1])}</p><p><b>Status:</b> ${esc(x[2])}</p><p>This is intentionally not a fake data-entry form. It will become operational only when its persistence, permissions and audit trail are connected.</p></div>`}
 function fields(){switch(tab){
 case 'teacher_tasks':return select('teacher_id','Teacher',(records.teacher_access||[]).filter(t=>t.active).map(t=>[t.account_id,t.name]))+input('title','Task / report name')+`<label>Due date<input name="due_date" type="date" min="${today()}" required></label>`+'<label>Responsibilities / preparation<textarea name="instructions" required maxlength="2000"></textarea></label>';
 case 'classrooms':return input('name','Classroom / section name')+select('program','Programme',classes)+input('academic_year','Academic starting year','number')+input('teacher','Class teacher name')+input('capacity','Room capacity','number');
@@ -57,7 +66,7 @@ case 'orders':return select('order_for','Order for',['School stock','Classroom',
 case 'ledger':return amount()+`<label>Payment date<input name="date" type="date" max="${today()}" required></label>`+input('reference','Bank / UPI transaction reference')+notes();
 case 'support':return input('subject','Subject')+notes();
 }}
-function renderContent(){
+function renderContent(){if(plannedTabs.has(tab)){const box=document.getElementById('portalContent');if(box)box.innerHTML=renderPlannedModule();return;}
  root.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===tab));
  (root.querySelector('#portalStatus')||{}).textContent='';const area=root.querySelector('#portalContent');
  if(loading&&!Object.keys(records).length){area.innerHTML='<div class="portal-empty">Loading your school workspace…</div>';return}
