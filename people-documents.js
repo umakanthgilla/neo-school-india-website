@@ -1,6 +1,6 @@
 (()=>{
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const today=()=>{const d=new Date();return d.toISOString().slice(0,10)};
+const today=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return v.year+'-'+v.month+'-'+v.day};
 const money=p=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format((Number(p)||0)/100);
 const printDoc=(title,html)=>{const w=open('','_blank');if(!w)return;w.document.write('<!doctype html><title>'+esc(title)+'</title><style>body{font-family:Arial,sans-serif;padding:28px;color:#12213c}h1,h2{color:#071b52}.card{border:1px solid #ccd6e5;border-radius:12px;padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}@media print{button{display:none}}</style><h1>'+esc(title)+'</h1>'+html);w.document.close();w.print()};
 window.renderNeoPeopleDocs=function(area,ctx){
