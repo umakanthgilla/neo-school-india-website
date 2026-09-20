@@ -399,3 +399,9 @@
 
 /* Make Today Snapshot eyebrow clearly readable on the light executive card */
 .executive-snapshot .snapshot-head .eyebrow{color:#1B365D!important;opacity:1!important;font-weight:900;letter-spacing:.14em}
+
+/* Income mix is categorical, not completion status */
+.health-item.income .health-ring{background:conic-gradient(#50E3C2 0 calc(var(--done)*1%),#4A90E2 calc(var(--done)*1%) calc((var(--done) + var(--critical))*1%),#DED2F9 calc((var(--done) + var(--critical))*1%) 100%)!important}
+.health-item.income .legend-done{background:#50E3C2!important}
+.health-item.income .legend-due{background:#4A90E2!important}
+.health-item.income .legend-third{background:#DED2F9!important}
