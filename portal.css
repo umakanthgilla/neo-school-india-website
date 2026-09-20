@@ -429,75 +429,20 @@
 /* Student Care / Adoption & PTM workflow blueprint */
 .workflow-blueprint{padding:22px}.workflow-blueprint>p{max-width:900px;color:#607087}.workflow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 20px}.workflow-steps article{position:relative;background:#fff;border:1px solid #dce6f1;border-radius:16px;padding:16px 16px 16px 52px;min-height:112px}.workflow-steps b{position:absolute;left:14px;top:15px;width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#102d63;color:#fff}.workflow-steps strong,.workflow-steps span{display:block}.workflow-steps strong{color:#18345f;margin-bottom:7px}.workflow-steps span{color:#66768d;font-size:13px;line-height:1.45}@media(max-width:900px){.workflow-steps{grid-template-columns:1fr 1fr}}@media(max-width:600px){.workflow-steps{grid-template-columns:1fr}}
 
-/* V18: calm official cards — remove decorative rainbow strips from operational content. */
-#neoWorkspace #portalContent .portal-card:before{display:none}
-#neoWorkspace #portalContent .portal-card{border-top:4px solid #dbe5f1}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+1){border-top-color:#4f9fb9}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+2){border-top-color:#8dbf7b}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+3){border-top-color:#d7b65d}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+4){border-top-color:#b59bc8}
-#neoWorkspace #portalContent .academic-kpis article{border-top:4px solid #dbe5f1}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(1){border-top-color:#4f9fb9}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(2){border-top-color:#8dbf7b}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(3){border-top-color:#d7b65d}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(4){border-top-color:#d99086}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(5){border-top-color:#b59bc8}
-#neoWorkspace #portalContent .academic-kpis article:nth-child(6){border-top-color:#7e9ab5}
 
-/* V19: universal single-accent card language across School Master content. */
-#neoWorkspace #portalContent .portal-grid .portal-card:before{display:none!important}
-#neoWorkspace #portalContent .portal-grid .portal-card{border-top:4px solid #4f9fb9!important;background:#fff}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+1){border-top-color:#4f9fb9!important}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+2){border-top-color:#8dbf7b!important}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+3){border-top-color:#d7b65d!important}
-#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+4){border-top-color:#b59bc8!important}
-#neoWorkspace #portalContent .workflow-steps article{border-top:4px solid #4f9fb9}
-#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+2){border-top-color:#8dbf7b}
-#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+3){border-top-color:#d7b65d}
-#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+4){border-top-color:#b59bc8}
-
-/* V20: Today Snapshot — clean status accents, no decorative block/gradient. */
-#neoWorkspace #portalContent .executive-snapshot{background:#fff!important;border-top:4px solid #4f9fb9!important;box-shadow:0 8px 24px #102a5608}
-#neoWorkspace #portalContent .health-item{background:#fff!important;border-top:4px solid #dbe5f1!important}
-#neoWorkspace #portalContent .health-item:nth-child(1){border-top-color:#4f9fb9!important}
-#neoWorkspace #portalContent .health-item:nth-child(2){border-top-color:#8dbf7b!important}
-#neoWorkspace #portalContent .health-item:nth-child(3){border-top-color:#d7b65d!important}
-#neoWorkspace #portalContent .health-item:nth-child(4){border-top-color:#b59bc8!important}
-#neoWorkspace #portalContent .health-item:nth-child(5){border-top-color:#7e9ab5!important}
-
-/* V21: unified Neo operational card palette.
-   Rule: no rainbow strips in app content; each repeated card gets one solid accent. */
-:root{--neo-card-blue:#49A6BA;--neo-card-green:#88BF73;--neo-card-gold:#D9B54A;--neo-card-coral:#D9897D;--neo-card-lavender:#B79AC8;--neo-card-steel:#789BB7}
-#neoWorkspace #portalContent .portal-card:before{display:none!important}
-#neoWorkspace #portalContent .portal-card,
-#neoWorkspace #portalContent .academic-kpis article,
-#neoWorkspace #portalContent .workflow-steps article,
-#neoWorkspace #portalContent .health-item{background:#fff!important;border:1px solid #dbe5f1!important;border-top-width:5px!important;box-shadow:0 5px 16px #102a5608}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n+1),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n+1),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n+1),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n+1){border-top-color:var(--neo-card-blue)!important}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n+2),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n+2),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n+2),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n+2){border-top-color:var(--neo-card-green)!important}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n+3),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n+3),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n+3),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n+3){border-top-color:var(--neo-card-gold)!important}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n+4),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n+4),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n+4),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n+4){border-top-color:var(--neo-card-coral)!important}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n+5),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n+5),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n+5),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n+5){border-top-color:var(--neo-card-lavender)!important}
-#neoWorkspace #portalContent .portal-grid>.portal-card:nth-child(6n),
-#neoWorkspace #portalContent .academic-kpis>article:nth-child(6n),
-#neoWorkspace #portalContent .workflow-steps>article:nth-child(6n),
-#neoWorkspace #portalContent .health-strip>.health-item:nth-child(6n){border-top-color:var(--neo-card-steel)!important}
-#neoWorkspace #portalContent .academic-intelligence,
-#neoWorkspace #portalContent .executive-snapshot{background:#fff!important}
-#neoWorkspace #portalContent .learning-welcome,
-#neoWorkspace #portalContent .portal-editor[open] summary{border-image:none!important}
+/* Brand eyebrow: Neo multi-colour recall. Keep operational card accents on their original design. */
+#neoWorkspace #portalContent .snapshot-head .eyebrow,
+#neoWorkspace #portalContent .workflow-blueprint>.eyebrow,
+#neoWorkspace #portalContent .academic-intelligence .eyebrow{
+  display:inline-block;
+  width:max-content;
+  max-width:100%;
+  background:var(--rainbow);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent!important;
+  opacity:1!important;
+  font-weight:900;
+  letter-spacing:.14em;
+}
