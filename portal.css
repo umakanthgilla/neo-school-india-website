@@ -446,3 +446,13 @@
   font-weight:900;
   letter-spacing:.14em;
 }
+
+/* Eyebrow labels: discrete Neo brand colours per word, never a gradient. */
+#neoWorkspace #portalContent .eyebrow.word-colors{background:none!important;-webkit-text-fill-color:initial!important;color:inherit!important}
+#neoWorkspace #portalContent .eyebrow.word-colors i{font-style:normal;-webkit-text-fill-color:initial}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n+1){color:#19a7c2}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n+2){color:#63b84e}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n+3){color:#e3b526}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n+4){color:#ef7b45}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n+5){color:#e64282}
+#neoWorkspace #portalContent .eyebrow.word-colors i:nth-child(6n){color:#6f62b5}
