@@ -455,3 +455,12 @@
 #neoWorkspace #portalContent .workflow-steps article:nth-child(4n+2){border-top-color:#8dbf7b}
 #neoWorkspace #portalContent .workflow-steps article:nth-child(4n+3){border-top-color:#d7b65d}
 #neoWorkspace #portalContent .workflow-steps article:nth-child(4n+4){border-top-color:#b59bc8}
+
+/* V20: Today Snapshot — clean status accents, no decorative block/gradient. */
+#neoWorkspace #portalContent .executive-snapshot{background:#fff!important;border-top:4px solid #4f9fb9!important;box-shadow:0 8px 24px #102a5608}
+#neoWorkspace #portalContent .health-item{background:#fff!important;border-top:4px solid #dbe5f1!important}
+#neoWorkspace #portalContent .health-item:nth-child(1){border-top-color:#4f9fb9!important}
+#neoWorkspace #portalContent .health-item:nth-child(2){border-top-color:#8dbf7b!important}
+#neoWorkspace #portalContent .health-item:nth-child(3){border-top-color:#d7b65d!important}
+#neoWorkspace #portalContent .health-item:nth-child(4){border-top-color:#b59bc8!important}
+#neoWorkspace #portalContent .health-item:nth-child(5){border-top-color:#7e9ab5!important}
