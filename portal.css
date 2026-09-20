@@ -317,3 +317,20 @@
  body:has(#neoWorkspace:not([hidden])) main{padding-top:0!important}
  #neoWorkspace:not([hidden]){margin-top:8px!important;margin-bottom:0!important}
 }
+
+/* Neo School Master identity + profile menu */
+.portal-identity{display:flex;flex-direction:column;justify-content:center;min-height:100%}
+.brand-eyebrow{display:flex;align-items:center;gap:6px;letter-spacing:.16em}
+.brand-eyebrow b{font:inherit;font-weight:850}.brand-eyebrow i{font-style:normal;color:#fff;opacity:.72}
+.brand-neo{color:#55d8ee}.brand-school{color:#7fd879}.brand-india{color:#f3d35b}.brand-city{color:#ff8f76}
+.portal-profile{position:relative;display:flex;align-items:center;align-self:stretch}
+.profile-trigger{padding:0;border:0;background:transparent;box-shadow:none;border-radius:22px;line-height:0}
+.profile-trigger:hover{transform:none;filter:brightness(1.03)}
+.profile-trigger:focus-visible{outline:3px solid #f3d35b;outline-offset:4px}
+.profile-trigger img{display:block;border-radius:20px}
+.profile-menu{position:absolute;right:0;top:calc(50% + 60px);z-index:40;width:190px;padding:7px;background:#fff;border:1px solid #d9e5f4;border-radius:13px;box-shadow:0 16px 36px #00143338}
+.profile-menu button{display:block;width:100%;min-height:38px;padding:9px 11px;text-align:left;background:#fff;color:#0b2055;border:0;border-radius:8px;box-shadow:none;font-size:13px}
+.profile-menu button:hover{background:#eef5fc;transform:none}
+.profile-menu button:last-child{border-top:1px solid #e4ebf4;border-radius:0 0 8px 8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(min-width:761px){#neoWorkspace>.portal-hero{align-items:stretch}.portal-profile{justify-content:center}.portal-profile .profile-trigger img{width:92px;height:108px}}
