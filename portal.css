@@ -443,3 +443,15 @@
 #neoWorkspace #portalContent .academic-kpis article:nth-child(4){border-top-color:#d99086}
 #neoWorkspace #portalContent .academic-kpis article:nth-child(5){border-top-color:#b59bc8}
 #neoWorkspace #portalContent .academic-kpis article:nth-child(6){border-top-color:#7e9ab5}
+
+/* V19: universal single-accent card language across School Master content. */
+#neoWorkspace #portalContent .portal-grid .portal-card:before{display:none!important}
+#neoWorkspace #portalContent .portal-grid .portal-card{border-top:4px solid #4f9fb9!important;background:#fff}
+#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+1){border-top-color:#4f9fb9!important}
+#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+2){border-top-color:#8dbf7b!important}
+#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+3){border-top-color:#d7b65d!important}
+#neoWorkspace #portalContent .portal-grid .portal-card:nth-child(4n+4){border-top-color:#b59bc8!important}
+#neoWorkspace #portalContent .workflow-steps article{border-top:4px solid #4f9fb9}
+#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+2){border-top-color:#8dbf7b}
+#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+3){border-top-color:#d7b65d}
+#neoWorkspace #portalContent .workflow-steps article:nth-child(4n+4){border-top-color:#b59bc8}
