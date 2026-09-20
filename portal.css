@@ -250,3 +250,24 @@
 .neo-calendar-details td{white-space:pre-wrap;overflow-wrap:anywhere}
 .neo-report-preview{margin:16px 0;padding:16px;border:1px solid #dce3ed;border-radius:12px;background:#fff}
 .neo-report-preview table{font-size:13px}
+
+/* School Master executive shell — compact, calm, fixed workspace navigation */
+#neoWorkspace:not([hidden]){display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:18px;align-items:start;min-height:calc(100dvh - 110px)}
+#neoWorkspace>.portal-hero{grid-column:1/-1;margin:0 0 2px;border-radius:18px;padding:20px 24px;min-height:116px;background:linear-gradient(120deg,#081b4d,#0d3269 68%,#0b5579)}
+#neoWorkspace>.portal-hero h2{font-size:28px;margin:5px 0}
+#neoWorkspace>.portal-hero p{margin:4px 0 10px}
+#neoWorkspace>.neo-department-nav{grid-column:1;grid-row:2/5;position:sticky;top:12px;height:calc(100dvh - 24px);overflow-y:auto;overflow-x:hidden;padding:10px;background:#0b2055;border:1px solid #17366d;border-radius:18px;scrollbar-width:thin}
+#neoWorkspace>.neo-department-nav .neo-department{margin:0 0 7px;padding:0;border:1px solid #294579;border-radius:12px;background:#102a60;box-shadow:none;overflow:hidden}
+#neoWorkspace>.neo-department-nav .neo-department>summary{padding:12px 13px;color:#fff;font-size:14px;font-weight:750;list-style-position:inside}
+#neoWorkspace>.neo-department-nav .neo-department>.actions{display:grid;grid-template-columns:1fr;gap:5px;margin:0;padding:0 8px 8px}
+#neoWorkspace>.neo-department-nav button{width:100%;min-height:38px;padding:9px 10px;text-align:left;border-radius:9px;background:#fff;color:#0b2055;border:1px solid #d8e4f2;font-size:13px;line-height:1.25;box-shadow:none}
+#neoWorkspace>.neo-department-nav button[aria-pressed=true]{color:#fff;background:linear-gradient(110deg,#126b98,#0b2055);border-color:transparent;box-shadow:inset 0 -3px 0 #f1c84b}
+#neoWorkspace>.neo-department-nav button:hover{filter:none;background:#f1f6fc}
+#neoWorkspace>.neo-department-nav button[aria-pressed=true]:hover{background:linear-gradient(110deg,#126b98,#0b2055)}
+#neoWorkspace>#portalStatus,#neoWorkspace>#portalContent{grid-column:2}
+#neoWorkspace>#portalContent{grid-row:2;min-width:0}
+#neoWorkspace>#portalStatus:not(:empty){grid-row:2;z-index:2;margin:0 0 10px}
+#neoWorkspace>#portalStatus:not(:empty)+#portalContent{padding-top:58px}
+@media(min-width:761px){body:has(#neoWorkspace:not([hidden])) main{max-width:1440px;margin:16px auto;padding:0 22px}body:has(#neoWorkspace:not([hidden])) #detail{display:none!important}}
+@media(max-width:760px){#neoWorkspace:not([hidden]){grid-template-columns:155px minmax(0,1fr);gap:10px}#neoWorkspace>.neo-department-nav{top:8px;height:calc(100dvh - 16px);padding:6px}#neoWorkspace>.neo-department-nav .neo-department>summary{font-size:12px;padding:10px 7px}#neoWorkspace>.neo-department-nav button{font-size:12px;padding:8px 6px}.portal-hero{padding:18px}}
+@media(max-width:480px){#neoWorkspace:not([hidden]){display:block}#neoWorkspace>.neo-department-nav{position:relative;top:auto;height:240px;margin:10px 0 16px}}
