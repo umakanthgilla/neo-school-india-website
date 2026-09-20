@@ -396,3 +396,6 @@
 .health-item.split .health-ring{background:conic-gradient(#2FA84F 0 calc(var(--done)*1%),#D9A514 calc(var(--done)*1%) 100%)!important}
 .health-item.pending .health-ring{background:#E5E9F0!important}
 .health-legend .legend-done{background:#2FA84F!important}.health-legend .legend-due{background:#D9A514!important}.health-legend .legend-critical{background:#D94141!important}
+
+/* Make Today Snapshot eyebrow clearly readable on the light executive card */
+.executive-snapshot .snapshot-head .eyebrow{color:#1B365D!important;opacity:1!important;font-weight:900;letter-spacing:.14em}
