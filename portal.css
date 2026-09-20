@@ -390,3 +390,9 @@
 .nav-signout{display:block;width:100%;margin:12px 0 4px;min-height:42px;background:#fff;color:#0b2055;border:1px solid #d8e4f2;border-radius:11px;box-shadow:none;font-weight:800}
 .nav-signout:hover{background:#f3f7fc;transform:none}
 .portal-profile{justify-content:center}.portal-profile>img{display:block;border-radius:20px}
+
+/* Operational ring semantics: green complete, yellow pending, red critical */
+.health-ring{--done:0;--critical:0;background:conic-gradient(#2FA84F 0 calc(var(--done)*1%),#D9A514 calc(var(--done)*1%) calc((100 - var(--critical))*1%),#D94141 calc((100 - var(--critical))*1%) 100%)!important}
+.health-item.split .health-ring{background:conic-gradient(#2FA84F 0 calc(var(--done)*1%),#D9A514 calc(var(--done)*1%) 100%)!important}
+.health-item.pending .health-ring{background:#E5E9F0!important}
+.health-legend .legend-done{background:#2FA84F!important}.health-legend .legend-due{background:#D9A514!important}.health-legend .legend-critical{background:#D94141!important}
