@@ -418,3 +418,10 @@
 .health-item.income .legend-due{background:#FFF68F!important}
 .health-item.income .legend-third{background:#FF8B94!important}
 .health-item.income .legend-fourth{background:#DED2F9!important}
+
+/* School Master academic intelligence */
+.academic-intelligence{padding:20px;border:1px solid #dbe5f1;border-radius:22px;background:linear-gradient(135deg,#f8fbff,#fffdf6);margin-bottom:20px}
+.academic-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.academic-kpis article{background:#fff;border:1px solid #dfe7f1;border-radius:16px;padding:16px;min-height:118px;box-shadow:0 6px 18px #102a560a}
+.academic-kpis small{display:block;color:#536783;font-weight:700}.academic-kpis strong{display:block;color:#102d63;font-size:28px;line-height:1.15;margin:8px 0 5px}.academic-kpis span{color:#65758c;font-size:13px;line-height:1.4}.academic-kpis article.needs-support{border-color:#ffd0cc;background:#fff9f8}.academic-kpis article.needs-support strong{color:#b63a43}
+@media(max-width:900px){.academic-kpis{grid-template-columns:1fr 1fr}}@media(max-width:600px){.academic-kpis{grid-template-columns:1fr}}
