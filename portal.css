@@ -353,3 +353,24 @@
 .attention-chip span{width:7px;height:7px;border-radius:50%;background:#e2a91f}.attention-chip.good span{background:#48a96b}
 @media(max-width:1100px){.health-strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.health-strip{grid-template-columns:1fr 1fr}.executive-snapshot{padding:16px}.snapshot-head h2{font-size:24px}}
+
+/* School Master snapshot readability + conventional status colours */
+.executive-snapshot{padding:16px 20px 18px}
+.snapshot-head{align-items:center}
+.snapshot-head .eyebrow{margin:0 0 2px;line-height:1.1}
+.snapshot-head h2{margin:3px 0 2px;font-size:28px;line-height:1.08}
+.snapshot-head p{line-height:1.25}
+.health-strip{margin-top:12px;gap:12px}
+.health-item{min-height:86px;padding:12px 14px;gap:12px;overflow:hidden}
+.health-item>div:last-child{min-width:0;flex:1}
+.health-item small,.health-item b{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.health-ring{width:62px;height:62px;flex-basis:62px}
+.health-ring span{max-width:48px;font-size:10px;overflow-wrap:anywhere}
+.health-item.good .health-ring{background:conic-gradient(#2fa84f calc(var(--value)*1%),#dcefe2 0)}
+.health-item.attention .health-ring{background:conic-gradient(#e0a000 calc(var(--value)*1%),#f6e8bc 0)}
+.health-item.pending .health-ring{background:conic-gradient(#d94141 calc(max(var(--value),18)*1%),#f3dada 0)}
+.health-item.neutral .health-ring{background:conic-gradient(#e0a000 calc(var(--value)*1%),#f2ead2 0)}
+.health-item.good b{color:#20783a}.health-item.attention b{color:#946700}.health-item.pending b{color:#b52e2e}
+.attention-chip span{background:#e0a000}
+.profile-menu{top:50%;transform:translateY(-8%);right:108px}
+@media(max-width:1100px){.profile-menu{right:0;top:calc(50% + 58px);transform:none}}
