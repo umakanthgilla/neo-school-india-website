@@ -311,3 +311,9 @@
  #neoWorkspace>.neo-department-nav:after{content:"";display:block;height:18px}
  #neoWorkspace>#portalContent:after{content:"";display:block;height:24px}
 }
+
+/* Reduce the desktop top breathing room requested in School Master review. */
+@media(min-width:761px){
+ body:has(#neoWorkspace:not([hidden])) main{padding-top:0!important}
+ #neoWorkspace:not([hidden]){margin-top:8px!important;margin-bottom:0!important}
+}
