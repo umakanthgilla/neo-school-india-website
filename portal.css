@@ -334,3 +334,22 @@
 .profile-menu button:last-child{border-top:1px solid #e4ebf4;border-radius:0 0 8px 8px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(min-width:761px){#neoWorkspace>.portal-hero{align-items:stretch}.portal-profile{justify-content:center}.portal-profile .profile-trigger img{width:92px;height:108px}}
+
+/* School Master executive visual snapshot */
+.executive-snapshot{padding:22px 24px 20px;border:1px solid #dce8f3;border-radius:18px;background:linear-gradient(115deg,#effcff 0%,#f5fff5 48%,#fff9e9 100%);box-shadow:0 10px 28px #08204c0b}
+.snapshot-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.snapshot-head h2{margin:6px 0 4px;font-size:30px}.snapshot-head p{margin:0;color:#536782}
+.snapshot-refresh{width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;font-size:23px;background:#fff;color:#0b2055;border:1px solid #d4e2ef;box-shadow:0 4px 14px #08204c12}
+.health-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:18px}
+.health-item{display:flex;align-items:center;gap:10px;min-width:0;padding:11px 12px;background:#ffffffd9;border:1px solid #dbe6f1;border-radius:14px}
+.health-item small,.health-item b{display:block}.health-item small{color:#60728a;font-size:12px}.health-item b{margin-top:3px;color:#102a60;font-size:12px}
+.health-ring{--value:0;width:56px;height:56px;flex:0 0 56px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#18a7bd calc(var(--value)*1%),#e7eef5 0);position:relative}
+.health-ring:after{content:"";position:absolute;inset:6px;background:#fff;border-radius:50%}
+.health-ring span{position:relative;z-index:1;max-width:46px;text-align:center;font-size:11px;font-weight:850;color:#0b2055;line-height:1.05}
+.health-item.attention .health-ring{background:conic-gradient(#e2a91f calc(var(--value)*1%),#f4ead0 0)}
+.health-item.pending .health-ring{background:conic-gradient(#8291a8 calc(var(--value)*1%),#e7eef5 0)}
+.attention-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.attention-chip{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #e0e7ef;border-radius:999px;background:#fff;font-size:12px}
+.attention-chip span{width:7px;height:7px;border-radius:50%;background:#e2a91f}.attention-chip.good span{background:#48a96b}
+@media(max-width:1100px){.health-strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.health-strip{grid-template-columns:1fr 1fr}.executive-snapshot{padding:16px}.snapshot-head h2{font-size:24px}}
