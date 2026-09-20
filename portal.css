@@ -296,3 +296,18 @@
  #neoWorkspace>.neo-department-nav{overflow-y:scroll!important;scrollbar-gutter:stable;overscroll-behavior:contain}
  #neoWorkspace>#portalContent{overflow-y:scroll!important;scrollbar-gutter:stable;overscroll-behavior:contain}
 }
+
+/* School Master alignment pass */
+#neoWorkspace>.neo-department-nav .neo-single-department{display:block;width:100%;margin:0 0 7px;min-height:44px;padding:11px 13px;text-align:left;border-radius:12px;background:#102a60;color:#fff;border:1px solid #294579;font-size:14px;font-weight:750}
+#neoWorkspace>.neo-department-nav .neo-single-department[aria-pressed=true]{background:#fff;color:#0b2055;border-color:#d8e4f2;box-shadow:inset 0 -3px 0 #f1c84b}
+@media(min-width:761px){
+ body:has(#neoWorkspace:not([hidden])) main{padding:4px 22px 8px}
+ #neoWorkspace:not([hidden]){height:calc(100dvh - 12px);grid-template-rows:150px minmax(0,1fr);gap:8px 18px}
+ #neoWorkspace>.portal-hero{height:150px;padding:14px 24px}
+ #neoWorkspace>.portal-hero-actions{height:100%;align-items:center}
+ #neoWorkspace>.hero-signout{align-self:center;margin:0}
+ #neoWorkspace>.portal-hero img{width:92px;height:108px}
+ #neoWorkspace>.neo-department-nav,#neoWorkspace>#portalContent{padding-bottom:42px}
+ #neoWorkspace>.neo-department-nav:after{content:"";display:block;height:18px}
+ #neoWorkspace>#portalContent:after{content:"";display:block;height:24px}
+}
