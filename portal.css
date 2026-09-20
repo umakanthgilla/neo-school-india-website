@@ -374,3 +374,14 @@
 .attention-chip span{background:#e0a000}
 .profile-menu{top:50%;transform:translateY(-8%);right:108px}
 @media(max-width:1100px){.profile-menu{right:0;top:calc(50% + 58px);transform:none}}
+
+/* Professional completed-vs-remaining snapshot palette */
+.health-item{min-height:112px}
+.health-copy{min-width:0;flex:1}.health-copy small,.health-copy b,.health-copy em{display:block}
+.health-copy b{margin-top:4px;color:#1B365D;font-size:12px}.health-copy em{margin-top:2px;color:#64748b;font-size:11px;font-style:normal}
+.health-ring{background:conic-gradient(#4A90E2 calc(var(--value)*1%),#E5E9F0 0)!important}
+.health-item.split .health-ring{background:conic-gradient(#50E3C2 calc(var(--value)*1%),#4A90E2 0)!important}
+.health-item.pending .health-ring{background:#E5E9F0!important}
+.health-legend{display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:7px;color:#68778b;font-size:9px;line-height:1.1}
+.health-legend span{display:flex;align-items:center;gap:4px}.health-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;background:#4A90E2}.health-legend .legend-due{background:#E5E9F0}
+.health-item.split .legend-done{background:#50E3C2}.health-item.split .legend-due{background:#4A90E2}
