@@ -411,3 +411,10 @@
 .health-item.income .legend-done{background:#A8E6CF!important}
 .health-item.income .legend-due{background:#8FB9D9!important}
 .health-item.income .legend-third{background:#D8CFF0!important}
+
+/* Requested four-way payment-mode palette: Cash / UPI / Bank transfer / Cheque */
+.health-item.income .health-ring{background:conic-gradient(#A8E6CF 0 calc(var(--done)*1%),#FFF68F calc(var(--done)*1%) calc((var(--done) + var(--critical))*1%),#FF8B94 calc((var(--done) + var(--critical))*1%) calc((var(--done) + var(--critical) + var(--third))*1%),#DED2F9 calc((var(--done) + var(--critical) + var(--third))*1%) 100%)!important}
+.health-item.income .legend-done{background:#A8E6CF!important}
+.health-item.income .legend-due{background:#FFF68F!important}
+.health-item.income .legend-third{background:#FF8B94!important}
+.health-item.income .legend-fourth{background:#DED2F9!important}
