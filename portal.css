@@ -405,3 +405,9 @@
 .health-item.income .legend-done{background:#50E3C2!important}
 .health-item.income .legend-due{background:#4A90E2!important}
 .health-item.income .legend-third{background:#DED2F9!important}
+
+/* Softer low-glare categorical palette for Income Today */
+.health-item.income .health-ring{background:conic-gradient(#A8E6CF 0 calc(var(--done)*1%),#8FB9D9 calc(var(--done)*1%) calc((var(--done) + var(--critical))*1%),#D8CFF0 calc((var(--done) + var(--critical))*1%) 100%)!important}
+.health-item.income .legend-done{background:#A8E6CF!important}
+.health-item.income .legend-due{background:#8FB9D9!important}
+.health-item.income .legend-third{background:#D8CFF0!important}
