@@ -385,3 +385,8 @@
 .health-legend{display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:7px;color:#68778b;font-size:9px;line-height:1.1}
 .health-legend span{display:flex;align-items:center;gap:4px}.health-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;background:#4A90E2}.health-legend .legend-due{background:#E5E9F0}
 .health-item.split .legend-done{background:#50E3C2}.health-item.split .legend-due{background:#4A90E2}
+
+/* Simple School Master account exit: no floating profile popover */
+.nav-signout{display:block;width:100%;margin:12px 0 4px;min-height:42px;background:#fff;color:#0b2055;border:1px solid #d8e4f2;border-radius:11px;box-shadow:none;font-weight:800}
+.nav-signout:hover{background:#f3f7fc;transform:none}
+.portal-profile{justify-content:center}.portal-profile>img{display:block;border-radius:20px}
