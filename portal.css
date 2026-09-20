@@ -284,3 +284,15 @@
  #neoWorkspace>#portalStatus:not(:empty){position:fixed;right:34px;top:194px;z-index:20;max-width:min(520px,45vw);box-shadow:0 10px 30px #071b5220}
  #neoWorkspace>#portalStatus:not(:empty)+#portalContent{padding-top:0}
 }
+
+/* Final School Master shell refinements */
+.portal-hero-actions{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.hero-signout{align-self:flex-start;background:#fff;color:#0b2055;border:1px solid #d9e5f4;min-height:38px;padding:8px 14px;box-shadow:0 4px 14px #00143322}
+@media(min-width:761px){
+ body:has(#neoWorkspace:not([hidden])) main{padding-top:8px}
+ #neoWorkspace:not([hidden]){height:calc(100dvh - 16px);grid-template-rows:158px minmax(0,1fr);gap:10px 18px}
+ #neoWorkspace>.portal-hero{height:158px;padding:16px 24px;border-radius:16px}
+ #neoWorkspace>.portal-hero img{width:92px;height:108px}
+ #neoWorkspace>.neo-department-nav{overflow-y:scroll!important;scrollbar-gutter:stable;overscroll-behavior:contain}
+ #neoWorkspace>#portalContent{overflow-y:scroll!important;scrollbar-gutter:stable;overscroll-behavior:contain}
+}
