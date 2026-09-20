@@ -3,18 +3,21 @@
 const root=document.createElement('section');root.id='neoWorkspace';root.hidden=true;document.querySelector('main').insertBefore(root,document.getElementById('detail'));
 let school=null,tab='dashboard',records={},errors={},generation=0,loading=false;
 const learningTabs=['calendar','curriculum','timetable','learning_report'];
-const plannedTabs=new Set(['daily_accounts','hr_workflow','transport','visitor_gate','vendors_assets','adoption_ptm']);
-const names={dashboard:'Overview',daily_accounts:'Daily accounts & vouchers',hr_workflow:'HR workflow',transport:'Transport & safety',visitor_gate:'Visitor & gate',vendors_assets:'Vendors & assets',adoption_ptm:'Adoption calls & PTM',calendar:'School calendar',curriculum:'Curriculum & calendar',timetable:'Teacher timetable',learning_report:'Learning report',students:'Students',classrooms:'Classrooms',fee_structures:'Fee structures',homework:'Homework',announcements:'Parent notices',parent_access:'Parent access',teacher_access:'Teacher access',teacher_tasks:'Teacher tasks & reports',staff:'Staff',staff_attendance:'Staff attendance',payroll:'Payroll',exams:'Exams & hall tickets',assessments:'Assessments & report cards',documents:'Documents & downloads',enquiries:'Enquiries',attendance:'Attendance',invoices:'Assigned fees',payments:'Collect payment',inventory:'Inventory & stores',reports:'Reports & Excel',tickets:'Parent concerns',orders:'Orders',ledger:'Head-office payments',support:'Support'};
+const plannedTabs=new Set(['daily_accounts','hr_workflow','transport','visitor_gate','vendors_assets','maintenance','student_lifecycle','health_safety','approvals','notifications','audit_trail','library','adoption_ptm']);
+const names={dashboard:'Overview',daily_accounts:'Daily accounts & vouchers',hr_workflow:'HR workflow',transport:'Transport & safety',visitor_gate:'Visitor & gate',vendors_assets:'Purchase, vendors & assets',maintenance:'Maintenance & housekeeping',student_lifecycle:'Promotion, TC & exit',health_safety:'Health & child safety',approvals:'Approvals',notifications:'Notification centre',audit_trail:'Audit trail',library:'Library',adoption_ptm:'Adoption calls & PTM',calendar:'School calendar',curriculum:'Curriculum & calendar',timetable:'Teacher timetable',learning_report:'Learning report',students:'Students',classrooms:'Classrooms',fee_structures:'Fee structures',homework:'Homework',announcements:'Parent notices',parent_access:'Parent access',teacher_access:'Teacher access',teacher_tasks:'Teacher tasks & reports',staff:'Staff',staff_attendance:'Staff attendance',payroll:'Payroll',exams:'Exams & hall tickets',assessments:'Assessments & report cards',documents:'Documents & downloads',enquiries:'Enquiries',attendance:'Attendance',invoices:'Assigned fees',payments:'Collect payment',inventory:'Inventory & stores',reports:'Reports & Excel',tickets:'Parent concerns',orders:'Orders',ledger:'Head-office payments',support:'Support'};
 const departments=[
  ['dashboard','School overview',['dashboard']],
  ['academics','Academics',['calendar','curriculum','timetable','learning_report','classrooms','homework','exams','assessments']],
- ['students','Students & parents',['students','attendance','adoption_ptm','parent_access','tickets']],
+ ['students','Students & parents',['students','attendance','adoption_ptm','student_lifecycle','health_safety','parent_access','tickets']],
  ['teachers','Teachers',['teacher_access','teacher_tasks']],
  ['frontoffice','Front office',['enquiries','announcements','visitor_gate']],
  ['hr','HR & payroll',['staff','staff_attendance','hr_workflow','payroll']],
  ['finance','Fees & accounts',['fee_structures','invoices','payments','daily_accounts','ledger']],
  ['inventory','Inventory & stores',['inventory','orders','vendors_assets']],
  ['transport','Transport & safety',['transport']],
+ ['maintenance','Maintenance',['maintenance']],
+ ['library','Library',['library']],
+ ['governance','Approvals & control',['approvals','notifications','audit_trail']],
  ['documents','Documents & reports',['documents','reports']],
  ['support','Operations & support',['support']]
 ];
@@ -48,7 +51,14 @@ daily_accounts:['Daily accounts & vouchers','Opening cash → income → expense
 hr_workflow:['HR workflow','Late marks, configurable leave types, leave application/approval, salary advances and payroll inputs belong here. Existing Staff/Attendance/Payroll screens remain unchanged until this workflow is connected.','Frontend shell ready · backend HR workflow required'],
 transport:['Transport & safety','Route start → approaching pickup → ready → picked up → school drop, with return-trip states. GPS/CCTV stay vendor integrations behind this workflow.','Planned integration · third-party GPS/CCTV later'],
 visitor_gate:['Visitor & gate','Visitor entry/exit, purpose, host, gate status and authorised history.','Reserved · backend workflow required'],
-vendors_assets:['Vendors & assets','Suppliers, purchases, school assets, issue/maintenance history and links to Inventory/Accounts.','Reserved · backend workflow required']
+vendors_assets:['Purchase, vendors & assets','Shortage/reorder → purchase request → approval → vendor → purchase order → goods received → Inventory update → vendor bill/payment in Accounts. Fixed assets retain purchase value, location and ownership history.','Reserved · backend procurement workflow required'],
+maintenance:['Maintenance & housekeeping','Asset complaints, repairs, warranty/service history, vehicle service/insurance/pollution/fitness reminders, plus classroom/toilet/common-area housekeeping schedules, cleaning checks and consumable requirements.','Reserved · backend maintenance workflow required'],
+student_lifecycle:['Promotion, TC & exit','Academic-year close → promote child to next class/section, or record withdrawal/TC/exit while preserving the child academic and financial history.','Reserved · backend lifecycle workflow required'],
+health_safety:['Health & child safety','Emergency contacts, authorised pickup, first-aid/incident records, parent-informed status and child welfare follow-up with restricted permissions.','Reserved · backend safety workflow required'],
+approvals:['Approvals','One principal/authorised inbox for expense, purchase, leave, fee concession/refund, salary advance, stock adjustment and exceptional child-release approvals.','Reserved · backend approval engine required'],
+notifications:['Notification centre','Central event → recipient → channel → delivery/read/acknowledgement engine for school, staff and parent communications. Modules should not create independent notification silos.','Reserved · backend notification engine required'],
+audit_trail:['Audit trail','Immutable accountability view for who created, changed, approved or reversed sensitive school records and when.','Reserved · backend audit events required'],
+library:['Library','Catalogue/accession → issue → student/staff → due → return → overdue/lost/damaged. Kept in the architecture now so Grade 1–10 expansion does not require redesign.','Reserved · backend library workflow required']
 };const x=copy[tab];return `<div class="panel"><span class="eyebrow">DEPARTMENT WORKFLOW</span><h3>${esc(x[0])}</h3><p>${esc(x[1])}</p><p><b>Status:</b> ${esc(x[2])}</p><p>This is intentionally not a fake data-entry form. It will become operational only when its persistence, permissions and audit trail are connected.</p></div>`}
 function fields(){switch(tab){
 case 'teacher_tasks':return select('teacher_id','Teacher',(records.teacher_access||[]).filter(t=>t.active).map(t=>[t.account_id,t.name]))+input('title','Task / report name')+`<label>Due date<input name="due_date" type="date" min="${today()}" required></label>`+'<label>Responsibilities / preparation<textarea name="instructions" required maxlength="2000"></textarea></label>';
