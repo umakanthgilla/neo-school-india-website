@@ -471,3 +471,18 @@
 #neoWorkspace .student-list-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 10px;padding:14px;border:1px solid #dbe5f1;border-radius:16px;background:#fff;position:relative;overflow:hidden}#neoWorkspace .student-list-filters:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--rainbow)}@media(max-width:700px){#neoWorkspace .student-list-filters{grid-template-columns:1fr}}
 
 #neoWorkspace .student-master-note{margin:14px 0;padding:14px 16px;border:1px solid #dbe5f1;border-radius:16px;background:#fff;position:relative;overflow:hidden}#neoWorkspace .student-master-note:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--rainbow)}#neoWorkspace .student-master-note>strong,#neoWorkspace .student-master-note>span{display:block}#neoWorkspace .student-master-note>span{margin:4px 0 9px;color:#64758c;font-size:13px}#neoWorkspace .student-master-note>div{display:flex;gap:14px;flex-wrap:wrap}
+
+/* Corporate employee generation form */
+#neoWorkspace #accessForm{max-width:none}
+#neoWorkspace #accessForm .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px;align-items:start}
+#neoWorkspace #accessForm label{margin:0;font-weight:800;color:#102d63}
+#neoWorkspace #accessForm input,#neoWorkspace #accessForm select{min-height:48px;border:1px solid #cbd8e8;border-radius:10px;background:#fff;color:#102d63;padding:10px 12px;box-shadow:0 1px 2px rgba(16,45,99,.04)}
+#neoWorkspace #accessForm input:focus,#neoWorkspace #accessForm select:focus{outline:2px solid rgba(17,139,232,.18);border-color:#118be8}
+#neoWorkspace #accessForm small{font-weight:600;line-height:1.35;color:#64758c}
+#neoWorkspace #accessForm .field-help{margin:0;padding:12px 14px;border:1px solid #dbe5f1;border-radius:10px;background:#f8fbff}
+#neoWorkspace .portal-editor{margin-top:18px;border:1px solid #dbe5f1;border-radius:16px;background:#fff;overflow:hidden}
+#neoWorkspace .portal-editor>summary{padding:16px 18px;background:#f8fbff;color:#12366d}
+#neoWorkspace .portal-editor>form{padding:18px}
+#neoWorkspace .portal-editor>form>button{margin-top:16px}
+@media(max-width:1050px){#neoWorkspace #accessForm .fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){#neoWorkspace #accessForm .fields{grid-template-columns:1fr}}
