@@ -2,6 +2,15 @@
 (()=>{
 const root=document.createElement('section');root.id='neoWorkspace';root.hidden=true;document.querySelector('main').insertBefore(root,document.getElementById('detail'));
 let school=null,tab='dashboard',records={},errors={},generation=0,loading=false;
+function peopleDocsDiagnostic(){
+ const info={
+  renderer:typeof window.renderNeoPeopleDocs,
+  inlineMarker:document.documentElement.innerHTML.includes('window.renderNeoPeopleDocs=function'),
+  scripts:[...document.scripts].map(x=>x.src||'inline').filter(x=>x.includes('people-documents')||x.includes('school-portal')||x==='inline').slice(-12)
+ };
+ try{localStorage.setItem('neo_people_docs_diag',JSON.stringify(info))}catch(_){}
+ return info;
+}
 const learningTabs=['calendar','curriculum','timetable','learning_report'];
 let peopleDocsRetry=null;
 function ensurePeopleDocs(){
@@ -24,7 +33,7 @@ function recoverPeopleDocs(area){
  ensurePeopleDocs().then(ok=>{
   if(tab!==expectedTab)return;
   if(ok){renderContent();return}
-  area.innerHTML='<div class="portal-error"><h3>Staff & payroll tools could not load</h3><p>Your saved data is safe. Retry only this module — a full page refresh is not required.</p><button id="retryPeopleDocs">Retry module</button></div>';
+  const d=peopleDocsDiagnostic(); area.innerHTML='<div class="portal-error"><h3>Staff & payroll diagnostic</h3><p>Your saved data is safe. Diagnostic: renderer='+d.renderer+' · inline='+d.inlineMarker+'</p><p style="font-size:12px;word-break:break-all">'+d.scripts.join(' | ')+'</p><button id="retryPeopleDocs">Retry module</button></div>';
   area.querySelector('#retryPeopleDocs').onclick=()=>recoverPeopleDocs(area);
  });
 }
