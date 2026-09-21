@@ -500,3 +500,16 @@
  body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{grid-column:1;grid-row:2;position:relative;top:auto;height:100%;max-height:none;overflow-y:auto;margin:0;padding:10px;background:#fff;border:1px solid #dce5f2;border-radius:18px;scrollbar-gutter:stable}
  body[data-role="teacher"] #familyApp>#familyContent,body[data-role="parent"] #familyApp>#familyContent{grid-column:2;grid-row:2;height:100%;overflow-y:auto;padding:0 4px 28px;scrollbar-gutter:stable}
 }
+
+
+/* Teacher + Parent desktop spacing refinement: mirror School Master breathing room without changing colours. */
+@media(min-width:761px){
+ body[data-role="teacher"]:has(#familyApp:not([hidden])) main,body[data-role="parent"]:has(#familyApp:not([hidden])) main{padding:0 22px 10px!important}
+ body[data-role="teacher"] #familyApp:not([hidden]),body[data-role="parent"] #familyApp:not([hidden]){height:calc(100dvh - 12px);margin:8px 0 0!important;grid-template-columns:255px minmax(0,1fr);grid-template-rows:150px minmax(0,1fr);gap:8px 18px}
+ body[data-role="teacher"] #familyApp>.portal-hero,body[data-role="parent"] #familyApp>.portal-hero{border-radius:20px;padding:14px 24px}
+ body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{padding:12px 10px 28px;gap:7px;border-radius:18px}
+ body[data-role="teacher"] #familyApp>.family-tabs button,body[data-role="parent"] #familyApp>.family-tabs button{min-height:46px;padding:11px 13px;line-height:1.35}
+ body[data-role="teacher"] #familyApp>#familyContent,body[data-role="parent"] #familyApp>#familyContent{padding:10px 16px 32px 12px;line-height:1.5}
+ body[data-role="teacher"] #familyApp>#familyContent h1,body[data-role="teacher"] #familyApp>#familyContent h2,body[data-role="teacher"] #familyApp>#familyContent h3,body[data-role="parent"] #familyApp>#familyContent h1,body[data-role="parent"] #familyApp>#familyContent h2,body[data-role="parent"] #familyApp>#familyContent h3{letter-spacing:-.02em;line-height:1.18}
+ body[data-role="teacher"] #familyApp>#familyContent p,body[data-role="parent"] #familyApp>#familyContent p{line-height:1.55}
+}
