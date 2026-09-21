@@ -532,3 +532,10 @@
  body[data-role="teacher"] #familyApp>#familyContent,body[data-role="parent"] #familyApp>#familyContent{grid-column:2!important;grid-row:2!important;height:100%!important;overflow-y:auto!important;padding:0 6px 30px 0!important;scrollbar-gutter:stable;line-height:1.5}
  body[data-role="teacher"] #familyApp>#familyContent>.learning-welcome,body[data-role="parent"] #familyApp>#familyContent>.learning-welcome{margin-top:0!important}
 }
+
+
+/* Use the existing Neo School India logo asset in Teacher/Parent left rail. */
+@media(min-width:761px){
+ body[data-role="teacher"] #familyApp>.family-tabs:before,body[data-role="parent"] #familyApp>.family-tabs:before{content:''!important;display:block!important;position:absolute!important;top:26px!important;left:28px!important;right:28px!important;height:82px!important;background:url('/neo-top-logo.jpeg') center/contain no-repeat!important}
+ body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{padding-top:126px!important}
+}
