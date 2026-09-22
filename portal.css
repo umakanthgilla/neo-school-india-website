@@ -559,3 +559,11 @@
 }
 .portal-alert-count[hidden]{display:none!important}
 @media(max-width:720px){.portal-alert-bell{top:14px;right:86px;width:36px;height:36px}}
+
+/* Neo finance source documents */
+.neo-print-document{max-width:920px;margin:24px auto;background:#fff;border:1px solid rgba(16,42,91,.14);border-radius:18px;padding:28px;box-shadow:0 16px 42px rgba(8,28,70,.08)}
+.neo-doc-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;border-bottom:2px solid #102a5b;padding-bottom:18px;margin-bottom:20px}
+.neo-doc-head h2{margin:.35rem 0}.neo-doc-head>div:last-child{text-align:right}
+.neo-doc-particulars{margin:18px 0;padding:14px 16px;border:1px solid rgba(16,42,91,.14);border-radius:12px}
+.neo-doc-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:52px;padding-top:16px;border-top:1px solid rgba(16,42,91,.18);font-size:.85rem;text-align:center}
+@media print{body *{visibility:hidden!important}.neo-print-document,.neo-print-document *{visibility:visible!important}.neo-print-document{position:absolute;left:0;top:0;width:100%;max-width:none;margin:0;border:0;box-shadow:none}.neo-print-document .no-print{display:none!important}}
