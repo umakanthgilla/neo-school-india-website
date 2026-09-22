@@ -634,3 +634,45 @@
 .neo-balance-sheet dd.is-credit{color:#77e0ae}.neo-balance-sheet dd.is-debit{color:#ff9ca7}.neo-balance-sheet dl .closing{background:rgba(255,255,255,.1)}
 @media(max-width:1100px){.neo-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.neo-balance-sheet{grid-template-columns:1fr}.neo-balance-sheet dl{grid-template-columns:repeat(2,minmax(0,1fr))}.neo-balance-sheet dl div:nth-child(3){border-left:0;border-top:1px solid rgba(255,255,255,.13)}.neo-balance-sheet dl div:nth-child(4){border-top:1px solid rgba(255,255,255,.13)}}
 @media(max-width:620px){.neo-ledger-summary{grid-template-columns:1fr 1fr;gap:9px}.neo-summary-item{min-height:112px;padding:15px}.neo-summary-item strong{font-size:22px}.neo-ledger-title{align-items:flex-start;flex-direction:column;padding:18px}.neo-balance-sheet{padding:18px}.neo-balance-sheet dl{grid-template-columns:1fr}.neo-balance-sheet dl div,.neo-balance-sheet dl div:nth-child(3){border-left:0;border-top:1px solid rgba(255,255,255,.13)}.neo-balance-sheet dl div:first-child{border-top:0}}
+
+
+/* Compact dual-copy payment vouchers */
+.neo-voucher-editor .fields{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.neo-voucher-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+.neo-voucher-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;min-height:138px;padding:17px 18px;background:#fff;border:1px solid #dbe5f1;border-radius:16px;box-shadow:0 7px 20px rgba(16,42,91,.05);position:relative;overflow:hidden}
+.neo-voucher-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--rainbow)}
+.neo-voucher-card-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:#eef5ff;font-size:24px}
+.neo-voucher-card-body{min-width:0}.neo-voucher-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.neo-voucher-card h3{margin:8px 0 5px;font-size:17px;overflow-wrap:anywhere}.neo-voucher-card p{margin:3px 0;font-size:12px;line-height:1.35}
+.neo-voucher-card-amount{display:flex;flex-direction:column;align-items:flex-end;gap:12px}.neo-voucher-card-amount strong{font-size:20px;white-space:nowrap}.neo-voucher-card-amount button{padding:8px 11px;min-height:36px;white-space:nowrap}
+.neo-voucher-sheet{max-width:940px;padding:18px 22px 22px}
+.neo-voucher-copies{display:grid;gap:0}
+.neo-voucher-copy{padding:18px 18px 14px;background:#fff;border:1px solid #d9e4f0;border-radius:14px}
+.neo-voucher-sheet .neo-doc-head{align-items:center;padding-bottom:10px;margin-bottom:12px}
+.neo-voucher-sheet .neo-doc-brand{column-gap:10px}.neo-voucher-sheet .neo-doc-logo{width:62px!important;height:62px!important;border-radius:8px}.neo-voucher-sheet .neo-doc-brand h2{font-size:1.45rem;margin:.18rem 0}.neo-voucher-sheet .neo-doc-brand p{font-size:12px;margin:0}.neo-voucher-sheet .neo-doc-head>div:last-child{display:grid;justify-items:end;gap:3px}.neo-voucher-sheet .neo-doc-head>div:last-child p{margin:0;font-size:12px}
+.neo-copy-label{padding:4px 7px;border-radius:999px;background:#edf4fe;color:#174b88;font-size:9px;font-weight:900;letter-spacing:.08em}
+.neo-voucher-info-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr .9fr .9fr;gap:8px}
+.neo-voucher-info-grid article{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border:1px solid #e0e8f2;border-radius:10px;background:#fbfdff}
+.neo-voucher-info-grid article>i{width:31px;height:31px;flex:0 0 31px;display:grid;place-items:center;border-radius:9px;background:#edf5ff;font-style:normal;font-weight:900}
+.neo-voucher-info-grid span{min-width:0;color:#6b7b92;font-size:10px}.neo-voucher-info-grid strong{display:block;margin-top:3px;color:#102a5b;font-size:12px;line-height:1.2;overflow-wrap:anywhere}
+.neo-voucher-purpose{display:flex;align-items:flex-start;gap:10px;margin:10px 0;padding:10px 12px;border:1px solid #dfe8f2;border-radius:10px;background:#fff}
+.neo-voucher-purpose>i{font-style:normal}.neo-voucher-purpose b{font-size:11px}.neo-voucher-purpose p{margin:3px 0 0;font-size:12px;line-height:1.35}
+.neo-voucher-meta{display:flex;justify-content:space-between;gap:16px;color:#53647d;font-size:10px}
+.neo-voucher-sheet .neo-doc-signatures{margin-top:12px;padding-top:8px;gap:18px;font-size:10px}.neo-voucher-sheet .neo-doc-signatures>span{min-height:58px}.neo-voucher-sheet .neo-system-stamp{width:56px;height:56px;border-width:2px;font-size:12px}.neo-voucher-sheet .neo-system-stamp small{font-size:5px;margin:2px 0}.neo-voucher-sheet .neo-system-stamp b{font-size:5px}.neo-voucher-sheet .neo-sign-slot i{font-size:10px;min-width:95px;padding-top:5px}
+.neo-voucher-cut{position:relative;height:28px;display:grid;place-items:center;color:#8593a6;font-size:8px;font-weight:850;letter-spacing:.12em}.neo-voucher-cut::before{content:"";position:absolute;left:0;right:0;border-top:1px dashed #a9b6c6}.neo-voucher-cut span{position:relative;padding:0 8px;background:#fff}
+@media(max-width:1000px){.neo-voucher-list{grid-template-columns:1fr}.neo-voucher-info-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){.neo-voucher-card{grid-template-columns:auto minmax(0,1fr)}.neo-voucher-card-amount{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}.neo-voucher-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.neo-voucher-info-grid article:first-child{grid-column:1/-1}.neo-voucher-meta{flex-direction:column;gap:4px}.neo-voucher-sheet{padding:16px 12px}.neo-voucher-copy{padding:14px 11px}.neo-voucher-sheet .neo-doc-head{align-items:flex-start;gap:8px}.neo-voucher-sheet .neo-doc-logo{width:50px!important;height:50px!important}.neo-voucher-sheet .neo-doc-brand h2{font-size:1.1rem}}
+@media print{
+ @page{size:A4 portrait;margin:7mm}
+ .neo-voucher-sheet{width:100%!important;padding:0!important;overflow:visible!important}
+ .neo-voucher-sheet::before,.neo-voucher-sheet::after{display:none!important}
+ .neo-voucher-sheet .neo-voucher-copies{display:block!important}
+ .neo-voucher-copy{display:block!important;height:132mm;padding:6mm 6mm 4mm;border:1px solid #cfd9e6;border-radius:0;break-inside:avoid;page-break-inside:avoid;overflow:hidden}
+ .neo-voucher-cut{display:grid!important;height:7mm}
+ .neo-voucher-info-grid{display:grid!important;grid-template-columns:1.15fr 1fr 1fr .9fr .9fr!important}
+ .neo-voucher-info-grid article{display:flex!important}
+ .neo-voucher-purpose{display:flex!important}
+ .neo-voucher-meta{display:flex!important}
+ .neo-voucher-sheet .neo-doc-head{display:flex!important}
+ .neo-voucher-sheet .neo-doc-brand{display:grid!important}
+ .neo-voucher-sheet .neo-doc-signatures{display:grid!important}
+}
