@@ -579,3 +579,11 @@
 .neo-info-card:nth-child(2) .neo-card-icon{background:#fff7df}.neo-info-card:nth-child(3) .neo-card-icon{background:#eaf9ef}.neo-info-card:nth-child(4) .neo-card-icon{background:#fff0f6}
 .neo-payment-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.neo-payment-meta>div{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid rgba(16,42,91,.14);border-radius:12px}.neo-payment-meta p{margin:0}.neo-payment-id{text-align:center;color:#53637e}
 @media(max-width:680px){.neo-payment-meta{grid-template-columns:1fr}.neo-print-document .neo-doc-logo{width:82px!important;height:82px!important}}
+
+/* Finance document stamp/signature convention */
+.neo-doc-signatures>span{min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.neo-doc-signatures em{font-style:normal}
+.neo-system-stamp{width:78px;height:78px;border:2px double #173a73;border-radius:50%;display:grid;place-content:center;text-align:center;font-style:normal;font-weight:900;font-size:16px;line-height:1;color:#173a73;transform:rotate(-6deg);opacity:.72;letter-spacing:.06em}
+.neo-system-stamp small{display:block;font-size:7px;letter-spacing:.13em;margin:3px 0}.neo-system-stamp b{font-size:7px;line-height:1.15}
+.neo-sign-slot i{font-family:cursive;font-size:17px;color:#173a73;opacity:.62;transform:rotate(-3deg);font-weight:500}
+@media print{.neo-system-stamp{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
