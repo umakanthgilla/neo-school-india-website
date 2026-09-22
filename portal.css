@@ -570,3 +570,12 @@
 
 .neo-doc-brand{display:grid;grid-template-columns:auto 1fr;column-gap:14px;align-items:center}.neo-doc-brand .neo-doc-logo{grid-row:1/4;width:78px;height:78px;object-fit:contain;border-radius:12px}.neo-doc-brand .eyebrow,.neo-doc-brand h2,.neo-doc-brand p{grid-column:2;margin-left:0}
 @media print{.neo-doc-brand .neo-doc-logo{width:72px;height:72px}}
+
+/* Final compact receipt treatment */
+.neo-print-document .neo-doc-brand h2{font-size:clamp(1.55rem,2.5vw,2.15rem);line-height:1.05}
+.neo-print-document .neo-doc-logo{width:92px!important;height:92px!important}
+.neo-info-card{display:flex;align-items:center;gap:14px}
+.neo-card-icon{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:inline-grid;place-items:center;background:#eef6ff;font-size:21px;font-weight:800;color:#102a5b}
+.neo-info-card:nth-child(2) .neo-card-icon{background:#fff7df}.neo-info-card:nth-child(3) .neo-card-icon{background:#eaf9ef}.neo-info-card:nth-child(4) .neo-card-icon{background:#fff0f6}
+.neo-payment-meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.neo-payment-meta>div{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid rgba(16,42,91,.14);border-radius:12px}.neo-payment-meta p{margin:0}.neo-payment-id{text-align:center;color:#53637e}
+@media(max-width:680px){.neo-payment-meta{grid-template-columns:1fr}.neo-print-document .neo-doc-logo{width:82px!important;height:82px!important}}
