@@ -597,3 +597,40 @@
 .neo-system-stamp small{font-size:8px;margin:4px 0;letter-spacing:.14em}.neo-system-stamp b{font-size:8px;line-height:1.2;letter-spacing:.08em}
 .neo-sign-slot i{font-family:inherit;font-size:13px;font-weight:700;font-style:normal;opacity:.55;transform:none;border-top:1px solid rgba(23,58,115,.35);padding-top:7px;min-width:130px;text-align:center}
 @media print{.neo-print-document::before,.neo-print-document::after{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+
+
+/* Professional accounting ledger statement */
+.neo-ledger-controls{margin-bottom:20px;background:linear-gradient(135deg,#f8fbff,#fff);border-color:#d8e4f2}
+.neo-ledger-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0 22px}
+.neo-summary-item{position:relative;min-height:132px;padding:20px 20px 17px;background:#fff;border:1px solid #dbe5f1;border-radius:16px;box-shadow:0 7px 20px rgba(16,42,91,.055);overflow:hidden}
+.neo-summary-item::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:#7890ae}
+.neo-summary-item.credit::before{background:#159a62}.neo-summary-item.debit::before{background:#d14d5b}.neo-summary-item.closing::before{background:#163b77}
+.neo-summary-item span{display:block;color:#62738c;font-size:13px;font-weight:750;letter-spacing:.02em}
+.neo-summary-item strong{display:block;margin:10px 0 6px;color:#102a5b;font-size:clamp(24px,2.4vw,34px);line-height:1.05}
+.neo-summary-item small{display:block;color:#7a8aa0;font-size:12px}
+.neo-ledger-statement{background:#fff;border:1px solid #d8e3f0;border-radius:18px;box-shadow:0 10px 30px rgba(16,42,91,.06);overflow:hidden}
+.neo-ledger-title{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:22px 24px 18px;border-bottom:1px solid #dfe7f1}
+.neo-ledger-title h3{margin:5px 0 2px;font-size:24px}.neo-ledger-title p{margin:0;font-size:13px}
+.neo-ledger-legend{display:flex;gap:8px;flex-wrap:wrap}.neo-ledger-legend span{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.neo-ledger-legend .is-credit{background:#eaf8f1;color:#147a50}.neo-ledger-legend .is-debit{background:#fff0f1;color:#b33c4a}
+.neo-ledger-table{width:100%;min-width:920px;border-collapse:separate;border-spacing:0;background:#fff}
+.neo-ledger-table th,.neo-ledger-table td{padding:15px 14px;border:0;border-bottom:1px solid #e7edf5;vertical-align:middle}
+.neo-ledger-table thead th{background:#102a5b;color:#fff;font-size:12px;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
+.neo-ledger-table tbody tr:nth-child(even){background:#f8fbff}.neo-ledger-table tbody tr:hover{background:#f1f7ff}
+.neo-ledger-table tfoot th{background:#edf3fb;color:#102a5b;font-weight:850;border-bottom:0}
+.neo-ledger-date{white-space:nowrap;font-weight:700;color:#415570}
+.neo-ledger-flow{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 9px;border-radius:999px;font-size:12px;font-weight:800}
+.neo-ledger-flow b{font-size:16px;line-height:1}.neo-ledger-flow.is-credit{color:#137a4e;background:#eaf8f1}.neo-ledger-flow.is-debit{color:#b33a48;background:#fff0f1}
+.neo-ledger-description strong{display:block;color:#102a5b}.neo-ledger-description small{display:block;margin-top:4px;color:#718198;line-height:1.35}
+.neo-ledger-reference{max-width:180px;padding:8px 10px;border:1px solid #cbd9ea;border-radius:8px;background:#f4f8fd;color:#174b88;font-size:12px;font-weight:800;line-height:1.25;overflow-wrap:anywhere;text-align:left}
+.neo-ledger-reference:hover{background:#e7f1fd}
+.neo-money{white-space:nowrap;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.neo-credit{color:#137a4e}.neo-debit{color:#b33a48}.neo-running{color:#102a5b;background:rgba(16,42,91,.035)}
+.neo-ledger-empty{text-align:center;color:#73839a;padding:32px!important}
+.neo-balance-sheet{display:grid;grid-template-columns:minmax(190px,.7fr) 2fr;align-items:center;gap:24px;margin-top:18px;padding:20px 24px;background:#102a5b;color:#fff;border-radius:16px;box-shadow:0 9px 24px rgba(16,42,91,.14)}
+.neo-balance-sheet>div>span{display:block;font-size:17px;font-weight:850}.neo-balance-sheet>div>small{display:block;margin-top:5px;color:#c9d7ea}
+.neo-balance-sheet dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0;background:rgba(255,255,255,.06);border-radius:12px;overflow:hidden}
+.neo-balance-sheet dl div{padding:12px 16px;border-left:1px solid rgba(255,255,255,.13)}.neo-balance-sheet dl div:first-child{border-left:0}
+.neo-balance-sheet dt{font-size:11px;color:#c8d5e8;text-transform:uppercase;letter-spacing:.05em}.neo-balance-sheet dd{margin:6px 0 0;font-size:17px;font-weight:850;white-space:nowrap}
+.neo-balance-sheet dd.is-credit{color:#77e0ae}.neo-balance-sheet dd.is-debit{color:#ff9ca7}.neo-balance-sheet dl .closing{background:rgba(255,255,255,.1)}
+@media(max-width:1100px){.neo-ledger-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.neo-balance-sheet{grid-template-columns:1fr}.neo-balance-sheet dl{grid-template-columns:repeat(2,minmax(0,1fr))}.neo-balance-sheet dl div:nth-child(3){border-left:0;border-top:1px solid rgba(255,255,255,.13)}.neo-balance-sheet dl div:nth-child(4){border-top:1px solid rgba(255,255,255,.13)}}
+@media(max-width:620px){.neo-ledger-summary{grid-template-columns:1fr 1fr;gap:9px}.neo-summary-item{min-height:112px;padding:15px}.neo-summary-item strong{font-size:22px}.neo-ledger-title{align-items:flex-start;flex-direction:column;padding:18px}.neo-balance-sheet{padding:18px}.neo-balance-sheet dl{grid-template-columns:1fr}.neo-balance-sheet dl div,.neo-balance-sheet dl div:nth-child(3){border-left:0;border-top:1px solid rgba(255,255,255,.13)}.neo-balance-sheet dl div:first-child{border-top:0}}
