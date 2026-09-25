@@ -774,3 +774,40 @@ body[data-role="parent"] #familyApp>.portal-hero .portal-hero-back,body[data-rol
 #neoWorkspace>.neo-department-nav #navSignOut{position:sticky;bottom:0;z-index:5;margin-top:12px;background:#fff;color:#0b2055;box-shadow:0 -8px 18px #00133335}
 @media(max-width:760px){body[data-role="parent"] #familyApp>.family-tabs,body[data-role="teacher"] #familyApp>.family-tabs{height:min(58vh,430px)!important;max-height:none!important}.family-nav-scroll{padding-top:118px}}
 @media(prefers-reduced-motion:reduce){.family-department-chevron{transition:none}}
+
+/* Uniform department rail controls with a brief click response. */
+body[data-role="parent"] #familyApp>.family-tabs .family-nav-scroll button,
+body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button,
+body[data-role="parent"] #familyApp>.family-tabs .family-signout,
+body[data-role="teacher"] #familyApp>.family-tabs .family-signout,
+body[data-role="parent"] #familyApp>.family-tabs .family-department>summary,
+body[data-role="teacher"] #familyApp>.family-tabs .family-department>summary,
+#neoWorkspace>.neo-department-nav button,
+#neoWorkspace>.neo-department-nav .neo-department>summary{
+  background:#17356c!important;color:#fff!important;border:1px solid #2b4a80!important;
+  box-shadow:none!important;
+}
+body[data-role="parent"] #familyApp>.family-tabs .family-nav-scroll button[aria-pressed=true],
+body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button[aria-pressed=true],
+#neoWorkspace>.neo-department-nav button[aria-pressed=true],
+#neoWorkspace>.neo-department-nav .neo-single-department[aria-pressed=true],
+body[data-role="parent"] #familyApp>.family-tabs .family-department[open]>summary,
+body[data-role="teacher"] #familyApp>.family-tabs .family-department[open]>summary,
+#neoWorkspace>.neo-department-nav .neo-department[open]>summary{
+  background:#17356c!important;color:#fff!important;border-color:#2b4a80!important;box-shadow:none!important;
+}
+body[data-role="parent"] #familyApp>.family-tabs .family-signout,
+body[data-role="teacher"] #familyApp>.family-tabs .family-signout{
+  background:#17356c!important;color:#fff!important;border-color:#2b4a80!important;box-shadow:none!important;
+}
+body[data-role="parent"] #familyApp>.family-tabs .nav-click-flash,
+body[data-role="teacher"] #familyApp>.family-tabs .nav-click-flash,
+#neoWorkspace>.neo-department-nav .nav-click-flash,
+body[data-role="parent"] #familyApp>.family-tabs .family-department>summary.nav-click-flash,
+body[data-role="teacher"] #familyApp>.family-tabs .family-department>summary.nav-click-flash,
+#neoWorkspace>.neo-department-nav .neo-department>summary.nav-click-flash{
+  background:#fff!important;color:#0b2055!important;border-color:#dce6f4!important;
+}
+body[data-role="parent"] #familyApp>.family-tabs :is(button,summary):focus-visible,
+body[data-role="teacher"] #familyApp>.family-tabs :is(button,summary):focus-visible,
+#neoWorkspace>.neo-department-nav :is(button,summary):focus-visible{outline:2px solid #56c5e4;outline-offset:2px}
