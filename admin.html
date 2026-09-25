@@ -275,6 +275,37 @@ body main section.reminders .reminder-col h3 {
  #appView .table-scroll{max-width:100%;overflow-x:auto}
 }
 @media(max-width:390px){#appView .workspace-nav{grid-template-columns:1fr 1fr}#appView .pipeline-grid{grid-template-columns:1fr}}
+
+/* Balanced Head Office workspace: light reading surface, navy hierarchy. */
+#appView{background:#f4f7fc}
+#appView .metric{position:relative;overflow:hidden}
+#appView main .metrics>.metric,
+#appView main .metrics>.metric:nth-child(n){
+ background:#fff!important;background-image:none!important;border:1px solid #dce6f2!important;
+ box-shadow:0 7px 20px #0b20550d!important;
+}
+#appView main .metrics>.metric:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad)}
+#appView main .metrics>.metric b{color:#536985!important}
+#appView main .metrics>.metric strong{color:#0b2055!important}
+#appView main section.reminders{background:#fff!important;background-image:none!important;border:1px solid #dce6f2!important;box-shadow:0 8px 22px #0b20550e!important}
+#appView main section.reminders .reminders-head h2{color:#0b2055!important}
+#appView main section.reminders .reminders-head span{color:#536985!important}
+#headOfficeMobileMenu{display:none}
+@media(max-width:700px){
+ #appView .topbar{position:sticky;top:0}
+ #appView .topbar-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px}
+ #appView .brand{min-width:0}
+ #appView .brand-logo{height:44px;max-width:104px;padding:5px}
+ #appView .brand strong{font-size:16px;white-space:nowrap}
+ #appView .brand-copy span{display:none}
+ #headOfficeMobileMenu{display:block;min-height:44px;padding:8px 12px;border:1px solid #6b8bae;border-radius:10px;background:#17356c;color:#fff;font-weight:800}
+ #appView .topbar:not(.mobile-menu-open) .workspace-nav{display:none}
+ #appView .topbar.mobile-menu-open .workspace-nav{display:grid;grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:100%;max-height:60dvh;overflow-y:auto;padding:4px 0}
+ #appView .workspace-nav :is(a,button){background:#fff;color:#0b2055;border-color:#dce6f4}
+ #appView .workspace-nav .logout{background:#fff;color:#0b2055}
+ #appView .hero{margin-top:4px}
+ #appView .metric strong{font-size:24px}
+}
 </style>
 <link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">
 <body>
@@ -311,7 +342,7 @@ body main section.reminders .reminder-col h3 {
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand"><img src="neo-top-logo.jpeg" alt="Neo School India" class="brand-logo"><div class="brand-copy"><strong>Head Office</strong><span>Franchise • Admissions • Follow-up</span></div></div>
-      <div class="top-actions workspace-nav"><span class="workspace-badge">Main Admin</span><a class="web-link" href="index.html" target="_blank">View Website</a><a href="schools.html">School Portal</a><a href="curriculum-master.html">Curriculum Master</a><button id="exportBtn" type="button">Export CSV</button><button id="manageAssigneesBtn" type="button">Team</button><button id="logoutBtn" class="logout">Logout</button></div>
+      <button type="button" id="headOfficeMobileMenu" aria-expanded="false" aria-controls="headOfficeNav">☰ Menu</button><div id="headOfficeNav" class="top-actions workspace-nav"><span class="workspace-badge">Main Admin</span><a class="web-link" href="index.html" target="_blank">View Website</a><a href="schools.html">School Portal</a><a href="curriculum-master.html">Curriculum Master</a><button id="exportBtn" type="button">Export CSV</button><button id="manageAssigneesBtn" type="button">Team</button><button id="logoutBtn" class="logout">Logout</button></div>
     </div>
   </header>
 
@@ -813,6 +844,19 @@ $("#quickAddAssignee").onclick=()=>{
 renderAssigneeOptions();
 
 if(token) showApp(); else showLogin();
+</script>
+<script>
+const headOfficeMenu=document.getElementById('headOfficeMobileMenu');
+headOfficeMenu?.addEventListener('click',()=>{
+ const header=headOfficeMenu.closest('.topbar');
+ const open=header.classList.toggle('mobile-menu-open');
+ headOfficeMenu.setAttribute('aria-expanded',String(open));
+});
+document.getElementById('headOfficeNav')?.addEventListener('click',event=>{
+ if(!event.target.closest('a,button'))return;
+ headOfficeMenu.closest('.topbar').classList.remove('mobile-menu-open');
+ headOfficeMenu.setAttribute('aria-expanded','false');
+});
 </script>
 </body>
 </html>
