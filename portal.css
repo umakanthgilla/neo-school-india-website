@@ -811,3 +811,8 @@ body[data-role="teacher"] #familyApp>.family-tabs .family-department>summary.nav
 body[data-role="parent"] #familyApp>.family-tabs :is(button,summary):focus-visible,
 body[data-role="teacher"] #familyApp>.family-tabs :is(button,summary):focus-visible,
 #neoWorkspace>.neo-department-nav :is(button,summary):focus-visible{outline:2px solid #56c5e4;outline-offset:2px}
+
+body[data-role="parent"] #familyApp>.family-tabs .family-nav-scroll button.nav-click-flash[aria-pressed=true],
+body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button.nav-click-flash[aria-pressed=true]{
+  background:#fff!important;color:#0b2055!important;border-color:#dce6f4!important;
+}
