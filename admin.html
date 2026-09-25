@@ -226,6 +226,28 @@ body main section.reminders .reminder-col h3 {
   line-height:1.5;
 }
 
+
+/* Signed-in Head Office shell aligned with the Neo portal palette. */
+#appView{min-height:100dvh;background:#102855;color:#13213c}
+#appView .topbar{background:#0b2055;border-bottom:1px solid #294579;box-shadow:0 8px 26px #06163724}
+#appView .topbar-inner{max-width:1500px}
+#appView .brand-logo{height:54px;max-width:188px;padding:7px 11px;border-radius:13px;background:#fff;border:1px solid #dce6f4;box-shadow:0 5px 18px #00133330}
+#appView .brand strong{color:#fff}
+#appView .brand span{color:#cbdaf3}
+#appView .workspace-badge{background:#17356c;color:#fff;border-color:#3b5b8b}
+#appView .workspace-nav a,#appView .workspace-nav button{background:#17356c;color:#fff;border:1px solid #3b5b8b}
+#appView .workspace-nav a:hover,#appView .workspace-nav button:hover{background:#25497f}
+#appView .workspace-nav :is(a,button):focus-visible{outline:2px solid #57c9e5;outline-offset:2px}
+#appView .workspace-nav .logout{background:#fff;color:#0b2055;border-color:#dce6f4}
+#appView .workspace-nav .logout:hover{background:#eef5ff}
+#appView .wrap{max-width:1500px}
+#appView .hero{position:relative;overflow:hidden;min-height:155px;align-items:center;padding:24px 30px;margin-bottom:16px;border:1px solid #375889;border-radius:20px;background:linear-gradient(120deg,#071943,#123d70);box-shadow:0 12px 30px #06163724}
+#appView .hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--grad)}
+#appView .hero h1,#appView .hero .ops-kicker{color:#fff}
+#appView .hero p,#appView .hero #lastUpdated{color:#cbdaf3!important}
+#appView .metric{border-radius:15px}
+#appView .pipeline,#appView .filters,#appView .table-card{box-shadow:0 10px 26px #0616371e}
+@media(max-width:700px){#appView .hero{padding:20px;min-height:0;align-items:start;flex-direction:column}#appView .topbar-inner{align-items:start;flex-direction:column}#appView .workspace-nav{width:100%}}
 </style>
 <style id="neo-head-office-upgrade">
 .workspace-nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.workspace-nav a,.workspace-nav button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:11px;padding:9px 12px;font-size:11px;font-weight:850;text-decoration:none;cursor:pointer}
