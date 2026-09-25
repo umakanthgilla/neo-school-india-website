@@ -680,3 +680,13 @@
 }
 
 .neo-login-status:not(:empty){padding:10px 12px;margin:10px 0;border-radius:10px;background:#eef5ff;color:#29415f;font-size:12px;line-height:1.45}
+
+/* Collapsible School Master departments */
+#neoWorkspace>.neo-department-nav .neo-department>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;cursor:pointer;min-height:44px}
+#neoWorkspace>.neo-department-nav .neo-department>summary::-webkit-details-marker{display:none}
+#neoWorkspace>.neo-department-nav .neo-department>summary:hover{background:#193873}
+#neoWorkspace>.neo-department-nav .neo-department[open]>summary{color:#fff;background:#17366d;box-shadow:inset 0 -3px 0 #f1c84b}
+#neoWorkspace>.neo-department-nav .neo-department-chevron{width:9px;height:9px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s ease;margin-right:4px}
+#neoWorkspace>.neo-department-nav .neo-department[open] .neo-department-chevron{transform:rotate(225deg)}
+#neoWorkspace>.neo-department-nav .neo-department:not([open])>.actions{display:none}
+@media(prefers-reduced-motion:reduce){#neoWorkspace>.neo-department-nav .neo-department-chevron{transition:none}}
