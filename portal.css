@@ -698,3 +698,8 @@
 #neoWorkspace>.neo-department-nav button[aria-pressed=true]::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:3px;background:var(--rainbow);pointer-events:none}
 #neoWorkspace>.neo-department-nav .neo-department[open]>summary{box-shadow:none}
 #neoWorkspace>.neo-department-nav .neo-single-department[aria-pressed=true]{box-shadow:none}
+
+/* Dashboard attention flags open the corresponding department. */
+.attention-row .attention-link{width:auto;min-height:38px;color:var(--navy);font:600 12px/1.35 system-ui;text-align:left;box-shadow:0 3px 10px #0b20550b}
+.attention-row .attention-link:hover{background:#eef5ff;border-color:#9dc5ea}
+.attention-row .attention-link span:last-child{width:auto;height:auto;border:0;border-radius:0;background:none;font-size:16px;line-height:1}
