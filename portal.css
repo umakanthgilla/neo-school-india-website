@@ -862,3 +862,26 @@ body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button.nav-
   body:has(#neoWorkspace:not([hidden])) main{padding:10px!important}
   .portal-hero-back:not([hidden]){min-height:44px}
 }
+
+/* School workspace icon language: one semantic glyph per department, tab and action. */
+#neoWorkspace .neo-icon-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+#neoWorkspace .neo-work-icon{width:18px;height:18px;display:block;flex:none}
+#neoWorkspace .neo-tone-0{--neo-glyph:#087fa7;--neo-glyph-bg:#e4f7fb}
+#neoWorkspace .neo-tone-1{--neo-glyph:#258651;--neo-glyph-bg:#e8f7ee}
+#neoWorkspace .neo-tone-2{--neo-glyph:#a26b0b;--neo-glyph-bg:#fff3dd}
+#neoWorkspace .neo-tone-3{--neo-glyph:#c66038;--neo-glyph-bg:#fff0e8}
+#neoWorkspace .neo-tone-4{--neo-glyph:#b54379;--neo-glyph-bg:#ffeaf2}
+#neoWorkspace :is(.neo-nav-icon,.neo-content-icon,.neo-action-icon){display:inline-grid;place-items:center;flex:none;background:var(--neo-glyph-bg);color:var(--neo-glyph);border-radius:10px}
+#neoWorkspace .neo-nav-icon{width:29px;height:29px}
+#neoWorkspace .neo-content-icon{width:32px;height:32px;border-radius:11px}
+#neoWorkspace .neo-action-icon{width:24px;height:24px;border-radius:7px}
+#neoWorkspace .neo-action-icon .neo-work-icon{width:15px;height:15px}
+#neoWorkspace>.neo-department-nav .neo-department>summary,
+#neoWorkspace>.neo-department-nav :is(.neo-single-department,button[data-tab],#navSignOut){display:flex!important;align-items:center;gap:9px!important}
+#neoWorkspace>.neo-department-nav .neo-nav-label{flex:1;min-width:0}
+#neoWorkspace>.neo-department-nav .neo-department-chevron{margin-left:auto}
+#neoWorkspace>#portalContent :is(h3, .portal-grid>.portal-card>p:first-child).neo-iconized-heading,
+#neoWorkspace>#portalContent .portal-editor>summary.neo-iconized-heading{display:flex;align-items:center;gap:9px}
+#neoWorkspace>#portalContent .neo-iconized-action{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#neoWorkspace>#portalContent .neo-iconized-action .neo-action-icon{background:#ffffffec}
+@media(max-width:760px){#neoWorkspace .neo-nav-icon{width:26px;height:26px}#neoWorkspace .neo-nav-icon .neo-work-icon{width:16px;height:16px}}
