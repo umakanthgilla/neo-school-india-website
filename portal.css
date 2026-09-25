@@ -703,3 +703,15 @@
 .attention-row .attention-link{width:auto;min-height:38px;color:var(--navy);font:600 12px/1.35 system-ui;text-align:left;box-shadow:0 3px 10px #0b20550b}
 .attention-row .attention-link:hover{background:#eef5ff;border-color:#9dc5ea}
 .attention-row .attention-link span:last-child{width:auto;height:auto;border:0;border-radius:0;background:none;font-size:16px;line-height:1}
+
+/* School Master Student 360, composed from existing school records. */
+#portalRecords>.student-360-expanded{grid-column:1/-1}
+.student-360{margin-top:16px;padding:20px;border:1px solid #d9e6f4;border-radius:16px;background:#f7fbff}
+.student-360-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-bottom:3px solid transparent;border-image:var(--rainbow) 1;padding-bottom:12px;margin-bottom:14px}
+.student-360-head h3{margin:4px 0}.student-360-head p{margin:0}.student-360-head>strong{background:#e8f5ed;color:#176b43;border-radius:999px;padding:6px 10px;font-size:12px}
+.student-360-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.student-360-section{padding:14px;background:#fff;border:1px solid #dde8f4;border-radius:12px;min-width:0}
+.student-360-section h4{margin:0 0 10px;color:var(--navy)}
+.student-360-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #edf2f8;font-size:13px}
+.student-360-row span{text-align:right;overflow-wrap:anywhere}
+.student-360-muted{font-size:12px;color:var(--muted);line-height:1.5}
