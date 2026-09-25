@@ -718,3 +718,23 @@
 
 /* Staff Master expanded identity view. */
 .staff-master-grid>.staff-360-expanded{grid-column:1/-1}
+
+/* Shared navy workspace backdrop for Teacher, Parent and Employee sessions. */
+body[data-role="teacher"]:has(#familyApp:not([hidden])),
+body[data-role="parent"]:has(#familyApp:not([hidden])),
+body:has(#employeeApp:not([hidden])){background:#0b2055!important}
+body[data-role="teacher"]:has(#familyApp:not([hidden])) main,
+body[data-role="parent"]:has(#familyApp:not([hidden])) main,
+body:has(#employeeApp:not([hidden])) main{background:#0b2055!important}
+body[data-role="teacher"] #familyApp:not([hidden]),
+body[data-role="parent"] #familyApp:not([hidden]){background:#0b2055!important}
+body[data-role="teacher"] #familyApp>.family-tabs,
+body[data-role="parent"] #familyApp>.family-tabs{background:#102a60!important;border-color:#294579!important}
+body[data-role="teacher"] #familyApp>#familyContent,
+body[data-role="parent"] #familyApp>#familyContent{background:#f7fbff!important;border-radius:18px;padding:18px 20px 30px!important;box-shadow:0 12px 36px #00133325}
+body:has(#employeeApp:not([hidden]))>header{background:#102a60;color:#fff;border-top:4px solid transparent;border-image:var(--rainbow) 1}
+body:has(#employeeApp:not([hidden]))>header a{color:#fff}
+body:has(#employeeApp:not([hidden]))>header .secondary{background:#fff;color:#0b2055}
+body:has(#employeeApp:not([hidden])) #employeeApp{padding-bottom:30px}
+@media(max-width:760px){body[data-role="teacher"] #familyApp>#familyContent,body[data-role="parent"] #familyApp>#familyContent{padding:16px!important}}
+@media print{body[data-role="teacher"],body[data-role="parent"],body:has(#employeeApp:not([hidden])){background:#fff!important}}
