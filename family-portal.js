@@ -99,5 +99,15 @@ function renderTeacher(area){
 // Refresh on return to the page, without interrupting a form in progress.
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token&&role==='parent'&&!['password','tickets'].includes(tab))refresh(true)});
 setInterval(()=>{if(token&&role==='parent'&&!document.hidden&&!['password','tickets'].includes(tab))refresh(true)},30000);
+
+// A short visual acknowledgement; the selected section keeps the same rail color.
+document.addEventListener('click',event=>{
+  const control=event.target.closest('#familyApp>.family-tabs button, #familyApp>.family-tabs .family-department>summary');
+  if(!control)return;
+  control.classList.remove('nav-click-flash');
+  void control.offsetWidth;
+  control.classList.add('nav-click-flash');
+  setTimeout(()=>control.classList.remove('nav-click-flash'),420);
+});
 if(token)refresh();
 })();
