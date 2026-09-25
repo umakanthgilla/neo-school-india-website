@@ -248,6 +248,21 @@ body main section.reminders .reminder-col h3 {
 #appView .metric{border-radius:15px}
 #appView .pipeline,#appView .filters,#appView .table-card{box-shadow:0 10px 26px #0616371e}
 @media(max-width:700px){#appView .hero{padding:20px;min-height:0;align-items:start;flex-direction:column}#appView .topbar-inner{align-items:start;flex-direction:column}#appView .workspace-nav{width:100%}}
+/* Coordinated blue action footer for mobile enquiry cards */
+@media(max-width:700px){
+ #appView .lead-table tbody tr td:last-child,
+ #appView .lead-table tbody tr:hover td:last-child,
+ #appView .lead-table tbody tr.follow-today td:last-child,
+ #appView .lead-table tbody tr.follow-overdue td:last-child{
+  background:#eef6ff;
+  border-top:1px solid #dceafa;
+  padding:12px 14px 14px;
+ }
+ #appView .lead-table tbody tr td:last-child:before{color:#53719a}
+ #appView .lead-table .actions .mobile-details{background:#fff;color:#24658e;border-color:#bdd9ee}
+ #appView .lead-table .actions button[data-edit]{background:#dceeff;color:#104b7e;border-color:#9fc9ea}
+ #appView .lead-table .actions a[href^="tel:"]{background:#e6f3ff;color:#11678c;border-color:#acd6eb}
+}
 </style>
 <style id="neo-head-office-upgrade">
 .workspace-nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.workspace-nav a,.workspace-nav button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:11px;padding:9px 12px;font-size:11px;font-weight:850;text-decoration:none;cursor:pointer}
