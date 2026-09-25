@@ -690,3 +690,11 @@
 #neoWorkspace>.neo-department-nav .neo-department[open] .neo-department-chevron{transform:rotate(225deg)}
 #neoWorkspace>.neo-department-nav .neo-department:not([open])>.actions{display:none}
 @media(prefers-reduced-motion:reduce){#neoWorkspace>.neo-department-nav .neo-department-chevron{transition:none}}
+
+/* One Neo gradient for expanded department and selected module indicators. */
+#neoWorkspace>.neo-department-nav .neo-department>summary,
+#neoWorkspace>.neo-department-nav button[aria-pressed=true]{position:relative;box-shadow:none}
+#neoWorkspace>.neo-department-nav .neo-department[open]>summary::after,
+#neoWorkspace>.neo-department-nav button[aria-pressed=true]::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:3px;background:var(--rainbow);pointer-events:none}
+#neoWorkspace>.neo-department-nav .neo-department[open]>summary{box-shadow:none}
+#neoWorkspace>.neo-department-nav .neo-single-department[aria-pressed=true]{box-shadow:none}
