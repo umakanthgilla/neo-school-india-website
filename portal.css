@@ -816,3 +816,49 @@ body[data-role="parent"] #familyApp>.family-tabs .family-nav-scroll button.nav-c
 body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button.nav-click-flash[aria-pressed=true]{
   background:#fff!important;color:#0b2055!important;border-color:#dce6f4!important;
 }
+
+/* Small-screen workspaces: compact department access and comfortable touch targets. */
+.portal-mobile-menu{display:none!important}
+@media(max-width:760px){
+  body[data-role="parent"]:has(#familyApp:not([hidden])),
+  body[data-role="teacher"]:has(#familyApp:not([hidden])),
+  body:has(#neoWorkspace:not([hidden])){overflow:auto!important;height:auto!important}
+  body[data-role="parent"] #familyApp:not([hidden]),
+  body[data-role="teacher"] #familyApp:not([hidden]),
+  #neoWorkspace:not([hidden]){display:block!important;height:auto!important;min-height:100dvh!important}
+  body[data-role="parent"] #familyApp>.portal-hero,
+  body[data-role="teacher"] #familyApp>.portal-hero,
+  #neoWorkspace>.portal-hero{height:auto!important;min-height:0!important;margin-bottom:12px!important;padding:18px!important}
+  body[data-role="parent"] #familyApp>.family-tabs,
+  body[data-role="teacher"] #familyApp>.family-tabs,
+  #neoWorkspace>.neo-department-nav{position:relative!important;top:auto!important;height:auto!important;max-height:none!important;min-height:0!important;margin:0 0 12px!important;padding:10px!important;overflow:visible!important;scrollbar-gutter:auto!important}
+  body[data-role="parent"] #familyApp>.family-tabs:before,
+  body[data-role="teacher"] #familyApp>.family-tabs:before{display:none!important}
+  #familyApp>.family-tabs .portal-mobile-menu,
+  #neoWorkspace>.neo-department-nav .portal-mobile-menu{display:block!important;width:100%!important;min-height:46px!important;margin:0!important;padding:10px 14px!important;text-align:left!important;border-radius:10px!important;background:#17356c!important;color:#fff!important;border:1px solid #3b5b8b!important;font-size:14px!important;font-weight:800!important}
+  #familyApp>.family-tabs .portal-mobile-menu:after{content:none!important}
+  #familyApp>.family-tabs:not(.mobile-menu-open) .family-nav-scroll{display:none!important}
+  #familyApp>.family-tabs .family-nav-scroll{padding:8px 0 0!important;max-height:min(58dvh,440px);overflow-y:auto}
+  #neoWorkspace>.neo-department-nav:not(.mobile-menu-open)>:not(#schoolMobileMenu):not(#navSignOut){display:none!important}
+  #neoWorkspace>.neo-department-nav.mobile-menu-open{max-height:70dvh!important;overflow-y:auto!important}
+  #neoWorkspace>.neo-department-nav #navSignOut{position:static!important;margin:8px 0 0!important;min-height:44px}
+  body[data-role="parent"] #familyApp>.family-tabs .family-signout,
+  body[data-role="teacher"] #familyApp>.family-tabs .family-signout{width:100%!important;margin:8px 0 0!important;min-height:44px!important}
+  body[data-role="parent"] #familyApp>#familyContent,
+  body[data-role="teacher"] #familyApp>#familyContent,
+  #neoWorkspace>#portalContent{height:auto!important;min-height:0!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important;padding:14px!important;margin:0!important}
+  #familyApp .portal-grid,#neoWorkspace .portal-grid{grid-template-columns:minmax(0,1fr)!important}
+  #familyApp :is(input,select,textarea,button),
+  #neoWorkspace :is(input,select,textarea,button),
+  #employeeApp :is(input,select,textarea,button){max-width:100%}
+  #familyApp :is(button,summary),
+  #neoWorkspace :is(button,summary),
+  #employeeApp button{min-height:44px}
+  #familyApp .portal-card,#neoWorkspace .portal-card,#employeeApp .portal-card{min-width:0}
+}
+@media(max-width:480px){
+  body[data-role="parent"]:has(#familyApp:not([hidden])) main,
+  body[data-role="teacher"]:has(#familyApp:not([hidden])) main,
+  body:has(#neoWorkspace:not([hidden])) main{padding:10px!important}
+  .portal-hero-back:not([hidden]){min-height:44px}
+}
