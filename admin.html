@@ -426,6 +426,24 @@ body main section.reminders .reminder-col h3 {
  #appView .lead-table .actions :is(button,a){box-shadow:none;font-weight:850}
  #appView .lead-table .actions :is(button,a):active{filter:brightness(.95)}
 }
+/* Neo mobile enquiry finish: softened navy action band and closing gradient. */
+@media(max-width:700px){
+ #appView .lead-table tbody tr{padding-bottom:4px}
+ #appView .lead-table tbody tr:after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--grad);pointer-events:none}
+ #appView .lead-table tbody tr td:last-child,
+ #appView .lead-table tbody tr:hover td:last-child,
+ #appView .lead-table tbody tr.follow-today td:last-child,
+ #appView .lead-table tbody tr.follow-overdue td:last-child{
+  background:#344b76;
+  border-top:1px solid #7183a3;
+  border-bottom:0;
+  padding:12px 14px 15px;
+ }
+ #appView .lead-table tbody tr td:last-child:before{color:#f2f7ff}
+ #appView .lead-table .actions .mobile-details{background:#e7f8fc;color:#075e7e;border-color:#a5dce9}
+ #appView .lead-table .actions button[data-edit]{background:#f1ebff;color:#51408e;border-color:#d2c4f7}
+ #appView .lead-table .actions a[href^="tel:"]{background:#e5f7ed;color:#176c43;border-color:#acdcbf}
+}
 </style>
 <link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">
 <body>
