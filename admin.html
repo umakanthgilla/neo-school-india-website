@@ -393,6 +393,24 @@ body main section.reminders .reminder-col h3 {
 #appView #refreshBtn .action-glyph{background:#ffffff29;color:#fff}
 #appView .lead-action-icon{flex:none;width:16px;height:16px;margin-right:5px;vertical-align:-3px}
 @media(max-width:700px){#appView .workspace-nav :is(a,button){gap:6px;padding:8px 7px;font-size:11px;line-height:1.2}#appView .nav-glyph{width:24px;height:24px}#appView .lead-table .actions :is(button,a){gap:2px}#appView .lead-action-icon{margin-right:1px;width:15px;height:15px}}
+
+/* Enquiry cards: restrained Neo color cues and distinct actions. */
+@media(max-width:700px){
+ #appView .mobile-dashboard-tabs button{position:relative;overflow:hidden}
+ #appView .mobile-dashboard-tabs button:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--grad)}
+ #appView .mobile-dashboard-tabs #mobileOverviewTab .mobile-tab-icon{background:#e3f8fc;color:#087a9e}
+ #appView .mobile-dashboard-tabs #mobileEnquiriesTab .mobile-tab-icon{background:#fff0d5;color:#a96508}
+ #appView .mobile-dashboard-tabs button[aria-pressed=true] .mobile-tab-icon{background:#fff;color:#0b2055}
+ #appView .lead-table tbody tr{position:relative;padding-top:3px;border-color:#d8e4f0}
+ #appView .lead-table tbody tr:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);pointer-events:none}
+ #appView .lead-table td:nth-child(2) .tag{background:#e8f7f7;color:#146f73}
+ #appView .lead-table td:nth-child(5) .tag{background:#eaf1ff;color:#25589a}
+ #appView .lead-table .actions .mobile-details{background:#eaf7fb;color:#0d6f88;border-color:#b9e3ed}
+ #appView .lead-table .actions button[data-edit]{background:#f0edff;color:#5949a6;border-color:#d8d0fa}
+ #appView .lead-table .actions a[href^="tel:"]{background:#eaf8ef;color:#207a45;border-color:#bfe4cc}
+ #appView .lead-table .actions :is(button,a){box-shadow:none;font-weight:850}
+ #appView .lead-table .actions :is(button,a):active{filter:brightness(.95)}
+}
 </style>
 <link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">
 <body>
