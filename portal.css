@@ -738,3 +738,13 @@ body:has(#employeeApp:not([hidden]))>header .secondary{background:#fff;color:#0b
 body:has(#employeeApp:not([hidden])) #employeeApp{padding-bottom:30px}
 @media(max-width:760px){body[data-role="teacher"] #familyApp>#familyContent,body[data-role="parent"] #familyApp>#familyContent{padding:16px!important}}
 @media print{body[data-role="teacher"],body[data-role="parent"],body:has(#employeeApp:not([hidden])){background:#fff!important}}
+
+/* Corporate portal shell and contextual Back action. */
+#neoWorkspace>.portal-hero,body[data-role="teacher"] #familyApp>.portal-hero,body[data-role="parent"] #familyApp>.portal-hero{background:linear-gradient(120deg,#071943 0%,#0b285d 62%,#123d70 100%)!important;box-shadow:0 14px 38px #06163726}
+.portal-hero-back{position:absolute;right:182px;top:20px;z-index:3;min-height:38px;padding:8px 14px;background:#fff;color:#0b2055;border:1px solid #dce8f6;border-radius:10px;font-size:13px;font-weight:750;box-shadow:0 5px 18px #00143725}
+.portal-hero-back:hover{background:#eef5ff;filter:none}
+.portal-hero-back[hidden]{display:none!important}
+#neoWorkspace>.neo-department-nav,body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{box-shadow:0 12px 32px #06163720}
+#neoWorkspace #portalContent>.portal-card,body[data-role="teacher"] #familyContent>.portal-card,body[data-role="parent"] #familyContent>.portal-card{border-color:#d8e3f1;box-shadow:0 7px 22px #0a275712}
+@media(max-width:720px){.portal-hero-back{left:18px;right:auto;top:12px}.portal-hero:has(.portal-hero-back:not([hidden])){padding-top:60px!important}}
+@media print{.portal-hero-back{display:none!important}}
