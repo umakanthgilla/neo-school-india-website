@@ -129,6 +129,76 @@ const departments=[
  ['documents','Documents & reports',['documents','reports']],
  ['support','Operations & support',['support']]
 ];
+const neoIconPaths={
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',
+ book:'<path d="M3 5.5C6 4 9 4 12 6c3-2 6-2 9-.5V19c-3-1.5-6-1.5-9 .5-3-2-6-2-9-.5zM12 6v13.5"/>',
+ users:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/>',
+ teacher:'<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4M7 9h10m-10 4h6"/>',
+ desk:'<path d="M4 3h16v18H4zM8 7h8M8 11h8M8 15h5"/>',
+ briefcase:'<rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18m-11 0v2h4v-2"/>',
+ wallet:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18m-6 4h6v5h-6a2.5 2.5 0 0 1 0-5z"/>',
+ package:'<path d="m12 2 9 5-9 5-9-5 9-5zm-9 5v10l9 5 9-5V7M12 12v10"/>',
+ bus:'<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 11h16M8 18v3m8-3v3M8 7h3m2 0h3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>',
+ wrench:'<path d="M21 6a6 6 0 0 1-8 7l-7 7a2 2 0 0 1-3-3l7-7a6 6 0 0 1 7-8l-3 4 4 4z"/>',
+ library:'<path d="M4 3h4v18H4zM10 3h4v18h-4zM16 5l4-1 3 16-4 1z"/>',
+ shield:'<path d="m12 2 9 4v6c0 5-3.5 8.5-9 10-5.5-1.5-9-5-9-10V6z"/><path d="m8 12 3 3 5-6"/>',
+ file:'<path d="M5 2h9l5 5v15H5zM14 2v5h5M8 12h8M8 16h8"/>',
+ help:'<circle cx="12" cy="12" r="10"/><path d="M9 9a3 3 0 1 1 5 2c-1 .7-2 1.3-2 3m0 4h.01"/>',
+ calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6m10-6v6M3 10h18m-13 5h3"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',
+ receipt:'<path d="M5 2h14v20l-3-2-4 2-4-2-3 2zM9 7h6M9 11h6m-6 4h4"/>',
+ card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h5"/>',
+ truck:'<path d="M2 5h12v12H2zM14 9h4l4 4v4h-8z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>',
+ building:'<path d="M4 22V3h12v19M16 10h4v12M2 22h20M8 7h4m-4 4h4m-4 4h4m-3 7v-3h3v3"/>',
+ bell:'<path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5zM10 21h4"/>',
+ search:'<circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/>',
+ heart:'<path d="M20 5a5 5 0 0 0-7 0l-1 1-1-1a5 5 0 0 0-7 7l8 8 8-8a5 5 0 0 0 0-7z"/>',
+ chart:'<path d="M3 21h18M6 17v-5m5 5V7m5 10v-8m5 8V4"/>',
+ download:'<path d="M12 3v12m-4-4 4 4 4-4M4 18v3h16v-3"/>',
+ check:'<path d="m4 12 5 5L20 6"/>',
+ plus:'<path d="M12 4v16M4 12h16"/>',
+ refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5 9a8 8 0 0 1 14-2l1 5M4 12l1 5a8 8 0 0 0 14-2"/>',
+ logout:'<path d="M10 3H4v18h6m4-4 5-5-5-5m5 5H9"/>',
+ pen:'<path d="m4 20 4-1 12-12-3-3L5 16zM15 6l3 3"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+ phone:'<path d="M5 3h4l2 5-3 2a15 15 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z"/>'
+};
+const neoSprite='<svg class="neo-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+Object.entries(neoIconPaths).map(([key,path])=>'<symbol id="neo-glyph-'+key+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+path+'</symbol>').join('')+'</svg>';
+const departmentIcons={dashboard:'grid',setup:'settings',academics:'book',students:'users',teachers:'teacher',frontoffice:'desk',hr:'briefcase',finance:'wallet',inventory:'package',transport:'bus',maintenance:'wrench',library:'library',governance:'shield',documents:'file',support:'help'};
+const tabIcons={dashboard:'grid',school_setup:'settings',teacher_access:'teacher',calendar:'calendar',curriculum:'book',timetable:'clock',learning_report:'chart',classrooms:'teacher',homework:'pen',exams:'file',assessments:'check',students:'users',attendance:'check',adoption_ptm:'phone',student_lifecycle:'refresh',health_safety:'heart',parent_access:'users',tickets:'help',teacher_tasks:'desk',enquiries:'search',announcements:'bell',visitor_gate:'building',staff:'users',staff_attendance:'clock',hr_workflow:'briefcase',payroll:'wallet',daily_accounts:'chart',vouchers:'receipt',fee_structures:'file',invoices:'receipt',payments:'card',ledger:'building',inventory:'package',orders:'truck',vendors_assets:'briefcase',transport:'bus',maintenance:'wrench',library:'library',approvals:'shield',notifications:'bell',audit_trail:'file',documents:'download',reports:'chart',support:'help'};
+function neoIcon(name){return '<svg class="neo-work-icon" aria-hidden="true"><use href="#neo-glyph-'+(neoIconPaths[name]?name:'grid')+'"></use></svg>'}
+function neoNavBadge(name,tone){return '<span class="neo-nav-icon neo-tone-'+tone+'" aria-hidden="true">'+neoIcon(name)+'</span>'}
+function neoContentIconName(label){
+ const value=String(label||'').toLowerCase();
+ if(/vendor|supplier/.test(value))return 'building';
+ if(/purchase order|\border\b/.test(value))return 'receipt';
+ if(/goods receipt|stock|inventory|kit/.test(value))return 'package';
+ if(/asset/.test(value))return 'briefcase';
+ if(/outstanding|payable|debit|credit|balance|ledger|payment|fee|salary/.test(value))return 'wallet';
+ if(/student|parent|staff|teacher|employee|child/.test(value))return 'users';
+ if(/attendance|check.in|confirm|approve|complete/.test(value))return 'check';
+ if(/calendar|date|schedule|follow.up/.test(value))return 'calendar';
+ if(/report|summary|overview|total/.test(value))return 'chart';
+ if(/transport|vehicle|route/.test(value))return 'bus';
+ if(/book|learning|curriculum/.test(value))return 'book';
+ if(/notice|alert|notification/.test(value))return 'bell';
+ if(/download|export/.test(value))return 'download';
+ if(/refresh|retry/.test(value))return 'refresh';
+ if(/save|submit|create|add|record/.test(value))return 'plus';
+ if(/edit|update/.test(value))return 'pen';
+ if(/view|open|details/.test(value))return 'eye';
+ if(/call|contact/.test(value))return 'phone';
+ if(/search|filter/.test(value))return 'search';
+ return 'grid';
+}
+function decorateSchoolContent(){
+ const area=root.querySelector('#portalContent');if(!area)return;
+ const targets=area.querySelectorAll(':scope > h3, :scope > .portal-grid > .portal-card > p:first-child, :scope > .portal-editor > summary, :scope > .panel > h3, :scope > section > h3, :scope > .neo-voucher-list + h3');
+ targets.forEach((el,index)=>{if(el.dataset.neoIconReady)return;el.dataset.neoIconReady='true';el.classList.add('neo-iconized-heading');const name=neoContentIconName(el.textContent);const badge=document.createElement('span');badge.className='neo-content-icon neo-tone-'+(index%5);badge.setAttribute('aria-hidden','true');badge.innerHTML=neoIcon(name);el.prepend(badge)});
+ area.querySelectorAll('button').forEach((el,index)=>{if(el.dataset.neoIconReady||el.closest('.neo-department-nav'))return;const label=el.textContent.trim();if(!/save|submit|create|add |record|refresh|retry|approve|confirm|view|open|details|download|export|print|search|edit|update|generate|call/i.test(label))return;el.dataset.neoIconReady='true';el.classList.add('neo-iconized-action');const badge=document.createElement('span');badge.className='neo-action-icon neo-tone-'+(index%5);badge.setAttribute('aria-hidden','true');badge.innerHTML=neoIcon(neoContentIconName(label));el.prepend(badge)});
+}
+let neoContentObserver=null;
 const classes=['Playgroup','Nursery','LKG','UKG','Daycare'];
 const money=x=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(x/100);
 const today=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),v=Object.fromEntries(parts.map(x=>[x.type,x.value]));return v.year+'-'+v.month+'-'+v.day};
@@ -144,8 +214,9 @@ async function call(kind,method='GET',data,id=''){
 function updateNotificationBadge(){const badge=root.querySelector('#portalAlertCount');if(!badge)return;const pendingLeave=(records.staff_leave||[]).filter(x=>x.status==='Pending').length,pendingAdvances=(records.salary_advances||[]).filter(x=>x.status==='Pending').length,actionable=pendingLeave+pendingAdvances,unread=(records.notifications||[]).filter(x=>x.status!=='Read').length,count=Math.max(actionable,unread);badge.textContent=String(count);badge.hidden=!count;badge.closest('.portal-alert-bell')?.classList.toggle('has-unread',count>0);badge.closest('.portal-alert-bell')?.setAttribute('aria-label',count?count+' pending notifications and actions':'Notifications')}
 async function loadRecords(){const stamp=++generation;loading=true;renderContent();const keys=Object.keys(names).filter(k=>k!=='dashboard'&&!learningTabs.includes(k)&&!plannedTabs.has(k)&&!['inventory','vendors_assets','reports','tickets','documents'].includes(k));keys.push('stock_items','stock_moves','vendors','purchase_orders','goods_receipts','assets','vendor_payables','vendor_payments','supply_catalog','staff_leave','salary_advances','salary_setup','hr_rules','daily_accounts','notifications');if(!keys.includes('vouchers'))keys.push('vouchers');const results=await Promise.allSettled(keys.map(async k=>[k,await call(k)]));if(stamp!==generation)return false;errors={};results.forEach((result,i)=>{const k=keys[i];if(result.status==='fulfilled'){records[k]=result.value[1].records||result.value[1].accounts||[]}else{errors[k]=result.reason.message;delete records[k]}});loading=false;updateNotificationBadge();renderContent();return !errors[tab]}
 window.openNeoWorkspace=s=>{school=s;tab='dashboard';records={};errors={};backStack=[];lastRenderedTab=null;goingBack=false;backRestoreScroll=null;backRestoreFilters=null;root.hidden=false;
- const departmentCards=departments.map(([id,title,tabs])=>tabs.length===1?`<button type="button" class="neo-single-department" data-tab="${tabs[0]}" aria-pressed="${tabs[0]===tab}">${esc(title)}</button>`:`<details class="panel neo-department" data-department="${esc(id)}"><summary>${esc(title)}<span class="neo-department-chevron" aria-hidden="true"></span></summary><div class="actions">${tabs.map(k=>`<button type="button" class="secondary" data-tab="${k}" aria-pressed="${k===tab}">${esc(names[k])}</button>`).join('')}</div></details>`).join('');
- root.innerHTML=`<div class="portal-hero"><div class="portal-identity"><span class="eyebrow brand-eyebrow"><b class="brand-neo">NEO</b> <b class="brand-school">SCHOOL</b> <b class="brand-india">INDIA</b> <i>·</i> <b class="brand-city">${esc(s.city)}</b></span><h2>${esc(s.name)}</h2><p>School Portal · Today’s workspace & head-office connection</p></div><button type="button" id="portalBack" class="portal-hero-back" hidden aria-label="Go back to previous school screen">← Back</button><button type="button" id="portalAlertBell" class="portal-alert-bell" aria-label="Notifications"><svg class="portal-bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="portalAlertCount" class="portal-alert-count" hidden>0</span></button><div class="portal-profile"><img src="/neo%20owl.jpeg" alt="Neo" width="100" height="120"></div></div><aside class="neo-department-nav" aria-label="School departments"><button type="button" class="portal-mobile-menu" id="schoolMobileMenu" aria-expanded="false">☰ Sections</button>${departmentCards}<button type="button" id="navSignOut" class="nav-signout">Sign out</button></aside><div id="portalStatus" role="status" aria-live="polite"></div><div id="portalContent"></div>`;
+ const departmentCards=departments.map(([id,title,tabs],index)=>tabs.length===1?`<button type="button" class="neo-single-department" data-tab="${tabs[0]}" aria-pressed="${tabs[0]===tab}">${neoNavBadge(departmentIcons[id],index%5)}<span class="neo-nav-label">${esc(title)}</span></button>`:`<details class="panel neo-department" data-department="${esc(id)}"><summary>${neoNavBadge(departmentIcons[id],index%5)}<span class="neo-nav-label">${esc(title)}</span><span class="neo-department-chevron" aria-hidden="true"></span></summary><div class="actions">${tabs.map(k=>`<button type="button" class="secondary" data-tab="${k}" aria-pressed="${k===tab}">${neoNavBadge(tabIcons[k],index%5)}<span class="neo-nav-label">${esc(names[k])}</span></button>`).join('')}</div></details>`).join('');
+ root.innerHTML=`${neoSprite}<div class="portal-hero"><div class="portal-identity"><span class="eyebrow brand-eyebrow"><b class="brand-neo">NEO</b> <b class="brand-school">SCHOOL</b> <b class="brand-india">INDIA</b> <i>·</i> <b class="brand-city">${esc(s.city)}</b></span><h2>${esc(s.name)}</h2><p>School Portal · Today’s workspace & head-office connection</p></div><button type="button" id="portalBack" class="portal-hero-back" hidden aria-label="Go back to previous school screen">← Back</button><button type="button" id="portalAlertBell" class="portal-alert-bell" aria-label="Notifications"><svg class="portal-bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="portalAlertCount" class="portal-alert-count" hidden>0</span></button><div class="portal-profile"><img src="/neo%20owl.jpeg" alt="Neo" width="100" height="120"></div></div><aside class="neo-department-nav" aria-label="School departments"><button type="button" class="portal-mobile-menu" id="schoolMobileMenu" aria-expanded="false">☰ Sections</button>${departmentCards}<button type="button" id="navSignOut" class="nav-signout">${neoNavBadge("logout",0)}<span class="neo-nav-label">Sign out</span></button></aside><div id="portalStatus" role="status" aria-live="polite"></div><div id="portalContent"></div>`;
+ neoContentObserver?.disconnect();neoContentObserver=new MutationObserver(()=>requestAnimationFrame(decorateSchoolContent));neoContentObserver.observe(root.querySelector('#portalContent'),{childList:true,subtree:true});
  const openActiveDepartment=()=>{const active=root.querySelector('.neo-department-nav [data-tab][aria-pressed="true"]');const group=active?.closest('details.neo-department');if(group){root.querySelectorAll('.neo-department-nav details.neo-department').forEach(d=>{d.open=d===group})}};
  root.querySelectorAll('.neo-department-nav details.neo-department').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)root.querySelectorAll('.neo-department-nav details.neo-department').forEach(other=>{if(other!==d)other.open=false})}));
  root.querySelector('#portalBack').onclick=()=>{const previous=backStack.pop();if(!previous)return;tab=previous.tab;backRestoreScroll=previous.scroll;backRestoreFilters=previous.filters||null;goingBack=true;root.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.tab===tab)));root.querySelectorAll('.neo-department-nav details.neo-department').forEach(d=>{d.open=!!d.querySelector('[data-tab="'+tab+'"]')});renderContent()};
