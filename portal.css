@@ -885,3 +885,28 @@ body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button.nav-
 #neoWorkspace>#portalContent .neo-iconized-action{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 #neoWorkspace>#portalContent .neo-iconized-action .neo-action-icon{background:#ffffffec}
 @media(max-width:760px){#neoWorkspace .neo-nav-icon{width:26px;height:26px}#neoWorkspace .neo-nav-icon .neo-work-icon{width:16px;height:16px}}
+
+/* Distinguish the expanded department and show exactly where its sub-tabs end. */
+#neoWorkspace>.neo-department-nav .neo-department[open]{
+  margin-bottom:16px;
+  border-color:#5c83b3;
+  background:#17356c;
+  box-shadow:0 8px 16px #071a4233!important;
+}
+#neoWorkspace>.neo-department-nav .neo-department[open]>summary{
+  background:#285089!important;
+  border-color:transparent!important;
+}
+#neoWorkspace>.neo-department-nav .neo-department[open]>.actions{
+  margin:7px 7px 10px;
+  padding:7px 5px 7px 9px;
+  border-left:3px solid #5ac1d5;
+  border-radius:0 8px 8px 0;
+  background:#244578;
+}
+#neoWorkspace>.neo-department-nav .neo-department[open]>.actions button{
+  border-color:#3c6096!important;
+}
+#neoWorkspace>.neo-department-nav .neo-department[open]+:is(.neo-department,.neo-single-department){
+  margin-top:5px;
+}
