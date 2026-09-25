@@ -748,3 +748,29 @@ body:has(#employeeApp:not([hidden])) #employeeApp{padding-bottom:30px}
 #neoWorkspace #portalContent>.portal-card,body[data-role="teacher"] #familyContent>.portal-card,body[data-role="parent"] #familyContent>.portal-card{border-color:#d8e3f1;box-shadow:0 7px 22px #0a275712}
 @media(max-width:720px){.portal-hero-back{left:18px;right:auto;top:12px}.portal-hero:has(.portal-hero-back:not([hidden])){padding-top:60px!important}}
 @media print{.portal-hero-back{display:none!important}}
+
+/* Compact department navigation for Parent and Teacher portals. */
+body[data-role="parent"] #familyApp>.family-tabs,body[data-role="teacher"] #familyApp>.family-tabs{display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important;gap:0!important;background:#102a60!important;border-color:#294579!important}
+body[data-role="parent"] #familyApp>.family-tabs:before,body[data-role="teacher"] #familyApp>.family-tabs:before{top:16px!important;left:50%!important;right:auto!important;transform:translateX(-50%);width:min(190px,calc(100% - 32px))!important;height:96px!important;border:1px solid #e5edf7;border-radius:15px;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat!important;box-shadow:0 10px 28px #00133335}
+.family-nav-scroll{flex:1;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;padding:124px 12px 12px;scrollbar-width:thin;scrollbar-color:#7890b6 transparent;overscroll-behavior:contain}
+.family-nav-scroll::-webkit-scrollbar,#familyContent::-webkit-scrollbar{width:5px}
+.family-nav-scroll::-webkit-scrollbar-track,#familyContent::-webkit-scrollbar-track{background:transparent}
+.family-nav-scroll::-webkit-scrollbar-thumb,#familyContent::-webkit-scrollbar-thumb{background:#8196b8;border-radius:8px}
+.family-department{margin:0 0 7px;border:1px solid #2b4a80;border-radius:12px;background:#17356c;overflow:hidden}
+.family-department>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;padding:11px 13px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;list-style:none}
+.family-department>summary::-webkit-details-marker{display:none}
+.family-department[open]>summary{background:#1b407b}
+.family-department-chevron{flex:none;width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}
+.family-department[open] .family-department-chevron{transform:rotate(225deg)}
+.family-department-items{display:grid;gap:6px;padding:7px}
+body[data-role="parent"] #familyApp>.family-tabs .family-department-items button,body[data-role="teacher"] #familyApp>.family-tabs .family-department-items button{min-height:40px!important;padding:9px 12px!important;font-size:12px!important}
+body[data-role="parent"] #familyApp>.family-tabs button:before,body[data-role="teacher"] #familyApp>.family-tabs button:before{content:none!important}
+body[data-role="parent"] #familyApp>.family-tabs button:after,body[data-role="teacher"] #familyApp>.family-tabs button:after{left:0!important;right:0!important;bottom:0!important;height:3px!important;border-radius:0!important;background:var(--rainbow)!important}
+body[data-role="parent"] #familyApp>.family-tabs .family-overview-tab,body[data-role="teacher"] #familyApp>.family-tabs .family-overview-tab{margin:0 0 7px!important}
+body[data-role="parent"] #familyApp>.family-tabs .family-signout,body[data-role="teacher"] #familyApp>.family-tabs .family-signout{flex:none;width:calc(100% - 24px)!important;margin:8px 12px 12px!important;min-height:42px!important;background:#fff!important;color:#0b2055!important;border:1px solid #dce6f4!important;box-shadow:0 6px 18px #00133335!important;text-align:center!important;font-weight:800!important}
+body[data-role="parent"] #familyApp>.family-tabs .family-signout:after,body[data-role="teacher"] #familyApp>.family-tabs .family-signout:after{content:none!important}
+.family-hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+body[data-role="parent"] #familyApp>.portal-hero .portal-hero-back,body[data-role="teacher"] #familyApp>.portal-hero .portal-hero-back{position:static!important;min-height:34px;padding:6px 13px;box-shadow:none}
+#neoWorkspace>.neo-department-nav #navSignOut{position:sticky;bottom:0;z-index:5;margin-top:12px;background:#fff;color:#0b2055;box-shadow:0 -8px 18px #00133335}
+@media(max-width:760px){body[data-role="parent"] #familyApp>.family-tabs,body[data-role="teacher"] #familyApp>.family-tabs{height:min(58vh,430px)!important;max-height:none!important}.family-nav-scroll{padding-top:118px}}
+@media(prefers-reduced-motion:reduce){.family-department-chevron{transition:none}}
