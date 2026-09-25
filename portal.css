@@ -517,16 +517,16 @@
 }
 
 
-/* Teacher + Parent final desktop composition — approved reference placement, white canvas, Neo gradient accents. */
+/* Teacher + Parent final desktop composition — corporate navy canvas, white work surface, Neo gradient accents. */
 @media(min-width:761px){
- body[data-role="teacher"]:has(#familyApp:not([hidden])),body[data-role="parent"]:has(#familyApp:not([hidden])){background:#fff!important}
+ body[data-role="teacher"]:has(#familyApp:not([hidden])),body[data-role="parent"]:has(#familyApp:not([hidden])){background:#0b2055!important}
  body[data-role="teacher"]:has(#familyApp:not([hidden]))>header,body[data-role="parent"]:has(#familyApp:not([hidden]))>header{display:none!important}
- body[data-role="teacher"]:has(#familyApp:not([hidden])) main,body[data-role="parent"]:has(#familyApp:not([hidden])) main{max-width:none!important;margin:0!important;padding:24px 28px!important;background:#fff!important}
+ body[data-role="teacher"]:has(#familyApp:not([hidden])) main,body[data-role="parent"]:has(#familyApp:not([hidden])) main{max-width:none!important;margin:0!important;padding:24px 28px!important;background:#0b2055!important}
  body[data-role="teacher"]:has(#familyApp:not([hidden])) #familyStatus,body[data-role="parent"]:has(#familyApp:not([hidden])) #familyStatus{display:none!important}
- body[data-role="teacher"] #familyApp:not([hidden]),body[data-role="parent"] #familyApp:not([hidden]){display:grid!important;height:calc(100dvh - 48px)!important;margin:0!important;grid-template-columns:255px minmax(0,1fr)!important;grid-template-rows:200px minmax(0,1fr)!important;gap:20px 22px!important;background:#fff!important}
+ body[data-role="teacher"] #familyApp:not([hidden]),body[data-role="parent"] #familyApp:not([hidden]){display:grid!important;height:calc(100dvh - 48px)!important;margin:0!important;grid-template-columns:255px minmax(0,1fr)!important;grid-template-rows:200px minmax(0,1fr)!important;gap:20px 22px!important;background:#0b2055!important}
  body[data-role="teacher"] #familyApp>.portal-hero,body[data-role="parent"] #familyApp>.portal-hero{grid-column:2!important;grid-row:1!important;height:200px!important;padding:26px 32px!important;border-radius:20px!important;box-shadow:0 8px 24px #102a5610}
  body[data-role="teacher"] #familyApp>.portal-hero img,body[data-role="parent"] #familyApp>.portal-hero img{width:104px!important;height:124px!important}
- body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{grid-column:1!important;grid-row:1/3!important;position:relative!important;top:auto!important;height:100%!important;max-height:none!important;margin:0!important;padding:128px 18px 28px!important;gap:8px!important;overflow-y:auto!important;background:#fff!important;border:1px solid #dce5f2!important;border-radius:20px!important;box-shadow:0 8px 24px #102a560b;scrollbar-gutter:stable}
+ body[data-role="teacher"] #familyApp>.family-tabs,body[data-role="parent"] #familyApp>.family-tabs{grid-column:1!important;grid-row:1/3!important;position:relative!important;top:auto!important;height:100%!important;max-height:none!important;margin:0!important;padding:128px 18px 28px!important;gap:8px!important;overflow-y:auto!important;background:#102a60!important;border:1px solid #dce5f2!important;border-radius:20px!important;box-shadow:0 8px 24px #102a560b;scrollbar-gutter:stable}
  body[data-role="teacher"] #familyApp>.family-tabs:before,body[data-role="parent"] #familyApp>.family-tabs:before{content:'NEO  SCHOOL  INDIA';position:absolute;top:38px;left:24px;right:24px;text-align:center;color:#0b2055;font-size:12px;font-weight:900;letter-spacing:.24em;line-height:1.5}
  body[data-role="teacher"] #familyApp>.family-tabs button,body[data-role="parent"] #familyApp>.family-tabs button{position:relative!important;overflow:hidden!important;width:100%!important;min-height:50px!important;padding:12px 15px!important;border-radius:12px!important;background:#fff!important;color:#0b2055!important;border:1px solid #dce5f2!important;box-shadow:0 3px 10px #102a5608!important;line-height:1.35!important}
  body[data-role="teacher"] #familyApp>.family-tabs button:after,body[data-role="parent"] #familyApp>.family-tabs button:after{content:'';position:absolute;left:13px;right:13px;bottom:0;height:3px;background:var(--rainbow);border-radius:8px 8px 0 0}
