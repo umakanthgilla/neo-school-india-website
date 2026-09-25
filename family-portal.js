@@ -2,7 +2,7 @@
 const role=document.body.dataset.role,base='https://neo-lead-crm-api.umakanthgilla.workers.dev/api/'+role+'/',key='neo_'+role+'_token';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let token=sessionStorage.getItem(key)||'',data=null,tab='overview',generation=0,portalNotifications=[];
-const money=x=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(x/100),status=s=>{$('familyStatus').textContent=s};
+const money=x=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(x/100),status=s=>{$('familyStatus').textContent=s;const loginStatus=$('familyLoginStatus');if(loginStatus)loginStatus.textContent=s};
 function logout(){generation++;token='';data=null;sessionStorage.removeItem(key);$('familyApp').hidden=true;$('familyApp').replaceChildren();$('familyLogout').hidden=true;$('familyLogin').hidden=false}
 async function api(path,method='GET',body){const r=await fetch(base+path,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const b=await r.json().catch(()=>({error:'Unreadable server response.'}));if(!r.ok){if(r.status===401&&path!=='login')logout();throw Error(b.error||'Request failed.')}return b}
 async function learningApi(path,body){const r=await fetch('https://neo-lead-crm-api.umakanthgilla.workers.dev/api/learning/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const b=await r.json();if(!r.ok)throw Error(b.error||'Learning request failed.');return b}
