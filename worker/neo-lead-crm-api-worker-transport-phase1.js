@@ -3515,6 +3515,20 @@ async function transportPortal(request,env,url){
 }
 
 /* Dedicated, route-scoped transport accounts and today's operations. */
+const transportSchemaReady=new WeakMap();
+async function ensureTransportSchema(env){
+ if(!transportSchemaReady.has(env.DB))transportSchemaReady.set(env.DB,(async()=>{
+  await env.DB.batch([
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_login_attempts(school_id TEXT PRIMARY KEY,attempts INTEGER NOT NULL,expires INTEGER NOT NULL)'),
+   env.DB.prepare("CREATE TABLE IF NOT EXISTS neo_transport_accounts(account_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,staff_id TEXT NOT NULL,role TEXT NOT NULL,salt TEXT NOT NULL,password_hash TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
+   env.DB.prepare('CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_staff_account ON neo_transport_accounts(school_id,staff_id)'),
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_photos(trip_id TEXT NOT NULL,phase TEXT NOT NULL,school_id TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(trip_id,phase))')
+  ]);
+  await env.DB.prepare('DROP INDEX IF EXISTS neo_transport_trip_once').run();
+  await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_run_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction'),COALESCE(json_extract(data,'$.run_no'),1)) WHERE kind='transport_trips'").run();
+ })().catch(e=>{transportSchemaReady.delete(env.DB);throw e}));
+ return transportSchemaReady.get(env.DB);
+}
 async function transportOperations(request,env,url){
  const path=url.pathname;if(!path.startsWith('/api/transport/'))return null;
  const parts=path.split('/').filter(Boolean),section=parts[2],action=parts[3];
@@ -3522,15 +3536,7 @@ async function transportOperations(request,env,url){
  const out=(b,s=200)=>json(b,s,request);
  try{
   await ensurePortalSchema(env);
-  await env.DB.batch([
-   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_login_attempts(school_id TEXT PRIMARY KEY,attempts INTEGER NOT NULL,expires INTEGER NOT NULL)'),
-   env.DB.prepare("CREATE TABLE IF NOT EXISTS neo_transport_accounts(account_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,staff_id TEXT NOT NULL,role TEXT NOT NULL,salt TEXT NOT NULL,password_hash TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
-   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_staff_account ON neo_transport_accounts(school_id,staff_id)"),
-   env.DB.prepare("CREATE TABLE IF NOT EXISTS neo_transport_photos(trip_id TEXT NOT NULL,phase TEXT NOT NULL,school_id TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(trip_id,phase))")
-  ]);
-  // The original single-run index must be removed before a second run can exist.
-  await env.DB.prepare('DROP INDEX IF EXISTS neo_transport_trip_once').run();
-  await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_run_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction'),COALESCE(json_extract(data,'$.run_no'),1)) WHERE kind='transport_trips'").run();
+  await ensureTransportSchema(env);
   if(section==='login'&&request.method==='POST'){
    const b=await request.json(),id=String(b.account_id||'').trim().toUpperCase();
    if(!/^ND-[A-Z0-9-]{8,32}$/.test(id)||typeof b.password!=='string'||b.password.length>128)return out({error:'Check transport ID and password.'},400);
