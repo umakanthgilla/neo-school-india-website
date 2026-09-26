@@ -968,7 +968,7 @@ async function franchiseRoute(request,env,url){
  if(url.pathname==='/api/franchise/schools'&&request.method==='POST'){
   if(!admin)return error('Head-office access required.',403);
   const b=await request.json();const name=clean(b.name,160),city=clean(b.city,120),owner=clean(b.owner,120);
-  if(!name||!city||!owner||!strongPortalPassword(b.password))return error('School, city, owner and a 8–128 character password with uppercase, lowercase, number and symbol are required.',400);
+  if(!name||!city||!owner||!strongPortalPassword(b.password))return error('School, city, owner and a 8â€“128 character password with uppercase, lowercase, number and symbol are required.',400);
   const id='NEO-'+crypto.randomUUID().slice(0,8).toUpperCase(),salt=crypto.randomUUID();
   const hash=await schoolPassword(b.password,salt);
   await env.DB.batch([env.DB.prepare('INSERT INTO neo_schools(school_id,name,city,owner,password_hash,salt) VALUES (?,?,?,?,?,?)').bind(id,name,city,owner,hash,salt),...SCHOOL_TASKS.map(t=>env.DB.prepare('INSERT INTO neo_school_tasks(school_id,task) VALUES (?,?)').bind(id,t))]);
@@ -1128,11 +1128,11 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     const teacher=await env.DB.prepare('SELECT account_id FROM neo_teacher_accounts WHERE school_id=? AND account_id=? AND active=1').bind(school,str('teacher_id',80)).first();if(!teacher)fail('Choose an active teacher in this school.');
     data={teacher_id:teacher.account_id,title:str('title'),due_date:date('due_date'),instructions:str('instructions',2000),status:'Pending',revision:1,history:[]};
    }else if(kind==='stock_items'){
-    const reorder=Number(b.reorder_level??0);if(!Number.isInteger(reorder)||reorder<0||reorder>10000)fail('Reorder level must be 0–10000.');
+    const reorder=Number(b.reorder_level??0);if(!Number.isInteger(reorder)||reorder<0||reorder>10000)fail('Reorder level must be 0â€“10000.');
     data={name:str('name'),category:choice('category',['Books','Student kits','Uniforms','Other']),size:str('size',80,false),reorder_level:reorder};
    }else if(kind==='stock_moves'){
     const item=await related('stock_items','item_id'),type=choice('type',['Receive','Issue to child','Adjustment in','Adjustment out']);
-    if(!Number.isInteger(b.quantity)||b.quantity<1||b.quantity>10000)fail('Quantity must be 1–10000.');
+    if(!Number.isInteger(b.quantity)||b.quantity<1||b.quantity>10000)fail('Quantity must be 1â€“10000.');
     const child=type==='Issue to child'?await related('students','student_id'):null;
     data={item_id:item.id,item_name:item.name,size:item.size,type,quantity:b.quantity,delta:['Receive','Adjustment in'].includes(type)?b.quantity:-b.quantity,student_id:child?.id||'',date:date('date'),reference:str('reference'),notes:str('notes',1000,false)};
     if(data.date>neoToday())fail('Stock date cannot be in the future.');
@@ -1143,11 +1143,11 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    }else if(kind==='purchase_orders'){
     const catalogId=str('central_product_id',80,false),catalog=catalogId?await supplyOne(env,'products',catalogId):null,vendor=catalog?{id:'HEAD_OFFICE',name:'Neo School India Head Office'}:await related('vendors','vendor_id'),quantity=Number(b.quantity),unit=catalog?Number(catalog.center_price_paise):Number(b.unit_price_paise),tax=Number(b.tax_paise||0),charges=Number(b.other_charges_paise||0);
     if(catalogId&&(!catalog||catalog.status!=='Active'||catalog.available_to_centers===false||!Number(catalog.center_price_paise)))fail('This Head Office catalogue item is unavailable. Refresh and choose again.');
-    if(!Number.isInteger(quantity)||quantity<1||quantity>10000)fail('Quantity must be 1–10000.');
+    if(!Number.isInteger(quantity)||quantity<1||quantity>10000)fail('Quantity must be 1â€“10000.');
     if(!Number.isSafeInteger(unit)||unit<=0||unit>100000000)fail('Check unit price.');
     if(!Number.isSafeInteger(tax)||tax<0||!Number.isSafeInteger(charges)||charges<0)fail('Check tax and other charges.');
     const orderDate=date('order_date'),terms=choice('payment_terms',['Spot payment','Credit purchase']),creditDays=terms==='Credit purchase'?Number(b.credit_days):0;
-    if(terms==='Credit purchase'&&(!Number.isInteger(creditDays)||creditDays<1||creditDays>365))fail('Credit days must be 1–365.');
+    if(terms==='Credit purchase'&&(!Number.isInteger(creditDays)||creditDays<1||creditDays>365))fail('Credit days must be 1â€“365.');
     const total=quantity*unit+tax+charges;if(!Number.isSafeInteger(total)||total>1000000000)fail('Purchase total is too large.');
     const itemType=choice('item_type',['Inventory','Fixed asset']),category=catalog?(catalog.center_category||'Other'):choice('category',itemType==='Inventory'?['Student kits','Books','Uniforms','Stationery','Consumables','Other']:['Furniture','Computer lab','Electrical','Vehicle','Other']);
     if(catalog&&itemType!=='Inventory')fail('Head Office catalogue is only for inventory supply items.');
@@ -1170,7 +1170,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     data={payable_id:payable.id,purchase_order_id:payable.purchase_order_id,vendor_id:payable.vendor_id,vendor_name:payable.vendor_name,amount_paise:amount,date:paymentDate,payment_mode:choice('payment_mode',['Cash','UPI','Bank transfer','Cheque']),reference:str('reference',200),notes:str('notes',1000,false),status:'Paid'};
    }else if(['assets','vendor_payables'].includes(kind))fail('This record is created automatically from procurement.');
    else if(kind==='classrooms'){
-    if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1–200.');
+    if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1â€“200.');
     data={name:str('name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),academic_year:str('academic_year',4),teacher:str('teacher'),capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
    }else if(kind==='fee_structures'){
     const classroom=await related('classrooms','classroom_id');data={classroom_id:classroom.id,title:str('title'),amount_paise:money(),due_date:date('due_date')};
@@ -1399,7 +1399,7 @@ recordId='HR_RULES_'+effectiveFrom;
     !Number.isInteger(installments) ||
     installments<1 ||
     installments>24
-  ) fail('Installments must be 1–24.');
+  ) fail('Installments must be 1â€“24.');
 
   data={
     staff_id:staffMember.id,
@@ -1420,7 +1420,7 @@ recordId='HR_RULES_'+effectiveFrom;
    else if(kind==='attendance'){const student=await related('students','student_id');data={student_id:student.id,date:date('date'),status:choice('status',['Present','Absent','Leave'])};if(data.date>new Date(Date.now()+330*60000).toISOString().slice(0,10))fail('Attendance cannot be in the future.');recordId=student.id+'_'+data.date;}
    else if(kind==='invoices'){const student=await related('students','student_id');data={student_id:student.id,title:str('title'),due_date:date('due_date'),amount_paise:money()};}
    else if(kind==='payments'){const invoice=await related('invoices','invoice_id'),paymentDate=date('date'),receiptNo=await nextFinanceNumber(env,school,'receipt',paymentDate);data={invoice_id:invoice.id,student_id:invoice.student_id,date:paymentDate,amount_paise:money(),method:choice('method',['Cash','UPI','Bank transfer','Cheque']),reference:str('reference',200),receipt_no:receiptNo,status:'Recorded by school'};if(data.date>new Date(Date.now()+330*60000).toISOString().slice(0,10))fail('Payment date cannot be in the future.');}
-   else if(kind==='orders'){const quantity=b.quantity;if(!Number.isInteger(quantity)||quantity<1||quantity>1000)fail('Quantity must be 1–1000.');data={category:choice('category',['Books','Student kits','Uniforms']),item:str('item'),size:str('size',80,false),quantity,notes:str('notes',1000,false),status:'Submitted'};if(data.category==='Uniforms'&&!data.size)fail('Uniform size is required.');
+   else if(kind==='orders'){const quantity=b.quantity;if(!Number.isInteger(quantity)||quantity<1||quantity>1000)fail('Quantity must be 1â€“1000.');data={category:choice('category',['Books','Student kits','Uniforms']),item:str('item'),size:str('size',80,false),quantity,notes:str('notes',1000,false),status:'Submitted'};if(data.category==='Uniforms'&&!data.size)fail('Uniform size is required.');
     data.order_for=b.order_for?choice('order_for',['School stock','Classroom','Child']):'School stock';
     if(data.order_for==='Classroom'){const c=await related('classrooms','classroom_id');data.classroom_id=c.id;data.classroom_name=c.name;}
     if(data.order_for==='Child'){const c=await related('students','student_id');data.student_id=c.id;data.child_name=c.name;data.classroom_id=c.classroom_id||'';}
@@ -1454,7 +1454,7 @@ recordId='HR_RULES_'+effectiveFrom;
    const acceptedValue=Math.round(Number(po.total_paise||0)*accepted/Number(po.quantity||1)),prior=(await portalRows(env,school,'goods_receipts')).filter(x=>x.purchase_order_id===po.id).reduce((n,x)=>n+Number(x.quantity||0),0),nextReceived=prior+Number(data.quantity||0),nextPo={...po,received_quantity:nextReceived,status:nextReceived>=Number(po.quantity||0)?'Delivered':po.status};delete nextPo.id;delete nextPo.created_at;
    writes.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'purchase_orders',?,?) ON CONFLICT(school_id,kind,id) DO UPDATE SET data=excluded.data").bind(school,po.id,JSON.stringify(nextPo)));
    if(po.item_type==='Inventory'){
-    const itemId='POITEM_'+po.id,stockItem={name:po.item_name,category:['Books','Student kits','Uniforms'].includes(po.category)?po.category:'Other',size:[po.program,po.size].filter(Boolean).join(' · '),reorder_level:0,source_kind:'purchase_order',source_id:po.id};
+    const itemId='POITEM_'+po.id,stockItem={name:po.item_name,category:['Books','Student kits','Uniforms'].includes(po.category)?po.category:'Other',size:[po.program,po.size].filter(Boolean).join(' Â· '),reorder_level:0,source_kind:'purchase_order',source_id:po.id};
     writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'stock_items',?,?)").bind(school,itemId,JSON.stringify(stockItem)));
     writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'stock_moves',?,?)").bind(school,'GRN_MOVE_'+recordId,JSON.stringify({item_id:itemId,item_name:po.item_name,size:stockItem.size,type:'Purchase receive',quantity:accepted,delta:accepted,student_id:'',date:data.date,reference:data.supplier_invoice,notes:'Automatic stock receipt from '+po.po_no,source_kind:'goods_receipt',source_id:recordId})));
    }else{
@@ -1462,7 +1462,7 @@ recordId='HR_RULES_'+effectiveFrom;
    }
    if(po.payment_terms==='Spot payment'){
     const accounts=await portalRows(env,school,'daily_accounts'),available=accounts.reduce((n,x)=>n+(x.direction==='IN'?1:-1)*Number(x.amount_paise||0),0);if(acceptedValue>available)fail('Insufficient available balance for this spot payment. Receive against credit terms or record sufficient funds first.');
-    const voucherId='PUR_'+recordId,voucherNo=await nextFinanceNumber(env,school,'voucher',data.date),voucher={voucher_no:voucherNo,date:data.date,category:'Purchase & inventory · '+po.category,paid_to:po.vendor_name,description:po.item_name+' · '+accepted+' received against '+po.po_no,amount_paise:acceptedValue,payment_mode:po.payment_mode,reference:data.supplier_invoice,notes:'System generated from goods receipt',source_kind:'goods_receipt',source_id:recordId,status:'Paid',created_by:'system',paid_at:new Date().toISOString()};
+    const voucherId='PUR_'+recordId,voucherNo=await nextFinanceNumber(env,school,'voucher',data.date),voucher={voucher_no:voucherNo,date:data.date,category:'Purchase & inventory Â· '+po.category,paid_to:po.vendor_name,description:po.item_name+' Â· '+accepted+' received against '+po.po_no,amount_paise:acceptedValue,payment_mode:po.payment_mode,reference:data.supplier_invoice,notes:'System generated from goods receipt',source_kind:'goods_receipt',source_id:recordId,status:'Paid',created_by:'system',paid_at:new Date().toISOString()};
     writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'vouchers',?,?)").bind(school,voucherId,JSON.stringify(voucher)));
     writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'daily_accounts',?,?)").bind(school,'FIN_PUR_'+recordId,JSON.stringify({direction:'OUT',category:voucher.category,amount_paise:acceptedValue,transaction_date:data.date,payment_mode:po.payment_mode,party:po.vendor_name,reference:voucherNo,notes:voucher.description,source_kind:'voucher',source_id:voucherId,status:'Posted'})));
    }else{
@@ -1473,7 +1473,7 @@ recordId='HR_RULES_'+effectiveFrom;
    const payable=await portalRecord(env,school,'vendor_payables',data.payable_id),accounts=await portalRows(env,school,'daily_accounts'),available=accounts.reduce((n,x)=>n+(x.direction==='IN'?1:-1)*Number(x.amount_paise||0),0);if(data.amount_paise>available)fail('Insufficient available balance for this vendor payment.');
    const nextPaid=Number(payable.paid_paise||0)+data.amount_paise,nextOutstanding=Math.max(0,Number(payable.amount_paise||0)-nextPaid),next={...payable,paid_paise:nextPaid,outstanding_paise:nextOutstanding,status:nextOutstanding?'Part paid':'Paid'};delete next.id;delete next.created_at;
    writes.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'vendor_payables',?,?) ON CONFLICT(school_id,kind,id) DO UPDATE SET data=excluded.data").bind(school,payable.id,JSON.stringify(next)));
-   const voucherId='VENDOR_'+recordId,voucherNo=await nextFinanceNumber(env,school,'voucher',data.date),voucher={voucher_no:voucherNo,date:data.date,category:'Purchase & inventory · Vendor payment',paid_to:payable.vendor_name,description:'Credit purchase payment',amount_paise:data.amount_paise,payment_mode:data.payment_mode,reference:data.reference,notes:data.notes,source_kind:'vendor_payment',source_id:recordId,status:'Paid',created_by:'system',paid_at:new Date().toISOString()};
+   const voucherId='VENDOR_'+recordId,voucherNo=await nextFinanceNumber(env,school,'voucher',data.date),voucher={voucher_no:voucherNo,date:data.date,category:'Purchase & inventory Â· Vendor payment',paid_to:payable.vendor_name,description:'Credit purchase payment',amount_paise:data.amount_paise,payment_mode:data.payment_mode,reference:data.reference,notes:data.notes,source_kind:'vendor_payment',source_id:recordId,status:'Paid',created_by:'system',paid_at:new Date().toISOString()};
    writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'vouchers',?,?)").bind(school,voucherId,JSON.stringify(voucher)));
    writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'daily_accounts',?,?)").bind(school,'FIN_VENDOR_'+recordId,JSON.stringify({direction:'OUT',category:voucher.category,amount_paise:data.amount_paise,transaction_date:data.date,payment_mode:data.payment_mode,party:payable.vendor_name,reference:voucherNo,notes:voucher.description,source_kind:'voucher',source_id:voucherId,status:'Posted'})));
   }
@@ -1512,10 +1512,10 @@ async function nextFinanceNumber(env,school,docType,docDate){
 async function portalRows(env,school,kind){const r=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? ORDER BY created_at DESC,id').bind(school,kind).all();return (r.results||[]).map(x=>({...JSON.parse(x.data),id:x.id,created_at:x.created_at}))}
 async function portalRecord(env,school,kind,id){const r=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();return r?{...JSON.parse(r.data),id}:null}
 function headOfficePaymentVoucher(payment,paymentId,voucherNo){
- return {voucher_no:voucherNo,date:payment.date,category:'Head Office · Payment',paid_to:'Head Office',description:payment.notes?'Payment to Head Office · '+payment.notes:'Payment to Head Office',amount_paise:payment.amount_paise,payment_mode:'Other',reference:payment.reference,notes:'Recorded by school; Head Office verification: '+payment.status,source_kind:'head_office_payment',source_id:paymentId,status:'Paid',created_by:'system',paid_at:payment.created_at||new Date().toISOString()};
+ return {voucher_no:voucherNo,date:payment.date,category:'Head Office Â· Payment',paid_to:'Head Office',description:payment.notes?'Payment to Head Office Â· '+payment.notes:'Payment to Head Office',amount_paise:payment.amount_paise,payment_mode:'Other',reference:payment.reference,notes:'Recorded by school; Head Office verification: '+payment.status,source_kind:'head_office_payment',source_id:paymentId,status:'Paid',created_by:'system',paid_at:payment.created_at||new Date().toISOString()};
 }
 function headOfficePaymentPosting(payment,voucherId,voucherNo){
- return {direction:'OUT',category:'Head Office · Payment',amount_paise:payment.amount_paise,transaction_date:payment.date,payment_mode:'Other',party:'Head Office',reference:voucherNo,notes:payment.notes?'Head Office payment · '+payment.notes:'Payment to Head Office',source_kind:'voucher',source_id:voucherId,status:'Posted'};
+ return {direction:'OUT',category:'Head Office Â· Payment',amount_paise:payment.amount_paise,transaction_date:payment.date,payment_mode:'Other',party:'Head Office',reference:voucherNo,notes:payment.notes?'Head Office payment Â· '+payment.notes:'Payment to Head Office',source_kind:'voucher',source_id:voucherId,status:'Posted'};
 }
 async function reconcileHeadOfficePayments(env,school){
  const payments=await portalRows(env,school,'ledger');
@@ -1582,7 +1582,7 @@ async function portalExtra(request,env,url,admin,session){
   const old=id?await env.DB.prepare('SELECT account_id FROM neo_employee_accounts WHERE school_id=? AND account_id=?').bind(school,id).first():null;
   if(id&&!old)return out({error:'Teacher not found.'},404);
   if(b?.disable===true){if(!old)return out({error:'Teacher not found.'},404);await env.DB.batch([env.DB.prepare('UPDATE neo_employee_accounts SET active=0 WHERE school_id=? AND account_id=?').bind(school,id),env.DB.prepare('UPDATE neo_teacher_accounts SET active=0 WHERE school_id=? AND account_id=?').bind(school,id),portalAudit(env,school,admin,'disable-employee-access',id)]);return out({success:true})}
-  if(!strongPortalPassword(b?.password)||!Array.isArray(b?.classroom_ids)||b.classroom_ids.length>20)return out({error:'Use an 8–128 character password with uppercase, lowercase, number and symbol.'},400);
+  if(!strongPortalPassword(b?.password)||!Array.isArray(b?.classroom_ids)||b.classroom_ids.length>20)return out({error:'Use an 8â€“128 character password with uppercase, lowercase, number and symbol.'},400);
   for(const cid of b.classroom_ids){if(typeof cid!=='string'||!await portalRecord(env,school,'classrooms',cid))return out({error:'Select classrooms from this school.'},400)}
 
   let staffMember=null,staffId=typeof b?.staff_id==='string'?b.staff_id.trim():'';
@@ -1632,7 +1632,7 @@ async function portalExtra(request,env,url,admin,session){
   const child=await portalRecord(env,school,'students',id);if(!child)return out({error:'Student not found.'},404);
   const old=await env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND student_id=?').bind(school,id).first();
   if(b?.disable===true){if(!old)return out({error:'Parent account not found.'},404);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET active=0 WHERE school_id=? AND student_id=?').bind(school,id),portalAudit(env,school,admin,'disable-parent-access',id)]);return out({success:true})}
-  if(!strongPortalPassword(b?.password))return out({error:'Choose a password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
+  if(!strongPortalPassword(b?.password))return out({error:'Choose a password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
   const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt),account=old?.account_id||'NP-'+crypto.randomUUID().slice(0,12).toUpperCase();
   await env.DB.batch([env.DB.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt,active) VALUES (?,?,?,?,?,1) ON CONFLICT(school_id,student_id) DO UPDATE SET password_hash=excluded.password_hash,salt=excluded.salt,active=1').bind(account,school,id,hash,salt),portalAudit(env,school,admin,'set-parent-access',id)]);
   return out({success:true,account_id:account});
@@ -1742,7 +1742,7 @@ async function parentPortal(request,env,url){
  }
  const a=await parentSession(request,env);if(!a)return out({error:'Parent sign in required.'},401);
  if(url.pathname==='/api/parent/password'&&request.method==='POST'){
-  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
+  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
   if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);
   const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(hash,salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'parent:'+a.account_id,'password-change',a.student_id)]);return out({success:true});
  }
@@ -1815,7 +1815,7 @@ async function teacherPortal(request,env,url){
   const link=await env.DB.prepare('SELECT staff_id FROM neo_teacher_staff_links WHERE school_id=? AND account_id=?').bind(a.school_id,a.account_id).first();if(!link)return out({error:'Teacher login is not linked to Staff Master. Contact HR.'},409);const b=await request.json(),amount=Number(b.amount_paise),installments=Number(b.installments||1);if(!Number.isSafeInteger(amount)||amount<=0||amount>100000000||!Number.isInteger(installments)||installments<1||installments>24||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(String(b.recovery_month||''))||typeof b.reason!=='string'||!b.reason.trim()||b.reason.length>1000)return out({error:'Check advance amount, recovery plan and reason.'},400);const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={staff_id:link.staff_id,amount_paise:amount,request_date:neoToday(),reason:b.reason.trim(),recovery_month:b.recovery_month,installments,status:'Pending',requested_by:'teacher:'+a.account_id};await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'salary_advances',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:salary_advances',id),portalNotification(env,a.school_id,'hr','New salary advance request',a.name+' submitted a salary advance request.','salary_advances',id,'Unread','hr_workflow')]);return out({success:true,id,status:'Pending'},201);
  }
  if(url.pathname==='/api/teacher/password'&&request.method==='POST'){
-  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
+  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
   if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);
   const salt=crypto.randomUUID();await env.DB.batch([env.DB.prepare('UPDATE neo_teacher_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(await schoolPassword(b.password,salt),salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'password-change',a.account_id)]);return out({success:true});
  }
@@ -1860,14 +1860,14 @@ function validateLearningPlan(b){
  if(typeof b.title!=='string'||!b.title.trim()||b.title.length>160)fail('Enter a curriculum title.');
  if(!Array.isArray(b.working_dates)||b.working_dates.length!==200||!b.working_dates.every(learningDate)||b.working_dates.some((d,i)=>i>0&&d<=b.working_dates[i-1]))fail('Provide exactly 200 unique working dates in chronological order.');
  if(Date.parse(b.working_dates[199])-Date.parse(b.working_dates[0])>730*86400000)fail('Calendar must fit within two years.');
- if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>1200)fail('Provide 1–1200 concepts. Drafts may be incomplete; approval requires all 200 days.');
+ if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>1200)fail('Provide 1â€“1200 concepts. Drafts may be incomplete; approval requires all 200 days.');
  const ids=new Set();
  const lessons=b.lessons.map((l,i)=>{
-  if(!Number.isInteger(l.day)||l.day<1||l.day>200)fail('Concept '+(i+1)+': day must be 1–200.');
+  if(!Number.isInteger(l.day)||l.day<1||l.day>200)fail('Concept '+(i+1)+': day must be 1â€“200.');
   const item={day:l.day,id:typeof l.id==='string'?l.id:'lesson-'+(i+1)};
   if(!/^[A-Za-z0-9_-]{1,64}$/.test(item.id)||ids.has(item.id))fail('Concept IDs must be unique.');ids.add(item.id);
   for(const [k,max] of [['subject',80],['concept',180],['objective',500],['activity',1000]]){if(typeof l[k]!=='string'||!l[k].trim()||l[k].length>max)fail('Concept '+(i+1)+': check '+k);item[k]=l[k].trim()}
-  if(!Array.isArray(l.questions)||l.questions.length<1||l.questions.length>5||l.questions.some(q=>typeof q!=='string'||!q.trim()||q.length>300))fail('Each concept needs 1–5 approved parent conversation questions.');
+  if(!Array.isArray(l.questions)||l.questions.length<1||l.questions.length>5||l.questions.some(q=>typeof q!=='string'||!q.trim()||q.length>300))fail('Each concept needs 1â€“5 approved parent conversation questions.');
   if(l.materials!==undefined&&(typeof l.materials!=='string'||l.materials.length>1000))fail('Check preparation materials.');item.materials=l.materials||'';for(const [key,max] of [['homework',1500],['period',50],['start',5],['end',5]]){if(l[key]!==undefined&&(typeof l[key]!=='string'||l[key].length>max))fail('Check '+key);item[key]=l[key]||'';}if((item.start||item.end)&&(!/^([01]\d|2[0-3]):[0-5]\d$/.test(item.start)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(item.end)||item.start>=item.end))fail('Check period start/end times.');item.questions=l.questions.map(q=>q.trim());return item;
  });
  for(let i=0;i<lessons.length;i++)for(let j=i+1;j<lessons.length;j++){const a=lessons[i],c=lessons[j];if(a.day===c.day&&a.start&&c.start&&a.start<c.end&&c.start<a.end)fail('Periods overlap on Day '+a.day);}
@@ -1896,13 +1896,13 @@ function validateMasterCurriculum(b){
   fail('Enter a curriculum title.');
 
  if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>1200)
-  fail('Provide 1–1200 concepts.');
+  fail('Provide 1â€“1200 concepts.');
 
  const ids=new Set();
 
  const lessons=b.lessons.map((l,i)=>{
   if(!Number.isInteger(l.day)||l.day<1||l.day>200)
-   fail('Concept '+(i+1)+': day must be 1–200.');
+   fail('Concept '+(i+1)+': day must be 1â€“200.');
 
   const item={
    day:l.day,
@@ -1926,7 +1926,7 @@ function validateMasterCurriculum(b){
 
   if(!Array.isArray(l.questions)||l.questions.length<1||l.questions.length>5||
      l.questions.some(q=>typeof q!=='string'||!q.trim()||q.length>300))
-   fail('Each concept needs 1–5 approved parent conversation questions.');
+   fail('Each concept needs 1â€“5 approved parent conversation questions.');
 
   item.questions=l.questions.map(q=>q.trim());
 
