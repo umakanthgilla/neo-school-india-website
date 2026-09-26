@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, writeFileSync } from 'node:fs';
 const source='worker/neo-lead-crm-api-worker-transport-phase1.js';
-writeFileSync('transport-qa-worker.mjs',readFileSync(source,'utf8')+'\nexport {transportPortal};\n');
+writeFileSync('worker/transport-qa-worker.mjs',readFileSync(source,'utf8')+'\nexport {transportPortal};\n');
 const {transportPortal}=await import('./transport-qa-worker.mjs');
 const db=new DatabaseSync(':memory:');
 const DB={
