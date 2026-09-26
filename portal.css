@@ -1022,3 +1022,14 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 }
 
 @media(min-width:761px){body:has(#employeeApp:not([hidden])) #employeeStatus{position:fixed;z-index:50;right:30px;bottom:20px;max-width:min(440px,80vw);padding:9px 14px;border-radius:10px;background:#eef7ff;box-shadow:0 8px 22px #00133333}body:has(#employeeApp:not([hidden])) #employeeStatus:empty{display:none}}
+
+/* Expanded family departments share the School portal's bounded sub-tab treatment. */
+#familyApp>.family-tabs .family-department[open]{margin-bottom:16px;border-color:#5c83b3;background:#17356c;box-shadow:0 8px 16px #071a4233}
+#familyApp>.family-tabs .family-department[open]>summary{background:#285089!important;border-color:transparent!important}
+#familyApp>.family-tabs .family-department[open]>.family-department-items{margin:7px 7px 10px;padding:7px 5px 7px 9px;border-left:3px solid #5ac1d5;border-radius:0 8px 8px 0;background:#244578}
+#familyApp>.family-tabs .family-department[open]>.family-department-items button{border-color:#3c6096!important}
+#familyApp>.family-tabs .family-department[open]+.family-department{margin-top:5px}
+#familyApp>.family-tabs .family-department[open]>summary::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;border-radius:3px;background:var(--rainbow);pointer-events:none}
+#familyApp>.family-tabs .family-department>summary{position:relative}
+#employeeApp .employee-tabs button[aria-current="page"]{position:relative;background:#285089;border-color:#5c83b3}
+#employeeApp .employee-tabs button[aria-current="page"]:after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;background:var(--rainbow);border-radius:3px}
