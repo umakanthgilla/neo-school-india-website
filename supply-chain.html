@@ -25,10 +25,29 @@
 }
 #openCenterFinance{white-space:nowrap}.neo-credit-alert>.cards{margin-top:12px}.neo-credit-alert .tab-title p{color:var(--muted);margin:4px 0 14px;font-size:13px}@media(max-width:620px){.neo-credit-alert .tab-title{display:block}#openCenterFinance{width:100%;margin-bottom:12px}}
 </style>
-</head>
+<style>
+body:has(#app:not(.hidden)){background:#0b2055}
+#app .topbar{background:#0b2055;border-bottom-color:#294579}
+#app .brand img{width:145px;max-height:72px;object-fit:contain;background:#fff;padding:7px;border-radius:12px}
+#app .brand b,#app .brand span{color:#fff}
+#app .topbar .badge{background:#17356c;color:#fff}
+#app .topbar .secondary,#app .shell-back{background:#17356c;color:#fff;border:1px solid #496698}
+#app .shell{background:#0b2055}
+#app .main{background:#f7fbff;min-height:calc(100vh - 104px)}
+#app .top-actions{position:relative}
+#app .shell-back[hidden],#app .shell-alert-panel[hidden],#app #supplyAlertCount[hidden]{display:none!important}
+#app .shell-alert-bell{position:relative;display:grid;place-items:center;width:42px;height:42px;padding:0;background:#17356c;border:1px solid #496698;color:#fff}
+#app .shell-alert-bell svg{width:21px;height:21px;fill:#fff}
+#app #supplyAlertCount{position:absolute;right:-6px;top:-7px;min-width:18px;height:18px;padding:1px 4px;background:#d92d20;border:2px solid #fff;border-radius:20px;color:#fff;font-size:10px;line-height:14px}
+#app .shell-alert-panel{position:absolute;right:0;top:calc(100% + 10px);z-index:30;width:min(340px,90vw);padding:14px;border:1px solid #dce6f2;border-radius:14px;background:#fff;box-shadow:0 18px 45px #0013334d;color:#0b2055}
+#app .shell-alert-panel strong{display:block;margin-bottom:8px}
+#app .shell-alert-panel button{display:block;width:100%;margin:6px 0;padding:10px;text-align:left;background:#eef5ff;color:#0b2055}
+#app .shell-alert-panel p{margin:4px 0;color:#536985}
+@media(max-width:760px){#app .topbar-in{flex-wrap:wrap;padding:10px 14px}#app .brand{width:100%}#app .brand img{width:95px}#app .top-actions{width:100%;justify-content:flex-end;flex-wrap:wrap}#app .topbar .badge{display:none}#app .top-actions :is(button){min-height:42px}#app .main{min-height:0}}
+</style></head>
 <body>
 <section id="login" class="login"><form id="loginForm" class="login-card"><img src="/neo-top-logo.jpeg" alt="Neo School India"><h1>Supply Chain CRM</h1><p>Private Head Office procurement, warehouse and fulfillment workspace.</p><label>Head Office password<input name="password" type="password" autocomplete="current-password" required></label><button>Sign in</button><p id="loginError" class="error"></p></form></section>
-<div id="app" class="hidden"><header class="topbar"><div class="topbar-in"><div class="brand"><img src="/neo-top-logo.jpeg" alt="Neo School India"><div><b>Head Office Supply Chain</b><span>Center demand · Vendors · Warehouse · Dispatch</span></div></div><div class="top-actions"><span class="badge">Private Operations</span><button id="refresh" class="secondary">Refresh</button><button id="logout" class="secondary">Logout</button></div></div></header><div class="shell"><nav class="side" id="nav"></nav><main class="main"><div class="hero"><div><h1 id="pageTitle">Supply Chain Dashboard</h1><p id="pageSub">One connected flow from center order to delivery.</p></div></div><div id="status" class="status" role="status"></div><div id="content"></div></main></div></div>
+<div id="app" class="hidden"><header class="topbar"><div class="topbar-in"><div class="brand"><img src="/neo-top-logo.jpeg" alt="Neo School India"><div><b>Head Office Supply Chain</b><span>Center demand · Vendors · Warehouse · Dispatch</span></div></div><div class="top-actions"><button type="button" id="supplyBack" class="shell-back" hidden aria-label="Previous section">← Back</button><button type="button" id="supplyAlertBell" class="shell-alert-bell" aria-label="Action alerts" aria-expanded="false" aria-controls="supplyAlertPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="supplyAlertCount" hidden></span></button><span class="badge">Private Operations</span><button id="refresh" class="secondary">Refresh</button><button id="logout" class="secondary">Logout</button><div id="supplyAlertPanel" class="shell-alert-panel" hidden></div></div></div></header><div class="shell"><nav class="side" id="nav"></nav><main class="main"><div class="hero"><div><h1 id="pageTitle">Supply Chain Dashboard</h1><p id="pageSub">One connected flow from center order to delivery.</p></div></div><div id="status" class="status" role="status"></div><div id="content"></div></main></div></div>
 <script>
 const API='https://neo-lead-crm-api.umakanthgilla.workers.dev',tabs=[['dashboard','Dashboard','⌂'],['center_orders','Center Orders','▤'],['demand','Demand Consolidation','∑'],['center_finance','Center Finance','₹'],['vendors','Vendor Master','♟'],['products','Products & Kits','◫'],['vendor_pos','Vendor Purchase Orders','✎'],['warehouse','Warehouse & GRN','▣'],['packing','Packing','▧'],['dispatch','Dispatch & Tracking','➜'],['finance','Vendor Finance','₹']],$=s=>document.querySelector(s),esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),money=p=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format((Number(p)||0)/100),today=()=>new Date(Date.now()+330*60000).toISOString().slice(0,10);
 let token=sessionStorage.getItem('neo_crm_token')||'',data={},tab='dashboard';
@@ -57,4 +76,46 @@ window.addEventListener('load',()=>{if(token)start()});
 </script>
 <script src="/supply-material-hub.js?v=49"></script>
 <script src="/supply-dispatch-batch.js?v=3"></script>
-</body></html>
+<script>
+/* Shared workspace back and action alerts. Counts are derived from loaded records. */
+let supplyLastTab=tab,supplyBackStack=[],supplyBackNavigation=false;
+const supplyRenderBeforeShell=render;
+render=function(){
+ const nextTab=tab;
+ if(nextTab!==supplyLastTab){
+  if(!supplyBackNavigation)supplyBackStack.push(supplyLastTab);
+  supplyLastTab=nextTab;
+ }
+ supplyBackNavigation=false;
+ supplyRenderBeforeShell();
+ document.querySelector('#supplyBack').hidden=!supplyBackStack.length;
+ updateSupplyAlerts();
+};
+function updateSupplyAlerts(){
+ const pending=(data.center_orders||[]).filter(x=>x.status==='Submitted').length;
+ const reports=(data.reportedPayments||[]).filter(x=>x.status==='Pending verification').length;
+ const overdue=(data.center_receivables||[]).filter(x=>Number(x.outstanding_paise)>0&&x.due_date&&x.due_date<today()).length;
+ const total=pending+reports+overdue,count=document.querySelector('#supplyAlertCount'),panel=document.querySelector('#supplyAlertPanel');
+ count.textContent=String(total);count.hidden=!total;
+ document.querySelector('#supplyAlertBell').setAttribute('aria-label',total?total+' action alerts':'No action alerts');
+ panel.innerHTML='<strong>Head Office action alerts</strong>'+(
+  total?[
+   pending?'<button type="button" data-alert-tab="center_orders">Center orders awaiting approval · '+pending+'</button>':'',
+   reports?'<button type="button" data-alert-tab="finance_control">School payments awaiting confirmation · '+reports+'</button>':'',
+   overdue?'<button type="button" data-alert-tab="center_finance">Overdue center payments · '+overdue+'</button>':''
+  ].join(''):'<p>No pending actions.</p>');
+ panel.querySelectorAll('[data-alert-tab]').forEach(button=>button.onclick=()=>{
+  tab=button.dataset.alertTab;render();renderSupplyNav();panel.hidden=true;
+  document.querySelector('#supplyAlertBell').setAttribute('aria-expanded','false');
+ });
+}
+document.querySelector('#supplyBack').onclick=()=>{
+ const previous=supplyBackStack.pop();if(!previous)return;
+ supplyBackNavigation=true;tab=previous;render();renderSupplyNav();
+};
+document.querySelector('#supplyAlertBell').onclick=()=>{
+ const panel=document.querySelector('#supplyAlertPanel');panel.hidden=!panel.hidden;
+ document.querySelector('#supplyAlertBell').setAttribute('aria-expanded',String(!panel.hidden));
+};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelector('#supplyAlertPanel').hidden=true;document.querySelector('#supplyAlertBell').setAttribute('aria-expanded','false')}});
+</script></body></html>
