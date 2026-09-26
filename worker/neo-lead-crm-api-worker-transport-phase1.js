@@ -3421,7 +3421,7 @@ async function transportPortal(request,env,url){
    const routes=(await portalRows(env,parent.school_id,'transport_routes')).filter(r=>routeIds.has(r.id)&&r.active);
    const vehicleIds=new Set(routes.map(r=>r.vehicle_id));
    const vehicles=(await portalRows(env,parent.school_id,'transport_vehicles')).filter(v=>vehicleIds.has(v.id));
-   const trips=(await portalRows(env,parent.school_id,'transport_trips')).filter(t=>routeIds.has(t.route_id)&&t.date===neoToday()).map(t=>({...t,events:(t.events||[]).filter(e=>e.student_id===parent.student_id)}));
+   const trips=(await portalRows(env,parent.school_id,'transport_trips')).filter(t=>assignments.some(a=>a.route_id===t.route_id&&Number(a.run_no||1)===Number(t.run_no||1))&&t.date===neoToday()).map(t=>({...t,events:(t.events||[]).filter(e=>e.student_id===parent.student_id)}));
    const alerts=(await portalRows(env,parent.school_id,'transport_alerts')).filter(n=>n.student_id===parent.student_id&&n.date===neoToday()).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
    return out({assignments,routes,vehicles,trips,alerts});
   }
@@ -3465,9 +3465,9 @@ async function transportPortal(request,env,url){
     const route=await read('routes',required('route_id',80)),student=await portalRecord(env,schoolId,'students',required('student_id',80)),classroom=await portalRecord(env,schoolId,'classrooms',required('classroom_id',80)),stop=required('stop',100);
     if(!route?.active||!student||!classroom||student.classroom_id!==classroom.id||student.program!==classroom.program||!route.stops.includes(stop))return out({error:'Choose a student from the selected class and section, and a stop on an active route.'},400);
     if((await portalRows(env,schoolId,dbKind)).some(a=>a.student_id===student.id))return out({error:'This child already has a locked transport assignment.'},409);
-    const count=(await portalRows(env,schoolId,dbKind)).filter(a=>a.active&&a.route_id===route.id).length,vehicle=await read('vehicles',route.vehicle_id);
-    if(count>=Number(vehicle?.capacity||0))return out({error:'Vehicle capacity reached.'},409);
     const runNo=Number(b.run_no||1);if(!Number.isInteger(runNo)||runNo<1||runNo>Number(route.trip_count||1))return out({error:'Select a valid trip run for this route.'},400);
+    const count=(await portalRows(env,schoolId,dbKind)).filter(a=>a.active&&a.route_id===route.id&&Number(a.run_no||1)===runNo).length,vehicle=await read('vehicles',route.vehicle_id);
+    if(count>=Number(vehicle?.capacity||0))return out({error:'Vehicle capacity reached for this trip run.'},409);
     data={route_id:route.id,student_id:student.id,classroom_id:classroom.id,program:classroom.program,stop,run_no:runNo,active:true};
    }else{
     return out({error:'Trips are started and finished only from the Driver Portal.'},403);
