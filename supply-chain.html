@@ -87,7 +87,25 @@ body:has(#app:not(.hidden)){background:#0b2055}
  #app .side .nav-signout{position:static;flex:none;min-height:48px;margin:12px 0 0;box-shadow:0 -8px 18px #00133335}
 }
 @media(max-width:760px){#app .side .supply-nav-logo{display:none}#app .side .supply-nav-scroll{display:block}#app .side .nav-signout{position:static;margin-top:10px}}
-</style></head>
+</style><style>
+/* Neo portal rail sizing shared with School, Teacher and Parent. */
+@media(min-width:761px){
+ #app:not(.hidden){padding:24px 28px}
+ #app .side{padding:26px 18px 18px}
+ #app .side .supply-nav-logo{margin-bottom:20px}
+}
+#app .side .nav-group{margin:0 0 7px}
+#app .side .nav-group-head{display:flex;align-items:center;gap:9px;width:100%;min-height:46px;margin:0;padding:9px 13px;border:1px solid #2b4a80;border-radius:12px;background:#17356c;color:#fff;font-size:13px;font-weight:800;line-height:1.3;text-align:left}
+#app .side .nav-group-head .nav-label{flex:1;min-width:0}
+#app .side .nav-subtabs{padding:7px 7px 9px 10px}
+#app .side .nav-subtab{display:flex;align-items:center;gap:9px;min-height:40px;margin:4px 0;padding:7px 10px;border:1px solid #2b4a80;border-radius:10px;background:#17356c;color:#fff;font-size:12px;font-weight:750;line-height:1.3;text-align:left}
+#app .side .nav-subtab.active{background:#17356c;color:#fff;border-color:#5c83b3;box-shadow:none}
+#app .side .nav-subtab.active:before{top:auto;bottom:0;height:3px;background:var(--neo-gradient)}
+#app .side .neo-nav-icon{width:29px;height:29px;flex:0 0 29px}
+#app .side .neo-work-icon{width:18px;height:18px}
+#app .side .nav-signout{display:flex!important;align-items:center;justify-content:center;gap:9px!important;min-height:46px;padding:9px 13px;text-align:center;font-size:13px;font-weight:800;line-height:1.3}
+</style>
+<style>@media(max-width:760px){#app .side :is(.nav-group-head,.nav-subtab,.nav-signout){min-height:44px;font-size:14px}#app .side .neo-nav-icon{width:29px;height:29px;flex:0 0 29px}}</style></head>
 <body>
 <section id="login" class="login"><form id="loginForm" class="login-card"><img src="/neo-top-logo.jpeg" alt="Neo School India"><h1>Supply Chain CRM</h1><p>Private Head Office procurement, warehouse and fulfillment workspace.</p><label>Head Office password<input name="password" type="password" autocomplete="current-password" required></label><button>Sign in</button><p id="loginError" class="error"></p></form></section>
 <div id="app" class="hidden"><header class="topbar"><div class="topbar-in"><div class="brand"><img src="/neo-top-logo.jpeg" alt="Neo School India"><div><span class="hero-eyebrow">NEO · HEAD OFFICE</span><b>Supply Chain</b><span>Center demand · Vendors · Warehouse · Dispatch</span><div class="supply-hero-actions"><button type="button" id="supplyBack" class="shell-back" hidden aria-label="Previous section">← Back</button></div></div></div><div class="top-actions"><button type="button" id="supplyAlertBell" class="shell-alert-bell" aria-label="Action alerts" aria-expanded="false" aria-controls="supplyAlertPanel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="supplyAlertCount" hidden></span></button><button id="refresh" class="hero-refresh" type="button" title="Refresh latest updates" aria-label="Refresh latest updates">↻</button><button id="logout" class="secondary" hidden>Sign out</button><div id="supplyAlertPanel" class="shell-alert-panel" hidden></div></div><img class="supply-hero-owl" src="/neo%20owl.jpeg" alt="Neo owl" width="104" height="124"></div></header><div class="shell"><nav class="side" id="nav"></nav><main class="main"><div class="hero"><div><h1 id="pageTitle">Supply Chain Dashboard</h1><p id="pageSub">One connected flow from center order to delivery.</p></div></div><div id="status" class="status" role="status"></div><div id="content"></div></main></div></div>
