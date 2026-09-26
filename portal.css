@@ -921,3 +921,20 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 .family-nav-icon[data-icon="activities"],.family-nav-icon[data-icon="tickets"],.family-nav-icon[data-icon="password"]{background:#fdeaf2;color:#a93665}
 .family-nav-icon[data-icon="employee_hub"],.family-nav-icon[data-icon="downloads"],.family-nav-icon[data-icon="curriculum"]{background:#e8ecff;color:#4457ad}
 @media(max-width:760px){.family-nav-icon{width:24px;height:24px}}
+
+/* Teacher workspace is the desktop shell reference for School Portal. */
+@media(min-width:761px){
+ body:has(#neoWorkspace:not([hidden])){background:#0b2055!important}
+ body:has(#neoWorkspace:not([hidden])) main{height:100dvh!important;max-width:none!important;margin:0!important;padding:32px 36px!important;background:#0b2055!important;overflow:hidden!important}
+ #neoWorkspace:not([hidden]){display:grid!important;height:calc(100dvh - 64px)!important;margin:0!important;grid-template-columns:255px minmax(0,1fr)!important;grid-template-rows:200px minmax(0,1fr)!important;gap:20px 22px!important;background:#0b2055!important;align-items:stretch!important}
+ #neoWorkspace>.portal-hero{grid-column:2!important;grid-row:1!important;height:200px!important;min-height:0!important;margin:0!important;padding:26px 32px!important;border-radius:20px!important;position:relative!important}
+ #neoWorkspace>.portal-hero .portal-profile img{width:104px!important;height:124px!important}
+ #neoWorkspace>.neo-department-nav{grid-column:1!important;grid-row:1/3!important;position:relative!important;top:auto!important;height:100%!important;max-height:none!important;margin:0!important;padding:128px 18px 28px!important;overflow-y:auto!important;background:#102a60!important;border:1px solid #dce5f2!important;border-radius:20px!important;scrollbar-gutter:stable}
+ #neoWorkspace>.neo-department-nav:before{content:"";display:block;position:absolute;top:26px;left:28px;right:28px;height:82px;border:1px solid #e5edf7;border-radius:15px;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat;box-shadow:0 10px 28px #00133335}
+ #neoWorkspace>#portalContent{grid-column:2!important;grid-row:2!important;height:100%!important;min-height:0!important;margin:0!important;padding:22px 24px 30px!important;overflow-y:auto!important;overflow-x:hidden!important;background:#f7fbff!important;border-radius:20px!important;scrollbar-gutter:stable}
+}
+@media(max-width:760px){
+ body:has(#neoWorkspace:not([hidden])) main{background:#0b2055!important}
+ #neoWorkspace:not([hidden]){background:#0b2055!important}
+ #neoWorkspace>#portalContent{background:#f7fbff!important;border-radius:16px!important;padding:16px!important}
+}
