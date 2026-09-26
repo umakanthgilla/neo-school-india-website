@@ -965,3 +965,23 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 }
 
 #familyApp .neo-icon-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+
+/* Common navigation measurements for all signed-in Neo workspaces. */
+@media(min-width:761px){
+ #neoWorkspace>.neo-department-nav :is(.neo-single-department,.neo-department>summary,#navSignOut),
+ body[data-role="teacher"] #familyApp>.family-tabs :is(.family-overview-tab,.family-department>summary,.family-signout,#familyDownload),
+ body[data-role="parent"] #familyApp>.family-tabs :is(.family-overview-tab,.family-department>summary,.family-signout,#familyDownload){min-height:46px!important;font-size:13px!important;font-weight:800!important;line-height:1.3!important}
+ #neoWorkspace>.neo-department-nav .neo-department .actions button,
+ body[data-role="teacher"] #familyApp>.family-tabs .family-department-items button,
+ body[data-role="parent"] #familyApp>.family-tabs .family-department-items button{min-height:40px!important;font-size:12px!important;line-height:1.3!important}
+ #neoWorkspace>.neo-department-nav .neo-nav-icon,
+ #familyApp>.family-tabs .neo-nav-icon{width:29px!important;height:29px!important;flex:0 0 29px!important}
+ #neoWorkspace>.neo-department-nav .neo-work-icon,
+ #familyApp>.family-tabs .neo-work-icon{width:18px!important;height:18px!important}
+}
+
+@media(max-width:760px){
+ #neoWorkspace>.neo-department-nav :is(button,.neo-department>summary),
+ #familyApp>.family-tabs :is(button,.family-department>summary){font-size:14px!important;line-height:1.3!important;min-height:44px!important}
+ #neoWorkspace>.neo-department-nav .neo-nav-icon,#familyApp>.family-tabs .neo-nav-icon{width:29px!important;height:29px!important;flex:0 0 29px!important}
+}
