@@ -985,3 +985,40 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
  #familyApp>.family-tabs :is(button,.family-department>summary){font-size:14px!important;line-height:1.3!important;min-height:44px!important}
  #neoWorkspace>.neo-department-nav .neo-nav-icon,#familyApp>.family-tabs .neo-nav-icon{width:29px!important;height:29px!important;flex:0 0 29px!important}
 }
+
+/* Employee HR portal uses the same rail measurements and visual language. */
+#employeeApp .neo-icon-sprite{position:absolute;width:0;height:0;overflow:hidden}
+#employeeApp .neo-tone-0{--neo-glyph:#087fa7;--neo-glyph-bg:#e4f7fb}
+#employeeApp .neo-tone-1{--neo-glyph:#258651;--neo-glyph-bg:#e8f7ee}
+#employeeApp .neo-tone-2{--neo-glyph:#a26b0b;--neo-glyph-bg:#fff3dd}
+#employeeApp .neo-tone-3{--neo-glyph:#c66038;--neo-glyph-bg:#fff0e8}
+#employeeApp .neo-tone-4{--neo-glyph:#b54379;--neo-glyph-bg:#ffeaf2}
+#employeeApp .neo-nav-icon{display:inline-grid;place-items:center;flex:0 0 29px;width:29px;height:29px;border-radius:10px;background:var(--neo-glyph-bg);color:var(--neo-glyph)}
+#employeeApp .neo-work-icon{display:block;width:18px;height:18px}
+#employeeApp .employee-tabs{background:#102a60;border:1px solid #dce5f2;border-radius:20px;padding:26px 18px 18px;display:flex;flex-direction:column;min-height:0}
+#employeeApp .employee-rail-logo{flex:none;height:82px;margin:0 9px 20px;border:1px solid #e5edf7;border-radius:15px;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat;box-shadow:0 10px 28px #00133335}
+#employeeApp .employee-nav-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+#employeeApp .employee-tabs button{display:flex;align-items:center;gap:9px;min-height:46px;padding:9px 13px;width:100%;border:1px solid #2b4a80;border-radius:12px;background:#17356c;color:#fff;font-size:13px;font-weight:800;line-height:1.3;text-align:left;cursor:pointer}
+#employeeApp .employee-tabs button:hover,#employeeApp .employee-tabs button:focus-visible{background:#285089;outline:2px solid #56c5e4;outline-offset:2px}
+#employeeApp .employee-signout{flex:none;justify-content:center;margin-top:12px;box-shadow:0 -8px 18px #00133335}
+#employeeApp .employee-content{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:22px 24px 30px;background:#f7fbff;border-radius:20px;scrollbar-gutter:stable}
+@media(min-width:761px){
+ body:has(#employeeApp:not([hidden])){height:100dvh;overflow:hidden;background:#0b2055}
+ body:has(#employeeApp:not([hidden]))>header{display:none}
+ body:has(#employeeApp:not([hidden]))>main{max-width:none;margin:0;padding:0}
+ #employeeApp:not([hidden]){display:grid;grid-template-columns:255px minmax(0,1fr);grid-template-rows:200px minmax(0,1fr);gap:20px 22px;height:100dvh;padding:24px 28px;background:#0b2055;box-sizing:border-box}
+ #employeeApp>.portal-hero{grid-column:2;grid-row:1;height:200px;min-height:0;margin:0;padding:26px 32px;border-radius:20px}
+ #employeeApp>.employee-tabs{grid-column:1;grid-row:1/3;height:100%}
+ #employeeApp>.employee-content{grid-column:2;grid-row:2;height:100%}
+}
+@media(max-width:760px){
+ #employeeApp:not([hidden]){display:block;padding:12px;background:#0b2055}
+ #employeeApp>.portal-hero{margin:0 0 12px}
+ #employeeApp .employee-tabs{margin-bottom:12px;padding:12px}
+ #employeeApp .employee-rail-logo{display:none}
+ #employeeApp .employee-nav-scroll{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;overflow:visible}
+ #employeeApp .employee-tabs button{min-height:44px;font-size:14px}
+ #employeeApp .employee-content{padding:16px;overflow:visible}
+}
+
+@media(min-width:761px){body:has(#employeeApp:not([hidden])) #employeeStatus{position:fixed;z-index:50;right:30px;bottom:20px;max-width:min(440px,80vw);padding:9px 14px;border-radius:10px;background:#eef7ff;box-shadow:0 8px 22px #00133333}body:has(#employeeApp:not([hidden])) #employeeStatus:empty{display:none}}
