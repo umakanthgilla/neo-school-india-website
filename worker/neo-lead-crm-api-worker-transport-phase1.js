@@ -3443,8 +3443,8 @@ async function transportPortal(request,env,url){
   if(!await env.DB.prepare('SELECT school_id FROM neo_schools WHERE school_id=?').bind(schoolId).first())return out({error:'School not found.'},404);
   const dbKind='transport_'+kind,read=async(k,rid)=>portalRecord(env,schoolId,'transport_'+k,rid);
   if(request.method==='GET'){
-   const [routes,vehicles,assignments,trips,students,staff]=await Promise.all(['routes','vehicles','assignments','trips'].map(k=>portalRows(env,schoolId,'transport_'+k)).concat([portalRows(env,schoolId,'students'),portalRows(env,schoolId,'staff')]));
-   return out({routes,vehicles,assignments,trips,students:students.map(s=>({id:s.id,name:s.name,program:s.program})),staff:staff.map(s=>({id:s.id,name:s.name,status:s.status,department:s.department,staff_type:s.staff_type}))});
+   const [routes,vehicles,assignments,trips,students,staff,classrooms]=await Promise.all(['routes','vehicles','assignments','trips'].map(k=>portalRows(env,schoolId,'transport_'+k)).concat([portalRows(env,schoolId,'students'),portalRows(env,schoolId,'staff'),portalRows(env,schoolId,'classrooms')]));
+   return out({routes,vehicles,assignments,trips,students:students.map(s=>({id:s.id,name:s.name,program:s.program,classroom_id:s.classroom_id||''})),classrooms:classrooms.map(c=>({id:c.id,name:c.name,program:c.program,academic_year:c.academic_year})),staff:staff.map(s=>({id:s.id,name:s.name,status:s.status,department:s.department,staff_type:s.staff_type}))});
   }
   if(!['POST','PATCH'].includes(request.method))return out({error:'Method not allowed.'},405);
   const raw=await request.text();if(raw.length>12000)return out({error:'Request too large.'},413);
@@ -3468,12 +3468,12 @@ async function transportPortal(request,env,url){
     const stops=b.stops;if(!Array.isArray(stops)||!stops.length||stops.length>40||stops.some(s=>typeof s!=='string'||!s.trim()||s.length>100))return out({error:'Add 1–40 route stops.'},400);
     data={name:required('name'),vehicle_id:vehicle.id,driver_staff_id:driver.id,stops:stops.map(s=>s.trim()),active:true};
    }else if(kind==='assignments'){
-    const route=await read('routes',required('route_id',80)),student=await portalRecord(env,schoolId,'students',required('student_id',80)),stop=required('stop',100);
-    if(!route?.active||!student||!route.stops.includes(stop))return out({error:'Select a student and a stop on an active route.'},400);
-    if((await portalRows(env,schoolId,dbKind)).some(a=>a.active&&a.student_id===student.id))return out({error:'Student already has an active transport assignment.'},409);
+    const route=await read('routes',required('route_id',80)),student=await portalRecord(env,schoolId,'students',required('student_id',80)),classroom=await portalRecord(env,schoolId,'classrooms',required('classroom_id',80)),stop=required('stop',100);
+    if(!route?.active||!student||!classroom||student.classroom_id!==classroom.id||student.program!==classroom.program||!route.stops.includes(stop))return out({error:'Choose a student from the selected class and section, and a stop on an active route.'},400);
+    if((await portalRows(env,schoolId,dbKind)).some(a=>a.student_id===student.id))return out({error:'This child already has a locked transport assignment.'},409);
     const count=(await portalRows(env,schoolId,dbKind)).filter(a=>a.active&&a.route_id===route.id).length,vehicle=await read('vehicles',route.vehicle_id);
     if(count>=Number(vehicle?.capacity||0))return out({error:'Vehicle capacity reached.'},409);
-    data={route_id:route.id,student_id:student.id,stop,active:true};
+    data={route_id:route.id,student_id:student.id,classroom_id:classroom.id,program:classroom.program,stop,active:true};
    }else{
     const route=await read('routes',required('route_id',80)),date=required('date',10),direction=required('direction',10);
     if(!route?.active||date!==neoToday()||!['Pickup','Drop'].includes(direction))return out({error:'Choose an active route, today and Pickup or Drop.'},400);
@@ -3490,8 +3490,10 @@ async function transportPortal(request,env,url){
    if(!assigned?.active||assigned.driver_staff_id!==employee.staff_id||previous.date!==neoToday())return out({error:'Only your active trip today can be updated.'},403);
   }
   let data;
-  if(kind==='assignments'||kind==='vehicles'||kind==='routes'){
+  if(kind==='assignments')return out({error:'A saved child transport route is locked and cannot be changed.'},403);
+  if(kind==='vehicles'||kind==='routes'){
    if(b.active!==false)return out({error:'Only deactivation is supported. Create a new record for changes.'},400);
+   if(kind==='routes'&&(await portalRows(env,schoolId,'transport_assignments')).some(a=>a.active&&a.route_id===recordId))return out({error:'This route has assigned children and is locked.'},409);
    if(kind==='routes'&&(await portalRows(env,schoolId,'transport_trips')).some(t=>t.route_id===recordId&&t.date===neoToday()&&t.status!=='Completed'))return out({error:'Complete today’s trip first.'},409);
    data={...previous,active:false,updated_at:now};
   }else{
