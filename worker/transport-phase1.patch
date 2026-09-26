@@ -1,0 +1,151 @@
+--- a/neo-lead-crm-api-worker-head-office-ledger-v10.js
++++ b/neo-lead-crm-api-worker-head-office-ledger-v10.js
+@@ -218,6 +218,8 @@
+     }
+ 
+     const url = new URL(request.url);
++    const transportResponse = await transportPortal(request, env, url);
++    if (transportResponse) return transportResponse;
+     const supplyResponse = await supplyChain(request, env, url);
+     if (supplyResponse) return supplyResponse;
+     const learningResponse = await learningPortal(request, env, url);
+@@ -1764,7 +1766,7 @@
+  if(!url.pathname.startsWith('/api/employee/'))return null;const out=(b,status=200)=>json(b,status,request);try{await ensurePortalSchema(env);
+  if(url.pathname==='/api/employee/login'&&request.method==='POST'){const b=await request.json(),id=typeof b?.account_id==='string'?b.account_id.trim().toUpperCase():'';if(!/^NT-[A-Z0-9-]{8,32}$/.test(id)||typeof b.password!=='string'||b.password.length>128)return out({error:'Check Employee ID and password.'},400);const a=await env.DB.prepare('SELECT e.* FROM neo_employee_accounts e JOIN neo_schools s ON s.school_id=e.school_id WHERE e.account_id=? AND e.active=1 AND s.active=1').bind(id).first();const hash=await schoolPassword(b.password,a?.salt||'invalid-employee');if(!a||hash!==a.password_hash)return out({error:'Check Employee ID and password.'},401);return out({token:await employeeToken(a,env.ADMIN_PASSWORD)})}
+  const a=await employeeSession(request,env);if(!a)return out({error:'Employee sign in required.'},401);const staff=await portalRecord(env,a.school_id,'staff',a.staff_id);if(!staff||staff.status==='Inactive')return out({error:'Staff profile is unavailable.'},403);const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(a.school_id).first();const pick=async k=>(await portalRows(env,a.school_id,k)).filter(x=>x.staff_id===a.staff_id);
+- if(url.pathname==='/api/employee/me'&&request.method==='GET'){const notifications=(await portalRows(env,a.school_id,'notifications')).filter(n=>n.target==='staff:'+a.staff_id);return out({account_id:a.account_id,name:a.name,staff_id:a.staff_id,staff_type:a.staff_type,staff,school,leaves:await pick('staff_leave'),advances:await pick('salary_advances'),payroll:await pick('payroll'),attendance:await pick('staff_attendance'),notifications});}
++ if(url.pathname==='/api/employee/me'&&request.method==='GET'){const notifications=(await portalRows(env,a.school_id,'notifications')).filter(n=>n.target==='staff:'+a.staff_id);return out({account_id:a.account_id,name:a.name,school_id:a.school_id,staff_id:a.staff_id,staff_type:a.staff_type,staff,school,leaves:await pick('staff_leave'),advances:await pick('salary_advances'),payroll:await pick('payroll'),attendance:await pick('staff_attendance'),notifications});}
+  if(url.pathname==='/api/employee/hr/leave'&&request.method==='POST'){const b=await request.json(),valid=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v));if(!valid(b.from_date)||!valid(b.to_date)||b.to_date<b.from_date||!['Casual','Sick','Earned','Unpaid','Other'].includes(b.leave_type)||typeof b.reason!=='string'||!b.reason.trim()||b.reason.length>1000)return out({error:'Check leave dates, type and reason.'},400);const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={staff_id:a.staff_id,leave_type:b.leave_type,from_date:b.from_date,to_date:b.to_date,reason:b.reason.trim(),status:'Pending',requested_by:'employee:'+a.account_id};await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'staff_leave',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'employee:'+a.account_id,'POST:staff_leave',id),portalNotification(env,a.school_id,'hr','New leave request',a.name+' submitted a leave request.','staff_leave',id,'Unread','hr_workflow')]);return out({success:true,id,status:'Pending'},201)}
+  if(url.pathname==='/api/employee/hr/advance'&&request.method==='POST'){const b=await request.json(),amount=Number(b.amount_paise),installments=Number(b.installments||1);if(!Number.isSafeInteger(amount)||amount<=0||amount>100000000||!Number.isInteger(installments)||installments<1||installments>24||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(String(b.recovery_month||''))||typeof b.reason!=='string'||!b.reason.trim()||b.reason.length>1000)return out({error:'Check advance amount, recovery plan and reason.'},400);const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={staff_id:a.staff_id,amount_paise:amount,request_date:neoToday(),reason:b.reason.trim(),recovery_month:b.recovery_month,installments,status:'Pending',requested_by:'employee:'+a.account_id};await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'salary_advances',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'employee:'+a.account_id,'POST:salary_advances',id),portalNotification(env,a.school_id,'hr','New salary advance request',a.name+' submitted a salary advance request.','salary_advances',id,'Unread','hr_workflow')]);return out({success:true,id,status:'Pending'},201)}
+  if(url.pathname==='/api/employee/password'&&request.method==='POST'){const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a strong new password.'},400);if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt);await env.DB.batch([env.DB.prepare('UPDATE neo_employee_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(hash,salt,a.account_id),env.DB.prepare('UPDATE neo_teacher_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(hash,salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'employee:'+a.account_id,'password-change',a.account_id)]);return out({success:true})}
+@@ -3393,3 +3395,130 @@
+     published_at:data.published_at
+   });
+ }
++
++/* Transport phase 1: school-controlled routes and manifests; driver trip events;
++   child-scoped parent view. GPS is intentionally outside this workflow. */
++async function transportPortal(request,env,url){
++ if(!url.pathname.startsWith('/api/transport/'))return null;
++ const out=(body,status=200)=>json(body,status,request);
++ try{
++  await ensurePortalSchema(env);
++  await env.DB.batch([
++   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction')) WHERE kind='transport_trips'"),
++   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_child_once ON neo_portal_records(school_id,json_extract(data,'$.student_id')) WHERE kind='transport_assignments' AND json_extract(data,'$.active')=1"),
++   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_vehicle_once ON neo_portal_records(school_id,json_extract(data,'$.registration_no')) WHERE kind='transport_vehicles' AND json_extract(data,'$.active')=1")
++  ]);
++  const parts=url.pathname.split('/').filter(Boolean),scope=parts[2],kind=parts[3],id=parts[4];
++  const admin=await requireAdmin(request,env),school=admin?null:await schoolSession(request,env);
++  const parent=!admin&&!school?await parentSession(request,env):null;
++  const employee=!admin&&!school&&!parent?await employeeSession(request,env):null;
++  if(!admin&&!school&&!parent&&!employee)return out({error:'Sign in required.'},401);
++  if(scope==='parent'&&request.method==='GET'&&kind==='me'){
++   if(!parent)return out({error:'Parent access required.'},403);
++   const assignments=(await portalRows(env,parent.school_id,'transport_assignments')).filter(a=>a.student_id===parent.student_id&&a.active);
++   const routeIds=new Set(assignments.map(a=>a.route_id));
++   const routes=(await portalRows(env,parent.school_id,'transport_routes')).filter(r=>routeIds.has(r.id)&&r.active);
++   const vehicleIds=new Set(routes.map(r=>r.vehicle_id));
++   const vehicles=(await portalRows(env,parent.school_id,'transport_vehicles')).filter(v=>vehicleIds.has(v.id));
++   const trips=(await portalRows(env,parent.school_id,'transport_trips')).filter(t=>routeIds.has(t.route_id)&&t.date>=neoToday()&&t.date<=neoToday()).map(t=>({...t,events:(t.events||[]).filter(e=>e.student_id===parent.student_id)}));
++   return out({assignments,routes,vehicles,trips});
++  }
++  if(scope==='driver'&&request.method==='GET'&&kind==='me'){
++   if(!employee)return out({error:'Employee access required.'},403);
++   const routes=(await portalRows(env,employee.school_id,'transport_routes')).filter(r=>r.driver_staff_id===employee.staff_id&&r.active);
++   const routeIds=new Set(routes.map(r=>r.id));
++   const trips=(await portalRows(env,employee.school_id,'transport_trips')).filter(t=>routeIds.has(t.route_id)&&t.date===neoToday());
++   const assignments=(await portalRows(env,employee.school_id,'transport_assignments')).filter(a=>routeIds.has(a.route_id)&&a.active);
++   const students=(await portalRows(env,employee.school_id,'students')).filter(s=>assignments.some(a=>a.student_id===s.id)).map(s=>({id:s.id,name:s.name}));
++   return out({routes,trips,assignments,students});
++  }
++  const isDriver=scope==='driver'&&kind==='trips'&&request.method==='PATCH';
++  if(scope!=='school'&&!isDriver||!kind||!['routes','vehicles','assignments','trips'].includes(kind))return out({error:'Not found.'},404);
++  const schoolId=parts[4]; // /api/transport/school/:kind/:school_id[/id]
++  const recordId=parts[5];
++  if(!schoolId)return out({error:'School required.'},400);
++  if(isDriver){
++   if(!employee||employee.school_id!==schoolId)return out({error:'Driver access denied.'},403);
++  }else if(!admin&&(!school||school.school_id!==schoolId))return out({error:'Access denied.'},403);
++  if(!await env.DB.prepare('SELECT school_id FROM neo_schools WHERE school_id=?').bind(schoolId).first())return out({error:'School not found.'},404);
++  const dbKind='transport_'+kind,read=async(k,rid)=>portalRecord(env,schoolId,'transport_'+k,rid);
++  if(request.method==='GET'){
++   const [routes,vehicles,assignments,trips,students,staff]=await Promise.all(['routes','vehicles','assignments','trips'].map(k=>portalRows(env,schoolId,'transport_'+k)).concat([portalRows(env,schoolId,'students'),portalRows(env,schoolId,'staff')]));
++   return out({routes,vehicles,assignments,trips,students:students.map(s=>({id:s.id,name:s.name,program:s.program})),staff:staff.map(s=>({id:s.id,name:s.name,status:s.status,department:s.department,staff_type:s.staff_type}))});
++  }
++  if(!['POST','PATCH'].includes(request.method))return out({error:'Method not allowed.'},405);
++  const raw=await request.text();if(raw.length>12000)return out({error:'Request too large.'},413);
++  let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid JSON.'},400)}
++  if(!b||typeof b!=='object'||Array.isArray(b))return out({error:'Invalid record.'},400);
++  const val=(k,max=160)=>typeof b[k]==='string'?b[k].trim().slice(0,max+1):'';
++  const required=(k,max=160)=>{const v=val(k,max);if(!v||v.length>max)throw Error('Check '+k+'.');return v};
++  const actor=isDriver?'driver:'+employee.staff_id:admin?'head-office':'school:'+schoolId;
++  const now=new Date().toISOString();
++  if(request.method==='POST'){
++   const rid=required('request_id',80);if(!/^[A-Za-z0-9_-]{8,80}$/.test(rid))return out({error:'Invalid request ID.'},400);
++   if(await read(kind,rid))return out({error:'Submission already exists.'},409);
++   let data;
++   if(kind==='vehicles'){
++    data={registration_no:required('registration_no',30).toUpperCase(),label:required('label'),capacity:Number(b.capacity),active:true};
++    if(!Number.isInteger(data.capacity)||data.capacity<1||data.capacity>100)return out({error:'Capacity must be 1–100.'},400);
++    if((await portalRows(env,schoolId,dbKind)).some(v=>v.registration_no===data.registration_no&&v.active))return out({error:'Vehicle registration already exists.'},409);
++   }else if(kind==='routes'){
++    const vehicle=await read('vehicles',required('vehicle_id',80)),driver=await portalRecord(env,schoolId,'staff',required('driver_staff_id',80));
++    if(!vehicle?.active||!driver||driver.status==='Inactive')return out({error:'Choose an active vehicle and staff driver.'},400);
++    const stops=b.stops;if(!Array.isArray(stops)||!stops.length||stops.length>40||stops.some(s=>typeof s!=='string'||!s.trim()||s.length>100))return out({error:'Add 1–40 route stops.'},400);
++    data={name:required('name'),vehicle_id:vehicle.id,driver_staff_id:driver.id,stops:stops.map(s=>s.trim()),active:true};
++   }else if(kind==='assignments'){
++    const route=await read('routes',required('route_id',80)),student=await portalRecord(env,schoolId,'students',required('student_id',80)),stop=required('stop',100);
++    if(!route?.active||!student||!route.stops.includes(stop))return out({error:'Select a student and a stop on an active route.'},400);
++    if((await portalRows(env,schoolId,dbKind)).some(a=>a.active&&a.student_id===student.id))return out({error:'Student already has an active transport assignment.'},409);
++    const count=(await portalRows(env,schoolId,dbKind)).filter(a=>a.active&&a.route_id===route.id).length,vehicle=await read('vehicles',route.vehicle_id);
++    if(count>=Number(vehicle?.capacity||0))return out({error:'Vehicle capacity reached.'},409);
++    data={route_id:route.id,student_id:student.id,stop,active:true};
++   }else{
++    const route=await read('routes',required('route_id',80)),date=required('date',10),direction=required('direction',10);
++    if(!route?.active||date!==neoToday()||!['Pickup','Drop'].includes(direction))return out({error:'Choose an active route, today and Pickup or Drop.'},400);
++    if((await portalRows(env,schoolId,dbKind)).some(t=>t.route_id===route.id&&t.date===date&&t.direction===direction))return out({error:'This trip already exists today.'},409);
++    data={route_id:route.id,date,direction,status:'Planned',events:[],started_at:null,completed_at:null};
++   }
++   await env.DB.batch([env.DB.prepare('INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(schoolId,dbKind,rid,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),schoolId,actor,'POST:'+dbKind,rid)]);
++   return out({success:true,id:rid,record:data},201);
++  }
++  if(!recordId)return out({error:'Record ID required.'},400);
++  const previous=await read(kind,recordId);if(!previous)return out({error:'Record not found.'},404);
++  if(isDriver){
++   const assigned=await read('routes',previous.route_id);
++   if(!assigned?.active||assigned.driver_staff_id!==employee.staff_id||previous.date!==neoToday())return out({error:'Only your active trip today can be updated.'},403);
++  }
++  let data;
++  if(kind==='assignments'||kind==='vehicles'||kind==='routes'){
++   if(b.active!==false)return out({error:'Only deactivation is supported. Create a new record for changes.'},400);
++   if(kind==='routes'&&(await portalRows(env,schoolId,'transport_trips')).some(t=>t.route_id===recordId&&t.date===neoToday()&&t.status!=='Completed'))return out({error:'Complete today’s trip first.'},409);
++   data={...previous,active:false,updated_at:now};
++  }else{
++   const eventType=val('event_type',30),studentId=val('student_id',80),next=eventType?'':required('status',40),arrival=previous.direction==='Pickup'?['Arrived school']:[],allowed={Planned:['Started'],Started:['Approaching','At stop',...arrival,'Completed'],Approaching:['At stop',...arrival,'Completed'],'At stop':['Approaching',...arrival,'Completed'],'Arrived school':['Completed'],Completed:[]};
++   if(eventType){
++    const valid=previous.direction==='Pickup'?['Ready','Picked up','Dropped at school','Absent']:['Boarded at school','Dropped at stop','Absent'];
++    if(previous.status==='Planned'||previous.status==='Completed'||!valid.includes(eventType))return out({error:'Start the trip and choose a valid child event.'},409);
++    const assignment=(await portalRows(env,schoolId,'transport_assignments')).find(a=>a.active&&a.route_id===previous.route_id&&a.student_id===studentId);
++    if(!assignment)return out({error:'Child is not assigned to this route.'},403);
++    const already=(previous.events||[]).some(e=>e.student_id===studentId&&e.type===eventType);
++    if(already)return out({error:'Child event already recorded.'},409);
++    data={...previous,events:[...(previous.events||[]),{student_id:studentId,type:eventType,at:now,actor}]};
++   }else{
++    if(!allowed[previous.status]?.includes(next))return out({error:'Invalid trip transition.'},409);
++    if(next==='Completed'){
++     const children=(await portalRows(env,schoolId,'transport_assignments')).filter(a=>a.active&&a.route_id===previous.route_id);
++     const terminal=previous.direction==='Pickup'?'Dropped at school':'Dropped at stop';
++     if(children.some(a=>!(previous.events||[]).some(e=>e.student_id===a.student_id&&[terminal,'Absent'].includes(e.type))))return out({error:'Record each child as dropped or absent before completing this trip.'},409);
++    }
++    data={...previous,status:next,started_at:next==='Started'?now:previous.started_at,completed_at:next==='Completed'?now:null,updated_at:now};
++   }
++  }
++  const oldJson=JSON.stringify((({id,created_at,...rest})=>rest)(previous));
++  const cleanData=(({id,created_at,...rest})=>rest)(data);
++  const result=await env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=? AND id=? AND data=?').bind(JSON.stringify(cleanData),schoolId,dbKind,recordId,oldJson).run();
++  if(!result.meta?.changes)return out({error:'Record changed. Refresh and retry.'},409);
++  await env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),schoolId,actor,'PATCH:'+dbKind,recordId).run();
++  return out({success:true,record:cleanData});
++ }catch(e){console.error('Transport error',e);return out({error:e?.message||'Transport request failed.'},400)}
++}
