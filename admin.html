@@ -496,6 +496,14 @@ body main section.reminders .reminder-col h3 {
 }
 </style>
 <link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">
+<style>
+/* Pin the Head Office logo and Sign out in its desktop rail. */
+@media(min-width:761px){
+ #appView .workspace-nav{padding-top:26px}
+ #appView .workspace-nav:before{position:sticky;top:0;left:auto;right:auto;z-index:6;flex:none;width:auto;height:82px;margin:0 9px 22px;box-sizing:border-box}
+ #appView .workspace-nav .logout{position:sticky;bottom:0;z-index:6;flex:none;margin-top:auto;box-shadow:0 -8px 18px #00133335}
+}
+</style>
 <body>
 
 <section id="loginView" class="login-shell">
