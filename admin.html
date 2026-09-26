@@ -272,6 +272,28 @@ body main section.reminders .reminder-col h3 {
 #appView #headOfficeBellCount{position:absolute;top:-7px;right:-6px;min-width:18px;height:18px;padding:1px 4px;border:2px solid #fff;border-radius:20px;background:#d92d20;color:#fff;font-size:10px;line-height:14px}
 #appView .head-office-header-tools button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media(max-width:700px){#appView .topbar-inner{grid-template-columns:minmax(0,1fr) auto auto!important}#appView .brand-logo{max-width:72px!important}#appView .head-office-header-tools{grid-column:2;grid-row:1}#headOfficeMobileMenu{grid-column:3;grid-row:1}#appView .workspace-nav{grid-row:2}#appView .head-office-header-tools button{min-width:34px;height:38px;padding:5px}}
+
+/* Teacher desktop shell proportions for the Head Office dashboard. */
+@media(min-width:761px){
+ body:has(#appView:not(.hidden)){height:100dvh;overflow:hidden;background:#0b2055}
+ #appView:not(.hidden){display:grid!important;position:relative;height:100dvh;padding:32px 36px;grid-template-columns:255px minmax(0,1fr);grid-template-rows:200px minmax(0,1fr);gap:20px 22px;overflow:hidden;background:#0b2055}
+ #appView .topbar{grid-column:2;grid-row:1;position:static;height:200px;margin:0;border:0;border-radius:20px;background:linear-gradient(120deg,#071943 0%,#0b285d 62%,#123d70);box-shadow:0 14px 38px #06163726}
+ #appView .topbar:before{height:5px;position:absolute;top:calc(32px + 195px);left:calc(36px + 277px);right:36px;z-index:1;background:var(--grad)}
+ #appView .topbar-inner{height:100%;max-width:none;padding:26px 32px;justify-content:space-between}
+ #appView .brand-logo{display:none}
+ #appView .brand strong{font-size:30px;line-height:1.2}
+ #appView .brand-copy span{font-size:14px}
+ #appView .head-office-hero-owl{display:block;flex:none;width:104px;height:124px;object-fit:contain;border-radius:20px;background:#fff}
+ #appView .workspace-nav{position:absolute;top:32px;left:36px;z-index:5;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:7px;width:255px;height:calc(100dvh - 64px);margin:0;padding:128px 18px 28px;overflow-y:auto;border:1px solid #dce5f2;border-radius:20px;background:#102a60;scrollbar-gutter:stable}
+ #appView .workspace-nav:before{content:"";display:block;position:absolute;top:26px;left:28px;right:28px;height:82px;border:1px solid #e5edf7;border-radius:15px;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat;box-shadow:0 10px 28px #00133335}
+ #appView .workspace-nav .workspace-badge{display:none}
+ #appView .workspace-nav :is(a,button){width:100%;min-height:46px;margin:0;justify-content:flex-start;text-align:left;background:#17356c;color:#fff;border:1px solid #2b4a80}
+ #appView .workspace-nav .logout{margin-top:auto;background:#17356c;color:#fff}
+ #appView .wrap{grid-column:2;grid-row:2;height:100%;min-height:0;max-width:none;margin:0;padding:22px 24px 30px;overflow-y:auto;overflow-x:hidden;border-radius:20px;background:#f7fbff;scrollbar-gutter:stable}
+ #appView .wrap>.hero{display:none}
+}
+@media(min-width:761px) and (max-width:1100px){#appView .brand-copy span{display:none}}
+@media(max-width:760px){#appView .head-office-hero-owl{display:none}}
 </style>
 <style id="neo-head-office-upgrade">
 .workspace-nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.workspace-nav a,.workspace-nav button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:11px;padding:9px 12px;font-size:11px;font-weight:850;text-decoration:none;cursor:pointer}
@@ -491,7 +513,7 @@ body main section.reminders .reminder-col h3 {
     <div class="topbar-inner">
       <div class="brand"><img src="neo-top-logo.jpeg" alt="Neo School India" class="brand-logo"><div class="brand-copy"><strong>Head Office</strong><span>Franchise • Admissions • Follow-up</span></div></div>
       <div class="head-office-header-tools"><button type="button" id="headOfficeBack" hidden aria-label="Go back to overview">←</button><button type="button" id="headOfficeBell" aria-label="New enquiries"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="headOfficeBellCount" hidden>0</span></button></div>
-      <button type="button" id="headOfficeMobileMenu" aria-expanded="false" aria-controls="headOfficeNav">☰ Menu</button><div id="headOfficeNav" class="top-actions workspace-nav"><span class="workspace-badge">Main Admin</span><a class="web-link" href="index.html" target="_blank"><span class="neo-glyph nav-glyph cyan" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-globe"></use></svg></span>View Website</a><a href="schools.html"><span class="neo-glyph nav-glyph green" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-school"></use></svg></span>School Portal</a><a href="curriculum-master.html"><span class="neo-glyph nav-glyph violet" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-book"></use></svg></span>Curriculum Master</a><button id="exportBtn" type="button"><span class="neo-glyph nav-glyph amber" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-download"></use></svg></span>Export CSV</button><button id="manageAssigneesBtn" type="button"><span class="neo-glyph nav-glyph pink" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-users"></use></svg></span>Team</button><button id="logoutBtn" class="logout"><span class="neo-glyph nav-glyph rose" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-logout"></use></svg></span>Logout</button></div>
+      <button type="button" id="headOfficeMobileMenu" aria-expanded="false" aria-controls="headOfficeNav">☰ Menu</button><div id="headOfficeNav" class="top-actions workspace-nav"><span class="workspace-badge">Main Admin</span><a class="web-link" href="index.html" target="_blank"><span class="neo-glyph nav-glyph cyan" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-globe"></use></svg></span>View Website</a><a href="schools.html"><span class="neo-glyph nav-glyph green" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-school"></use></svg></span>School Portal</a><a href="curriculum-master.html"><span class="neo-glyph nav-glyph violet" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-book"></use></svg></span>Curriculum Master</a><button id="exportBtn" type="button"><span class="neo-glyph nav-glyph amber" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-download"></use></svg></span>Export CSV</button><button id="manageAssigneesBtn" type="button"><span class="neo-glyph nav-glyph pink" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-users"></use></svg></span>Team</button><button id="logoutBtn" class="logout"><span class="neo-glyph nav-glyph rose" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-logout"></use></svg></span>Logout</button></div><img class="head-office-hero-owl" src="/neo%20owl.jpeg" alt="Neo owl" width="104" height="124">
     </div>
   </header>
 
