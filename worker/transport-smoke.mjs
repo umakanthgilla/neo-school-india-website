@@ -43,6 +43,7 @@ r=await call('school/access/'+schoolId,'POST',{staff_id:'DRIVER01',role:'Driver'
 r=await call('login','POST',{account_id:account,password:'TestDriver1!'},'');assert(r.status===200,'driver login '+JSON.stringify(r));const driver=r.body.token;
 r=await call('driver/me','GET',null,driver);assert(r.status===200&&r.body.routes.length===1&&r.body.students.length===3,'scoped manifest');
 const photo='data:image/jpeg;base64,'+Buffer.from([255,216,1,2,255,217]).toString('base64');
+r=await call('school/access/'+schoolId,'POST',{staff_id:'OTHER001',role:'Driver',password:'OtherStaff1!'});assert(r.status===400,'unassigned staff cannot get access');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},schoolToken);assert(r.status===401,'school cannot start');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},driver);assert(r.status===201,'driver start '+JSON.stringify(r));const trip=r.body.id;
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:2,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},driver);assert(r.status===201,'independent second run '+JSON.stringify(r));
@@ -52,6 +53,7 @@ r=await call('driver/event','POST',{trip_id:trip,student_id:'CHILD002',event_typ
 r=await call('driver/event','POST',{trip_id:trip,student_id:'CHILD001',event_type:'Picked up'},driver);assert(r.status===200,'first child '+JSON.stringify(r));
 r=await call('driver/event','POST',{trip_id:trip,student_id:'CHILD002',event_type:'Absent'},driver);assert(r.status===200,'second child');
 r=await call('driver/finish','POST',{trip_id:trip,odometer_km:102,photo},driver);assert(r.status===200,'finish '+JSON.stringify(r));
+const imageRequest=req('photo/'+trip+'/finish','GET',null,driver);const image=await transportOperations(imageRequest,env,new URL(imageRequest.url));assert(image.status===200&&image.headers.get('Content-Type')==='image/jpeg','photo retrieval');
 const parent=await token('parent',{account_id:'NP-PARENT01'},'parent-hash');
 db.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt) VALUES (?,?,?,?,?)').run('NP-PARENT01',schoolId,'CHILD001','parent-hash','salt');
 r=await call('parent/me','GET',null,parent);assert(r.status===200&&r.body.trips.length===1&&r.body.alerts.length===1,'child-scoped parent view '+JSON.stringify(r));
