@@ -3515,9 +3515,10 @@ async function transportPortal(request,env,url){
    }
   }
   const oldJson=JSON.stringify((({id,created_at,...rest})=>rest)(previous));
-  const result=await env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=? AND id=? AND data=?').bind(JSON.stringify(data),schoolId,dbKind,recordId,oldJson).run();
+  const cleanData=(({id,created_at,...rest})=>rest)(data);
+  const result=await env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=? AND id=? AND data=?').bind(JSON.stringify(cleanData),schoolId,dbKind,recordId,oldJson).run();
   if(!result.meta?.changes)return out({error:'Record changed. Refresh and retry.'},409);
   await env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),schoolId,actor,'PATCH:'+dbKind,recordId).run();
-  return out({success:true,record:data});
+  return out({success:true,record:cleanData});
  }catch(e){console.error('Transport error',e);return out({error:e?.message||'Transport request failed.'},400)}
 }
