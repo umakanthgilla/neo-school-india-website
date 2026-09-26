@@ -1033,3 +1033,40 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #familyApp>.family-tabs .family-department>summary{position:relative}
 #employeeApp .employee-tabs button[aria-current="page"]{position:relative;background:#285089;border-color:#5c83b3}
 #employeeApp .employee-tabs button[aria-current="page"]:after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;background:var(--rainbow);border-radius:3px}
+
+/* Shared thin rail border and contained scrolling. Logos and Sign out stay in place. */
+@media(min-width:761px){
+ #neoWorkspace>.neo-department-nav,
+ body[data-role="parent"] #familyApp>.family-tabs,
+ body[data-role="teacher"] #familyApp>.family-tabs,
+ #employeeApp>.employee-tabs{border:1px solid #dce5f2!important;border-radius:20px!important}
+ #neoWorkspace>.neo-department-nav{display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:26px 18px 18px!important;overflow:hidden!important;scrollbar-gutter:auto!important}
+ #neoWorkspace>.neo-department-nav:before{display:none!important}
+ #neoWorkspace>.neo-department-nav .school-rail-logo{flex:none;height:82px;margin:0 9px 20px;border:1px solid #e5edf7;border-radius:15px;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat;box-shadow:0 10px 28px #00133335}
+ #neoWorkspace>.neo-department-nav .school-nav-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 2px 10px;overscroll-behavior:contain}
+ #neoWorkspace>.neo-department-nav #navSignOut{position:static!important;flex:none;width:100%;min-height:46px;margin:12px 0 0!important}
+ body[data-role="parent"] #familyApp>.family-tabs,body[data-role="teacher"] #familyApp>.family-tabs{display:flex!important;flex-direction:column!important;align-items:stretch!important;padding:26px 18px 18px!important;overflow:hidden!important;scrollbar-gutter:auto!important}
+ body[data-role="parent"] #familyApp>.family-tabs:before,body[data-role="teacher"] #familyApp>.family-tabs:before{position:static!important;display:block!important;flex:none!important;top:auto!important;left:auto!important;right:auto!important;transform:none!important;width:calc(100% - 18px)!important;height:82px!important;margin:0 9px 20px!important;padding:0!important;background:#fff url('/neo-top-logo.jpeg') center/82% auto no-repeat!important}
+ body[data-role="parent"] #familyApp>.family-tabs .family-nav-scroll,body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 2px 10px!important;scrollbar-gutter:auto!important;overscroll-behavior:contain}
+ body[data-role="parent"] #familyApp>.family-tabs .family-signout,body[data-role="teacher"] #familyApp>.family-tabs .family-signout{position:static!important;flex:none;width:100%!important;margin:12px 0 0!important;min-height:46px!important}
+}
+@media(max-width:760px){
+ #neoWorkspace>.neo-department-nav{border:1px solid #dce5f2!important;border-radius:16px!important}
+ #neoWorkspace>.neo-department-nav:before,#neoWorkspace>.neo-department-nav .school-rail-logo{display:none!important}
+ #neoWorkspace>.neo-department-nav .school-nav-scroll{display:block;max-height:70dvh;overflow-y:auto}
+ #neoWorkspace>.neo-department-nav:not(.mobile-menu-open) .school-nav-scroll{display:none!important}
+ #neoWorkspace>.neo-department-nav.mobile-menu-open{max-height:none!important;overflow:visible!important}
+ #neoWorkspace>.neo-department-nav #navSignOut{position:static!important}
+}
+#neoWorkspace>.neo-department-nav .school-nav-scroll,
+#familyApp>.family-tabs .family-nav-scroll,
+#employeeApp .employee-nav-scroll{scrollbar-width:thin;scrollbar-color:#8caed2 transparent}
+#neoWorkspace>.neo-department-nav .school-nav-scroll::-webkit-scrollbar,
+#familyApp>.family-tabs .family-nav-scroll::-webkit-scrollbar,
+#employeeApp .employee-nav-scroll::-webkit-scrollbar{width:6px}
+#neoWorkspace>.neo-department-nav .school-nav-scroll::-webkit-scrollbar-track,
+#familyApp>.family-tabs .family-nav-scroll::-webkit-scrollbar-track,
+#employeeApp .employee-nav-scroll::-webkit-scrollbar-track{background:transparent}
+#neoWorkspace>.neo-department-nav .school-nav-scroll::-webkit-scrollbar-thumb,
+#familyApp>.family-tabs .family-nav-scroll::-webkit-scrollbar-thumb,
+#employeeApp .employee-nav-scroll::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
