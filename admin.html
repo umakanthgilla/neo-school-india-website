@@ -595,7 +595,6 @@ body main section.reminders .reminder-col h3 {
         <option>New</option><option>Contacted</option><option>Follow-up</option><option>Interested</option>
         <option>Visit / Meeting</option><option>Decision Pending</option><option>Converted</option><option>Lost</option>
       </select>
-      <button id="refreshBtn" type="button"><span class="neo-glyph action-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-clock"></use></svg></span>Refresh</button>
     </section>
 
     <section class="table-card">
@@ -810,7 +809,7 @@ $("#loginForm").addEventListener("submit", async e=>{
 });
 
 $("#logoutBtn").onclick=()=>{token="";sessionStorage.removeItem("neo_crm_token");showLogin()};
-$("#refreshBtn").onclick=loadAll;
+
 $("#typeFilter").onchange=loadLeads; $("#statusFilter").onchange=loadLeads;
 let searchTimer; $("#search").oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(loadLeads,300)};
 
