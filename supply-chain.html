@@ -114,6 +114,14 @@ body:has(#app:not(.hidden)){background:#0b2055}
 #app .side .nav-group.open .nav-subtab{border-color:#3c6096}
 #app .side .nav-group.open+.nav-group{margin-top:5px}
 </style>
+<style>
+/* Consistent Neo sidebar border and slim light-blue scrollbar. */
+#app .side{border:1px solid #dce5f2;border-radius:20px}
+#app .side .supply-nav-scroll{scrollbar-width:thin;scrollbar-color:#8caed2 transparent}
+#app .side .supply-nav-scroll::-webkit-scrollbar{width:6px}
+#app .side .supply-nav-scroll::-webkit-scrollbar-track{background:transparent}
+#app .side .supply-nav-scroll::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
+</style>
 </head>
 <body>
 <section id="login" class="login"><form id="loginForm" class="login-card"><img src="/neo-top-logo.jpeg" alt="Neo School India"><h1>Supply Chain CRM</h1><p>Private Head Office procurement, warehouse and fulfillment workspace.</p><label>Head Office password<input name="password" type="password" autocomplete="current-password" required></label><button>Sign in</button><p id="loginError" class="error"></p></form></section>
