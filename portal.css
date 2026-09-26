@@ -938,3 +938,11 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
  #neoWorkspace:not([hidden]){background:#0b2055!important}
  #neoWorkspace>#portalContent{background:#f7fbff!important;border-radius:16px!important;padding:16px!important}
 }
+
+/* Shared hero controls: Back under identity, refresh and notifications beside Neo. */
+.portal-hero-refresh{position:absolute;top:20px;right:182px;z-index:3;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid rgba(255,255,255,.30);border-radius:50%;background:rgba(255,255,255,.10);color:#fff;font-size:26px;font-weight:500;line-height:1;cursor:pointer;box-shadow:0 5px 14px rgba(3,18,56,.14)}
+.portal-hero-refresh:hover,.portal-hero-refresh:focus-visible{background:rgba(255,255,255,.18);outline:2px solid rgba(255,255,255,.9);outline-offset:2px}
+#neoWorkspace>.portal-hero .portal-hero-back{position:static!important;min-height:34px;padding:6px 13px;box-shadow:none}
+#neoWorkspace>.portal-hero .portal-identity .portal-hero-actions{display:flex;align-items:center;gap:12px;margin-top:14px;height:auto}
+@media(max-width:720px){.portal-hero-refresh{top:14px;right:130px;width:36px;height:36px;font-size:24px}#neoWorkspace>.portal-hero .portal-hero-back{position:static!important}}
+@media print{.portal-hero-refresh{display:none!important}}
