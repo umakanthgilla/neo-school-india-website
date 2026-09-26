@@ -106,7 +106,7 @@ head('Dispatch & Courier Tracking','Ship packed orders and monitor delivery to e
 async function patch(kind,id,status){try{await api('/api/supply/'+kind+'/'+encodeURIComponent(id),'PATCH',{status});await load();note('✓ Status updated to '+status+'.')}catch(e){note(e.message,true)}}
 window.addEventListener('load',()=>{if(token)start()});
 </script>
-<script src="/supply-material-hub.js?v=50"></script>
+<script src="/supply-material-hub.js?v=51"></script>
 <script src="/supply-dispatch-batch.js?v=3"></script>
 <script>
 /* Shared workspace back and action alerts. Counts are derived from loaded records. */
