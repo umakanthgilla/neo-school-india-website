@@ -946,3 +946,22 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #neoWorkspace>.portal-hero .portal-identity .portal-hero-actions{display:flex;align-items:center;gap:12px;margin-top:14px;height:auto}
 @media(max-width:720px){.portal-hero-refresh{top:14px;right:130px;width:36px;height:36px;font-size:24px}#neoWorkspace>.portal-hero .portal-hero-back{position:static!important}}
 @media print{.portal-hero-refresh{display:none!important}}
+
+/* Match the school department icons across parent and teacher navigation. */
+#familyApp .neo-work-icon{width:18px;height:18px;display:block;flex:none}
+#familyApp .neo-tone-0{--neo-glyph:#087fa7;--neo-glyph-bg:#e4f7fb}
+#familyApp .neo-tone-1{--neo-glyph:#258651;--neo-glyph-bg:#e8f7ee}
+#familyApp .neo-tone-2{--neo-glyph:#a26b0b;--neo-glyph-bg:#fff3dd}
+#familyApp .neo-tone-3{--neo-glyph:#c66038;--neo-glyph-bg:#fff0e8}
+#familyApp .neo-tone-4{--neo-glyph:#b54379;--neo-glyph-bg:#ffeaf2}
+#familyApp .family-tabs .neo-nav-icon{display:inline-grid;place-items:center;flex:none;width:29px;height:29px;border-radius:10px;background:var(--neo-glyph-bg);color:var(--neo-glyph)}
+#familyApp .family-tabs .family-department>summary{display:flex;align-items:center;gap:9px}
+#familyApp .family-tabs .family-department-label{flex:1;min-width:0}
+#familyApp .family-tabs .family-department-items button,#familyApp .family-tabs .family-overview-tab,#familyApp .family-tabs #familyDownload{display:flex;align-items:center;gap:9px}
+#familyApp .family-tabs .family-signout{display:flex;align-items:center;justify-content:center;gap:9px}
+@media(min-width:1101px){
+ #neoWorkspace>.neo-department-nav{padding-top:26px!important}
+ #neoWorkspace>.neo-department-nav:before{position:sticky;top:0;left:auto;right:auto;z-index:5;width:auto;height:82px;margin:0 9px 22px;flex:none;box-sizing:border-box}
+}
+
+#familyApp .neo-icon-sprite{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
