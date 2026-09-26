@@ -1070,3 +1070,9 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #neoWorkspace>.neo-department-nav .school-nav-scroll::-webkit-scrollbar-thumb,
 #familyApp>.family-tabs .family-nav-scroll::-webkit-scrollbar-thumb,
 #employeeApp .employee-nav-scroll::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
+
+/* School portal starts at the same desktop canvas edge as Supply Chain. */
+@media(min-width:761px){
+ body:has(#neoWorkspace:not([hidden])) main{position:relative!important;padding:0!important}
+ #neoWorkspace:not([hidden]){position:absolute!important;inset:24px 28px!important;width:auto!important;height:auto!important;margin:0!important;min-height:0!important}
+}
