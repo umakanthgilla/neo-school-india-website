@@ -9,7 +9,7 @@ Branch: `transport-phase1`
 - No GPS or CCTV dependency.
 
 ## Deployment dependency
-The frontend can be merged after the API Worker is deployed. The current public Worker does not yet serve `/api/transport`; merging the frontend first would show an unavailable state.
+The frontend can be merged after the API Worker is deployed. The full Worker file was reconciled against the current Cloudflare editor copy supplied by the user on 2026-09-26; existing application logic was preserved, with transport routes and a school_id field in employee /me added. The current public Worker does not yet serve `/api/transport`; merging the frontend first would show an unavailable state.
 
 Deploy the complete `worker/neo-lead-crm-api-worker-transport-phase1.js` script, or apply `worker/transport-phase1.patch` to the exact `neo-lead-crm-api-worker-head-office-ledger-v10.js` source from the v10 Worker package, then deploy the patched Worker with the existing Cloudflare D1 binding and environment variables. The patch does not add a D1 migration file: it creates its three partial unique indexes on first transport request, and uses the existing `neo_portal_records` and `neo_portal_audit` tables.
 
