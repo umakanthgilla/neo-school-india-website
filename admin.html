@@ -524,7 +524,13 @@ body main section.reminders .reminder-col h3 {
  #appView .workspace-nav .logout{min-height:46px!important}
 }
 </style>
-<style>@media(max-width:760px){#appView .workspace-nav :is(a,button){min-height:44px;font-size:14px;line-height:1.3}#appView .workspace-nav .nav-glyph{width:29px;height:29px;flex:0 0 29px}}</style><body>
+<style>@media(max-width:760px){#appView .workspace-nav :is(a,button){min-height:44px;font-size:14px;line-height:1.3}#appView .workspace-nav .nav-glyph{width:29px;height:29px;flex:0 0 29px}}</style><style>
+#appView .workspace-nav{border:1px solid #dce5f2;border-radius:20px;scrollbar-width:thin;scrollbar-color:#8caed2 transparent}
+#appView .workspace-nav::-webkit-scrollbar{width:6px}
+#appView .workspace-nav::-webkit-scrollbar-track{background:transparent}
+#appView .workspace-nav::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
+</style>
+<body>
 
 <section id="loginView" class="login-shell">
   <form id="loginForm" class="login-card">
