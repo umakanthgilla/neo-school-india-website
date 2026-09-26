@@ -910,3 +910,14 @@ body[data-role="teacher"] #familyApp>.family-tabs .family-nav-scroll button.nav-
 #neoWorkspace>.neo-department-nav .neo-department[open]+:is(.neo-department,.neo-single-department){
   margin-top:5px;
 }
+
+/* One white notification glyph and readable colored section icons across school, teacher and parent workspaces. */
+.portal-alert-bell .portal-bell-icon{fill:#fff!important;color:#fff!important}
+body[data-role="teacher"] #familyApp .family-nav-scroll button,
+body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!important;align-items:center!important;gap:9px!important}
+.family-nav-icon{flex:none;display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#dff3fb;color:#087b9d;font-size:16px;font-weight:900;line-height:1}
+.family-nav-icon[data-icon="attendance"],.family-nav-icon[data-icon="fees"]{background:#e3f6e8;color:#16743a}
+.family-nav-icon[data-icon="calendar"],.family-nav-icon[data-icon="announcements"],.family-nav-icon[data-icon="homework"]{background:#fff1dc;color:#a65e00}
+.family-nav-icon[data-icon="activities"],.family-nav-icon[data-icon="tickets"],.family-nav-icon[data-icon="password"]{background:#fdeaf2;color:#a93665}
+.family-nav-icon[data-icon="employee_hub"],.family-nav-icon[data-icon="downloads"],.family-nav-icon[data-icon="curriculum"]{background:#e8ecff;color:#4457ad}
+@media(max-width:760px){.family-nav-icon{width:24px;height:24px}}
