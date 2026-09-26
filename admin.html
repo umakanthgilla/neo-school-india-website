@@ -504,6 +504,14 @@ body main section.reminders .reminder-col h3 {
  #appView .workspace-nav .logout{position:sticky;bottom:0;z-index:6;flex:none;margin-top:auto;box-shadow:0 -8px 18px #00133335}
 }
 </style>
+<style>
+/* Align every Head Office rail icon and label to the School portal grid. */
+@media(min-width:761px){
+ #appView .workspace-nav :is(a,button){display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:9px!important;padding:9px 14px!important;text-align:left!important}
+ #appView .workspace-nav .nav-glyph{width:29px!important;height:29px!important;flex:0 0 29px!important;margin:0!important}
+ #appView .workspace-nav .logout{justify-content:flex-start!important}
+}
+</style>
 <body>
 
 <section id="loginView" class="login-shell">
