@@ -263,6 +263,15 @@ body main section.reminders .reminder-col h3 {
  #appView .lead-table .actions button[data-edit]{background:#dceeff;color:#104b7e;border-color:#9fc9ea}
  #appView .lead-table .actions a[href^="tel:"]{background:#e6f3ff;color:#11678c;border-color:#acd6eb}
 }
+
+/* Shared corporate header controls. */
+#appView .head-office-header-tools{display:flex;align-items:center;gap:7px;margin-left:auto}
+#appView .head-office-header-tools button{position:relative;min-width:38px;height:38px;padding:6px 10px;background:#17356c;border:1px solid #496698;border-radius:10px;color:#fff;cursor:pointer;font-weight:900}
+#appView .head-office-header-tools button[hidden],#appView #headOfficeBellCount[hidden]{display:none!important}
+#appView #headOfficeBell svg{display:block;width:20px;height:20px;fill:#fff}
+#appView #headOfficeBellCount{position:absolute;top:-7px;right:-6px;min-width:18px;height:18px;padding:1px 4px;border:2px solid #fff;border-radius:20px;background:#d92d20;color:#fff;font-size:10px;line-height:14px}
+#appView .head-office-header-tools button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:700px){#appView .topbar-inner{grid-template-columns:minmax(0,1fr) auto auto!important}#appView .brand-logo{max-width:72px!important}#appView .head-office-header-tools{grid-column:2;grid-row:1}#headOfficeMobileMenu{grid-column:3;grid-row:1}#appView .workspace-nav{grid-row:2}#appView .head-office-header-tools button{min-width:34px;height:38px;padding:5px}}
 </style>
 <style id="neo-head-office-upgrade">
 .workspace-nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.workspace-nav a,.workspace-nav button{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:11px;padding:9px 12px;font-size:11px;font-weight:850;text-decoration:none;cursor:pointer}
@@ -481,6 +490,7 @@ body main section.reminders .reminder-col h3 {
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand"><img src="neo-top-logo.jpeg" alt="Neo School India" class="brand-logo"><div class="brand-copy"><strong>Head Office</strong><span>Franchise • Admissions • Follow-up</span></div></div>
+      <div class="head-office-header-tools"><button type="button" id="headOfficeBack" hidden aria-label="Go back to overview">←</button><button type="button" id="headOfficeBell" aria-label="New enquiries"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a2 2 0 0 0-2 2v.35C7.08 5.2 5 7.9 5 11v4.1l-1.7 2.55A1 1 0 0 0 4.13 19h15.74a1 1 0 0 0 .83-1.55L19 15.1V11c0-3.1-2.08-5.8-5-6.65V4a2 2 0 0 0-2-2Zm-2.35 19a2.5 2.5 0 0 0 4.7 0h-4.7Z"/></svg><span id="headOfficeBellCount" hidden>0</span></button></div>
       <button type="button" id="headOfficeMobileMenu" aria-expanded="false" aria-controls="headOfficeNav">☰ Menu</button><div id="headOfficeNav" class="top-actions workspace-nav"><span class="workspace-badge">Main Admin</span><a class="web-link" href="index.html" target="_blank"><span class="neo-glyph nav-glyph cyan" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-globe"></use></svg></span>View Website</a><a href="schools.html"><span class="neo-glyph nav-glyph green" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-school"></use></svg></span>School Portal</a><a href="curriculum-master.html"><span class="neo-glyph nav-glyph violet" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-book"></use></svg></span>Curriculum Master</a><button id="exportBtn" type="button"><span class="neo-glyph nav-glyph amber" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-download"></use></svg></span>Export CSV</button><button id="manageAssigneesBtn" type="button"><span class="neo-glyph nav-glyph pink" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-users"></use></svg></span>Team</button><button id="logoutBtn" class="logout"><span class="neo-glyph nav-glyph rose" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#neo-glyph-logout"></use></svg></span>Logout</button></div>
     </div>
   </header>
@@ -867,6 +877,7 @@ async function loadMetrics(){
   try{
     const d=await api("/api/admin/dashboard"); const m=d.metrics||{};
     $("#mTotal").textContent=m.total||0; $("#mNew").textContent=m.new_leads||0; $("#mAdmissions").textContent=m.admissions||0; $("#mFranchise").textContent=m.franchises||0;
+    const newCount=Number(m.new_leads||0),bellCount=$("#headOfficeBellCount");bellCount.textContent=String(newCount);bellCount.hidden=!newCount;$("#headOfficeBell").setAttribute("aria-label",newCount?newCount+" new enquiries":"No new enquiries");
     $("#mToday").textContent=m.today_followups||0; $("#mOverdue").textContent=m.overdue||0; $("#mConverted").textContent=m.converted||0; $("#mLost").textContent=m.lost||0;
     return true;
   }catch(e){reportLoadError(e);return false}
@@ -1014,11 +1025,29 @@ function setMobileDashboardView(view){
  headOfficeApp.classList.toggle('mobile-enquiries',view==='enquiries');
  overviewTab.setAttribute('aria-pressed',String(view==='overview'));
  enquiriesTab.setAttribute('aria-pressed',String(view==='enquiries'));
+ updateHeadOfficeBack();
  document.querySelector('.mobile-dashboard-tabs').scrollIntoView({block:'start',behavior:'smooth'});
 }
 overviewTab.addEventListener('click',()=>setMobileDashboardView('overview'));
 enquiriesTab.addEventListener('click',()=>setMobileDashboardView('enquiries'));
 document.getElementById('showFranchiseBtn')?.addEventListener('click',()=>{if(window.innerWidth<=700)setMobileDashboardView('enquiries')});
+
+function updateHeadOfficeBack(){
+ document.getElementById('headOfficeBack').hidden=!headOfficeApp.classList.contains('mobile-enquiries')&&!document.getElementById('editModal').classList.contains('open');
+}
+document.getElementById('headOfficeBack').onclick=()=>{
+ const modal=document.getElementById('editModal');
+ if(modal.classList.contains('open')){modal.classList.remove('open');updateHeadOfficeBack();return}
+ setMobileDashboardView('overview');
+};
+document.getElementById('headOfficeBell').onclick=()=>{
+ document.getElementById('statusFilter').value='New';
+ loadLeads();
+ if(window.innerWidth<=700)setMobileDashboardView('enquiries');
+ else document.querySelector('.filters').scrollIntoView({behavior:'smooth',block:'center'});
+};
+new MutationObserver(updateHeadOfficeBack).observe(document.getElementById('editModal'),{attributes:true,attributeFilter:['class']});
+updateHeadOfficeBack();
 function updateMobileBackTop(){mobileBackTop.hidden=window.innerWidth>700||window.scrollY<450||headOfficeApp.classList.contains('hidden')}
 window.addEventListener('scroll',updateMobileBackTop,{passive:true});
 window.addEventListener('resize',updateMobileBackTop);
