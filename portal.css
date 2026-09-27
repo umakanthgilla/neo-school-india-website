@@ -1128,3 +1128,10 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 @media(max-width:800px){#neoWorkspace .transport-documents-grid,#neoWorkspace .transport-renewal-panel form{grid-template-columns:minmax(0,1fr)}}
 
 .neo-push-optin{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 20px;padding:13px 16px;border:1px solid #bed5e8;border-radius:13px;background:#edf7fc;color:#0b2156}.neo-push-optin button{min-height:44px}.neo-push-optin span{font-size:.9rem;font-weight:650}
+
+/* Center kit order progress shared with Head Office dispatch records. */
+.neo-po-tracking{margin-top:12px;padding:12px 14px;border:1px solid #dce6f3;border-radius:12px;background:#f7faff;color:#102a58;font-size:13px}
+.neo-po-tracking>strong{display:block;margin-bottom:9px}.neo-po-tracking ol{display:flex;flex-wrap:wrap;gap:7px;margin:0;padding:0;list-style:none}
+.neo-po-tracking li{padding:5px 9px;border:1px solid #d3dce9;border-radius:999px;background:#fff;color:#60718b;white-space:nowrap}
+.neo-po-tracking li.done{border-color:#a8c9e4;color:#164875;background:#eaf5fb}.neo-po-tracking li.current{background:#0e285f;border-color:#0e285f;color:#fff;font-weight:700}
+.neo-po-tracking p{margin:9px 0 0;color:#3c587a;overflow-wrap:anywhere}
