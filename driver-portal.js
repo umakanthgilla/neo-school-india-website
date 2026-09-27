@@ -22,8 +22,9 @@
   const done=children.filter(a=>finalEvents.has(a.student_id)).length,next=children.find(a=>!finalEvents.has(a.student_id));
   const finished=trip?.status==='Completed',started=trip?.status==='Started';
   const progress=finished||started&&!next?100:Math.round(done/children.length*100);
-  const startLabel=direction==='Pickup'?route.stops[0]||'Route start':'School';
-  const endLabel=direction==='Pickup'?'School':route.stops[0]||'Route end';
+  const tripStops=trip?.route_stops||route.stops;
+  const startLabel=direction==='Pickup'?tripStops[0]||'Route start':'School';
+  const endLabel=direction==='Pickup'?'School':tripStops[0]||'Route end';
   const journey=`<div class="transport-journey" aria-label="${esc(heading)} progress: ${done} of ${children.length} children recorded">
     <div class="transport-journey-meta"><strong>${finished?'Trip completed':started?next?'Next stop':'All children recorded':'Ready to start'}</strong><span>${done} / ${children.length}</span></div>
     <div class="transport-journey-track" role="img" aria-label="${done} of ${children.length} stops recorded"><span class="transport-journey-fill" style="width:${progress}%"></span><span class="transport-journey-bus" style="left:${progress}%">${icon('bus')}</span></div>
