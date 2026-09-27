@@ -121,6 +121,16 @@ body:has(#app:not(.hidden)){background:#0b2055}
 #app .side .supply-nav-scroll::-webkit-scrollbar{width:6px}
 #app .side .supply-nav-scroll::-webkit-scrollbar-track{background:transparent}
 #app .side .supply-nav-scroll::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
+/* Compact one-action packing batches. */
+.pack-batch-list{display:grid;gap:14px}
+.pack-batch-card{border:1px solid #dbe6f2;border-radius:18px;background:#fff;padding:18px}
+.pack-batch-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.pack-batch-head h3{margin:0 0 5px;font-size:18px;color:#0d285d}
+.pack-batch-head p{margin:0;color:#60728b}
+.pack-batch-card details{margin-top:10px;border-top:1px solid #e5edf5;padding-top:10px}
+.pack-batch-card summary{cursor:pointer;color:#175987;font-weight:700}
+.pack-batch-card details .cards{margin-top:12px}
+@media(max-width:680px){.pack-batch-head{align-items:stretch;flex-direction:column}.pack-batch-head button{width:100%}}
 </style>
 <script src="/neo-alert-sound.js?v=20260927-v1"></script></head>
 <body>
@@ -152,7 +162,7 @@ head('Dispatch & Courier Tracking','Ship packed orders and monitor delivery to e
 async function patch(kind,id,status){try{await api('/api/supply/'+kind+'/'+encodeURIComponent(id),'PATCH',{status});await load();note('✓ Status updated to '+status+'.')}catch(e){note(e.message,true)}}
 window.addEventListener('load',()=>{if(token)start()});
 </script>
-<script src="/supply-material-hub.js?v=53"></script>
+<script src="/supply-material-hub.js?v=54"></script>
 <script src="/supply-dispatch-batch.js?v=3"></script>
 <script>
 /* Shared workspace back and action alerts. Counts are derived from loaded records. */
