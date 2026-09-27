@@ -1135,3 +1135,15 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 .neo-po-tracking li{padding:5px 9px;border:1px solid #d3dce9;border-radius:999px;background:#fff;color:#60718b;white-space:nowrap}
 .neo-po-tracking li.done{border-color:#a8c9e4;color:#164875;background:#eaf5fb}.neo-po-tracking li.current{background:#0e285f;border-color:#0e285f;color:#fff;font-weight:700}
 .neo-po-tracking p{margin:9px 0 0;color:#3c587a;overflow-wrap:anywhere}
+
+/* School finance: credit purchase obligations. */
+.neo-credit-summary .portal-card{display:flex;flex-direction:column;gap:5px}
+.neo-credit-summary .metric{color:#0d285d}
+.neo-credit-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:20px}
+.neo-credit-heading h3{margin:0}.neo-credit-card{border-top:3px solid #17a8ce}
+.neo-credit-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.neo-credit-card .neo-credit-overdue{background:#fff1e8;color:#a64716}
+.neo-credit-card h3{margin:10px 0 6px}
+.neo-credit-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e0e9f5}
+.neo-credit-numbers span{font-size:12px;color:#5b6c83}.neo-credit-numbers strong{display:block;color:#0d285d;font-size:15px;overflow-wrap:anywhere}
+@media(max-width:680px){.neo-credit-heading{align-items:stretch;flex-direction:column}.neo-credit-heading button{width:100%}}
