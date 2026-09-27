@@ -1480,7 +1480,7 @@ recordId='HR_RULES_'+effectiveFrom;
    writes.push(env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'daily_accounts',?,?)").bind(school,'FIN_VENDOR_'+recordId,JSON.stringify({direction:'OUT',category:voucher.category,amount_paise:data.amount_paise,transaction_date:data.date,payment_mode:data.payment_mode,party:payable.vendor_name,reference:voucherNo,notes:voucher.description,source_kind:'voucher',source_id:voucherId,status:'Posted'})));
   }
   if(kind==='payments'&&request.method==='POST'){const finId='FIN_FEE_'+recordId,student=await portalRecord(env,school,'students',data.student_id);writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'daily_accounts',finId,JSON.stringify({direction:'IN',category:'Fee collection',amount_paise:data.amount_paise,transaction_date:data.date,payment_mode:data.method,party:student?.name||data.student_id,reference:data.receipt_no,notes:'Automatic posting from fee receipt',source_kind:'fee_payment',source_id:recordId,status:'Posted'})));}
-  if(kind==='vouchers'&&request.method==='POST'){const finId='FIN_VCH_'+recordId;writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'daily_accounts',finId,JSON.stringify({direction:'OUT',category:data.category,amount_paise:data.amount_paise,transaction_date:data.date,payment_mode:data.payment_mode,party:data.paid_to,reference:data.voucher_no,notes:data.description,source_kind:'voucher',source_id:recordId,status:'Posted'})));}
+  if(kind==='vouchers'&&request.method==='POST'){const finId='FIN_VCH_'+recordId;writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'daily_accounts',finId,JSON.stringify({direction:'OUT',category:data.category,amount_paise:data.amount_paise,transaction_date:data.date,payment_mode:data.payment_mode,party:data.paid_to,reference:data.voucher_no,notes:data.description,source_kind:'voucher',source_id:recordId,status:'Posted'})));if(/^Transport(?:\s*·|\s*-|\s*\/|$)/i.test(data.category))writes.push(portalNotification(env,school,'school','Transport expense recorded',data.category+' · INR '+(data.amount_paise/100).toFixed(2)+' · '+data.voucher_no+'. '+data.description,'vouchers',recordId,'Unread','transport'));}
   if(kind==='ledger'&&request.method==='POST'){
    const voucherId='HO_'+recordId,voucherNo=await nextFinanceNumber(env,school,'voucher',data.date);
    const voucher=headOfficePaymentVoucher(data,recordId,voucherNo);
@@ -1751,8 +1751,12 @@ async function parentPortal(request,env,url){
  if(url.pathname!=='/api/parent/me'||request.method!=='GET')return out({error:'Not found.'},404);
  const child=await portalRecord(env,a.school_id,'students',a.student_id);if(!child)return out({error:'Student record not available. Contact your school.'},404);
  const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(a.school_id).first();
- const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders'];
+ const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders','transport_alerts'];
  const pairs=await Promise.all(kinds.map(async k=>{
+  if(k==='transport_alerts'){
+   const rows=await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_alerts' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.date')=? ORDER BY created_at DESC,id LIMIT 50").bind(a.school_id,a.student_id,neoToday()).all();
+   return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
+  }
   // Only fetch this child's rows or explicitly published classroom/school content.
   const sql=k==='homework'?"json_extract(data,'$.published')=1 AND json_extract(data,'$.classroom_id')=?":k==='announcements'?"COALESCE(json_extract(data,'$.audience'),'Parents and teachers')!='Teachers only' AND json_extract(data,'$.published')=1 AND (json_extract(data,'$.classroom_id')='' OR json_extract(data,'$.classroom_id')=?)":"json_extract(data,'$.student_id')=?";
   const arg=['homework','announcements'].includes(k)?(child.classroom_id||'UNASSIGNED'):a.student_id;
@@ -3594,7 +3598,7 @@ async function transportOperations(request,env,url){
    const reminders=vehicles.flatMap(v=>['insurance','pollution','fitness','tax'].map(k=>{const date=v[k+'_expiry'],days=date?Math.ceil((Date.parse(date+'T00:00:00+05:30')-Date.now())/86400000):null;return {vehicle_id:v.id,type:k,date:date||null,days_remaining:days}}).filter(r=>r.days_remaining===null||r.days_remaining<=30));
    return out({account_id:transport.account_id,name:staff.name,role:transport.role,school_id:schoolId,routes,vehicles,assignments:allAssignments,students,trips:allTrips,reminders});
   }
-  if(request.method!=='POST'||!['start','event','finish'].includes(action))return out({error:'Not found.'},404);
+  if(request.method!=='POST'||!['start','event','finish','emergency'].includes(action))return out({error:'Not found.'},404);
   const raw=await request.text();if(raw.length>230000)return out({error:'Photo request too large.'},413);
   let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid JSON.'},400)}
   const photo=()=>{if(typeof b.photo!=='string'||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(b.photo)||b.photo.length>205000)throw Error('Capture a JPEG photo under 150 KB.');const decoded=atob(b.photo.split(',')[1]);if(decoded.length>150000||decoded.length<4||decoded.charCodeAt(0)!==255||decoded.charCodeAt(1)!==216||decoded.charCodeAt(decoded.length-2)!==255||decoded.charCodeAt(decoded.length-1)!==217)throw Error('Capture a valid JPEG photo under 150 KB.');return Uint8Array.from(decoded,c=>c.charCodeAt(0))};
@@ -3609,13 +3613,23 @@ async function transportOperations(request,env,url){
    if(b.fuel_ok!==true||b.tyres_ok!==true||b.condition_ok!==true)return out({error:'Complete fuel, tyre air and vehicle condition checks.'},400);
    const km=reading(),picture=photo(),id=crypto.randomUUID(),record={route_id:route.id,vehicle_id:vehicle.id,direction,run_no:run,date:today,status:'Started',odometer_start_km:km,checks:{fuel:true,tyres:true,condition:true},events:[],started_at:now,started_by:actor};
    if(allTrips.some(t=>t.route_id===route.id&&t.direction===direction&&Number(t.run_no||1)===run))return out({error:'This trip run has already started today.'},409);
-   const inserts=[env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_trips',?,?)").bind(schoolId,id,JSON.stringify(record)),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'start',?,?)").bind(id,schoolId,picture),portalAudit(env,schoolId,false,'transport-start',id)];
+   const inserts=[env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_trips',?,?)").bind(schoolId,id,JSON.stringify(record)),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'start',?,?)").bind(id,schoolId,picture),portalAudit(env,schoolId,false,'transport-start',id),portalNotification(env,schoolId,'school','Transport trip started',route.name+' · '+direction+' · Run '+run+' started at '+km+' km. Vehicle '+vehicle.registration_no+'. Fuel, tyre air and vehicle condition checks: OK.','transport_trips',id,'Unread','transport')];
    for(const [i,child] of children.entries())inserts.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:id,date:today,at:now,message:'Your '+(direction==='Pickup'?'pickup':'return')+' vehicle has started. Your child is '+(i+1)+' of '+children.length+' scheduled stops.',remaining:children.length})));
    await env.DB.batch(inserts);return out({success:true,id,record},201);
   }
   const trip=allTrips.find(t=>t.id===b.trip_id),route=trip&&routes.find(r=>r.id===trip.route_id);if(!trip||!route)return out({error:'Assigned trip not found today.'},404);
   if(trip.status!=='Started')return out({error:'Trip is not active.'},409);
   const children=ordered(route,Number(trip.run_no||1),trip.direction),previous=JSON.stringify((({id,created_at,...data})=>data)(trip));
+  if(action==='emergency'){
+   const type=String(b.type||''),note=typeof b.message==='string'?b.message.trim():'';
+   if(!['Breakdown','Delay','Medical','Other'].includes(type)||note.length>200)return out({error:'Choose the emergency type and a short note.'},400);
+   if((trip.events||[]).some(e=>e.type==='Emergency'&&e.emergency_type===type&&Date.now()-Date.parse(e.at)<300000))return out({error:'This emergency was just reported. Wait before sending it again.'},409);
+   const next={...JSON.parse(previous),events:[...(trip.events||[]),{type:'Emergency',emergency_type:type,note,at:now,actor}],updated_at:now};
+   const statements=[env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),portalAudit(env,schoolId,false,'transport-emergency',trip.id),portalNotification(env,schoolId,'school','Transport emergency · '+type,route.name+' · '+trip.direction+' · Run '+(trip.run_no||1)+'. '+(note||'Staff requested immediate assistance.')+' Trip '+trip.id+'.','transport_trips',trip.id,'Unread','transport')];
+   for(const child of children)statements.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'Transport update for '+route.name+': the vehicle has a '+(type==='Delay'?'delay':'service interruption')+'. The school is responding. Please check the Transport page for updates.',event_type:'Emergency'})));
+   const results=await env.DB.batch(statements);if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
+   return out({success:true,record:next});
+  }
   if(action==='event'){
    const child=children.find(a=>a.student_id===b.student_id),event=b.event_type,valid=trip.direction==='Pickup'?['Picked up','Absent']:['Dropped at stop','Absent'];
    if(!child||!valid.includes(event))return out({error:'Choose an assigned child and valid event.'},400);
@@ -3625,6 +3639,7 @@ async function transportOperations(request,env,url){
    const next={...JSON.parse(previous),events:[...(trip.events||[]),{student_id:child.student_id,type:event,at:now,actor}],updated_at:now};
    const remaining=children.filter(a=>!done.has(a.student_id)&&a.student_id!==child.student_id);
    const steps=[env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),portalAudit(env,schoolId,false,'transport-event',trip.id)];
+   if(event==='Absent')steps.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'Your child was marked absent for '+(trip.direction==='Pickup'?'morning pickup':'return drop')+' on '+route.name+'. If this is incorrect, please contact the school. Morning pickup absence does not automatically mark return absence.',event_type:'Absent'})));
    for(const [i,a] of remaining.entries())steps.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:a.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'The vehicle has completed '+(children.length-remaining.length)+' of '+children.length+' scheduled stops. Your turn is '+(i+1)+' of '+remaining.length+' remaining.',remaining:remaining.length})));
    const results=await env.DB.batch(steps);if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
    return out({success:true,record:next});
@@ -3633,7 +3648,7 @@ async function transportOperations(request,env,url){
   if(children.some(a=>!done.has(a.student_id)))return out({error:'Record pickup, drop or absence for every child first.'},409);
   const km=reading();if(km<trip.odometer_start_km)return out({error:'Finish reading cannot be below start reading.'},400);
   const picture=photo(),next={...JSON.parse(previous),status:'Completed',odometer_end_km:km,completed_at:now,completed_by:actor,updated_at:now};
-  const results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'finish',?,?)").bind(trip.id,schoolId,picture),portalAudit(env,schoolId,false,'transport-finish',trip.id)]);
+  const vehicle=vehicles.find(v=>v.id===trip.vehicle_id),results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'finish',?,?)").bind(trip.id,schoolId,picture),portalAudit(env,schoolId,false,'transport-finish',trip.id),portalNotification(env,schoolId,'school',trip.direction==='Pickup'?'Vehicle arrived at school':'Return trip completed',route.name+' · '+trip.direction+' · Run '+(trip.run_no||1)+' completed. Start '+trip.odometer_start_km+' km; finish '+km+' km; distance '+(km-trip.odometer_start_km)+' km. Vehicle '+(vehicle?.registration_no||'assigned')+'.','transport_trips',trip.id,'Unread','transport')]);
   if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
   return out({success:true,record:next});
  }catch(e){console.error('Transport operations',e);return out({error:e?.message||'Transport operation failed.'},400)}
