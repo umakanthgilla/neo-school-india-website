@@ -7,6 +7,7 @@
   if(!supported()||!area||!token)return;
   const box=document.createElement('div');box.className='neo-push-optin';box.innerHTML='<button type="button" class="secondary">Enable phone alerts</button><span role="status" aria-live="polite"></span>';
   area.prepend(box);const button=box.querySelector('button'),status=box.querySelector('span');
+  const setup=Promise.all([call(token,'key'),navigator.serviceWorker.register('/neo-transport-sw.js?role='+encodeURIComponent(role),{scope:'/'})]).catch(error=>{status.textContent=error.message;return null});
   try{const existing=await navigator.serviceWorker.getRegistration('/'),subscribed=await existing?.pushManager.getSubscription();
    if(subscribed&&Notification.permission==='granted'){await call(token,'subscription','POST',{endpoint:subscribed.endpoint});button.textContent='Phone alerts enabled';button.dataset.enabled='true'}
   }catch(error){status.textContent=error.message}
@@ -15,7 +16,8 @@
     const registration=await navigator.serviceWorker.getRegistration('/'),subscription=await registration?.pushManager.getSubscription();if(subscription){await call(token,'subscription','DELETE',{endpoint:subscription.endpoint});await subscription.unsubscribe()}button.dataset.enabled='false';button.textContent='Enable phone alerts';status.textContent='Phone alerts disabled.';
    }else{
     const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Allow notifications in browser settings to receive phone alerts.');
-    const {publicKey}=await call(token,'key');const registration=await navigator.serviceWorker.register('/neo-transport-sw.js?role='+encodeURIComponent(role),{scope:'/'});const subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(publicKey)});
+    const ready=await setup;if(!ready)throw Error('Phone alerts are not configured yet.');
+    const [{publicKey},registration]=ready;const subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(publicKey)});
     try{await call(token,'subscription','POST',{endpoint:subscription.endpoint})}catch(error){await subscription.unsubscribe();throw error}
     button.dataset.enabled='true';button.textContent='Phone alerts enabled';status.textContent='Phone alerts are enabled for this login.';
    }
