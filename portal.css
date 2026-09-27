@@ -1126,3 +1126,5 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #familyApp .transport-parent-history .transport-report-controls{margin:12px 0}
 #familyApp .transport-parent-history :is(input,select){width:100%;box-sizing:border-box}
 @media(max-width:800px){#neoWorkspace .transport-documents-grid,#neoWorkspace .transport-renewal-panel form{grid-template-columns:minmax(0,1fr)}}
+
+.neo-push-optin{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0 20px;padding:13px 16px;border:1px solid #bed5e8;border-radius:13px;background:#edf7fc;color:#0b2156}.neo-push-optin button{min-height:44px}.neo-push-optin span{font-size:.9rem;font-weight:650}

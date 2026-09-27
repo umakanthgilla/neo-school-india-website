@@ -208,7 +208,7 @@ async function requireAdmin(request, env) {
 ================================ */
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
 
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -218,7 +218,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    const transportOperationsResponse = await transportOperations(request, env, url);
+    const transportOperationsResponse = await transportOperations(request, env, url, ctx);
     if (transportOperationsResponse) return transportOperationsResponse;
     const transportResponse = await transportPortal(request, env, url);
     if (transportResponse) return transportResponse;
@@ -908,6 +908,9 @@ export default {
       404,
       request
     );
+  },
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(transportRenewalSweep(env, ctx));
   },
 };
 // Additive tables: existing leads and the existing admin password are retained.
@@ -3412,7 +3415,8 @@ async function transportPortal(request,env,url){
   await env.DB.batch([
    env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_run_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction'),COALESCE(json_extract(data,'$.run_no'),1)) WHERE kind='transport_trips'"),
    env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_child_once ON neo_portal_records(school_id,json_extract(data,'$.student_id')) WHERE kind='transport_assignments' AND json_extract(data,'$.active')=1"),
-   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_vehicle_once ON neo_portal_records(school_id,json_extract(data,'$.registration_no')) WHERE kind='transport_vehicles' AND json_extract(data,'$.active')=1")
+   env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_vehicle_once ON neo_portal_records(school_id,json_extract(data,'$.registration_no')) WHERE kind='transport_vehicles' AND json_extract(data,'$.active')=1"),
+   env.DB.prepare("CREATE INDEX IF NOT EXISTS neo_transport_trip_date ON neo_portal_records(school_id,json_extract(data,'$.date')) WHERE kind='transport_trips'")
   ]);
   const parts=url.pathname.split('/').filter(Boolean),scope=parts[2],kind=parts[3],id=parts[4];
   const admin=await requireAdmin(request,env),school=admin?null:await schoolSession(request,env);
@@ -3440,8 +3444,11 @@ async function transportPortal(request,env,url){
   if(!await env.DB.prepare('SELECT school_id FROM neo_schools WHERE school_id=?').bind(schoolId).first())return out({error:'School not found.'},404);
   const dbKind='transport_'+kind,read=async(k,rid)=>portalRecord(env,schoolId,'transport_'+k,rid);
   if(request.method==='GET'){
-   const [routes,vehicles,assignments,trips,students,staff,classrooms]=await Promise.all(['routes','vehicles','assignments','trips'].map(k=>portalRows(env,schoolId,'transport_'+k)).concat([portalRows(env,schoolId,'students'),portalRows(env,schoolId,'staff'),portalRows(env,schoolId,'classrooms')]));
-   return out({routes,vehicles,assignments,trips,students:students.map(s=>({id:s.id,name:s.name,program:s.program,classroom_id:s.classroom_id||''})),classrooms:classrooms.map(c=>({id:c.id,name:c.name,program:c.program,academic_year:c.academic_year})),staff:staff.map(s=>({id:s.id,name:s.name,status:s.status,department:s.department,staff_type:s.staff_type}))});
+   const from=url.searchParams.get('from')||neoToday(),to=url.searchParams.get('to')||from;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||!Number.isFinite(Date.parse(from))||!Number.isFinite(Date.parse(to))||Date.parse(to)<Date.parse(from)||Date.parse(to)-Date.parse(from)>31*86400000)return out({error:'Choose a date range up to one month.'},400);
+   const [routes,vehicles,assignments,tripRows,students,staff,classrooms]=await Promise.all([portalRows(env,schoolId,'transport_routes'),portalRows(env,schoolId,'transport_vehicles'),portalRows(env,schoolId,'transport_assignments'),env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_trips' AND json_extract(data,'$.date') BETWEEN ? AND ? ORDER BY json_extract(data,'$.date') DESC,created_at DESC LIMIT 3001").bind(schoolId,from,to).all(),portalRows(env,schoolId,'students'),portalRows(env,schoolId,'staff'),portalRows(env,schoolId,'classrooms')]);
+   const trips=(tripRows.results||[]).slice(0,3000).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}));
+   return out({routes,vehicles,assignments,trips,report_truncated:(tripRows.results||[]).length>3000,students:students.map(s=>({id:s.id,name:s.name,program:s.program,classroom_id:s.classroom_id||''})),classrooms:classrooms.map(c=>({id:c.id,name:c.name,program:c.program,academic_year:c.academic_year})),staff:staff.map(s=>({id:s.id,name:s.name,status:s.status,department:s.department,staff_type:s.staff_type}))});
   }
   if(!['POST','PATCH'].includes(request.method))return out({error:'Method not allowed.'},405);
   const raw=await request.text();if(raw.length>12000)return out({error:'Request too large.'},413);
@@ -3532,16 +3539,68 @@ async function ensureTransportSchema(env){
    env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_photos(trip_id TEXT NOT NULL,phase TEXT NOT NULL,school_id TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(trip_id,phase))'),
    env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_documents(id TEXT PRIMARY KEY,school_id TEXT NOT NULL,vehicle_id TEXT NOT NULL,type TEXT NOT NULL,expiry_date TEXT NOT NULL,uploaded_at TEXT NOT NULL,photo BLOB NOT NULL)'),
    env.DB.prepare('CREATE INDEX IF NOT EXISTS neo_transport_documents_vehicle ON neo_transport_documents(school_id,vehicle_id,type,uploaded_at)')
+   ,env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_care_photos(id TEXT PRIMARY KEY,school_id TEXT NOT NULL,photo BLOB NOT NULL)'),
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_staff_documents(id TEXT PRIMARY KEY,school_id TEXT NOT NULL,staff_id TEXT NOT NULL,type TEXT NOT NULL,expiry_date TEXT NOT NULL,uploaded_at TEXT NOT NULL,photo BLOB NOT NULL)'),
+   env.DB.prepare('CREATE INDEX IF NOT EXISTS neo_transport_staff_documents_staff ON neo_transport_staff_documents(school_id,staff_id,type,uploaded_at)'),
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_renewal_notices(id TEXT PRIMARY KEY,school_id TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)'),
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_push(endpoint TEXT PRIMARY KEY,school_id TEXT NOT NULL,role TEXT NOT NULL,subject_id TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)'),
+   env.DB.prepare('CREATE INDEX IF NOT EXISTS neo_transport_push_recipient ON neo_transport_push(school_id,role,subject_id)')
   ]);
   await env.DB.prepare('DROP INDEX IF EXISTS neo_transport_trip_once').run();
   await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_run_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction'),COALESCE(json_extract(data,'$.run_no'),1)) WHERE kind='transport_trips'").run();
  })().catch(e=>{transportSchemaReady.delete(env.DB);throw e}));
  return transportSchemaReady.get(env.DB);
 }
-async function transportOperations(request,env,url){
+function transportPushPublic(env){
+ try{const key=JSON.parse(env.VAPID_PRIVATE_JWK||'');if(key.kty!=='EC'||key.crv!=='P-256'||!key.x||!key.y||!key.d)return null;return base64urlEncode(Uint8Array.from([4,...base64urlDecode(key.x),...base64urlDecode(key.y)]))}catch{return null}
+}
+function validTransportPushEndpoint(value){
+ try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.port&&['fcm.googleapis.com','updates.push.services.mozilla.com','web.push.apple.com'].includes(u.hostname)&&value.length<1500}catch{return false}
+}
+async function sendTransportPush(env,schoolId,role,subjects){
+ if(!transportPushPublic(env)||!subjects.length)return;
+ const unique=[...new Set(subjects)];if(unique.length>100)return;
+ const rows=await env.DB.prepare('SELECT endpoint FROM neo_transport_push WHERE school_id=? AND role=? AND subject_id IN ('+unique.map(()=>'?').join(',')+') LIMIT 300').bind(schoolId,role,...unique).all();
+ const jwk=JSON.parse(env.VAPID_PRIVATE_JWK),key=await crypto.subtle.importKey('jwk',jwk,{name:'ECDSA',namedCurve:'P-256'},false,['sign']),publicKey=transportPushPublic(env);
+ await Promise.allSettled((rows.results||[]).map(async row=>{
+  if(!validTransportPushEndpoint(row.endpoint))return;
+  const audience=new URL(row.endpoint).origin,header=base64urlEncode(new TextEncoder().encode(JSON.stringify({typ:'JWT',alg:'ES256'}))),claims=base64urlEncode(new TextEncoder().encode(JSON.stringify({aud:audience,exp:Math.floor(Date.now()/1000)+3600,sub:'https://neoschoolindia.com'}))),data=header+'.'+claims,signature=base64urlEncode(new Uint8Array(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},key,new TextEncoder().encode(data))));
+  const response=await fetch(row.endpoint,{method:'POST',headers:{Authorization:'vapid t='+data+'.'+signature+', k='+publicKey,TTL:'120',Urgency:'normal'}});
+  if(response.status===404||response.status===410)await env.DB.prepare('DELETE FROM neo_transport_push WHERE endpoint=?').bind(row.endpoint).run();
+ }));
+}
+function queueTransportPush(ctx,env,schoolId,role,subjects){if(!ctx?.waitUntil||!env.VAPID_PRIVATE_JWK||!subjects.length)return;ctx.waitUntil(sendTransportPush(env,schoolId,role,subjects).catch(e=>console.error('Transport push delivery',e)))}
+function queueTransportParentPush(ctx,env,schoolId,studentIds){
+ if(!ctx?.waitUntil||!env.VAPID_PRIVATE_JWK||!studentIds.length)return;
+ ctx.waitUntil((async()=>{const unique=[...new Set(studentIds)];const rows=await env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND active=1 AND student_id IN ('+unique.map(()=>'?').join(',')+')').bind(schoolId,...unique).all();await sendTransportPush(env,schoolId,'parent',(rows.results||[]).map(x=>x.account_id))})().catch(e=>console.error('Parent push delivery',e)));
+}
+async function transportRenewalSweep(env,ctx){
+ await ensurePortalSchema(env);await ensureTransportSchema(env);
+ const today=neoToday(),rows=await env.DB.prepare("SELECT r.school_id,r.id,r.data FROM neo_portal_records r JOIN neo_schools s ON s.school_id=r.school_id WHERE r.kind='transport_vehicles' AND s.active=1 AND json_extract(r.data,'$.active')=1 LIMIT 2000").all();
+ for(const item of rows.results||[]){
+  const vehicle=JSON.parse(item.data);for(const type of ['insurance','pollution','fitness','tax']){
+   const expiry=vehicle[type+'_expiry'];if(!/^\d{4}-\d{2}-\d{2}$/.test(expiry||''))continue;
+   const days=Math.round((Date.parse(expiry+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);
+   if(![30,14,7,1,0].includes(days))continue;
+   const noticeId=[item.school_id,item.id,type,expiry,days].join(':');
+   const inserted=await env.DB.prepare('INSERT OR IGNORE INTO neo_transport_renewal_notices(id,school_id) VALUES (?,?)').bind(noticeId,item.school_id).run();if(!inserted.meta?.changes)continue;
+   await portalNotification(env,item.school_id,'school','Vehicle '+type+' renewal due',vehicle.registration_no+' · '+type+' expires '+expiry+' ('+days+' days). Renew and upload the current document in Transport Setup.','transport_vehicles',item.id,'Unread','transport').run();
+   queueTransportPush(ctx,env,item.school_id,'school',[item.school_id]);
+   const staff=await env.DB.prepare("SELECT DISTINCT a.account_id FROM neo_transport_accounts a JOIN neo_portal_records r ON r.school_id=a.school_id AND r.kind='transport_routes' WHERE a.school_id=? AND a.active=1 AND json_extract(r.data,'$.active')=1 AND json_extract(r.data,'$.vehicle_id')=? AND (json_extract(r.data,'$.driver_staff_id')=a.staff_id OR json_extract(r.data,'$.attendant_staff_id')=a.staff_id)").bind(item.school_id,item.id).all();
+   queueTransportPush(ctx,env,item.school_id,'transport',(staff.results||[]).map(x=>x.account_id));
+  }
+ }
+ const licences=await env.DB.prepare("SELECT d.school_id,d.staff_id,d.expiry_date,s.data AS staff_data FROM neo_transport_staff_documents d JOIN neo_schools x ON x.school_id=d.school_id AND x.active=1 LEFT JOIN neo_portal_records s ON s.school_id=d.school_id AND s.kind='staff' AND s.id=d.staff_id WHERE d.type='license' ORDER BY d.uploaded_at DESC,d.id DESC LIMIT 2000").all();
+ const seen=new Set();for(const doc of licences.results||[]){const staffKey=doc.school_id+':'+doc.staff_id;if(seen.has(staffKey))continue;seen.add(staffKey);const days=Math.round((Date.parse(doc.expiry_date+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000);if(![30,14,7,1,0].includes(days))continue;
+  const noticeId=[staffKey,'license',doc.expiry_date,days].join(':');const inserted=await env.DB.prepare('INSERT OR IGNORE INTO neo_transport_renewal_notices(id,school_id) VALUES (?,?)').bind(noticeId,doc.school_id).run();if(!inserted.meta?.changes)continue;
+  const name=doc.staff_data?JSON.parse(doc.staff_data).name:doc.staff_id;await portalNotification(env,doc.school_id,'school','Driving licence renewal due',name+' · driving licence expires '+doc.expiry_date+' ('+days+' days). Upload the renewed licence in Transport Documents.','staff',doc.staff_id,'Unread','transport').run();queueTransportPush(ctx,env,doc.school_id,'school',[doc.school_id]);
+  const staff=await env.DB.prepare('SELECT account_id FROM neo_transport_accounts WHERE school_id=? AND staff_id=? AND active=1').bind(doc.school_id,doc.staff_id).all();queueTransportPush(ctx,env,doc.school_id,'transport',(staff.results||[]).map(x=>x.account_id));
+ }
+}
+async function transportOperations(request,env,url,ctx){
  const path=url.pathname;if(!path.startsWith('/api/transport/'))return null;
  const parts=path.split('/').filter(Boolean),section=parts[2],action=parts[3];
- if(!['login','driver','school','photo','document'].includes(section)||section==='school'&&!['access','compliance','documents'].includes(action))return null;
+ if(!['login','driver','school','photo','document','staff-document','carephoto','push'].includes(section)||section==='school'&&!['access','compliance','documents','staff-documents','care'].includes(action))return null;
  const out=(b,s=200)=>json(b,s,request);
  try{
   await ensurePortalSchema(env);
@@ -3560,6 +3619,49 @@ async function transportOperations(request,env,url){
   const admin=await requireAdmin(request,env),school=admin?null:await schoolSession(request,env);
   if(section==='school'){
    const schoolId=parts[4];if(!schoolId||!admin&&school?.school_id!==schoolId)return out({error:'School access required.'},403);
+   if(action==='staff-documents'){
+    const staffId=parts[5]||url.searchParams.get('staff_id'),staff=staffId&&await portalRecord(env,schoolId,'staff',staffId);
+    const assigned=staff&&(await portalRows(env,schoolId,'transport_routes')).some(r=>r.active&&[r.driver_staff_id,r.attendant_staff_id].includes(staffId));
+    if(!assigned)return out({error:'Choose an assigned driver or helper.'},404);
+    if(request.method==='GET'){
+     const rows=await env.DB.prepare('SELECT id,type,expiry_date,uploaded_at FROM neo_transport_staff_documents WHERE school_id=? AND staff_id=? ORDER BY uploaded_at DESC,id DESC LIMIT 80').bind(schoolId,staffId).all();
+     return out({staff_id:staffId,documents:rows.results||[]});
+    }
+    if(request.method!=='POST')return out({error:'Method not allowed.'},405);
+    const raw=await request.text();if(raw.length>210000)return out({error:'Photo must be under 150 KB.'},413);
+    let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid staff document.'},400)}
+    const type=String(b.type||''),expiry=String(b.expiry_date||''),photo=String(b.photo||''),isDriver=(await portalRows(env,schoolId,'transport_routes')).some(r=>r.active&&r.driver_staff_id===staffId);
+    if(!['license','aadhaar','id_proof'].includes(type)||type==='license'&&!isDriver||type==='license'&&(!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isFinite(Date.parse(expiry)))||type!=='license'&&expiry)return out({error:'Choose the correct staff document and licence expiry.'},400);
+    if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Capture a JPEG photo under 150 KB.'},400);
+    const bytes=Uint8Array.from(atob(photo.split(',')[1]),c=>c.charCodeAt(0));if(bytes.length<4||bytes.length>150000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return out({error:'Upload a valid JPEG photo under 150 KB.'},400);
+    const id=crypto.randomUUID();await env.DB.batch([env.DB.prepare('INSERT INTO neo_transport_staff_documents(id,school_id,staff_id,type,expiry_date,uploaded_at,photo) VALUES (?,?,?,?,?,?,?)').bind(id,schoolId,staffId,type,expiry,new Date().toISOString(),bytes),portalAudit(env,schoolId,!school,'transport-staff-document',id)]);
+    return out({success:true,id,type,expiry_date:expiry},201);
+   }
+   if(action==='care'){
+   if(request.method==='GET'){
+     const vehicleId=url.searchParams.get('vehicle_id')||'';
+     if(vehicleId&&!await portalRecord(env,schoolId,'transport_vehicles',vehicleId))return out({error:'Vehicle not found.'},404);
+     const from=url.searchParams.get('from')||neoToday(),to=url.searchParams.get('to')||from;
+     if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||Date.parse(to)<Date.parse(from)||Date.parse(to)-Date.parse(from)>31*86400000)return out({error:'Choose a date range up to one month.'},400);
+     const rows=await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_care' AND (?='' OR json_extract(data,'$.vehicle_id')=?) AND json_extract(data,'$.date') BETWEEN ? AND ? ORDER BY created_at DESC LIMIT 1001").bind(schoolId,vehicleId,vehicleId,from,to).all();
+     return out({records:(rows.results||[]).slice(0,1000).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at})),report_truncated:(rows.results||[]).length>1000});
+    }
+    if(request.method==='POST'&&parts[6]==='confirm'){
+     const care=await portalRecord(env,schoolId,'transport_care',parts[5]);if(!care)return out({error:'Care record not found.'},404);
+     if(care.voucher_id)return out({error:'Voucher already posted.'},409);
+     if(!Number.isSafeInteger(care.amount_paise)||care.amount_paise<=0)return out({error:'No payment amount to post.'},400);
+     const b=await request.json(),paidTo=String(b.paid_to||'').trim(),mode=String(b.payment_mode||'');
+     if(!paidTo||paidTo.length>160||!['Cash','UPI','Bank transfer','Cheque','Other'].includes(mode))return out({error:'Enter the payee and payment mode after paying.'},400);
+     const voucherId='CARE_'+care.id,voucherNo=await nextFinanceNumber(env,schoolId,'voucher',neoToday()),vehicle=await portalRecord(env,schoolId,'transport_vehicles',care.vehicle_id),category='Transport · '+(care.type==='Fuel refill'?'Diesel/Fuel':care.type==='Tyre air'?'Tyre air':'Maintenance');
+     const voucher={voucher_no:voucherNo,date:neoToday(),category,paid_to:paidTo,description:(vehicle?.registration_no||'Vehicle')+' · '+care.type+' · '+(care.note||'Transport care'),amount_paise:care.amount_paise,payment_mode:mode,reference:care.id,notes:'Driver reported '+care.created_at,source_kind:'transport_care',source_id:care.id,status:'Paid',created_by:admin?'head-office':'school:'+schoolId,paid_at:new Date().toISOString()};
+     const old=JSON.stringify((({id,created_at,...data})=>data)(care)),next={...JSON.parse(old),voucher_id:voucherId,voucher_no:voucherNo,paid_at:new Date().toISOString()};
+     const guarded="SELECT ?,?,?,? WHERE EXISTS (SELECT 1 FROM neo_portal_records WHERE school_id=? AND kind='transport_care' AND id=? AND json_extract(data,'$.voucher_no')=?)";
+     const results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_care' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,care.id,old),env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) '+guarded).bind(schoolId,'vouchers',voucherId,JSON.stringify(voucher),schoolId,care.id,voucherNo),env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) '+guarded).bind(schoolId,'daily_accounts','FIN_'+voucherId,JSON.stringify({direction:'OUT',category,amount_paise:care.amount_paise,transaction_date:neoToday(),payment_mode:mode,party:paidTo,reference:voucherNo,notes:voucher.description,source_kind:'voucher',source_id:voucherId,status:'Posted'}),schoolId,care.id,voucherNo),portalAudit(env,schoolId,!school,'transport-care-paid',care.id)]);
+     if(!results[0].meta?.changes)return out({error:'Record changed. Refresh and retry.'},409);
+     return out({success:true,voucher_no:voucherNo});
+    }
+    return out({error:'Method not allowed.'},405);
+   }
    if(action==='documents'){
     const vehicleId=parts[5]||url.searchParams.get('vehicle_id');
     if(!vehicleId)return out({error:'Choose a vehicle.'},400);
@@ -3572,10 +3674,10 @@ async function transportOperations(request,env,url){
     const raw=await request.text();if(raw.length>210000)return out({error:'Photo must be under 150 KB.'},413);
     let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid document.'},400)}
     const type=String(b.type||''),expiry=String(b.expiry_date||''),photo=String(b.photo||'');
-    if(!['insurance','pollution','fitness','tax'].includes(type)||!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isFinite(Date.parse(expiry)))return out({error:'Choose document type and valid expiry date.'},400);
+    if(!['insurance','pollution','fitness','tax','rc'].includes(type)||type!=='rc'&&(!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isFinite(Date.parse(expiry)))||type==='rc'&&expiry)return out({error:'Choose document type and valid expiry date.'},400);
     if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Capture a JPEG photo under 150 KB.'},400);
     const bytes=Uint8Array.from(atob(photo.split(',')[1]),c=>c.charCodeAt(0));if(bytes.length<4||bytes.length>150000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return out({error:'Upload a valid JPEG photo under 150 KB.'},400);
-    const current=JSON.stringify((({id,created_at,...data})=>data)(vehicle)),next={...JSON.parse(current),[type+'_expiry']:expiry,updated_at:new Date().toISOString()},id=crypto.randomUUID();
+    const current=JSON.stringify((({id,created_at,...data})=>data)(vehicle)),next={...JSON.parse(current),...(type==='rc'?{}:{[type+'_expiry']:expiry}),updated_at:new Date().toISOString()},id=crypto.randomUUID();
     const results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_vehicles' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,vehicleId,current),env.DB.prepare('INSERT INTO neo_transport_documents(id,school_id,vehicle_id,type,expiry_date,uploaded_at,photo) VALUES (?,?,?,?,?,?,?)').bind(id,schoolId,vehicleId,type,expiry,new Date().toISOString(),bytes),portalAudit(env,schoolId,!school,'transport-document',id)]);
     if(!results[0].meta?.changes)return out({error:'Vehicle changed. Refresh and retry.'},409);
     return out({success:true,id,type,expiry_date:expiry},201);
@@ -3604,6 +3706,18 @@ async function transportOperations(request,env,url){
   }
   let transport=null;
   try{const p=(request.headers.get('Authorization')||'').replace(/^Bearer /,'').split('.');if(p.length===2&&await crypto.subtle.verify('HMAC',await getSigningKey(env.ADMIN_PASSWORD),base64urlDecode(p[1]),new TextEncoder().encode(p[0]))){const claim=JSON.parse(new TextDecoder().decode(base64urlDecode(p[0])));if(claim.role==='transport'&&claim.exp>Date.now()){const a=await env.DB.prepare('SELECT a.* FROM neo_transport_accounts a JOIN neo_schools s ON s.school_id=a.school_id WHERE a.account_id=? AND a.active=1 AND s.active=1').bind(claim.account_id).first();if(a?.password_hash===claim.version)transport=a}}}catch{}
+  if(section==='push'){
+   const parent=!school&&!transport&&!admin?await parentSession(request,env):null;
+   const identity=school?{school_id:school.school_id,role:'school',subject_id:school.school_id}:transport?{school_id:transport.school_id,role:'transport',subject_id:transport.account_id}:parent?{school_id:parent.school_id,role:'parent',subject_id:parent.account_id}:null;
+   if(!identity)return out({error:'Portal sign in required.'},401);
+   const publicKey=transportPushPublic(env);if(!publicKey)return out({error:'Push notifications are not configured yet.'},503);
+   if(request.method==='GET'&&action==='key')return out({publicKey});
+   if(!['POST','DELETE'].includes(request.method)||action!=='subscription')return out({error:'Not found.'},404);
+   const b=await request.json(),endpoint=String(b.endpoint||'');if(!validTransportPushEndpoint(endpoint))return out({error:'Invalid browser push subscription.'},400);
+   if(request.method==='DELETE')await env.DB.prepare('DELETE FROM neo_transport_push WHERE endpoint=? AND school_id=? AND role=? AND subject_id=?').bind(endpoint,identity.school_id,identity.role,identity.subject_id).run();
+   else await env.DB.prepare('INSERT INTO neo_transport_push(endpoint,school_id,role,subject_id) VALUES (?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET school_id=excluded.school_id,role=excluded.role,subject_id=excluded.subject_id').bind(endpoint,identity.school_id,identity.role,identity.subject_id).run();
+   return out({success:true});
+  }
   if(section==='document'&&request.method==='GET'){
    if(!admin&&!school&&!transport)return out({error:'Sign in required.'},401);
    const row=await env.DB.prepare('SELECT school_id,vehicle_id,photo FROM neo_transport_documents WHERE id=?').bind(action).first();
@@ -3612,6 +3726,20 @@ async function transportOperations(request,env,url){
     const assigned=(await portalRows(env,transport.school_id,'transport_routes')).some(r=>r.active&&r.vehicle_id===row.vehicle_id&&[r.driver_staff_id,r.attendant_staff_id].includes(transport.staff_id));
     if(!assigned)return out({error:'Document not found.'},404);
    }
+   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
+  }
+  if(section==='staff-document'&&request.method==='GET'){
+   if(!admin&&!school&&!transport)return out({error:'Sign in required.'},401);
+   const row=await env.DB.prepare('SELECT school_id,staff_id,photo FROM neo_transport_staff_documents WHERE id=?').bind(action).first();
+   if(!row||!admin&&row.school_id!==(school?.school_id||transport?.school_id))return out({error:'Document not found.'},404);
+   if(transport){const assigned=(await portalRows(env,transport.school_id,'transport_routes')).some(r=>r.active&&[r.driver_staff_id,r.attendant_staff_id].includes(transport.staff_id)&&[r.driver_staff_id,r.attendant_staff_id].includes(row.staff_id));if(!assigned||transport.role==='Attendant'&&row.staff_id!==transport.staff_id)return out({error:'Document not found.'},404)}
+   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
+  }
+  if(section==='carephoto'&&request.method==='GET'){
+   if(!admin&&!school&&!transport)return out({error:'Sign in required.'},401);
+   const row=await env.DB.prepare('SELECT school_id,photo FROM neo_transport_care_photos WHERE id=?').bind(action).first();
+   if(!row||!admin&&row.school_id!==(school?.school_id||transport?.school_id))return out({error:'Photo not found.'},404);
+   if(transport){const care=await portalRecord(env,row.school_id,'transport_care',action),assigned=care&&(await portalRows(env,row.school_id,'transport_routes')).some(r=>r.active&&r.vehicle_id===care.vehicle_id&&[r.driver_staff_id,r.attendant_staff_id].includes(transport.staff_id));if(!assigned)return out({error:'Photo not found.'},404)}
    return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
   }
   if(section==='photo'){
@@ -3635,9 +3763,34 @@ async function transportOperations(request,env,url){
    const rows=await env.DB.prepare('SELECT id,type,expiry_date,uploaded_at FROM neo_transport_documents WHERE school_id=? AND vehicle_id=? ORDER BY uploaded_at DESC,id DESC LIMIT 80').bind(schoolId,vehicleId).all();
    return out({vehicle_id:vehicleId,documents:rows.results||[]});
   }
+  if(action==='staff-documents'&&request.method==='GET'){
+   const staffId=parts[4],assigned=staffId&&routes.some(r=>[r.driver_staff_id,r.attendant_staff_id].includes(staffId));
+   if(!assigned||transport.role==='Attendant'&&staffId!==transport.staff_id)return out({error:'Staff not assigned to your route.'},404);
+   const rows=await env.DB.prepare('SELECT id,type,expiry_date,uploaded_at FROM neo_transport_staff_documents WHERE school_id=? AND staff_id=? ORDER BY uploaded_at DESC,id DESC LIMIT 80').bind(schoolId,staffId).all();
+   return out({staff_id:staffId,documents:rows.results||[]});
+  }
   if(action==='me'&&request.method==='GET'){
    const reminders=vehicles.flatMap(v=>['insurance','pollution','fitness','tax'].map(k=>{const date=v[k+'_expiry'],days=date?Math.ceil((Date.parse(date+'T00:00:00+05:30')-Date.now())/86400000):null;return {vehicle_id:v.id,type:k,date:date||null,days_remaining:days}}).filter(r=>r.days_remaining===null||r.days_remaining<=30));
-   return out({account_id:transport.account_id,name:staff.name,role:transport.role,school_id:schoolId,routes,vehicles,assignments:allAssignments,students,trips:allTrips,reminders});
+   const crewIds=[...new Set(routes.flatMap(r=>[r.driver_staff_id,r.attendant_staff_id]).filter(Boolean))],crew=(await Promise.all(crewIds.map(id=>portalRecord(env,schoolId,'staff',id)))).filter(Boolean).map(s=>({id:s.id,name:s.name}));
+   return out({account_id:transport.account_id,staff_id:transport.staff_id,name:staff.name,role:transport.role,school_id:schoolId,routes,vehicles,crew,assignments:allAssignments,students,trips:allTrips,reminders});
+  }
+  if(action==='care'){
+   if(request.method==='GET'){
+    const vehicleId=parts[4];if(!vehicleId||!vehicleIds.has(vehicleId))return out({error:'Vehicle not assigned.'},404);
+    const rows=await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_care' AND json_extract(data,'$.vehicle_id')=? ORDER BY created_at DESC LIMIT 40").bind(schoolId,vehicleId).all();
+    return out({records:(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))});
+   }
+   if(request.method!=='POST')return out({error:'Method not allowed.'},405);
+   const raw=await request.text();if(raw.length>210000)return out({error:'Invoice photo too large.'},413);
+   let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid care report.'},400)}
+   const vehicleId=String(b.vehicle_id||''),type=String(b.type||''),note=String(b.note||'').trim(),km=Number(b.odometer_km),amount=Number(b.amount_paise||0),litres=b.litres==null?null:Number(b.litres);
+   if(!vehicleIds.has(vehicleId)||!['Fuel refill','Tyre air','Maintenance'].includes(type)||note.length>300||!Number.isSafeInteger(km)||km<0||km>9999999||!Number.isSafeInteger(amount)||amount<0||amount>100000000||type==='Fuel refill'&&(!Number.isFinite(litres)||litres<=0||litres>500))return out({error:'Check the assigned vehicle, type, reading, amount and fuel litres.'},400);
+   let bytes=null;if(b.photo){const photo=String(b.photo);if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Invoice must be a JPEG under 150 KB.'},400);bytes=Uint8Array.from(atob(photo.split(',')[1]),c=>c.charCodeAt(0));if(bytes.length<4||bytes.length>150000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return out({error:'Invalid invoice photo.'},400)}
+   if(amount>0&&!bytes)return out({error:'Attach the payment invoice photo.'},400);
+   const id=crypto.randomUUID(),vehicle=vehicles.find(v=>v.id===vehicleId),data={vehicle_id:vehicleId,type,note,odometer_km:km,amount_paise:amount,litres:type==='Fuel refill'?litres:null,has_invoice:!!bytes,reported_by:transport.staff_id,date:neoToday(),reported_at:new Date().toISOString(),status:amount?'Awaiting school payment confirmation':'Recorded'};
+   const writes=[env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_care',?,?)").bind(schoolId,id,JSON.stringify(data)),portalAudit(env,schoolId,false,'transport-care',id),portalNotification(env,schoolId,'school','Vehicle care reported',vehicle.registration_no+' · '+type+' · '+km+' km. '+(amount?'Amount ₹'+(amount/100).toFixed(2)+'; confirm payment in Transport monitor.':'No payment reported.')+' '+note,'transport_care',id,'Unread','transport')];
+   if(bytes)writes.push(env.DB.prepare('INSERT INTO neo_transport_care_photos(id,school_id,photo) VALUES (?,?,?)').bind(id,schoolId,bytes));
+   await env.DB.batch(writes);queueTransportPush(ctx,env,schoolId,'school',[schoolId]);return out({success:true,id},201);
   }
   if(request.method!=='POST'||!['start','event','finish','emergency'].includes(action))return out({error:'Not found.'},404);
   const raw=await request.text();if(raw.length>230000)return out({error:'Photo request too large.'},413);
@@ -3651,12 +3804,14 @@ async function transportOperations(request,env,url){
    const children=ordered(route,run,direction);if(!children.length)return out({error:'No children assigned to this trip run.'},409);
    const vehicle=vehicles.find(v=>v.id===route.vehicle_id),expired=['insurance','pollution','fitness','tax'].filter(k=>!vehicle?.[k+'_expiry']||vehicle[k+'_expiry']<today);
    if(expired.length)return out({error:'Vehicle documents need school renewal: '+expired.join(', ')+'.'},409);
+   const licence=await env.DB.prepare("SELECT expiry_date FROM neo_transport_staff_documents WHERE school_id=? AND staff_id=? AND type='license' ORDER BY uploaded_at DESC,id DESC LIMIT 1").bind(schoolId,route.driver_staff_id).first();
+   if(!licence||licence.expiry_date<today)return out({error:'The assigned driver needs a current driving licence uploaded by the school.'},409);
    if(b.fuel_ok!==true||b.tyres_ok!==true||b.condition_ok!==true)return out({error:'Complete fuel, tyre air and vehicle condition checks.'},400);
    const km=reading(),picture=photo(),id=crypto.randomUUID(),record={route_id:route.id,vehicle_id:vehicle.id,direction,run_no:run,date:today,status:'Started',odometer_start_km:km,checks:{fuel:true,tyres:true,condition:true},events:[],started_at:now,started_by:actor};
    if(allTrips.some(t=>t.route_id===route.id&&t.direction===direction&&Number(t.run_no||1)===run))return out({error:'This trip run has already started today.'},409);
    const inserts=[env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_trips',?,?)").bind(schoolId,id,JSON.stringify(record)),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'start',?,?)").bind(id,schoolId,picture),portalAudit(env,schoolId,false,'transport-start',id),portalNotification(env,schoolId,'school','Transport trip started',route.name+' · '+direction+' · Run '+run+' started at '+km+' km. Vehicle '+vehicle.registration_no+'. Fuel, tyre air and vehicle condition checks: OK.','transport_trips',id,'Unread','transport')];
    for(const [i,child] of children.entries())inserts.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:id,date:today,at:now,message:'Your '+(direction==='Pickup'?'pickup':'return')+' vehicle has started. Your child is '+(i+1)+' of '+children.length+' scheduled stops.',remaining:children.length})));
-   await env.DB.batch(inserts);return out({success:true,id,record},201);
+   await env.DB.batch(inserts);queueTransportPush(ctx,env,schoolId,'school',[schoolId]);queueTransportParentPush(ctx,env,schoolId,children.map(a=>a.student_id));return out({success:true,id,record},201);
   }
   const trip=allTrips.find(t=>t.id===b.trip_id),route=trip&&routes.find(r=>r.id===trip.route_id);if(!trip||!route)return out({error:'Assigned trip not found today.'},404);
   if(trip.status!=='Started')return out({error:'Trip is not active.'},409);
@@ -3669,6 +3824,7 @@ async function transportOperations(request,env,url){
    const statements=[env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),portalAudit(env,schoolId,false,'transport-emergency',trip.id),portalNotification(env,schoolId,'school','Transport emergency · '+type,route.name+' · '+trip.direction+' · Run '+(trip.run_no||1)+'. '+(note||'Staff requested immediate assistance.')+' Trip '+trip.id+'.','transport_trips',trip.id,'Unread','transport')];
    for(const child of children)statements.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'Transport update for '+route.name+': the vehicle has a '+(type==='Delay'?'delay':'service interruption')+'. The school is responding. Please check the Transport page for updates.',event_type:'Emergency'})));
    const results=await env.DB.batch(statements);if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
+   queueTransportPush(ctx,env,schoolId,'school',[schoolId]);queueTransportParentPush(ctx,env,schoolId,children.map(a=>a.student_id));
    return out({success:true,record:next});
   }
   if(action==='event'){
@@ -3683,6 +3839,7 @@ async function transportOperations(request,env,url){
    if(event==='Absent')steps.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:child.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'Your child was marked absent for '+(trip.direction==='Pickup'?'morning pickup':'return drop')+' on '+route.name+'. If this is incorrect, please contact the school. Morning pickup absence does not automatically mark return absence.',event_type:'Absent'})));
    for(const [i,a] of remaining.entries())steps.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'transport_alerts',?,?)").bind(schoolId,crypto.randomUUID(),JSON.stringify({student_id:a.student_id,route_id:route.id,trip_id:trip.id,date:today,at:now,message:'The vehicle has completed '+(children.length-remaining.length)+' of '+children.length+' scheduled stops. Your turn is '+(i+1)+' of '+remaining.length+' remaining.',remaining:remaining.length})));
    const results=await env.DB.batch(steps);if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
+   queueTransportParentPush(ctx,env,schoolId,[...remaining.map(a=>a.student_id),...(event==='Absent'?[child.student_id]:[])]);
    return out({success:true,record:next});
   }
   const done=new Set((trip.events||[]).filter(e=>(trip.direction==='Pickup'?['Picked up','Absent']:['Dropped at stop','Absent']).includes(e.type)).map(e=>e.student_id));
@@ -3691,6 +3848,7 @@ async function transportOperations(request,env,url){
   const picture=photo(),next={...JSON.parse(previous),status:'Completed',odometer_end_km:km,completed_at:now,completed_by:actor,updated_at:now};
   const vehicle=vehicles.find(v=>v.id===trip.vehicle_id),results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_trips' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,trip.id,previous),env.DB.prepare("INSERT INTO neo_transport_photos(trip_id,phase,school_id,photo) VALUES (?,'finish',?,?)").bind(trip.id,schoolId,picture),portalAudit(env,schoolId,false,'transport-finish',trip.id),portalNotification(env,schoolId,'school',trip.direction==='Pickup'?'Vehicle arrived at school':'Return trip completed',route.name+' · '+trip.direction+' · Run '+(trip.run_no||1)+' completed. Start '+trip.odometer_start_km+' km; finish '+km+' km; distance '+(km-trip.odometer_start_km)+' km. Vehicle '+(vehicle?.registration_no||'assigned')+'.','transport_trips',trip.id,'Unread','transport')]);
   if(!results[0].meta?.changes)return out({error:'Trip changed. Refresh and retry.'},409);
+  queueTransportPush(ctx,env,schoolId,'school',[schoolId]);
   return out({success:true,record:next});
  }catch(e){console.error('Transport operations',e);return out({error:e?.message||'Transport operation failed.'},400)}
 }
