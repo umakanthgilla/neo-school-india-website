@@ -67,6 +67,9 @@ const vapidToken=pushRequest.options.headers.Authorization.match(/vapid t=([^,]+
 r=await call('driver/care','POST',{vehicle_id:'VEHICLE01',type:'Fuel refill',odometer_km:99,litres:10,amount_paise:20000,note:'Fuel invoice',photo},driver);assert(r.status===201,'driver care report '+JSON.stringify(r));const careId=r.body.id;
 r=await call('school/care/'+schoolId);assert(r.status===200&&r.body.records.some(c=>c.id===careId),'school sees care report');
 r=await call('driver/care/VEHICLE01','GET',null,driver);assert(r.status===200&&r.body.records.some(c=>c.id===careId),'driver sees care history');
+r=await call('driver/care','POST',{vehicle_id:'VEHICLE01',type:'Tyre air',odometer_km:null,litres:null,amount_paise:0,note:'Air pressure checked'},driver);assert(r.status===201,'tyre air needs no fuel readings');const airId=r.body.id;
+r=await call('driver/care/VEHICLE01','GET',null,driver);assert(r.body.records.some(c=>c.id===airId&&c.type==='Tyre air'&&c.odometer_km===null),'tyre air stores no artificial odometer');
+r=await call('driver/care','POST',{vehicle_id:'VEHICLE01',type:'Maintenance',odometer_km:null,litres:null,amount_paise:0,note:'Door latch checked'},driver);assert(r.status===201,'maintenance needs no fuel readings');
 const invoiceRequest=req('carephoto/'+careId,'GET',null,driver);const invoice=await transportOperations(invoiceRequest,env,new URL(invoiceRequest.url));assert(invoice.status===200&&invoice.headers.get('Access-Control-Allow-Origin')==='https://neoschoolindia.com','driver invoice image');
 r=await call('school/care/'+schoolId+'/'+careId+'/confirm','POST',{paid_to:'Fuel station',payment_mode:'Cash'});assert(r.status===200&&r.body.voucher_no,'school posts transport voucher '+JSON.stringify(r));
 assert(db.prepare("SELECT count(*) n FROM neo_portal_records WHERE school_id=? AND kind='daily_accounts' AND id=?").get(schoolId,'FIN_CARE_'+careId).n===1,'transport expense posts once to ledger');
