@@ -17,7 +17,7 @@ const token=async(role,id,version)=>{
  return payload+'.'+sig;
 };
 const schoolToken=await token('school',{school_id:schoolId},'school-hash');
-const req=(path,method='GET',body,auth=schoolToken)=>new Request('https://example.test/api/transport/'+path,{method,headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+const req=(path,method='GET',body,auth=schoolToken)=>new Request('https://example.test/api/transport/'+path,{method,headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json',Origin:'https://neoschoolindia.com'},...(body?{body:JSON.stringify(body)}:{})});
 async function call(path,method,body,auth){const request=req(path,method,body,auth),url=new URL('https://example.test/api/transport/'+path);const r=await transportOperations(request,env,url)||await transportPortal(request,env,url);return {status:r.status,body:await r.json()}}
 const assert=(c,m)=>{if(!c)throw Error(m)};
 db.exec('CREATE TABLE neo_schools(school_id TEXT PRIMARY KEY,name TEXT,city TEXT,owner TEXT,password_hash TEXT,salt TEXT,active INTEGER DEFAULT 1)');
@@ -34,7 +34,7 @@ let r=await call('school/vehicles/'+schoolId,'POST',{request_id:'VEHICLE01',regi
 const photo='data:image/jpeg;base64,'+Buffer.from([255,216,1,2,255,217]).toString('base64');
 r=await call('school/documents/'+schoolId+'/VEHICLE01','POST',{type:'insurance',expiry_date:'2028-01-01',photo});assert(r.status===201,'vehicle document upload '+JSON.stringify(r));const documentId=r.body.id;
 r=await call('school/documents/'+schoolId+'?vehicle_id=VEHICLE01');assert(r.status===200&&r.body.documents.length===1&&r.body.documents[0].expiry_date==='2028-01-01','vehicle document list');
-const documentRequest=req('document/'+documentId);const documentImage=await transportOperations(documentRequest,env,new URL(documentRequest.url));assert(documentImage.status===200&&documentImage.headers.get('Content-Type')==='image/jpeg','authorized document photo');
+const documentRequest=req('document/'+documentId);const documentImage=await transportOperations(documentRequest,env,new URL(documentRequest.url));assert(documentImage.status===200&&documentImage.headers.get('Content-Type')==='image/jpeg'&&documentImage.headers.get('Access-Control-Allow-Origin')==='https://neoschoolindia.com','authorized document photo permits website origin');
 r=await call('school/routes/'+schoolId);assert(r.body.vehicles[0].insurance_expiry==='2028-01-01','document date updates vehicle');
 r=await call('school/routes/'+schoolId,'POST',{request_id:'ROUTE001',name:'Route 1',vehicle_id:'VEHICLE01',driver_staff_id:'DRIVER01',stops:['Market','School'],trip_count:2});assert(r.status===201,'route '+JSON.stringify(r));
 r=await call('school/assignments/'+schoolId,'POST',{request_id:'WRONGCLASS',route_id:'ROUTE001',student_id:'CHILD001',classroom_id:'CLASS002',stop:'Market'});assert(r.status===400,'wrong class');
@@ -48,7 +48,7 @@ r=await call('school/access/'+schoolId,'POST',{staff_id:'DRIVER01',role:'Driver'
 r=await call('login','POST',{account_id:account,password:'TestDriver1!'},'');assert(r.status===200,'driver login '+JSON.stringify(r));const driver=r.body.token;
 r=await call('driver/me','GET',null,driver);assert(r.status===200&&r.body.routes.length===1&&r.body.students.length===3,'scoped manifest');
 r=await call('driver/documents/VEHICLE01','GET',null,driver);assert(r.status===200&&r.body.documents.length===1&&r.body.documents[0].id===documentId,'assigned driver document list');
-const driverDocumentRequest=req('document/'+documentId,'GET',null,driver);const driverDocumentImage=await transportOperations(driverDocumentRequest,env,new URL(driverDocumentRequest.url));assert(driverDocumentImage.status===200&&driverDocumentImage.headers.get('Content-Type')==='image/jpeg','assigned driver document photo');
+const driverDocumentRequest=req('document/'+documentId,'GET',null,driver);const driverDocumentImage=await transportOperations(driverDocumentRequest,env,new URL(driverDocumentRequest.url));assert(driverDocumentImage.status===200&&driverDocumentImage.headers.get('Content-Type')==='image/jpeg'&&driverDocumentImage.headers.get('Access-Control-Allow-Origin')==='https://neoschoolindia.com','assigned driver document photo permits website origin');
 r=await call('driver/documents/ANOTHER-VEHICLE','GET',null,driver);assert(r.status===404,'unassigned vehicle documents denied');
 db.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.active',json('false')) WHERE school_id=? AND kind='transport_routes' AND id=?").run(schoolId,'ROUTE001');
 const revokedDocumentRequest=req('document/'+documentId,'GET',null,driver);const revokedDocument=await transportOperations(revokedDocumentRequest,env,new URL(revokedDocumentRequest.url));assert(revokedDocument.status===404,'driver loses photo access after route deactivation');
