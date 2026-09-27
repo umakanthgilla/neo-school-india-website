@@ -3605,9 +3605,13 @@ async function transportOperations(request,env,url){
   let transport=null;
   try{const p=(request.headers.get('Authorization')||'').replace(/^Bearer /,'').split('.');if(p.length===2&&await crypto.subtle.verify('HMAC',await getSigningKey(env.ADMIN_PASSWORD),base64urlDecode(p[1]),new TextEncoder().encode(p[0]))){const claim=JSON.parse(new TextDecoder().decode(base64urlDecode(p[0])));if(claim.role==='transport'&&claim.exp>Date.now()){const a=await env.DB.prepare('SELECT a.* FROM neo_transport_accounts a JOIN neo_schools s ON s.school_id=a.school_id WHERE a.account_id=? AND a.active=1 AND s.active=1').bind(claim.account_id).first();if(a?.password_hash===claim.version)transport=a}}}catch{}
   if(section==='document'&&request.method==='GET'){
-   if(!admin&&!school)return out({error:'School access required.'},403);
-   const row=await env.DB.prepare('SELECT school_id,photo FROM neo_transport_documents WHERE id=?').bind(action).first();
-   if(!row||!admin&&row.school_id!==school.school_id)return out({error:'Document not found.'},404);
+   if(!admin&&!school&&!transport)return out({error:'Sign in required.'},401);
+   const row=await env.DB.prepare('SELECT school_id,vehicle_id,photo FROM neo_transport_documents WHERE id=?').bind(action).first();
+   if(!row||!admin&&row.school_id!==(school?.school_id||transport?.school_id))return out({error:'Document not found.'},404);
+   if(transport){
+    const assigned=(await portalRows(env,transport.school_id,'transport_routes')).some(r=>r.active&&r.vehicle_id===row.vehicle_id&&[r.driver_staff_id,r.attendant_staff_id].includes(transport.staff_id));
+    if(!assigned)return out({error:'Document not found.'},404);
+   }
    return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
   }
   if(section==='photo'){
@@ -3625,6 +3629,12 @@ async function transportOperations(request,env,url){
   const vehicleIds=new Set(routes.map(r=>r.vehicle_id)),vehicles=(await portalRows(env,schoolId,'transport_vehicles')).filter(v=>vehicleIds.has(v.id));
   const allStudents=await portalRows(env,schoolId,'students'),studentIds=new Set(allAssignments.map(a=>a.student_id)),students=allStudents.filter(s=>studentIds.has(s.id)).map(s=>({id:s.id,name:s.name}));
   const ordered=(route,run,direction)=>allAssignments.filter(a=>a.route_id===route.id&&Number(a.run_no||1)===run).sort((a,b)=>{const x=route.stops.indexOf(a.stop),y=route.stops.indexOf(b.stop);return (direction==='Drop'?y-x:x-y)||String(a.created_at).localeCompare(String(b.created_at))||a.id.localeCompare(b.id)});
+  if(action==='documents'&&request.method==='GET'){
+   const vehicleId=parts[4];
+   if(!vehicleId||!vehicleIds.has(vehicleId))return out({error:'Vehicle not assigned.'},404);
+   const rows=await env.DB.prepare('SELECT id,type,expiry_date,uploaded_at FROM neo_transport_documents WHERE school_id=? AND vehicle_id=? ORDER BY uploaded_at DESC,id DESC LIMIT 80').bind(schoolId,vehicleId).all();
+   return out({vehicle_id:vehicleId,documents:rows.results||[]});
+  }
   if(action==='me'&&request.method==='GET'){
    const reminders=vehicles.flatMap(v=>['insurance','pollution','fitness','tax'].map(k=>{const date=v[k+'_expiry'],days=date?Math.ceil((Date.parse(date+'T00:00:00+05:30')-Date.now())/86400000):null;return {vehicle_id:v.id,type:k,date:date||null,days_remaining:days}}).filter(r=>r.days_remaining===null||r.days_remaining<=30));
    return out({account_id:transport.account_id,name:staff.name,role:transport.role,school_id:schoolId,routes,vehicles,assignments:allAssignments,students,trips:allTrips,reminders});

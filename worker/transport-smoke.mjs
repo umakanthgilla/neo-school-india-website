@@ -47,6 +47,13 @@ r=await call('school/trips/'+schoolId,'POST',{request_id:'SCHOOLOPS',route_id:'R
 r=await call('school/access/'+schoolId,'POST',{staff_id:'DRIVER01',role:'Driver',password:'TestDriver1!'});assert(r.status===201,'create transport access '+JSON.stringify(r));const account=r.body.account_id;
 r=await call('login','POST',{account_id:account,password:'TestDriver1!'},'');assert(r.status===200,'driver login '+JSON.stringify(r));const driver=r.body.token;
 r=await call('driver/me','GET',null,driver);assert(r.status===200&&r.body.routes.length===1&&r.body.students.length===3,'scoped manifest');
+r=await call('driver/documents/VEHICLE01','GET',null,driver);assert(r.status===200&&r.body.documents.length===1&&r.body.documents[0].id===documentId,'assigned driver document list');
+const driverDocumentRequest=req('document/'+documentId,'GET',null,driver);const driverDocumentImage=await transportOperations(driverDocumentRequest,env,new URL(driverDocumentRequest.url));assert(driverDocumentImage.status===200&&driverDocumentImage.headers.get('Content-Type')==='image/jpeg','assigned driver document photo');
+r=await call('driver/documents/ANOTHER-VEHICLE','GET',null,driver);assert(r.status===404,'unassigned vehicle documents denied');
+db.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.active',json('false')) WHERE school_id=? AND kind='transport_routes' AND id=?").run(schoolId,'ROUTE001');
+const revokedDocumentRequest=req('document/'+documentId,'GET',null,driver);const revokedDocument=await transportOperations(revokedDocumentRequest,env,new URL(revokedDocumentRequest.url));assert(revokedDocument.status===404,'driver loses photo access after route deactivation');
+r=await call('driver/documents/VEHICLE01','GET',null,driver);assert(r.status===404,'driver loses document list after route deactivation');
+db.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.active',json('true')) WHERE school_id=? AND kind='transport_routes' AND id=?").run(schoolId,'ROUTE001');
 r=await call('school/access/'+schoolId,'POST',{staff_id:'OTHER001',role:'Driver',password:'OtherStaff1!'});assert(r.status===400,'unassigned staff cannot get access');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},schoolToken);assert(r.status===401,'school cannot start');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},driver);assert(r.status===201,'driver start '+JSON.stringify(r));const trip=r.body.id;
@@ -70,7 +77,7 @@ assert(rows('notifications').some(x=>x.title==='Vehicle arrived at school'&&x.me
 const imageRequest=req('photo/'+trip+'/finish','GET',null,driver);const image=await transportOperations(imageRequest,env,new URL(imageRequest.url));assert(image.status===200&&image.headers.get('Content-Type')==='image/jpeg','photo retrieval');
 const parent=await token('parent',{account_id:'NP-PARENT01'},'parent-hash');
 db.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt) VALUES (?,?,?,?,?)').run('NP-PARENT01',schoolId,'CHILD001','parent-hash','salt');
-const blockedDocumentRequest=req('document/'+documentId,'GET',null,parent);const blockedDocument=await transportOperations(blockedDocumentRequest,env,new URL(blockedDocumentRequest.url));assert(blockedDocument.status===403,'parent cannot view private vehicle document');
+const blockedDocumentRequest=req('document/'+documentId,'GET',null,parent);const blockedDocument=await transportOperations(blockedDocumentRequest,env,new URL(blockedDocumentRequest.url));assert(blockedDocument.status===401,'parent cannot view private vehicle document');
 r=await call('parent/me','GET',null,parent);assert(r.status===200&&r.body.trips.length===1&&r.body.alerts.length===2&&r.body.alerts.every(x=>x.student_id==='CHILD001'),'child-scoped parent view '+JSON.stringify(r));
 r=await call('parent/me?from=2026-01-01&to=2026-01-31','GET',null,parent);assert(r.status===200&&r.body.trips.length===0,'parent period excludes trips outside range');
 r=await call('parent/me?from=2026-01-01&to=2026-12-31','GET',null,parent);assert(r.status===400,'parent period range capped');
