@@ -3612,7 +3612,7 @@ async function transportOperations(request,env,url){
     const assigned=(await portalRows(env,transport.school_id,'transport_routes')).some(r=>r.active&&r.vehicle_id===row.vehicle_id&&[r.driver_staff_id,r.attendant_staff_id].includes(transport.staff_id));
     if(!assigned)return out({error:'Document not found.'},404);
    }
-   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
   }
   if(section==='photo'){
    if(!transport&&!school&&!admin)return out({error:'Sign in required.'},401);
@@ -3620,7 +3620,7 @@ async function transportOperations(request,env,url){
    const image=await env.DB.prepare('SELECT school_id,photo FROM neo_transport_photos WHERE trip_id=? AND phase=?').bind(tripId,phase).first();
    if(!image||!admin&&image.school_id!==(school?.school_id||transport?.school_id))return out({error:'Photo not found.'},404);
    if(transport){const trip=await portalRecord(env,image.school_id,'transport_trips',tripId),route=trip&&await portalRecord(env,image.school_id,'transport_routes',trip.route_id);if(!route||![route.driver_staff_id,route.attendant_staff_id].includes(transport.staff_id))return out({error:'Access denied.'},403)}
-   return new Response(new Uint8Array(image.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store'}});
+   return new Response(new Uint8Array(image.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store',...cors(request)}});
   }
   if(!transport)return out({error:'Transport sign in required.'},401);
   const staff=await portalRecord(env,transport.school_id,'staff',transport.staff_id);if(!staff||staff.status==='Inactive')return out({error:'Staff profile unavailable.'},403);
