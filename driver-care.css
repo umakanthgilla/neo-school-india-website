@@ -1,0 +1,31 @@
+/* Compact mobile controls for the four transport sections. */
+.transport-main-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.transport-main-tabs button{min-width:0;min-height:66px;padding:9px;gap:6px;justify-content:flex-start;text-align:left;line-height:1.2}
+.transport-main-tabs button .transport-icon{margin:0}
+.transport-main-tabs button span:last-child{min-width:0;overflow-wrap:anywhere}
+.transport-route-picker{display:grid;gap:8px;background:#fff;border:1px solid var(--transport-line);border-radius:14px;padding:12px 15px;margin-bottom:14px}
+.transport-route-picker label{display:flex;align-items:center;font-weight:800;margin:0}
+.transport-route-picker .transport-icon{width:30px;height:30px}
+.transport-route-picker select{width:100%;margin:0;min-height:46px}
+.transport-push-slot:empty{display:none}
+.transport-push-slot .neo-push-optin{margin:0 0 14px;padding:8px 12px;background:#fff}
+.transport-push-slot .neo-push-optin button{min-height:42px;padding:7px 12px}
+.transport-care-card .transport-care-intro{line-height:1.5;margin:8px 0 20px;color:#3b526b}
+.transport-care-card .transport-form-fields{gap:11px 16px}
+.transport-care-card .transport-form-fields label{margin:0}
+.transport-care-card .transport-form-fields input,.transport-care-card .transport-form-fields select{margin-top:6px}
+.transport-care-card [data-care-field][hidden]{display:none!important}
+.transport-care-help{font-size:.9rem;color:#536980;margin:10px 0 15px}
+@media(max-width:700px){
+ .transport-header{flex-wrap:wrap;gap:9px;padding:9px 14px}
+ .transport-header .transport-brand{gap:10px}
+ .transport-brand img{width:70px;height:45px}
+ .transport-header nav{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ .transport-header nav a,.transport-header nav button{min-height:42px;text-align:center;margin:0}
+ .transport-main-tabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .transport-main-tabs button,.transport-main-tabs button[data-view=staff]{grid-column:auto;min-height:60px;font-size:.87rem;padding:7px 9px}
+ .transport-main-tabs .transport-icon{width:30px;height:30px;flex:none}
+ .transport-main-tabs .transport-icon svg{width:18px;height:18px}
+ .transport-care-card .transport-form-fields{grid-template-columns:1fr;gap:12px}
+ .transport-push-slot .neo-push-optin{justify-content:center}
+}
