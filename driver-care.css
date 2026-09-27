@@ -29,3 +29,63 @@
  .transport-care-card .transport-form-fields{grid-template-columns:1fr;gap:12px}
  .transport-push-slot .neo-push-optin{justify-content:center}
 }
+/* Driver workspace: the daily route stays in view; other tools live in Menu. */
+.transport-menu-panel[hidden]{display:none!important}
+.transport-work-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-bottom:14px}
+.transport-work-bar button,.transport-menu-panel button,.transport-return{display:flex;align-items:center;justify-content:center;gap:9px;min-height:52px;font-weight:800}
+.transport-work-bar button .transport-icon,.transport-menu-panel button .transport-icon{flex:none}
+.transport-work-bar [data-menu-toggle]{min-width:118px;background:#fff;color:#10275b;border:1px solid #cbd9e9}
+.transport-menu-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px;margin:-4px 0 14px;background:#eef5fc;border:1px solid #cbd9e9;border-radius:18px}
+.transport-menu-panel button{min-width:0;line-height:1.2;background:#fff;color:#10275b;border:1px solid #d4e0eb}
+.transport-menu-panel button span:last-child{overflow-wrap:anywhere}
+.transport-menu-panel .transport-push-slot,.transport-menu-reminders{grid-column:1/-1}
+.transport-menu-panel .transport-push-slot .neo-push-optin{margin:0}
+.transport-menu-reminders{padding:12px;background:#fff;border-radius:12px}
+.transport-menu-reminders strong{display:flex;align-items:center;gap:8px}
+.transport-menu-reminders p{margin:7px 0}
+.transport-return{margin:0 0 14px;padding:8px 18px;background:#fff;color:#10275b;border:1px solid #d4e0eb}
+.transport-trip-card{min-width:0}
+.transport-journey{padding:16px 16px 12px;background:#f0f6ff;border:1px solid #d5e4f2;border-radius:16px;margin:14px 0}
+.transport-journey-meta,.transport-journey-ends{display:flex;justify-content:space-between;gap:12px}
+.transport-journey-meta{color:#10275b}
+.transport-journey-meta span{font-weight:800;white-space:nowrap}
+.transport-journey-track{position:relative;height:10px;margin:31px 14px 24px;border-radius:20px;background:#c9d7e6}
+.transport-journey-fill{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#2591c1,#42b65d,#f3cd24,#f65b77);transition:width .35s ease}
+.transport-journey-bus{position:absolute;top:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#10275b;color:#fff;border:2px solid #fff;box-shadow:0 3px 10px #10275b55;transform:translate(-50%,-50%);transition:left .35s ease}
+.transport-journey-bus .transport-icon{background:none;color:inherit;margin:0}
+.transport-journey-ends{font-size:.86rem;color:#51657e}
+.transport-journey-ends span{max-width:47%;overflow-wrap:anywhere}
+.transport-journey-ends span:last-child{text-align:right}
+.transport-next-child{padding:16px;background:#fff;border:1px solid #cbd9e9;border-radius:16px;margin:15px 0}
+.transport-step-label{font-size:.78rem;font-weight:900;letter-spacing:.09em;color:#506580}
+.transport-next-name{display:flex;align-items:center;gap:12px;margin:8px 0 16px;font-size:1.25rem;color:#10275b}
+.transport-next-name span:last-child{display:grid}
+.transport-next-name small{font-size:.92rem;color:#536980}
+.transport-next-child .transport-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.transport-next-child .transport-actions button{min-height:54px;display:flex;align-items:center;justify-content:center;gap:7px;margin:0}
+.transport-next-child .transport-actions button.secondary{background:#fff;color:#10275b;border:1px solid #b9cbe0}
+.transport-trip-reading{font-size:.9rem;color:#536980}
+.transport-itinerary,.transport-trip-tools{border:1px solid #d5e1ed;border-radius:13px;margin-top:16px;background:#fff}
+.transport-itinerary summary,.transport-trip-tools summary{display:flex;align-items:center;gap:8px;padding:14px;cursor:pointer;font-weight:800;color:#10275b;list-style:none}
+.transport-itinerary summary::-webkit-details-marker,.transport-trip-tools summary::-webkit-details-marker{display:none}
+.transport-itinerary summary::after,.transport-trip-tools summary::after{content:'⌄';margin-left:auto}
+.transport-itinerary[open] summary::after,.transport-trip-tools[open] summary::after{content:'⌃'}
+.transport-itinerary ol{list-style:none;padding:0 15px 14px;margin:0}
+.transport-itinerary li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #e4edf5;color:#51657e}
+.transport-itinerary li.is-next{color:#10275b;background:#f0f6ff}
+.transport-itinerary li.is-done{color:#186e56}
+.transport-stop-number{flex:none;width:32px;height:32px;border-radius:50%;background:#e7eef6;color:#10275b;display:flex;align-items:center;justify-content:center;font-weight:900}
+.transport-itinerary li.is-next .transport-stop-number{background:#10275b;color:#fff}
+.transport-itinerary li.is-done .transport-stop-number{background:#e6f5ed;color:#186e56}
+.transport-stop-number .transport-icon{width:22px;height:22px;margin:0;background:none}
+.transport-itinerary li>span:nth-child(2){display:grid;min-width:0}
+.transport-itinerary small{color:#65778a}
+.transport-stop-state{margin-left:auto;font-size:.8rem;white-space:nowrap}
+.transport-finish-form{padding:16px;background:#f0f6ff;border-radius:16px}
+.transport-trip-tools form{padding:0 14px 14px}
+@media(max-width:700px){
+ .transport-menu-panel{grid-template-columns:1fr}
+ .transport-menu-panel button{justify-content:flex-start}
+ .transport-work-bar [data-menu-toggle]{min-width:104px}
+ .transport-next-child .transport-actions button{padding:8px;font-size:.9rem}
+}
