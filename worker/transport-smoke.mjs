@@ -31,6 +31,11 @@ put('students','CHILD001',{name:'Child A',program:'LKG',classroom_id:'CLASS001'}
 put('students','CHILD002',{name:'Child B',program:'UKG',classroom_id:'CLASS002'});
 put('students','CHILD003',{name:'Child C',program:'LKG',classroom_id:'CLASS001'});
 let r=await call('school/vehicles/'+schoolId,'POST',{request_id:'VEHICLE01',registration_no:'TS01AB1234',label:'Bus 1',capacity:2,insurance_expiry:'2027-12-01',pollution_expiry:'2027-12-01',fitness_expiry:'2027-12-01',tax_expiry:'2027-12-01'});assert(r.status===201,'vehicle '+JSON.stringify(r));
+const photo='data:image/jpeg;base64,'+Buffer.from([255,216,1,2,255,217]).toString('base64');
+r=await call('school/documents/'+schoolId+'/VEHICLE01','POST',{type:'insurance',expiry_date:'2028-01-01',photo});assert(r.status===201,'vehicle document upload '+JSON.stringify(r));const documentId=r.body.id;
+r=await call('school/documents/'+schoolId+'?vehicle_id=VEHICLE01');assert(r.status===200&&r.body.documents.length===1&&r.body.documents[0].expiry_date==='2028-01-01','vehicle document list');
+const documentRequest=req('document/'+documentId);const documentImage=await transportOperations(documentRequest,env,new URL(documentRequest.url));assert(documentImage.status===200&&documentImage.headers.get('Content-Type')==='image/jpeg','authorized document photo');
+r=await call('school/routes/'+schoolId);assert(r.body.vehicles[0].insurance_expiry==='2028-01-01','document date updates vehicle');
 r=await call('school/routes/'+schoolId,'POST',{request_id:'ROUTE001',name:'Route 1',vehicle_id:'VEHICLE01',driver_staff_id:'DRIVER01',stops:['Market','School'],trip_count:2});assert(r.status===201,'route '+JSON.stringify(r));
 r=await call('school/assignments/'+schoolId,'POST',{request_id:'WRONGCLASS',route_id:'ROUTE001',student_id:'CHILD001',classroom_id:'CLASS002',stop:'Market'});assert(r.status===400,'wrong class');
 r=await call('school/assignments/'+schoolId,'POST',{request_id:'ASSIGN001',route_id:'ROUTE001',student_id:'CHILD001',classroom_id:'CLASS001',stop:'Market',run_no:1});assert(r.status===201,'assign '+JSON.stringify(r));
@@ -42,7 +47,6 @@ r=await call('school/trips/'+schoolId,'POST',{request_id:'SCHOOLOPS',route_id:'R
 r=await call('school/access/'+schoolId,'POST',{staff_id:'DRIVER01',role:'Driver',password:'TestDriver1!'});assert(r.status===201,'create transport access '+JSON.stringify(r));const account=r.body.account_id;
 r=await call('login','POST',{account_id:account,password:'TestDriver1!'},'');assert(r.status===200,'driver login '+JSON.stringify(r));const driver=r.body.token;
 r=await call('driver/me','GET',null,driver);assert(r.status===200&&r.body.routes.length===1&&r.body.students.length===3,'scoped manifest');
-const photo='data:image/jpeg;base64,'+Buffer.from([255,216,1,2,255,217]).toString('base64');
 r=await call('school/access/'+schoolId,'POST',{staff_id:'OTHER001',role:'Driver',password:'OtherStaff1!'});assert(r.status===400,'unassigned staff cannot get access');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},schoolToken);assert(r.status===401,'school cannot start');
 r=await call('driver/start','POST',{route_id:'ROUTE001',direction:'Pickup',run_no:1,fuel_ok:true,tyres_ok:true,condition_ok:true,odometer_km:100,photo},driver);assert(r.status===201,'driver start '+JSON.stringify(r));const trip=r.body.id;
@@ -66,5 +70,8 @@ assert(rows('notifications').some(x=>x.title==='Vehicle arrived at school'&&x.me
 const imageRequest=req('photo/'+trip+'/finish','GET',null,driver);const image=await transportOperations(imageRequest,env,new URL(imageRequest.url));assert(image.status===200&&image.headers.get('Content-Type')==='image/jpeg','photo retrieval');
 const parent=await token('parent',{account_id:'NP-PARENT01'},'parent-hash');
 db.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt) VALUES (?,?,?,?,?)').run('NP-PARENT01',schoolId,'CHILD001','parent-hash','salt');
+const blockedDocumentRequest=req('document/'+documentId,'GET',null,parent);const blockedDocument=await transportOperations(blockedDocumentRequest,env,new URL(blockedDocumentRequest.url));assert(blockedDocument.status===403,'parent cannot view private vehicle document');
 r=await call('parent/me','GET',null,parent);assert(r.status===200&&r.body.trips.length===1&&r.body.alerts.length===2&&r.body.alerts.every(x=>x.student_id==='CHILD001'),'child-scoped parent view '+JSON.stringify(r));
-console.log('Transport smoke: class lock, separate login, ordered parent alerts, absence, emergency, school readings and finish passed.');
+r=await call('parent/me?from=2026-01-01&to=2026-01-31','GET',null,parent);assert(r.status===200&&r.body.trips.length===0,'parent period excludes trips outside range');
+r=await call('parent/me?from=2026-01-01&to=2026-12-31','GET',null,parent);assert(r.status===400,'parent period range capped');
+console.log('Transport smoke: route alerts, school readings, vehicle documents, child-scoped period reports and finish passed.');

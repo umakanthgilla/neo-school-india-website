@@ -3425,9 +3425,12 @@ async function transportPortal(request,env,url){
    const routes=(await portalRows(env,parent.school_id,'transport_routes')).filter(r=>routeIds.has(r.id)&&r.active);
    const vehicleIds=new Set(routes.map(r=>r.vehicle_id));
    const vehicles=(await portalRows(env,parent.school_id,'transport_vehicles')).filter(v=>vehicleIds.has(v.id));
-   const trips=(await portalRows(env,parent.school_id,'transport_trips')).filter(t=>assignments.some(a=>a.route_id===t.route_id&&Number(a.run_no||1)===Number(t.run_no||1))&&t.date===neoToday()).map(t=>({...t,events:(t.events||[]).filter(e=>e.student_id===parent.student_id)}));
+   const from=url.searchParams.get('from')||neoToday(),to=url.searchParams.get('to')||from;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||!Number.isFinite(Date.parse(from))||!Number.isFinite(Date.parse(to))||Date.parse(to)<Date.parse(from)||Date.parse(to)-Date.parse(from)>31*86400000)return out({error:'Choose a valid date, week or month.'},400);
+   const tripRows=routeIds.size?await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_trips' AND json_extract(data,'$.date') BETWEEN ? AND ? AND json_extract(data,'$.route_id') IN ("+[...routeIds].map(()=>'?').join(',')+") ORDER BY json_extract(data,'$.date') DESC,created_at DESC LIMIT 500").bind(parent.school_id,from,to,...routeIds).all():{results:[]};
+   const trips=(tripRows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at})).filter(t=>assignments.some(a=>a.route_id===t.route_id&&Number(a.run_no||1)===Number(t.run_no||1))).map(t=>({...t,events:(t.events||[]).filter(e=>e.student_id===parent.student_id)}));
    const alerts=(await portalRows(env,parent.school_id,'transport_alerts')).filter(n=>n.student_id===parent.student_id&&n.date===neoToday()).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
-   return out({assignments,routes,vehicles,trips,alerts});
+   return out({assignments,routes,vehicles,trips,alerts,period:{from,to}});
   }
   if(scope!=='school'||!kind||!['routes','vehicles','assignments','trips'].includes(kind))return out({error:'Not found.'},404);
   const schoolId=parts[4]; // /api/transport/school/:kind/:school_id[/id]
@@ -3526,7 +3529,9 @@ async function ensureTransportSchema(env){
    env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_login_attempts(school_id TEXT PRIMARY KEY,attempts INTEGER NOT NULL,expires INTEGER NOT NULL)'),
    env.DB.prepare("CREATE TABLE IF NOT EXISTS neo_transport_accounts(account_id TEXT PRIMARY KEY,school_id TEXT NOT NULL,staff_id TEXT NOT NULL,role TEXT NOT NULL,salt TEXT NOT NULL,password_hash TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"),
    env.DB.prepare('CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_staff_account ON neo_transport_accounts(school_id,staff_id)'),
-   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_photos(trip_id TEXT NOT NULL,phase TEXT NOT NULL,school_id TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(trip_id,phase))')
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_photos(trip_id TEXT NOT NULL,phase TEXT NOT NULL,school_id TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(trip_id,phase))'),
+   env.DB.prepare('CREATE TABLE IF NOT EXISTS neo_transport_documents(id TEXT PRIMARY KEY,school_id TEXT NOT NULL,vehicle_id TEXT NOT NULL,type TEXT NOT NULL,expiry_date TEXT NOT NULL,uploaded_at TEXT NOT NULL,photo BLOB NOT NULL)'),
+   env.DB.prepare('CREATE INDEX IF NOT EXISTS neo_transport_documents_vehicle ON neo_transport_documents(school_id,vehicle_id,type,uploaded_at)')
   ]);
   await env.DB.prepare('DROP INDEX IF EXISTS neo_transport_trip_once').run();
   await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS neo_transport_trip_run_once ON neo_portal_records(school_id,json_extract(data,'$.route_id'),json_extract(data,'$.date'),json_extract(data,'$.direction'),COALESCE(json_extract(data,'$.run_no'),1)) WHERE kind='transport_trips'").run();
@@ -3536,7 +3541,7 @@ async function ensureTransportSchema(env){
 async function transportOperations(request,env,url){
  const path=url.pathname;if(!path.startsWith('/api/transport/'))return null;
  const parts=path.split('/').filter(Boolean),section=parts[2],action=parts[3];
- if(!['login','driver','school','photo'].includes(section)||section==='school'&&!['access','compliance'].includes(action))return null;
+ if(!['login','driver','school','photo','document'].includes(section)||section==='school'&&!['access','compliance','documents'].includes(action))return null;
  const out=(b,s=200)=>json(b,s,request);
  try{
   await ensurePortalSchema(env);
@@ -3555,6 +3560,26 @@ async function transportOperations(request,env,url){
   const admin=await requireAdmin(request,env),school=admin?null:await schoolSession(request,env);
   if(section==='school'){
    const schoolId=parts[4];if(!schoolId||!admin&&school?.school_id!==schoolId)return out({error:'School access required.'},403);
+   if(action==='documents'){
+    const vehicleId=parts[5]||url.searchParams.get('vehicle_id');
+    if(!vehicleId)return out({error:'Choose a vehicle.'},400);
+    const vehicle=await portalRecord(env,schoolId,'transport_vehicles',vehicleId);if(!vehicle)return out({error:'Vehicle not found.'},404);
+    if(request.method==='GET'){
+     const rows=await env.DB.prepare('SELECT id,type,expiry_date,uploaded_at FROM neo_transport_documents WHERE school_id=? AND vehicle_id=? ORDER BY uploaded_at DESC,id DESC LIMIT 80').bind(schoolId,vehicleId).all();
+     return out({vehicle_id:vehicleId,documents:rows.results||[]});
+    }
+    if(request.method!=='POST')return out({error:'Method not allowed.'},405);
+    const raw=await request.text();if(raw.length>210000)return out({error:'Photo must be under 150 KB.'},413);
+    let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid document.'},400)}
+    const type=String(b.type||''),expiry=String(b.expiry_date||''),photo=String(b.photo||'');
+    if(!['insurance','pollution','fitness','tax'].includes(type)||!/^\d{4}-\d{2}-\d{2}$/.test(expiry)||!Number.isFinite(Date.parse(expiry)))return out({error:'Choose document type and valid expiry date.'},400);
+    if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Capture a JPEG photo under 150 KB.'},400);
+    const bytes=Uint8Array.from(atob(photo.split(',')[1]),c=>c.charCodeAt(0));if(bytes.length<4||bytes.length>150000||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)return out({error:'Upload a valid JPEG photo under 150 KB.'},400);
+    const current=JSON.stringify((({id,created_at,...data})=>data)(vehicle)),next={...JSON.parse(current),[type+'_expiry']:expiry,updated_at:new Date().toISOString()},id=crypto.randomUUID();
+    const results=await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='transport_vehicles' AND id=? AND data=?").bind(JSON.stringify(next),schoolId,vehicleId,current),env.DB.prepare('INSERT INTO neo_transport_documents(id,school_id,vehicle_id,type,expiry_date,uploaded_at,photo) VALUES (?,?,?,?,?,?,?)').bind(id,schoolId,vehicleId,type,expiry,new Date().toISOString(),bytes),portalAudit(env,schoolId,!school,'transport-document',id)]);
+    if(!results[0].meta?.changes)return out({error:'Vehicle changed. Refresh and retry.'},409);
+    return out({success:true,id,type,expiry_date:expiry},201);
+   }
    if(action==='access'){
     if(request.method==='GET'){const rows=await env.DB.prepare('SELECT account_id,staff_id,role,active,created_at FROM neo_transport_accounts WHERE school_id=? ORDER BY created_at DESC').bind(schoolId).all();return out({accounts:rows.results||[]})}
     if(request.method!=='POST')return out({error:'Method not allowed.'},405);
@@ -3579,6 +3604,12 @@ async function transportOperations(request,env,url){
   }
   let transport=null;
   try{const p=(request.headers.get('Authorization')||'').replace(/^Bearer /,'').split('.');if(p.length===2&&await crypto.subtle.verify('HMAC',await getSigningKey(env.ADMIN_PASSWORD),base64urlDecode(p[1]),new TextEncoder().encode(p[0]))){const claim=JSON.parse(new TextDecoder().decode(base64urlDecode(p[0])));if(claim.role==='transport'&&claim.exp>Date.now()){const a=await env.DB.prepare('SELECT a.* FROM neo_transport_accounts a JOIN neo_schools s ON s.school_id=a.school_id WHERE a.account_id=? AND a.active=1 AND s.active=1').bind(claim.account_id).first();if(a?.password_hash===claim.version)transport=a}}}catch{}
+  if(section==='document'&&request.method==='GET'){
+   if(!admin&&!school)return out({error:'School access required.'},403);
+   const row=await env.DB.prepare('SELECT school_id,photo FROM neo_transport_documents WHERE id=?').bind(action).first();
+   if(!row||!admin&&row.school_id!==school.school_id)return out({error:'Document not found.'},404);
+   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+  }
   if(section==='photo'){
    if(!transport&&!school&&!admin)return out({error:'Sign in required.'},401);
    const tripId=action,phase=parts[4];if(!['start','finish'].includes(phase))return out({error:'Not found.'},404);

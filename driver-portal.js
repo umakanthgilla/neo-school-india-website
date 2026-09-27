@@ -26,6 +26,7 @@
  function render(){
   const route=current.routes.find(r=>r.id===selectedRoute)||current.routes[0];selectedRoute=route?.id||'';
   login.hidden=true;app.hidden=false;signOut.hidden=false;staffName.textContent=current.name+' · '+current.role;
+  window.NeoAlertSound?.count('transport:'+current.account_id,current.reminders.length+current.trips.reduce((n,t)=>n+(t.events||[]).filter(e=>e.type==='Emergency').length,0));
   app.innerHTML=`<section class="transport-card transport-hero"><h1>${icon('route')}Today's Route</h1><p>${esc(current.name)} · ${esc(current.role)}. Complete vehicle checks and record each child in stop order.</p></section>`+
    (current.reminders.length?`<section class="transport-card"><h2>${icon('alert','gold')}Vehicle renewals</h2>${current.reminders.map(r=>`<div class="transport-notice">${icon('clock','gold')}<p>${esc(current.vehicles.find(v=>v.id===r.vehicle_id)?.registration_no||'Vehicle')}: ${esc(r.type)} ${r.date?'renew by '+esc(r.date):'date missing'} ${r.days_remaining!==null?'('+r.days_remaining+' days)':''}</p></div>`).join('')}</section>`:'')+
    (current.routes.length>1?`<nav class="transport-route-tabs" aria-label="Assigned routes">${current.routes.map(r=>`<button type="button" data-route="${esc(r.id)}" aria-current="${r.id===selectedRoute}">${icon('bus')}${esc(r.name)}</button>`).join('')}</nav>`:'')+
@@ -38,5 +39,6 @@
  }
  async function draw(){current=await api('driver/me');render()}
  document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();e.submitter.disabled=true;try{const b=await api('login','POST',Object.fromEntries(new FormData(e.target)));token=b.token;sessionStorage.setItem(key,token);e.target.reset();await draw()}catch(err){status(err.message)}finally{e.submitter.disabled=false}};
+ setInterval(async()=>{if(!token||!current||document.hidden)return;try{const next=await api('driver/me'),previous=current.reminders.length+current.trips.reduce((n,t)=>n+(t.events||[]).filter(e=>e.type==='Emergency').length,0),incoming=next.reminders.length+next.trips.reduce((n,t)=>n+(t.events||[]).filter(e=>e.type==='Emergency').length,0);window.NeoAlertSound?.count('transport:'+next.account_id,incoming);if(incoming!==previous){current=next;render();if(incoming>previous)status('New vehicle or route alert.')}}catch{}},30000);
  if(token)draw().catch(err=>{logout();status(err.message)});
 })();

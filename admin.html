@@ -530,7 +530,7 @@ body main section.reminders .reminder-col h3 {
 #appView .workspace-nav::-webkit-scrollbar-track{background:transparent}
 #appView .workspace-nav::-webkit-scrollbar-thumb{background:#8caed2;border-radius:999px}
 </style>
-<body>
+<script src="/neo-alert-sound.js?v=20260927-v1"></script><body>
 
 <section id="loginView" class="login-shell">
   <form id="loginForm" class="login-card">
@@ -950,7 +950,7 @@ async function loadMetrics(){
   try{
     const d=await api("/api/admin/dashboard"); const m=d.metrics||{};
     $("#mTotal").textContent=m.total||0; $("#mNew").textContent=m.new_leads||0; $("#mAdmissions").textContent=m.admissions||0; $("#mFranchise").textContent=m.franchises||0;
-    const newCount=Number(m.new_leads||0),bellCount=$("#headOfficeBellCount");bellCount.textContent=String(newCount);bellCount.hidden=!newCount;$("#headOfficeBell").setAttribute("aria-label",newCount?newCount+" new enquiries":"No new enquiries");
+    const newCount=Number(m.new_leads||0),bellCount=$("#headOfficeBellCount");bellCount.textContent=String(newCount);bellCount.hidden=!newCount;window.NeoAlertSound?.count('head-office:new-leads',newCount);$("#headOfficeBell").setAttribute("aria-label",newCount?newCount+" new enquiries":"No new enquiries");
     $("#mToday").textContent=m.today_followups||0; $("#mOverdue").textContent=m.overdue||0; $("#mConverted").textContent=m.converted||0; $("#mLost").textContent=m.lost||0;
     return true;
   }catch(e){reportLoadError(e);return false}
@@ -1122,6 +1122,7 @@ document.getElementById('headOfficeBell').onclick=()=>{
 };
 new MutationObserver(updateHeadOfficeBack).observe(document.getElementById('editModal'),{attributes:true,attributeFilter:['class']});
 updateHeadOfficeBack();
+setInterval(()=>{if(token&&!document.hidden)loadMetrics()},30000);
 function updateMobileBackTop(){mobileBackTop.hidden=window.innerWidth>700||window.scrollY<450||headOfficeApp.classList.contains('hidden')}
 window.addEventListener('scroll',updateMobileBackTop,{passive:true});
 window.addEventListener('resize',updateMobileBackTop);

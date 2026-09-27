@@ -1107,3 +1107,22 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #familyApp .transport-parent-alert button{min-height:36px}
 #familyApp .transport-parent-alert.is-read{background:#f8fafc}
 #familyApp .transport-read-state{color:#355a79;font-weight:700}
+
+/* Selected vehicle, documents and parent trip history */
+#neoWorkspace .transport-vehicle-picker{display:block;max-width:480px;margin:12px 0 18px;font-weight:700}
+#neoWorkspace .transport-vehicle-picker select{display:block;width:100%;max-width:100%;box-sizing:border-box;margin-top:7px}
+#neoWorkspace .transport-renewal-panel .transport-row{max-width:100%}
+#neoWorkspace .transport-renewal-panel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}
+#neoWorkspace .transport-renewal-panel form label{min-width:0}
+#neoWorkspace .transport-renewal-panel form input{width:100%;min-width:0;box-sizing:border-box}
+#neoWorkspace .transport-renewal-panel form button{min-height:46px}
+#neoWorkspace .transport-documents-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#neoWorkspace .transport-document-card{min-width:0}
+#neoWorkspace .transport-document-card form{display:grid;gap:12px;margin-top:18px}
+#neoWorkspace .transport-document-card :is(input,button){max-width:100%;box-sizing:border-box}
+#neoWorkspace .transport-document-image{display:block;max-width:min(100%,560px);max-height:460px;object-fit:contain;border:1px solid #dce6f2;border-radius:10px;margin:12px 0}
+#neoWorkspace .transport-document-card details{margin-top:16px}
+#neoWorkspace .transport-document-card details p{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+#familyApp .transport-parent-history .transport-report-controls{margin:12px 0}
+#familyApp .transport-parent-history :is(input,select){width:100%;box-sizing:border-box}
+@media(max-width:800px){#neoWorkspace .transport-documents-grid,#neoWorkspace .transport-renewal-panel form{grid-template-columns:minmax(0,1fr)}}
