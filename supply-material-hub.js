@@ -93,7 +93,7 @@ const supplyNavGroups=[
  {key:'centers',label:'Centers Hub',icon:'building',items:[['center_orders','Center Orders'],['demand','Demand Consolidation'],['center_finance','Center Finance']]},
  {key:'vendors',label:'Vendors',icon:'building',items:[['vendors','Vendor Details'],['materials','Material Hub'],['kits','Student Kit Builder'],['vendor_pos','Purchase Orders']]},
  {key:'fulfilment',label:'Warehouse & Fulfilment',icon:'package',items:[['stock','Available Stock'],['warehouse','Warehouse & GRN'],['packing','Packing'],['dispatch','Dispatch & Tracking']]},
- {key:'finance',label:'Finance',icon:'wallet',items:[['head_office_ledger','Head Office Ledger'],['finance_control','Finance Control'],['schools_ledger','Schools Ledger'],['money_in','↓ Money In'],['money_out','↑ Money Out']]}
+ {key:'finance',label:'Finance',icon:'wallet',items:[['head_office_ledger','Head Office Ledger'],['finance_control','Finance Control'],['schools_ledger','Schools Ledger'],['money_in','↓ Money In'],['money_out','↑ Vendor Payments']]}
 ];
 const groupForTab=t=>supplyNavGroups.find(g=>g.items.some(([key])=>key===t))?.key||'overview';
 let openSupplyGroup=groupForTab(tab);
