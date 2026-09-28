@@ -68,6 +68,7 @@
   }catch(err){status(err.message)}
  }
  function render(){
+  app.dataset.renderedAt=String(Date.now());app.dataset.renderStack=(new Error('render')).stack?.slice(0,500)||'';
   const route=current.routes.find(r=>r.id===selectedRoute)||current.routes[0];selectedRoute=route?.id||'';
   login.hidden=true;app.hidden=false;document.body.classList.add('transport-authenticated');signOut.hidden=false;staffName.textContent=current.name+' · '+current.role;
   window.NeoAlertSound?.count('transport:'+current.account_id,current.reminders.length+current.trips.reduce((n,t)=>n+(t.events||[]).filter(e=>e.type==='Emergency').length,0));
@@ -164,7 +165,7 @@
    form.reset();dialog.querySelector('[data-start-step="checks"]').hidden=false;dialog.querySelector('[data-start-step="selection"]').hidden=true;
    const index=startChoices.findIndex(t=>t.route.id===button.dataset.openStart&&t.direction===button.dataset.direction&&t.run===Number(button.dataset.run));
    form.elements.namedItem('trip_choice').value=String(index>=0?index:0);
-   dialog.hidden=false;dialog.querySelector('[data-close-start]').focus();status('Trip checks opened.');
+   dialog.hidden=false;app.dataset.openedAt=String(Date.now());dialog.querySelector('[data-close-start]').focus();status('Trip checks opened.');
   }catch(err){console.error('Transport start popup:',err);status('Unable to open trip checks: '+err.message)}
  },true);
  if(token)draw().catch(err=>{logout();status(err.message)});
