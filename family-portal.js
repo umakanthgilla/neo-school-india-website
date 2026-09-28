@@ -123,6 +123,11 @@ const familyTabIcon={overview:'grid',calendar:'calendar',timetable:'clock',curri
    page.document.close();page.focus();page.print();
   });
  }
+ if(role==='parent'){
+  const certificates=data.student_tc||[];
+  area.insertAdjacentHTML('beforeend',`<section class="panel"><h3>Transfer Certificate</h3><div class="portal-grid">${certificates.map(tc=>card(tc.certificate_no,`<p>Issued ${esc(tc.issued_on)} · Withdrawn ${esc(tc.withdrawal_date)}</p><button type="button" data-print-tc="${esc(tc.id)}">Print / Save PDF</button>`)).join('')||'<p>No Transfer Certificate issued for your child.</p>'}</div></section>`);
+  area.querySelectorAll('[data-print-tc]').forEach(button=>button.onclick=()=>{const tc=certificates.find(x=>x.id===button.dataset.printTc);if(!window.neoPrintTC?.(tc))status('Allow pop-ups to print the Transfer Certificate.')});
+ }
  area.querySelectorAll('[data-report-target]').forEach(b=>b.onclick=()=>{tab=b.dataset.reportTarget;render()});return}
  if(tab==='transport'&&role==='parent'){window.NeoTransport.parent(area,{token,base:'https://neo-lead-crm-api.umakanthgilla.workers.dev',isAlertRead:id=>seenAlerts().has('transport_alerts:'+id),onAlertRead:id=>markParentRead('transport_alerts',id)});return}
  if(tab==='calendar'){window.renderNeoCalendar(area,{api:learningApi,state:data.learning.calendar});return}
