@@ -1160,3 +1160,14 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #neoWorkspace .transport-report-trip>form[data-resolve-emergency]{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:16px 0}
 #neoWorkspace .transport-report-trip>form[data-resolve-emergency] input{width:100%;min-width:0}
 @media(max-width:700px){#neoWorkspace .transport-report-trip>.actions>details form,#neoWorkspace .transport-report-trip>form[data-resolve-emergency]{grid-template-columns:minmax(0,1fr)}}
+
+/* Detailed transport reports */
+#neoWorkspace .transport-report-controls{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+#neoWorkspace .transport-report-stats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+#neoWorkspace .transport-summary-card details{margin-top:12px;border-top:1px solid #dce6f3;padding-top:10px}
+#neoWorkspace .transport-summary-card details summary{color:#173b74}
+#neoWorkspace .transport-report-table-wrap{max-width:100%;overflow-x:auto;margin-top:12px}
+#neoWorkspace .transport-report-table{width:100%;min-width:680px;border-collapse:collapse;font-size:.9rem}
+#neoWorkspace .transport-report-table :is(th,td){padding:8px 10px;border-bottom:1px solid #e4ecf5;text-align:left;white-space:nowrap}
+#neoWorkspace .transport-report-table th{color:#254775;background:#f1f6fd}
+@media(max-width:700px){#neoWorkspace .transport-report-controls,#neoWorkspace .transport-report-stats{grid-template-columns:minmax(0,1fr)}}
