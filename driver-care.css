@@ -141,3 +141,36 @@ body.transport-authenticated>.transport-main{max-width:none;margin:0;padding:8px
  #app .transport-side-signout{margin:2px 0 0;min-height:43px}
 }
 @media(max-width:480px){#app .transport-sidebar .transport-menu-panel,#app .transport-sidebar .transport-menu-panel[hidden]{grid-template-columns:repeat(3,minmax(0,1fr))}.transport-portal-hero .eyebrow{font-size:10px;letter-spacing:.12em}.transport-hero-controls{gap:5px}.transport-hero-controls img{display:none}}
+
+/* Match the shared School and Head Office workspace frame. */
+body.transport-authenticated{background:#0b2055!important}
+@media(min-width:761px){
+ body.transport-authenticated{height:100dvh;overflow:hidden}
+ body.transport-authenticated>.transport-main{height:100dvh;padding:32px 36px!important;background:#0b2055}
+ #app:not([hidden]){height:calc(100dvh - 64px);min-height:0;grid-template-columns:255px minmax(0,1fr);grid-template-rows:200px minmax(0,1fr);gap:20px 22px;background:#0b2055}
+ #app>.transport-sidebar{background:#102a60;border:1px solid #dce5f2;border-radius:20px;padding:26px 18px 18px}
+ .transport-sidebar-logo{margin:0 9px 22px}
+ .transport-sidebar-logo img{height:82px;width:100%;padding:8px;border:1px solid #e5edf7;border-radius:15px;box-shadow:0 10px 28px #00133335}
+ #app>.transport-portal-hero{height:200px;border-radius:20px;padding:26px 32px;background:linear-gradient(120deg,#071943 0%,#0b285d 62%,#123d70)}
+ #app>.transport-content{background:#f7fbff;border-radius:20px;padding:22px 24px 30px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}
+}
+#app .transport-portal-hero{background:linear-gradient(120deg,#071943 0%,#0b285d 62%,#123d70)}
+#app .transport-sidebar .transport-work-bar button,#app .transport-sidebar .transport-menu-panel button{background:#1c3a72;border-color:#3c6096}
+#app .transport-sidebar .transport-work-bar button[aria-current=true],#app .transport-sidebar .transport-menu-panel button[aria-current=true]{background:#fff;color:#102657}
+#app .transport-side-signout{background:#17356c;border-color:#2b4a80}
+#app .transport-sidebar .transport-push-slot .neo-push-optin{padding:9px;background:#17356c;border-color:#3c6096;color:#fff}
+#app .transport-sidebar .transport-push-slot .neo-push-optin button{background:#fff;color:#102657}
+#app .transport-content>.transport-hero{background:transparent;color:#102657;border:0;border-radius:0;box-shadow:none;padding:5px 0 12px;margin:0 0 12px}
+#app .transport-content>.transport-hero:before{display:none}
+#app .transport-content>.transport-hero h1{font-size:clamp(28px,3vw,42px);color:#102657}
+#app .transport-content>.transport-hero p{color:#60728b}
+#app .transport-content>.transport-hero .transport-icon{background:#e5f4fa;color:#087393}
+@media(max-width:760px){
+ body.transport-authenticated>.transport-main{background:#0b2055!important;padding:12px 12px 30px!important}
+ #app:not([hidden]){background:#0b2055}
+ #app>.transport-portal-hero{border-radius:16px}
+ #app>.transport-sidebar{background:#102a60;border-color:#dce5f2;border-radius:16px}
+ #app>.transport-content{background:#f7fbff;border-radius:16px;padding:18px;overflow:visible}
+ #app .transport-content>.transport-hero{padding:3px 0 10px}
+ #app .transport-content>.transport-hero h1{font-size:28px}
+}
