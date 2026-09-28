@@ -68,7 +68,6 @@
   }catch(err){status(err.message)}
  }
  function render(){
-  app.dataset.renderedAt=String(Date.now());app.dataset.renderStack=(new Error('render')).stack?.slice(0,500)||'';
   const route=current.routes.find(r=>r.id===selectedRoute)||current.routes[0];selectedRoute=route?.id||'';
   login.hidden=true;app.hidden=false;document.body.classList.add('transport-authenticated');signOut.hidden=false;staffName.textContent=current.name+' · '+current.role;
   window.NeoAlertSound?.count('transport:'+current.account_id,current.reminders.length+current.trips.reduce((n,t)=>n+(t.events||[]).filter(e=>e.type==='Emergency').length,0));
@@ -132,7 +131,7 @@
   hero.querySelector('#transportHeroBack').onclick=()=>{activeView=viewHistory.pop()||'route';render();if(activeView==='documents'&&route)loadDocuments(route.vehicle_id);if(activeView==='care'&&route)loadCare(route.vehicle_id);if(activeView==='staff'&&selectedStaff)loadStaffDocuments(selectedStaff)};
   window.NeoTransportPush?.mount(app.querySelector('.transport-push-slot'),token,'transport');
   app.querySelector('[data-menu-toggle]').onclick=()=>{menuOpen=!menuOpen;render()};
-  app.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{if(activeView!==b.dataset.view)viewHistory.push(activeView);if(b.dataset.staffTarget&&route){const id=b.dataset.staffTarget==='driver'?route.driver_staff_id:route.attendant_staff_id;if(id!==selectedStaff){selectedStaff=id||'';staffDocuments=null}}if(b.dataset.careTarget)selectedCareType=b.dataset.careTarget;activeView=b.dataset.view;menuOpen=true;render();if(activeView==='documents'&&route&&documentVehicle!==route.vehicle_id)loadDocuments(route.vehicle_id);if(activeView==='care'&&route&&careVehicle!==route.vehicle_id)loadCare(route.vehicle_id);if(activeView==='staff'&&selectedStaff)loadStaffDocuments(selectedStaff)});
+  app.querySelectorAll('button[data-view]').forEach(b=>b.onclick=()=>{if(activeView!==b.dataset.view)viewHistory.push(activeView);if(b.dataset.staffTarget&&route){const id=b.dataset.staffTarget==='driver'?route.driver_staff_id:route.attendant_staff_id;if(id!==selectedStaff){selectedStaff=id||'';staffDocuments=null}}if(b.dataset.careTarget)selectedCareType=b.dataset.careTarget;activeView=b.dataset.view;menuOpen=true;render();if(activeView==='documents'&&route&&documentVehicle!==route.vehicle_id)loadDocuments(route.vehicle_id);if(activeView==='care'&&route&&careVehicle!==route.vehicle_id)loadCare(route.vehicle_id);if(activeView==='staff'&&selectedStaff)loadStaffDocuments(selectedStaff)});
   app.querySelectorAll('[data-document]').forEach(b=>b.onclick=()=>openDocument(b.dataset.document));
   app.querySelectorAll('[data-staff-document]').forEach(b=>b.onclick=()=>openDocument(b.dataset.staffDocument,'staff'));
   const staffSelect=app.querySelector('[data-staff-select]');if(staffSelect)staffSelect.onchange=()=>loadStaffDocuments(staffSelect.value);
@@ -157,7 +156,6 @@
   const button=e.target.closest?.('[data-open-start]');
   if(!button||!app.contains(button))return;
   e.preventDefault();
-  status('Opening trip checks…');
   try{
    if(!startChoices.length){status('No trip is ready to start. Ask the school to check child and route assignments.');return}
    const dialog=document.getElementById('transportStartDialog'),form=document.getElementById('transportStartForm');
@@ -165,7 +163,7 @@
    form.reset();dialog.querySelector('[data-start-step="checks"]').hidden=false;dialog.querySelector('[data-start-step="selection"]').hidden=true;
    const index=startChoices.findIndex(t=>t.route.id===button.dataset.openStart&&t.direction===button.dataset.direction&&t.run===Number(button.dataset.run));
    form.elements.namedItem('trip_choice').value=String(index>=0?index:0);
-   dialog.hidden=false;app.dataset.openedAt=String(Date.now());dialog.querySelector('[data-close-start]').focus();status('Trip checks opened.');
+   dialog.hidden=false;dialog.querySelector('[data-close-start]').focus();
   }catch(err){console.error('Transport start popup:',err);status('Unable to open trip checks: '+err.message)}
  },true);
  if(token)draw().catch(err=>{logout();status(err.message)});
