@@ -174,3 +174,28 @@ body.transport-authenticated{background:#0b2055!important}
  #app .transport-content>.transport-hero{padding:3px 0 10px}
  #app .transport-content>.transport-hero h1{font-size:28px}
 }
+
+/* Compact trip workspace and grouped transport navigation. */
+#app .transport-sidebar .transport-menu-panel{display:block!important}
+#app .transport-sidebar .transport-nav-group{margin:0 0 7px;border:1px solid #3c6096;border-radius:12px;background:#1c3a72;overflow:hidden}
+#app .transport-sidebar .transport-nav-group>summary{min-height:51px;display:flex;align-items:center;gap:7px;padding:9px 12px;color:#fff;font-weight:700;cursor:pointer;list-style:none;box-sizing:border-box}
+#app .transport-sidebar .transport-nav-group>summary::-webkit-details-marker{display:none}
+#app .transport-sidebar .transport-nav-group>summary::after{content:'⌄';margin-left:auto;font-size:19px;line-height:1;transition:transform .2s}
+#app .transport-sidebar .transport-nav-group[open]>summary::after{transform:rotate(180deg)}
+#app .transport-sidebar .transport-nav-group[open]{border-color:#bad2eb;background:#244477}
+#app .transport-sidebar .transport-nav-children{margin:0 7px 8px;padding:8px 0 0;border-top:1px solid #7192c0}
+#app .transport-sidebar .transport-nav-children button{min-height:42px;margin:0 0 5px;padding:7px 9px;font-size:13px;background:#294b81;border:1px solid #5676a9}
+#app .transport-sidebar .transport-nav-children button[disabled]{opacity:.55;cursor:not-allowed}
+#app .transport-sidebar .transport-nav-children .transport-icon{width:24px;height:24px}
+#app .transport-content>.transport-trip-heading{padding:1px 0 8px;margin:0 0 8px}
+#app .transport-content>.transport-trip-heading h1{display:flex;align-items:center;gap:8px;margin:0;font-size:clamp(25px,2.5vw,36px);color:#102657}
+#app .transport-content>.transport-trip-heading p{margin:3px 0 0;color:#536985;font-weight:600}
+#app .transport-content>.transport-trip-heading .transport-icon{background:#e5f4fa;color:#087393}
+#app .transport-content[data-view=route]>.transport-route-picker{margin:0 0 10px;padding:10px 14px}
+#app .transport-content[data-view=route]>.transport-trip-grid{margin:0}
+@media(max-width:800px){
+ #app .transport-sidebar .transport-nav-group>summary{min-height:49px}
+ #app .transport-sidebar .transport-nav-children{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ #app .transport-sidebar .transport-nav-children button{margin:0;min-height:47px}
+ #app .transport-content>.transport-trip-heading h1{font-size:25px}
+}
