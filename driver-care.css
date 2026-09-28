@@ -222,3 +222,6 @@ body.transport-authenticated{background:#0b2055!important}
 .transport-start-actions{display:grid;grid-template-columns:1fr 2fr;gap:9px;margin-top:17px}
 .transport-start-actions [data-back-start]{background:#eaf1f8;color:#102657}
 .transport-start-dialog button[type=submit]{display:flex;align-items:center;justify-content:center;gap:7px}
+
+#app .transport-route-picker small{display:block;color:#5a6f88;font-size:12px;font-weight:700}
+#app .transport-route-picker select{cursor:pointer;background:#fff;color:#102657;border:1px solid #a9bfd8;border-radius:10px}
