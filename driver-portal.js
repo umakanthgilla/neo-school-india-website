@@ -5,7 +5,7 @@
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const paths={bus:'<path d="M5 17V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12H5Z"/><path d="M5 11h14M7 17v3m10-3v3M8 14h.01M16 14h.01"/>',route:'<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a4 4 0 0 0 4-4v-6"/>',check:'<path d="M4 12l5 5L20 6"/>',alert:'<path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3h.01"/>',child:'<circle cx="12" cy="7" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',fuel:'<path d="M4 20V4h11v16H4Zm0-9h11m0-4 3 2v8a2 2 0 0 0 4 0v-6l-2-2"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3V7Z"/><circle cx="12" cy="13" r="3"/>',file:'<path d="M6 2h8l5 5v15H6V2Z"/><path d="M14 2v6h5M9 13h7M9 17h7"/>'};
  const icon=(name,color='')=>`<span class="transport-icon ${color}" aria-hidden="true"><svg viewBox="0 0 24 24">${paths[name]}</svg></span>`;
- const status=s=>{message.textContent=s;loginStatus.textContent=login.hidden?'':s;clearTimeout(status.timer);status.timer=setTimeout(()=>{message.textContent='';loginStatus.textContent=''},7000)};
+ const status=s=>{message.textContent=s;loginStatus.textContent=login.hidden?'':s;clearTimeout(status.timer);status.timer=setTimeout(()=>{message.textContent='';loginStatus.textContent=''},45000)};
  const api=async(path,method='GET',body)=>{const r=await fetch(base+'/api/transport/'+path,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json().catch(()=>({error:'Unreadable response.'}));if(!r.ok)throw Error(d.error||'Transport request failed.');return d};
  const logout=()=>{window.NeoTransportPush?.signOut(token);if(documentUrl)URL.revokeObjectURL(documentUrl);documentUrl='';token='';sessionStorage.removeItem(key);current=null;selectedRoute='';activeView='route';menuOpen=true;viewHistory=[];documents=null;documentVehicle='';careRecords=null;careVehicle='';staffDocuments=null;selectedStaff='';app.hidden=true;login.hidden=false;document.body.classList.remove('transport-authenticated');signOut.hidden=true;staffName.textContent=''};signOut.onclick=logout;
  document.getElementById('togglePassword').onclick=()=>{const input=document.getElementById('transportPassword'),button=document.getElementById('togglePassword'),visible=input.type==='password';input.type=visible?'text':'password';button.setAttribute('aria-label',visible?'Hide password':'Show password');button.title=visible?'Hide password':'Show password';button.setAttribute('aria-pressed',String(visible))};
@@ -155,6 +155,7 @@
   const button=e.target.closest?.('[data-open-start]');
   if(!button||!app.contains(button))return;
   e.preventDefault();
+  status('Opening trip checks…');
   try{
    if(!startChoices.length){status('No trip is ready to start. Ask the school to check child and route assignments.');return}
    const dialog=document.getElementById('transportStartDialog'),form=document.getElementById('transportStartForm');
@@ -162,8 +163,8 @@
    form.reset();dialog.querySelector('[data-start-step="checks"]').hidden=false;dialog.querySelector('[data-start-step="selection"]').hidden=true;
    const index=startChoices.findIndex(t=>t.route.id===button.dataset.openStart&&t.direction===button.dataset.direction&&t.run===Number(button.dataset.run));
    form.elements.namedItem('trip_choice').value=String(index>=0?index:0);
-   dialog.showModal();
-  }catch(err){status('Unable to open trip checks: '+err.message)}
+   dialog.showModal();status('Trip checks opened.');
+  }catch(err){console.error('Transport start popup:',err);status('Unable to open trip checks: '+err.message)}
  },true);
  if(token)draw().catch(err=>{logout();status(err.message)});
 })();
