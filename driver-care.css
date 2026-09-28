@@ -250,3 +250,6 @@ body.transport-authenticated #message:not(:empty){position:fixed;left:50%;bottom
 #app .transport-content .transport-empty-route{border:1px solid #d2e0ee;background:#fff;padding:22px}
 #app .transport-empty-route h2{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#102657}
 #app .transport-empty-route p{margin:0;color:#536985}
+
+#app .transport-trip-blocked{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border:1px solid #e5cf9a;border-radius:10px;background:#fff8e9;color:#5d4820;font-weight:700;line-height:1.4}
+#app .transport-trip-blocked .transport-icon{flex:none}
