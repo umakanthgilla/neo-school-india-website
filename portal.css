@@ -1147,3 +1147,16 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 .neo-credit-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e0e9f5}
 .neo-credit-numbers span{font-size:12px;color:#5b6c83}.neo-credit-numbers strong{display:block;color:#0d285d;font-size:15px;overflow-wrap:anywhere}
 @media(max-width:680px){.neo-credit-heading{align-items:stretch;flex-direction:column}.neo-credit-heading button{width:100%}}
+
+/* Keep trip corrections on their own rows and photos compact. */
+#neoWorkspace .transport-report-trip>.actions{display:block;margin:14px 0 0}
+#neoWorkspace .transport-report-trip>.actions>details{display:block;margin:10px 0;border:1px solid #dce6f3;border-radius:12px;padding:12px 16px;background:#f8fbff}
+#neoWorkspace .transport-report-trip>.actions>details[open]{padding-bottom:16px}
+#neoWorkspace .transport-report-trip>.actions>details form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0 0;align-items:end}
+#neoWorkspace .transport-report-trip>.actions>details form label{min-width:0}
+#neoWorkspace .transport-report-trip>.actions>details form :is(input,select){width:100%;min-width:0;box-sizing:border-box}
+#neoWorkspace .transport-report-trip>.actions>details form button{min-height:46px;align-self:end}
+#neoWorkspace .transport-report-trip>.actions>button{display:inline-flex;align-items:center;width:auto;min-height:42px;margin:6px 8px 0 0}
+#neoWorkspace .transport-report-trip>form[data-resolve-emergency]{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:16px 0}
+#neoWorkspace .transport-report-trip>form[data-resolve-emergency] input{width:100%;min-width:0}
+@media(max-width:700px){#neoWorkspace .transport-report-trip>.actions>details form,#neoWorkspace .transport-report-trip>form[data-resolve-emergency]{grid-template-columns:minmax(0,1fr)}}
