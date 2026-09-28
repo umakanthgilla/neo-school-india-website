@@ -225,3 +225,18 @@ body.transport-authenticated{background:#0b2055!important}
 
 #app .transport-route-picker small{display:block;color:#5a6f88;font-size:12px;font-weight:700}
 #app .transport-route-picker select{cursor:pointer;background:#fff;color:#102657;border:1px solid #a9bfd8;border-radius:10px}
+
+/* Visible route and trip choices, with the preflight dialog on the page top layer. */
+#app .transport-route-picker>strong{display:flex;align-items:center;gap:7px;color:#102657}
+#app .transport-route-options{display:flex;flex-wrap:wrap;gap:8px}
+#app .transport-route-options button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:145px;min-height:54px;padding:8px 12px;border:1px solid #b7cbe1;border-radius:10px;background:#fff;color:#102657;font-weight:800;text-align:left}
+#app .transport-route-options button[aria-pressed=true]{background:#102657;color:#fff;border-color:#102657}
+#app .transport-route-options button small{font-size:11px;font-weight:600;color:inherit}
+.transport-start-dialog .transport-trip-choices{display:grid;gap:8px;margin:0;padding:0;border:0}
+.transport-start-dialog .transport-trip-choices legend{font-weight:800;margin-bottom:8px}
+.transport-start-dialog .transport-trip-choices label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #cbd9e9;border-radius:11px;cursor:pointer}
+.transport-start-dialog .transport-trip-choices label:has(input:checked){border-color:#102657;background:#eef4fb}
+.transport-start-dialog .transport-trip-choices input{width:20px;height:20px;flex:none;accent-color:#102657}
+.transport-start-dialog .transport-trip-choices span{display:grid;gap:2px}
+.transport-start-dialog .transport-trip-choices small{color:#4b617d;font-weight:600}
+@media(max-width:600px){#app .transport-route-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#app .transport-route-options button{min-width:0}}
