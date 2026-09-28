@@ -246,3 +246,7 @@ body.transport-authenticated #message:not(:empty){position:fixed;left:50%;bottom
 /* Persistent preflight overlay. */
 .transport-start-dialog{position:fixed;inset:0;z-index:2147483646;display:block;margin:auto;height:max-content;max-height:min(90dvh,760px);box-shadow:0 0 0 100vmax #071943ab,0 22px 60px #07194370}
 .transport-start-dialog[hidden]{display:none!important}
+
+#app .transport-content .transport-empty-route{border:1px solid #d2e0ee;background:#fff;padding:22px}
+#app .transport-empty-route h2{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#102657}
+#app .transport-empty-route p{margin:0;color:#536985}
