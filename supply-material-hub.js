@@ -87,13 +87,13 @@ const supplyIconPaths={
 
 const supplyIconSprite='<svg class="neo-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">'+Object.entries(supplyIconPaths).map(([key,path])=>'<symbol id="supply-glyph-'+key+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+path+'</symbol>').join('')+'</svg>';
 const supplyBadge=(icon,tone)=>'<span class="neo-nav-icon neo-tone-'+tone+'" aria-hidden="true"><svg class="neo-work-icon"><use href="#supply-glyph-'+icon+'"></use></svg></span>';
-const supplyTabIcons={dashboard:'grid',order_control:'file',center_orders:'receipt',demand:'chart',center_finance:'wallet',vendors:'building',materials:'package',kits:'package',vendor_pos:'receipt',stock:'package',warehouse:'building',packing:'package',dispatch:'truck',finance_control:'wallet',money_in:'wallet',money_out:'wallet'};
+const supplyTabIcons={dashboard:'grid',order_control:'file',center_orders:'receipt',demand:'chart',center_finance:'wallet',schools_ledger:'wallet',vendors:'building',materials:'package',kits:'package',vendor_pos:'receipt',stock:'package',warehouse:'building',packing:'package',dispatch:'truck',finance_control:'wallet',money_in:'wallet',money_out:'wallet'};
 const supplyNavGroups=[
  {key:'overview',label:'Overview',icon:'grid',items:[['dashboard','Dashboard'],['order_control','Order Control']]},
- {key:'centers',label:'Centers Hub',icon:'building',items:[['center_orders','Center Orders'],['demand','Demand Consolidation'],['center_finance','Center Receivables']]},
+ {key:'centers',label:'Centers Hub',icon:'building',items:[['center_orders','Center Orders'],['demand','Demand Consolidation'],['center_finance','Center Finance']]},
  {key:'vendors',label:'Vendors',icon:'building',items:[['vendors','Vendor Details'],['materials','Material Hub'],['kits','Student Kit Builder'],['vendor_pos','Purchase Orders']]},
  {key:'fulfilment',label:'Warehouse & Fulfilment',icon:'package',items:[['stock','Available Stock'],['warehouse','Warehouse & GRN'],['packing','Packing'],['dispatch','Dispatch & Tracking']]},
- {key:'finance',label:'Finance',icon:'wallet',items:[['finance_control','Finance Control'],['money_in','↓ Money In'],['money_out','↑ Money Out']]}
+ {key:'finance',label:'Finance',icon:'wallet',items:[['finance_control','Finance Control'],['schools_ledger','Schools Ledger'],['money_in','↓ Money In'],['money_out','↑ Money Out']]}
 ];
 const groupForTab=t=>supplyNavGroups.find(g=>g.items.some(([key])=>key===t))?.key||'overview';
 let openSupplyGroup=groupForTab(tab);
