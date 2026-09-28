@@ -89,3 +89,55 @@
  .transport-work-bar [data-menu-toggle]{min-width:104px}
  .transport-next-child .transport-actions button{padding:8px;font-size:.9rem}
 }
+
+/* Shared portal frame for Driver and Attendant, aligned to Teacher and Parent. */
+body.transport-authenticated{background:#fff}
+body.transport-authenticated>.transport-header{display:none}
+body.transport-authenticated>.transport-main{max-width:none;margin:0;padding:8px 22px 10px;background:#fff}
+#app:not([hidden]){display:grid;grid-template-columns:235px minmax(0,1fr);grid-template-rows:150px minmax(0,1fr);gap:8px 18px;height:calc(100dvh - 16px);min-height:560px;align-items:start}
+#app>.transport-sidebar{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;min-height:0;height:100%;background:#102657;border:1px solid #dce5f2;border-radius:20px;padding:22px 15px 16px;box-sizing:border-box;box-shadow:0 8px 24px #0b225818}
+.transport-sidebar-logo{display:block;flex:none;text-align:center;margin:0 0 17px}
+.transport-sidebar-logo img{width:min(172px,100%);height:82px;object-fit:contain;background:#fff;border-radius:12px;padding:8px;box-sizing:border-box}
+.transport-sidebar-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#8caed2 transparent}
+.transport-sidebar-scroll::-webkit-scrollbar{width:6px}.transport-sidebar-scroll::-webkit-scrollbar-thumb{background:#8caed2;border-radius:20px}
+#app .transport-sidebar .transport-work-bar{display:block;margin:0 0 7px}
+#app .transport-sidebar .transport-work-bar button,#app .transport-sidebar .transport-menu-panel button{width:100%;min-height:51px;display:flex;justify-content:flex-start;text-align:left;margin:0 0 7px;padding:9px 12px;background:#1c3a72;border:1px solid #3c6096;border-radius:12px;color:#fff}
+#app .transport-sidebar .transport-work-bar button[aria-current=true],#app .transport-sidebar .transport-menu-panel button[aria-current=true]{background:#fff;color:#102657;border-color:#fff}
+#app .transport-sidebar .transport-work-bar [data-menu-toggle]{display:none}
+#app .transport-sidebar .transport-menu-panel,#app .transport-sidebar .transport-menu-panel[hidden]{display:grid!important;grid-template-columns:1fr;gap:0;padding:0;margin:0;background:transparent;border:0}
+#app .transport-sidebar .transport-menu-panel .transport-icon,#app .transport-sidebar .transport-work-bar .transport-icon{width:31px;height:31px;margin-right:0}
+#app .transport-sidebar .transport-push-slot,#app .transport-sidebar .transport-menu-reminders{grid-column:auto}
+#app .transport-sidebar .transport-menu-reminders{padding:11px;margin:5px 0 10px;border-radius:10px;background:#eaf2fc;font-size:12px}
+#app .transport-sidebar .transport-menu-reminders p{color:#1c365f}
+#app .transport-side-signout{flex:none;width:100%;margin:13px 0 0;display:flex;align-items:center;justify-content:center;gap:8px;background:#1c3a72;border:1px solid #3c6096;color:#fff}
+#app .transport-side-signout .transport-icon{width:28px;height:28px;margin:0}
+#app>.transport-portal-hero{grid-column:2;grid-row:1;margin:0;height:150px;min-height:0;box-sizing:border-box;border-radius:20px;align-items:center;padding:18px 24px}
+.transport-portal-hero h2{font-size:clamp(22px,2.5vw,32px);margin:5px 0}.transport-portal-hero p{margin:0 0 9px}
+.transport-hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.transport-hero-actions button{background:#fff;color:#102657;min-height:38px;padding:6px 13px}
+.transport-hero-controls{display:flex;align-items:center;gap:10px}
+.transport-hero-controls>button{position:relative;display:grid;place-items:center;width:43px;height:43px;padding:0;border:1px solid #8aa9d0;background:#244578;color:#fff;font-size:26px}
+.transport-hero-controls img{object-fit:contain;background:#fff;border-radius:16px}
+.transport-alert-count{position:absolute;top:-8px;right:-7px;display:grid;place-items:center;min-width:20px;height:20px;padding:0 2px;border-radius:50%;background:#fff;color:#102657;font-size:12px;font-weight:900}
+.transport-hero-alerts{position:absolute;right:85px;top:75px;z-index:20;width:min(340px,75vw);max-height:250px;overflow:auto;background:#fff;color:#102657;border:1px solid #cbd9eb;border-radius:12px;padding:13px;box-shadow:0 12px 30px #03163855}
+.transport-hero-alerts[hidden]{display:none}.transport-hero-alerts p{color:#334c70}
+#app>.transport-content{grid-column:2;grid-row:2;min-width:0;min-height:0;height:100%;overflow:auto;padding:8px 2px 35px;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#8caed2 transparent}
+#app .transport-content>.transport-return{display:none}
+#app .transport-content .transport-card{box-shadow:0 8px 28px #0c23510e}
+@media(max-width:800px){
+ body.transport-authenticated>.transport-main{padding:8px 14px 60px}
+ #app:not([hidden]){display:flex;flex-direction:column;height:auto;min-height:0;gap:10px}
+ #app>.transport-portal-hero{order:0;width:100%;height:auto;min-height:136px;padding:17px;gap:8px}
+ .transport-hero-controls img{width:57px;height:73px}.transport-hero-controls>button{width:39px;height:39px}
+ #app>.transport-sidebar{order:1;width:100%;height:auto;padding:12px;gap:7px}
+ .transport-sidebar-logo{margin:0}.transport-sidebar-logo img{height:52px;width:104px}
+ .transport-sidebar-scroll{overflow:visible;display:grid;grid-template-columns:1fr}
+ #app .transport-sidebar .transport-work-bar{margin:0}
+ #app .transport-sidebar .transport-menu-panel,#app .transport-sidebar .transport-menu-panel[hidden]{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ #app .transport-sidebar .transport-work-bar button,#app .transport-sidebar .transport-menu-panel button{margin:0;min-height:57px;font-size:12px;justify-content:center;text-align:center;flex-direction:column;gap:3px;padding:7px}
+ #app .transport-sidebar .transport-menu-panel .transport-icon,#app .transport-sidebar .transport-work-bar .transport-icon{margin:0}
+ #app .transport-sidebar .transport-menu-reminders,#app .transport-sidebar .transport-push-slot{grid-column:1/-1}
+ #app>.transport-content{order:2;width:100%;height:auto;overflow:visible;padding:2px 0 50px}
+ #app .transport-side-signout{margin:2px 0 0;min-height:43px}
+}
+@media(max-width:480px){#app .transport-sidebar .transport-menu-panel,#app .transport-sidebar .transport-menu-panel[hidden]{grid-template-columns:repeat(3,minmax(0,1fr))}.transport-portal-hero .eyebrow{font-size:10px;letter-spacing:.12em}.transport-hero-controls{gap:5px}.transport-hero-controls img{display:none}}
