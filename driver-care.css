@@ -240,3 +240,5 @@ body.transport-authenticated{background:#0b2055!important}
 .transport-start-dialog .transport-trip-choices span{display:grid;gap:2px}
 .transport-start-dialog .transport-trip-choices small{color:#4b617d;font-weight:600}
 @media(max-width:600px){#app .transport-route-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#app .transport-route-options button{min-width:0}}
+
+body.transport-authenticated #message:not(:empty){position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483647;max-width:min(90vw,620px);padding:12px 18px;border:2px solid #fff;border-radius:12px;background:#102657;color:#fff;box-shadow:0 12px 36px #00133399;font-weight:700;text-align:center}
