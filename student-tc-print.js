@@ -1,0 +1,9 @@
+(()=>{
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.neoPrintTC=function(tc){
+ if(!tc?.certificate_no)return false;
+ const row=(label,value)=>'<tr><th>'+esc(label)+'</th><td>'+esc(value||'—')+'</td></tr>';
+ const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(tc.certificate_no)+'</title><style>body{font:16px Arial,sans-serif;color:#10234c;max-width:800px;margin:30px auto;padding:24px}header{text-align:center;border-bottom:3px solid #0b2155;padding-bottom:18px}h1{margin:8px 0;font-size:30px}h2{text-align:center;margin:30px 0 18px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c7d2e3;padding:12px;text-align:left}th{width:34%;background:#f1f5fa}.sign{display:flex;justify-content:space-between;margin-top:65px}.sign span{border-top:1px solid #123;padding-top:8px;min-width:180px;text-align:center}small{color:#54637a}@media print{body{margin:0;padding:10mm}}</style></head><body><header><h1>'+esc(tc.school_name)+'</h1><p>'+esc(tc.school_city)+'</p></header><h2>Transfer Certificate</h2><p><strong>Certificate No. '+esc(tc.certificate_no)+'</strong> · Issued '+esc(tc.issued_on)+'</p><table>'+row('Student',tc.student_name)+row('Parent / Guardian',tc.parent_name)+row('Date of birth',tc.dob)+row('Admission date',tc.admission_date)+row('Last class / section',tc.classroom_name||tc.program)+row('Academic year',tc.academic_year)+row('Withdrawal date',tc.withdrawal_date)+row('Reason recorded',tc.reason)+'</table><p><small>Issued by the school from its saved withdrawal record. School stamp and authorised signature are completed by the school.</small></p><div class="sign"><span>School stamp</span><span>Authorised signatory</span></div></body></html>';
+ const win=window.open('','_blank');if(!win)return false;win.document.write(html);win.document.close();win.focus();win.print();return true;
+};
+})();
