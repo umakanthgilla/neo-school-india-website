@@ -79,7 +79,7 @@
     <details class="transport-nav-group" ${activeView==='documents'||activeView==='staff'?'open':''}><summary>${icon('file','green')}<span>Documents</span></summary><div class="transport-nav-children"><button type="button" data-view="documents" aria-current="${activeView==='documents'}">${icon('file','green')}<span>Vehicle Documents</span></button><button type="button" data-view="staff" data-staff-target="driver" aria-current="${activeView==='staff'&&selectedStaff===route?.driver_staff_id}" ${current.role==='Attendant'?'disabled title="Driver documents are available to assigned drivers"':''}>${icon('child','green')}<span>Driver Documents</span></button><button type="button" data-view="staff" data-staff-target="attendant" aria-current="${activeView==='staff'&&selectedStaff===route?.attendant_staff_id}" ${!route?.attendant_staff_id?'disabled title="No attendant assigned"':''}>${icon('child','green')}<span>Attendant Documents</span></button></div></details>
     <details class="transport-nav-group" ${activeView==='care'?'open':''}><summary>${icon('fuel','gold')}<span>Vehicle Maintenance</span></summary><div class="transport-nav-children"><button type="button" data-view="care" data-care-target="Fuel refill" aria-current="${activeView==='care'&&selectedCareType==='Fuel refill'}">${icon('fuel','gold')}<span>Fuel Refill</span></button><button type="button" data-view="care" data-care-target="Tyre air" aria-current="${activeView==='care'&&selectedCareType==='Tyre air'}">${icon('check','green')}<span>Tyre Air Check</span></button><button type="button" data-view="care" data-care-target="Maintenance" aria-current="${activeView==='care'&&selectedCareType==='Maintenance'}">${icon('route','gold')}<span>Repairs &amp; Service</span></button></div></details>
     <div class="transport-push-slot"></div>${current.reminders.length?`<div class="transport-menu-reminders"><strong>${icon('alert','gold')}Vehicle renewals</strong>${current.reminders.map(r=>`<p>${esc(current.vehicles.find(v=>v.id===r.vehicle_id)?.registration_no||'Vehicle')}: ${esc(r.type)} ${r.date?'renew by '+esc(r.date):'date missing'} ${r.days_remaining!==null?'('+r.days_remaining+' days)':''}</p>`).join('')}</div>`:''}</nav>`+
-   (current.routes.length>1?`<div class="transport-route-picker"><label for="assignedRoute">${icon('bus')}Assigned route and vehicle</label><select id="assignedRoute" data-route-select>${current.routes.map(r=>`<option value="${esc(r.id)}" ${r.id===selectedRoute?'selected':''}>${esc(r.name)} · ${esc(current.vehicles.find(v=>v.id===r.vehicle_id)?.registration_no||'Vehicle')} · ${esc(r.id.slice(-5))}</option>`).join('')}</select></div>`:'')+
+   (current.routes.length?`<div class="transport-route-picker"><label for="assignedRoute">${icon('bus')}Select assigned route and vehicle</label><select id="assignedRoute" data-route-select>${current.routes.map(r=>`<option value="${esc(r.id)}" ${r.id===selectedRoute?'selected':''}>${esc(r.name)} · ${esc(current.vehicles.find(v=>v.id===r.vehicle_id)?.registration_no||'Vehicle')}</option>`).join('')}</select><small>${current.routes.length} route${current.routes.length===1?'':'s'} assigned to this login</small></div>`:'')+
    (activeView!=='route'?`<button type="button" class="transport-return" data-view="route">← Today's Route</button>`:'')+
    (activeView==='staff'?
     `<section class="transport-card transport-document-section"><h1>${icon('child','green')}${selectedStaff===route?.driver_staff_id?'Driver':'Attendant'} Documents</h1><p>Only documents for staff assigned to this route are shown.</p>${crew.length?`<label>Choose staff member<select data-staff-select>${crew.map(x=>`<option value="${esc(x.id)}" ${x.id===selectedStaff?'selected':''}>${esc(x.name)} · ${x.id===route.driver_staff_id?'Driver':'Helper'}</option>`).join('')}</select></label>`:'<p>No assigned staff.</p>'}${staffDocuments===null?'<p>Loading documents…</p>':`<div class="transport-document-grid">${(selectedStaff===route?.driver_staff_id?['license','aadhaar','id_proof']:['aadhaar','id_proof']).map(type=>{const doc=staffDocuments.find(x=>x.type===type);return `<article class="transport-document-card"><h2>${icon('file')}${docLabels[type]}${type==='license'?' · Required':''}</h2>${doc?`<p>${type==='license'?'Valid until '+esc(doc.expiry_date):'Uploaded '+esc(doc.uploaded_at.slice(0,10))}</p><button type="button" data-staff-document="${esc(doc.id)}">View document</button>`:'<p>Not uploaded by school yet.</p>'}</article>`}).join('')}</div>`}</section>`:
@@ -121,12 +121,16 @@
   });
   const startDialog=app.querySelector('#transportStartDialog'),startForm=app.querySelector('#transportStartForm');
   const checksStep=startDialog.querySelector('[data-start-step="checks"]'),selectionStep=startDialog.querySelector('[data-start-step="selection"]');
-  app.querySelectorAll('[data-open-start]').forEach(button=>button.onclick=()=>{
-   startForm.reset();checksStep.hidden=false;selectionStep.hidden=true;
-   const index=availableTrips.findIndex(t=>t.route.id===button.dataset.openStart&&t.direction===button.dataset.direction&&t.run===Number(button.dataset.run));
-   if(index>=0)startForm.elements.namedItem('trip_choice').value=String(index);
-   startDialog.showModal();
-  });
+  app.onclick=e=>{
+   const button=e.target.closest('[data-open-start]');if(!button||!app.contains(button))return;
+   try{
+    if(!availableTrips.length){status('No trip is ready to start for this login. Check your school route and child assignments.');return}
+    startForm.reset();checksStep.hidden=false;selectionStep.hidden=true;
+    const index=availableTrips.findIndex(t=>t.route.id===button.dataset.openStart&&t.direction===button.dataset.direction&&t.run===Number(button.dataset.run));
+    startForm.elements.namedItem('trip_choice').value=String(index>=0?index:0);
+    if(!startDialog.open)startDialog.showModal();
+   }catch(err){status('Unable to open trip checks: '+err.message)}
+  };
   startDialog.querySelector('[data-close-start]').onclick=()=>startDialog.close();
   startDialog.querySelector('[data-continue-start]').onclick=()=>{
    const fields=checksStep.querySelectorAll('input');
