@@ -3,8 +3,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 window.renderNeoStudentLifecycle=async function(area,{records,call,refresh,status}){
  area.innerHTML='<p class="portal-empty">Loading student movement history…</p>';
- let movements;
- try{movements=(await call('student_movements')).records||[]}
+ let movements,certificates;
+ try{[movements,certificates]=await Promise.all([call('student_movements').then(x=>x.records||[]),call('student_tc').then(x=>x.records||[])])}
  catch(error){area.innerHTML='<div class="portal-error"><h3>Student movements unavailable</h3><p>'+esc(error.message)+'</p></div>';return}
  const students=(records.students||[]).filter(x=>x.status!=='Withdrawn'),classes=records.classrooms||[];
  const className=id=>classes.find(x=>x.id===id)?.name||id||'Unassigned';
@@ -17,6 +17,10 @@ window.renderNeoStudentLifecycle=async function(area,{records,call,refresh,statu
  <label class="full-width">Reason / authorisation note<textarea name="reason" required maxlength="500"></textarea></label></div>
  <p id="movementHint" class="form-note">Choose a student and movement to see eligible classrooms.</p><button type="submit">Save student movement</button></form>
  <h3>Movement history</h3><div class="portal-grid">${movements.slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).map(x=>{const child=(records.students||[]).find(s=>s.id===x.student_id);return `<article class="portal-card"><h4>${esc(child?.name||x.student_id)} · ${esc(x.type)}</h4><p>${esc(className(x.from_classroom_id))} → ${esc(x.to_classroom_id?className(x.to_classroom_id):'Withdrawn')}</p><p>${esc(x.from_academic_year)} → ${esc(x.to_academic_year||'Exit')} · Effective ${esc(x.effective_date)}</p><p>${esc(x.reason)}</p></article>`}).join('')||'<p>No student movements recorded.</p>'}</div>`;
+ const pending=movements.filter(x=>x.type==='Withdrawal'&&!certificates.some(c=>c.movement_id===x.id));
+ area.insertAdjacentHTML('beforeend',`<h3>Transfer Certificates</h3><p>Review outstanding fees and student details before issuing. The document number is assigned once.</p><div class="portal-grid">${pending.map(x=>{const child=(records.students||[]).find(s=>s.id===x.student_id),due=(records.invoices||[]).filter(i=>i.student_id===x.student_id).reduce((n,i)=>n+Number(i.amount_paise||0),0)-(records.payments||[]).filter(p=>p.student_id===x.student_id).reduce((n,p)=>n+Number(p.amount_paise||0),0);return `<article class="portal-card"><h4>${esc(child?.name||x.student_id)} · Withdrawal</h4><p>Recorded fee balance: ₹${Math.max(0,due/100).toFixed(2)}</p><button type="button" data-issue-tc="${esc(x.id)}">Issue Transfer Certificate</button></article>`}).join('')}${certificates.map(tc=>`<article class="portal-card"><h4>${esc(tc.student_name)}</h4><p>${esc(tc.certificate_no)} · Issued ${esc(tc.issued_on)}</p><button type="button" class="secondary" data-print-tc="${esc(tc.id)}">Print TC</button></article>`).join('')||(!pending.length?'<p>No Transfer Certificates issued yet.</p>':'')}</div>`);
+ area.querySelectorAll('[data-issue-tc]').forEach(button=>button.onclick=async()=>{if(!confirm('Issue one numbered Transfer Certificate for this saved withdrawal? Review the fee balance and student details first.'))return;button.disabled=true;try{await call('student_tc','POST',{movement_id:button.dataset.issueTc});await refresh();status('Transfer Certificate issued. Open this tab to print it.')}catch(error){status(error.message);button.disabled=false}});
+ area.querySelectorAll('[data-print-tc]').forEach(button=>button.onclick=()=>{const tc=certificates.find(c=>c.id===button.dataset.printTc);if(!window.neoPrintTC?.(tc))status('Allow pop-ups to print the Transfer Certificate.')});
  const form=area.querySelector('#neoMovementForm'),studentSelect=form.elements.student_id,typeSelect=form.elements.type,targetSelect=form.elements.to_classroom_id,targetLabel=area.querySelector('#movementTarget'),hint=area.querySelector('#movementHint');
  const choices=()=>{const student=students.find(x=>x.id===studentSelect.value),type=typeSelect.value;
   targetLabel.hidden=type==='Withdrawal';targetSelect.required=type!=='Withdrawal';targetSelect.disabled=type==='Withdrawal';
