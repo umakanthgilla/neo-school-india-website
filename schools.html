@@ -338,7 +338,7 @@ function renderSchoolSetup(area){
  const steps=[
   ['Classes & sections',classrooms.length>0,classrooms.length+' classroom / section'+(classrooms.length===1?'':'s')+' · '+programmes.length+' programme'+(programmes.length===1?'':'s'),'classrooms'],
   ['Teachers',teachers.length>0,teachers.length+' active teacher account'+(teachers.length===1?'':'s')+' · linked to existing Staff IDs','teacher_access'],
-  ['Teacher assignment',classrooms.length>0&&unassignedClasses.length===0,classrooms.length?unassignedClasses.length+' class'+(unassignedClasses.length===1?'':'es')+' without a stored teacher assignment':'Create classes first','classrooms'],
+  ['Teacher assignment',classrooms.length>0&&unassignedClasses.length===0,classrooms.length?unassignedClasses.length+' class'+(unassignedClasses.length===1?'':'es')+' without a stored teacher assignment':'Create classes first','teacher_access'],
   ['Students',students.length>0,students.length+' student'+(students.length===1?'':'s')+' · '+studentClassLinks+' linked to a classroom','students'],
   ['Fee structure',fees.length>0,fees.length+' fee structure'+(fees.length===1?'':'s')+' · '+feeClassLinks+' class link'+(feeClassLinks===1?'':'s'),'fee_structures'],
   ['Timetable',null,'Published timetable status is managed in the connected timetable workflow.','timetable'],
