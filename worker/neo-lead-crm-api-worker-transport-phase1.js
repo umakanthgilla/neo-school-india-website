@@ -1147,6 +1147,8 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   if(request.method==='POST'&&kind==='student_movements'){
    const student=await related('students','student_id'),type=choice('type',['Promotion','Section change','Withdrawal']),effectiveDate=date('effective_date'),reason=str('reason',500);
    if((student.status||'Active')==='Withdrawn')fail('This Student ID is already withdrawn. Do not create another student record.');
+   const duplicateMovement=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='student_movements' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.type')=? AND json_extract(data,'$.effective_date')=? LIMIT 1").bind(school,student.id,type,effectiveDate).first();
+   if(duplicateMovement)fail('This student movement is already recorded for the same Student ID, movement type and effective date.');
    const fromClass=student.classroom_id?await related('classrooms','classroom_id'):null;let toClass=null;
    if(type==='Withdrawal'){if(b.to_classroom_id)fail('Withdrawal does not use a destination classroom.');}
    else{toClass=await related('classrooms','to_classroom_id');if(type==='Promotion'&&academicYearStart(toClass.academic_year)<=academicYearStart(student.academic_year))fail('Promotion must move to a later academic year.');if(type==='Section change'&&(toClass.program!==student.program||toClass.academic_year!==student.academic_year))fail('Section change must stay within the same programme and academic year.');if(toClass.id===student.classroom_id)fail('Choose a different destination classroom.');}
@@ -1517,12 +1519,12 @@ recordId='HR_RULES_'+effectiveFrom;
   const writes=[env.DB.prepare(sql).bind(school,kind,recordId,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,admin?'head-office':'school:'+school,request.method+':'+kind,recordId)];
   if(kind==='student_movements'&&lifecycleStudentUpdate){writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='students' AND id=?").bind(JSON.stringify(lifecycleStudentUpdate),school,lifecycleStudentId));for(const fee of lifecycleNewFees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices',fee.id,JSON.stringify(fee)));}
   if(kind==='students'&&data.classroom_id){
-   const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===data.classroom_id);
+   const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===data.classroom_id&&String(data.status||'Active')!=='Withdrawn');
    if(fees.length>80)fail('Too many fee structures for automatic assignment. Contact head office.');
    for(const fee of fees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+fee.id+'_'+recordId,JSON.stringify({student_id:recordId,title:fee.title,due_date:fee.due_date,amount_paise:fee.amount_paise,fee_structure_id:fee.id,classroom_id:data.classroom_id,program:data.program,academic_year:data.academic_year})));
   }
   if(kind==='fee_structures'){
-   const children=(await portalRows(env,school,'students')).filter(c=>c.classroom_id===data.classroom_id);
+   const children=(await portalRows(env,school,'students')).filter(c=>c.classroom_id===data.classroom_id&&String(c.status||'Active')!=='Withdrawn');
    if(children.length>80)fail('This class exceeds the automatic fee assignment limit of 80. Split into classroom sections.');
    for(const child of children)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+recordId+'_'+child.id,JSON.stringify({student_id:child.id,title:data.title,due_date:data.due_date,amount_paise:data.amount_paise,fee_structure_id:recordId,classroom_id:data.classroom_id,academic_year:(await portalRecord(env,school,'classrooms',data.classroom_id))?.academic_year||'',program:(await portalRecord(env,school,'classrooms',data.classroom_id))?.program||''})));
   }
