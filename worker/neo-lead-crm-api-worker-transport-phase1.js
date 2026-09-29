@@ -1096,6 +1096,12 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    const rows=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? ORDER BY created_at DESC,id').bind(school,kind).all();
    let records=rows.results.map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}));
    if(kind==='notifications'&&!admin)records=records.filter(n=>['hr','finance','school'].includes(n.target));
+   if(kind==='student_movements'){
+     const activeStudents=(await portalRows(env,school,'students')).filter(s=>String(s.status||'Active')!=='Withdrawn');
+     const fee_summaries={};
+     for(const child of activeStudents)fee_summaries[child.id]=await studentFeeSummary(child.id,child.academic_year);
+     return out({records,fee_summaries});
+   }
    return out({records});
   }
   if(!['POST','PATCH'].includes(request.method))return out({error:'Method not allowed.'},405);
@@ -1483,7 +1489,11 @@ recordId='HR_RULES_'+effectiveFrom;
       if(data.classroom_id&&String(data.classroom_id)!==String(fee.classroom_id))fail('Invoice classroom must match the Fee Structure.');
       const classroom=await portalRecord(env,school,'classrooms',fee.classroom_id);
       if(String(student.classroom_id)!==String(fee.classroom_id))fail('Student must belong to the Fee Structure classroom.');
+      const existing=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='invoices' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.fee_structure_id')=? LIMIT 1").bind(school,student.id,data.fee_structure_id).first();
+      if(existing)fail('This fee request already exists for this Student ID and Fee Structure. Use the existing invoice instead of creating a duplicate.');
       data.classroom_id=fee.classroom_id;data.academic_year=classroom?.academic_year||fee.academic_year||student.academic_year;
+    }else{
+      fail('Fee requests must be generated from a Fee Structure. Do not create manual duplicate invoices.');
     }
     if(!data.classroom_id)data.classroom_id=student.classroom_id||'';
     if(!data.academic_year)data.academic_year=student.academic_year||'';
