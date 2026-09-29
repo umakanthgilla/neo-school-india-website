@@ -240,7 +240,7 @@ window.addEventListener('neo:open-tab',e=>{if(!school||!e.detail?.tab)return;tab
 
 const input=(key,title,type='text',required=true)=>`<label>${title}<input name="${key}" type="${type}" ${required?'required':''} ${type==='number'?'min="1" step="1"':''} ${type==='text'?'maxlength="200"':''}></label>`;
 const select=(key,title,options)=>`<label>${title}<select name="${key}" required><option value="">Choose…</option>${options.map(x=>{const [v,t]=Array.isArray(x)?x:[x,x];return `<option value="${esc(v)}">${esc(t)}</option>`}).join('')}</select></label>`;
-const chooseStudent=()=>select('student_id','Student',(records.students||[]).map(s=>[s.id,s.name+' · '+s.program]));
+const chooseStudent=()=>select('student_id','Student',(records.students||[]).filter(s=>s.classroom_id).map(s=>[s.id,s.name+' · '+s.program+' · '+classroomName(s.classroom_id)]));
 const amount=()=>'<label>Amount (INR)<input name="amount" type="number" min="0.01" max="1000000" step="0.01" required></label>';
 const notes=()=>'<label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label>';
 const chooseClassroom=(required=true)=>select('classroom_id','Classroom',(records.classrooms||[]).map(c=>[c.id,c.name+' · '+c.program+' · '+c.academic_year])).replace('required',required?'required':'');
@@ -334,12 +334,12 @@ function renderSchoolSetup(area){
  activeTeacherAccounts.forEach(t=>(Array.isArray(t.classroom_ids)?t.classroom_ids:[]).forEach(cid=>{if(!teacherByClassroom.has(String(cid)))teacherByClassroom.set(String(cid),t)}));
  const assignedClassrooms=new Set(),unassignedClasses=[];
  classrooms.forEach(c=>{const teacherRef=c.teacher_staff_id||c.teacher_id||c.teacher_account_id||c.teacher;const linked=teacherRef||teacherByClassroom.get(String(c.id))?.staff_id||teacherByClassroom.get(String(c.id))?.account_id;if(linked)assignedClassrooms.add(String(c.id));else unassignedClasses.push(c)});
- const studentClassLinks=students.filter(s=>s.classroom_id).length,unlinkedStudents=students.filter(s=>!s.classroom_id).length,feeClassLinks=new Set(fees.map(f=>f.classroom_id).filter(Boolean)).size;
+ const studentClassLinks=students.filter(s=>s.classroom_id).length,unlinkedStudents=students.filter(s=>!s.classroom_id).length,orphanedStudents=students.filter(s=>s.classroom_id&&!classrooms.some(c=>String(c.id)===String(s.classroom_id))).length,feeClassLinks=new Set(fees.map(f=>f.classroom_id).filter(Boolean)).size;
  const steps=[
   ['Classes & sections',classrooms.length>0,classrooms.length+' classroom / section'+(classrooms.length===1?'':'s')+' · '+programmes.length+' programme'+(programmes.length===1?'':'s'),'classrooms'],
   ['Teachers',teachers.length>0,teachers.length+' active teacher account'+(teachers.length===1?'':'s')+' · linked to existing Staff IDs','teacher_access'],
   ['Teacher assignment',classrooms.length>0&&unassignedClasses.length===0,classrooms.length?unassignedClasses.length+' class'+(unassignedClasses.length===1?'':'es')+' without a stored teacher assignment':'Create classes first','teacher_access'],
-  ['Students',students.length>0&&unlinkedStudents===0,students.length+' student'+(students.length===1?'':'s')+' · '+studentClassLinks+' linked'+(unlinkedStudents?' · '+unlinkedStudents+' need classroom linking':''),'students'],
+  ['Students',students.length>0&&unlinkedStudents===0&&orphanedStudents===0,students.length+' student'+(students.length===1?'':'s')+' · '+studentClassLinks+' linked'+(unlinkedStudents?' · '+unlinkedStudents+' need classroom linking':'')+(orphanedStudents?' · '+orphanedStudents+' have invalid classroom links':''),'students'],
   ['Fee structure',fees.length>0,fees.length+' fee structure'+(fees.length===1?'':'s')+' · '+feeClassLinks+' class link'+(feeClassLinks===1?'':'s'),'fee_structures'],
   ['Timetable',null,'Published timetable status is managed in the connected timetable workflow.','timetable'],
   ['Opening inventory',stock.length>0,stock.length+' stock item'+(stock.length===1?'':'s')+' currently available in Inventory','inventory'],
