@@ -1734,7 +1734,7 @@ async function portalExtra(request,env,url,admin,session){
   return out({success:true,account_id:account});
  }
  const fee=await portalRecord(env,school,'fee_structures',id);if(!fee)return out({error:'Fee structure not found.'},404);
- const students=(await portalRows(env,school,'students')).filter(s=>s.classroom_id===fee.classroom_id);
+ const students=(await portalRows(env,school,'students')).filter(s=>s.classroom_id===fee.classroom_id&&String(s.status||'Active')!=='Withdrawn');
  if(!students.length)return out({error:'Assign students to this classroom first.'},400);
  if(students.length>90)return out({error:'This classroom exceeds the batch size of 90. Create individual fee requests or contact head office.'},400);
  const writes=students.map(child=>env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+fee.id+'_'+child.id,JSON.stringify({student_id:child.id,title:fee.title,due_date:fee.due_date,amount_paise:fee.amount_paise,fee_structure_id:fee.id})));
