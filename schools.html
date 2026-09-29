@@ -327,7 +327,7 @@ case 'ledger':return `<p class="portal-empty">A unique payment voucher number is
 case 'support':return input('subject','Subject')+notes();
 }}
 function renderSchoolSetup(area){
- const classrooms=records.classrooms||[],students=records.students||[],teachers=(records.teacher_access||[]).filter(x=>x.active),staff=(records.staff||[]).filter(x=>x.status!=='Inactive'),fees=records.fee_structures||[],stock=records.stock_items||[];
+ const classrooms=records.classrooms||[],students=records.students||[],teachers=(records.teacher_access||[]).filter(x=>x.active&&(!x.staff_type||x.staff_type==='Teaching Staff')),fees=records.fee_structures||[],stock=records.stock_items||[];
  const setupErrors=['students','classrooms','teacher_access'].filter(k=>errors[k]);
  const programmes=[...new Set(classrooms.map(x=>x.program).filter(Boolean))];
  const activeTeacherAccounts=(records.teacher_access||[]).filter(x=>x.active),teacherByClassroom=new Map();
