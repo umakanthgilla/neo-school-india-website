@@ -989,39 +989,7 @@ async function franchiseRoute(request,env,url){
    const tasks=await env.DB.prepare('SELECT task,completed,updated_at FROM neo_school_tasks WHERE school_id=?').bind(id).all();
    return reply({success:true,school:publicSchool(school),tasks:tasks.results||[]});
   }
-  if(request.method==='POST'&&kind==='student_movements'){
-   const student=await related('students','student_id'),type=choice('type',['Promotion','Section change','Withdrawal']),effectiveDate=date('effective_date'),reason=str('reason',500);
-   if((student.status||'Active')==='Withdrawn')fail('This Student ID is already withdrawn. Do not create another student record.');
-   const fromClass=student.classroom_id?await related('classrooms','classroom_id'):null;
-   let toClass=null;
-   if(type==='Withdrawal'){
-    if(b.to_classroom_id)fail('Withdrawal does not use a destination classroom.');
-   }else{
-    toClass=await related('classrooms','to_classroom_id');
-    if(type==='Promotion'&&Number(toClass.academic_year)<=Number(student.academic_year))fail('Promotion must move to a later academic year.');
-    if(type==='Section change'&&(toClass.program!==student.program||toClass.academic_year!==student.academic_year))fail('Section change must stay within the same programme and academic year.');
-    if(toClass.id===student.classroom_id)fail('Choose a different destination classroom.');
-   }
-   const now=new Date().toISOString();
-   const nextStudent={...student,status:type==='Withdrawal'?'Withdrawn':'Active',classroom_id:toClass?.id||student.classroom_id||'',program:toClass?.program||student.program,academic_year:toClass?.academic_year||student.academic_year};
-   lifecycleStudentId=student.id;lifecycleStudentUpdate=nextStudent;delete lifecycleStudentUpdate.id;delete lifecycleStudentUpdate.created_at;
-   data={student_id:student.id,type,from_classroom_id:fromClass?.id||student.classroom_id||'',to_classroom_id:toClass?.id||'',from_program:student.program,to_program:toClass?.program||'',from_academic_year:student.academic_year,to_academic_year:toClass?.academic_year||'',effective_date:effectiveDate,reason,recorded_at:now};
-   if(toClass){
-    const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===toClass.id);
-    if(fees.length>80)fail('Too many fee structures for the destination classroom. Contact head office.');
-    lifecycleNewFees=fees.map(f=>({id:'FS_'+f.id+'_'+student.id+'_'+toClass.id,student_id:student.id,title:f.title,due_date:f.due_date,amount_paise:f.amount_paise,fee_structure_id:f.id,student_movement_id:recordId}));
-   }
-  }else if(request.method==='POST'&&kind==='student_tc'){
-   const movementId=str('movement_id',80),movement=await portalRecord(env,school,'student_movements',movementId);
-   if(!movement||movement.type!=='Withdrawal')fail('A saved withdrawal movement is required before issuing a Transfer Certificate.');
-   const existingTc=(await portalRows(env,school,'student_tc')).find(x=>x.movement_id===movementId);
-   if(existingTc)fail('A Transfer Certificate has already been issued for this withdrawal.');
-   const student=await related('students','student_id'),issuedOn=neoToday(),year=issuedOn.slice(0,4),suffix=crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();
-   const schoolRow=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(school).first();
-   const fromClass=movement.from_classroom_id?await portalRecord(env,school,'classrooms',movement.from_classroom_id):null;
-   data={movement_id:movementId,student_id:student.id,student_name:student.name,parent_name:student.parent,dob:student.dob,admission_date:student.admission_date||'',classroom_name:fromClass?.name||student.program,program:movement.from_program||student.program,academic_year:movement.from_academic_year||student.academic_year,withdrawal_date:movement.effective_date,reason:movement.reason,school_name:schoolRow?.name||school,school_city:schoolRow?.city||'',certificate_no:'TC-'+year+'-'+suffix,issued_on:issuedOn};
-   recordId='TC_'+movementId;
-  }else if(request.method==='PATCH'){
+  if(request.method==='PATCH'){
    if(!admin)return error('Only head office can approve readiness or change access.',403);
    const b=await request.json();
    if(SCHOOL_TASKS.includes(b.task)&&typeof b.completed==='boolean'){
@@ -1116,7 +1084,7 @@ async function schoolPortal(request,env,url){
   }
   await ensurePortalSchema(env);
   const extra=await portalExtra(request,env,url,admin,session);if(extra)return extra;
-const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc)(?:\/([^/]+))?$/);
+const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog)(?:\/([^/]+))?$/);
   if(!match)return out({error:'Not found.'},404);
   const [,school,kind,id]=match;
   if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
@@ -1141,8 +1109,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   const money=()=>{if(!Number.isSafeInteger(b.amount_paise)||b.amount_paise<=0||b.amount_paise>100000000)fail('Amount must be positive, up to INR 1,000,000.');return b.amount_paise};
   const mobile=()=>{const v=str('mobile',20);if(!/^\+?[0-9 ()-]{8,20}$/.test(v))fail('Check mobile number.');return v};
   const related=async(k,key)=>{const v=str(key,80);const r=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,k,v).first();if(!r)fail('Related record not found in this school.');return {id:v,...JSON.parse(r.data)}};
-  let data,recordId=id||(kind==='staff'&&!b.request_id?('NEO'+String(new Date().getFullYear()).slice(-2)+crypto.randomUUID().replace(/-/g,'').slice(0,4).toUpperCase()):kind==='student_tc'?'TC_'+crypto.randomUUID().replace(/-/g,''):str('request_id',80));
-  let lifecycleStudentUpdate=null,lifecycleStudentId='',lifecycleNewFees=[];
+  let data,recordId=id||(kind==='staff'&&!b.request_id?('NEO'+String(new Date().getFullYear()).slice(-2)+crypto.randomUUID().replace(/-/g,'').slice(0,4).toUpperCase()):str('request_id',80));
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(recordId))fail('Invalid record ID.');
   if(request.method==='PATCH'){
    const schoolPatch=['students','classrooms','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders'];
@@ -1477,10 +1444,6 @@ recordId='HR_RULES_'+effectiveFrom;
   sql+=' ON CONFLICT(school_id,kind,id) DO UPDATE SET data=excluded.data';
 }
   const writes=[env.DB.prepare(sql).bind(school,kind,recordId,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,admin?'head-office':'school:'+school,request.method+':'+kind,recordId)];
-  if(kind==='student_movements'&&lifecycleStudentUpdate){
-   writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='students' AND id=?").bind(JSON.stringify(lifecycleStudentUpdate),school,lifecycleStudentId));
-   for(const fee of lifecycleNewFees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices',fee.id,JSON.stringify(fee)));
-  }
   if(kind==='students'&&data.classroom_id){
    const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===data.classroom_id);
    if(fees.length>80)fail('Too many fee structures for automatic assignment. Contact head office.');
