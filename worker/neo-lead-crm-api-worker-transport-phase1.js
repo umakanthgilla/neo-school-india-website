@@ -1575,8 +1575,14 @@ async function portalExtra(request,env,url,admin,session){
  const [,school,kind,id]=m;
  if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
  if(kind==='teacher_access'&&request.method==='GET'){
-  const r=await env.DB.prepare(`SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e LEFT JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=?`).bind(school).all();
-  return out({accounts:(r.results||[]).map(x=>({...x,classroom_ids:JSON.parse(x.classroom_ids||'[]')}))});
+  const [employees,legacy]=await Promise.all([
+   env.DB.prepare(`SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e LEFT JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=?`).bind(school).all(),
+   env.DB.prepare(`SELECT a.account_id,a.name,a.active,a.classroom_ids FROM neo_teacher_accounts a WHERE a.school_id=? AND NOT EXISTS (SELECT 1 FROM neo_employee_accounts e WHERE e.school_id=a.school_id AND e.account_id=a.account_id)`).bind(school).all()
+  ]);
+  const accounts=(employees.results||[]).map(x=>({...x,classroom_ids:JSON.parse(x.classroom_ids||'[]')}));
+  const seen=new Set(accounts.map(x=>x.account_id));
+  for(const x of (legacy.results||[]))if(!seen.has(x.account_id))accounts.push({...x,staff_id:'',staff_type:'Teaching Staff',classroom_ids:JSON.parse(x.classroom_ids||'[]')});
+  return out({accounts});
  }
  if(kind==='parent_access'&&request.method==='GET'){
   const r=await env.DB.prepare('SELECT account_id,student_id,active FROM neo_parent_accounts WHERE school_id=?').bind(school).all();return out({accounts:r.results||[]});
