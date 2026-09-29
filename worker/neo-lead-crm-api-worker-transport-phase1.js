@@ -1097,7 +1097,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    let records=rows.results.map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}));
    if(kind==='notifications'&&!admin)records=records.filter(n=>['hr','finance','school'].includes(n.target));
    if(kind==='student_movements'){
-     const activeStudents=(await portalRows(env,school,'students')).filter(s=>String(s.status||'Active')!=='Withdrawn');
+     const activeStudents=await portalRows(env,school,'students');
      const fee_summaries={};
      for(const child of activeStudents)fee_summaries[child.id]=await studentFeeSummary(child.id,child.academic_year);
      return out({records,fee_summaries});
