@@ -1111,20 +1111,51 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   const related=async(k,key)=>{const v=str(key,80);const r=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,k,v).first();if(!r)fail('Related record not found in this school.');return {id:v,...JSON.parse(r.data)}};
   let data,recordId=id||(kind==='staff'&&!b.request_id?('NEO'+String(new Date().getFullYear()).slice(-2)+crypto.randomUUID().replace(/-/g,'').slice(0,4).toUpperCase()):str('request_id',80));
   let lifecycleStudentUpdate=null,lifecycleStudentId='',lifecycleNewFees=[];
+  const studentFeeSummary=async(studentId,currentAcademicYear='')=>{
+   const invoices=await portalRows(env,school,'invoices');
+   const payments=await portalRows(env,school,'payments');
+   const fees=await portalRows(env,school,'fee_structures');
+   const feeById=new Map(fees.map(f=>[String(f.id),f]));
+   const paidByInvoice=new Map();
+   for(const p of payments){
+    const key=String(p.invoice_id||'');
+    paidByInvoice.set(key,(paidByInvoice.get(key)||0)+Number(p.amount_paise||0));
+   }
+   const own=invoices.filter(i=>String(i.student_id)===String(studentId));
+   const lines=own.map(i=>{
+    const fee=i.fee_structure_id?feeById.get(String(i.fee_structure_id)):null;
+    const academicYear=String(i.academic_year||fee?.academic_year||'');
+    const classroomId=i.classroom_id||fee?.classroom_id||'';
+    const amount=Math.max(0,Number(i.amount_paise)||0);
+    const paid=Math.max(0,Number(paidByInvoice.get(String(i.id))||0));
+    return {...i,academic_year:academicYear,classroom_id:classroomId,balance_paise:Math.max(0,amount-paid),paid_paise:paid};
+   }).filter(i=>i.balance_paise>0);
+   const current=String(currentAcademicYear||'');
+   const previous=lines.filter(i=>current&&i.academic_year&&Number(i.academic_year)<Number(current));
+   const currentDue=lines.filter(i=>!current||!i.academic_year||Number(i.academic_year)>=Number(current));
+   return {
+    total_due_paise:lines.reduce((n,i)=>n+i.balance_paise,0),
+    previous_due_paise:previous.reduce((n,i)=>n+i.balance_paise,0),
+    current_due_paise:currentDue.reduce((n,i)=>n+i.balance_paise,0),
+    previous_due_count:previous.length,
+    current_due_count:currentDue.length,
+    lines:lines.map(i=>({invoice_id:i.id,title:i.title,amount_paise:i.amount_paise,paid_paise:i.paid_paise,balance_paise:i.balance_paise,due_date:i.due_date,academic_year:i.academic_year,classroom_id:i.classroom_id}))
+   };
+  };
   if(request.method==='POST'&&kind==='student_movements'){
    const student=await related('students','student_id'),type=choice('type',['Promotion','Section change','Withdrawal']),effectiveDate=date('effective_date'),reason=str('reason',500);
    if((student.status||'Active')==='Withdrawn')fail('This Student ID is already withdrawn. Do not create another student record.');
    const fromClass=student.classroom_id?await related('classrooms','classroom_id'):null;let toClass=null;
    if(type==='Withdrawal'){if(b.to_classroom_id)fail('Withdrawal does not use a destination classroom.');}
    else{toClass=await related('classrooms','to_classroom_id');if(type==='Promotion'&&Number(toClass.academic_year)<=Number(student.academic_year))fail('Promotion must move to a later academic year.');if(type==='Section change'&&(toClass.program!==student.program||toClass.academic_year!==student.academic_year))fail('Section change must stay within the same programme and academic year.');if(toClass.id===student.classroom_id)fail('Choose a different destination classroom.');}
-   lifecycleStudentId=student.id;const nextStudent={...student,status:type==='Withdrawal'?'Withdrawn':'Active',classroom_id:toClass?.id||student.classroom_id||'',program:toClass?.program||student.program,academic_year:toClass?.academic_year||student.academic_year};delete nextStudent.id;delete nextStudent.created_at;lifecycleStudentUpdate=nextStudent;
-   data={student_id:student.id,type,from_classroom_id:fromClass?.id||student.classroom_id||'',to_classroom_id:toClass?.id||'',from_program:student.program,to_program:toClass?.program||'',from_academic_year:student.academic_year,to_academic_year:toClass?.academic_year||'',effective_date:effectiveDate,reason,recorded_at:new Date().toISOString()};
-   if(toClass){const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===toClass.id);if(fees.length>80)fail('Too many fee structures for the destination classroom. Contact head office.');lifecycleNewFees=fees.map(f=>({id:'FS_'+f.id+'_'+student.id+'_'+toClass.id,student_id:student.id,title:f.title,due_date:f.due_date,amount_paise:f.amount_paise,fee_structure_id:f.id,student_movement_id:recordId}));}
+   lifecycleStudentId=student.id;const feeSummary=await studentFeeSummary(student.id,student.academic_year);const nextStudent={...student,status:type==='Withdrawal'?'Withdrawn':'Active',classroom_id:toClass?.id||student.classroom_id||'',program:toClass?.program||student.program,academic_year:toClass?.academic_year||student.academic_year};delete nextStudent.id;delete nextStudent.created_at;lifecycleStudentUpdate=nextStudent;
+   data={student_id:student.id,type,from_classroom_id:fromClass?.id||student.classroom_id||'',to_classroom_id:toClass?.id||'',from_program:student.program,to_program:toClass?.program||'',from_academic_year:student.academic_year,to_academic_year:toClass?.academic_year||'',effective_date:effectiveDate,reason,recorded_at:new Date().toISOString(),previous_due_paise:feeSummary.previous_due_paise,current_due_paise:feeSummary.current_due_paise,total_due_before_movement_paise:feeSummary.total_due_paise,due_lines:feeSummary.lines};
+   if(toClass){const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===toClass.id);if(fees.length>80)fail('Too many fee structures for the destination classroom. Contact head office.');lifecycleNewFees=fees.map(f=>({id:'FS_'+f.id+'_'+student.id+'_'+toClass.id,student_id:student.id,title:f.title,due_date:f.due_date,amount_paise:f.amount_paise,fee_structure_id:f.id,student_movement_id:recordId,classroom_id:toClass.id,program:toClass.program,academic_year:toClass.academic_year,fee_period:'current'}));}
   }else if(request.method==='POST'&&kind==='student_tc'){
    const movementId=str('movement_id',80),movement=await portalRecord(env,school,'student_movements',movementId);if(!movement||movement.type!=='Withdrawal')fail('A saved withdrawal movement is required before issuing a Transfer Certificate.');
    const existingTc=(await portalRows(env,school,'student_tc')).find(x=>x.movement_id===movementId);if(existingTc)fail('A Transfer Certificate has already been issued for this withdrawal.');
    const student=await related('students','student_id'),issuedOn=neoToday(),schoolRow=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(school).first(),fromClass=movement.from_classroom_id?await portalRecord(env,school,'classrooms',movement.from_classroom_id):null;
-   data={movement_id:movementId,student_id:student.id,student_name:student.name,parent_name:student.parent,dob:student.dob,admission_date:student.admission_date||'',classroom_name:fromClass?.name||student.program,program:movement.from_program||student.program,academic_year:movement.from_academic_year||student.academic_year,withdrawal_date:movement.effective_date,reason:movement.reason,school_name:schoolRow?.name||school,school_city:schoolRow?.city||'',certificate_no:'TC-'+issuedOn.slice(0,4)+'-'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase(),issued_on:issuedOn};recordId='TC_'+movementId;
+   const feeSummary=await studentFeeSummary(student.id,student.academic_year);data={movement_id:movementId,student_id:student.id,student_name:student.name,parent_name:student.parent,dob:student.dob,admission_date:student.admission_date||'',classroom_name:fromClass?.name||student.program,program:movement.from_program||student.program,academic_year:movement.from_academic_year||student.academic_year,withdrawal_date:movement.effective_date,reason:movement.reason,school_name:schoolRow?.name||school,school_city:schoolRow?.city||'',certificate_no:'TC-'+issuedOn.slice(0,4)+'-'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase(),issued_on:issuedOn,total_due_paise:feeSummary.total_due_paise,previous_due_paise:feeSummary.previous_due_paise,current_due_paise:feeSummary.current_due_paise,due_status:feeSummary.total_due_paise>0?'DUE':'CLEARED',due_lines:feeSummary.lines};recordId='TC_'+movementId;
   }
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(recordId))fail('Invalid record ID.');
   if(request.method==='PATCH'){
@@ -1464,12 +1495,12 @@ recordId='HR_RULES_'+effectiveFrom;
   if(kind==='students'&&data.classroom_id){
    const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===data.classroom_id);
    if(fees.length>80)fail('Too many fee structures for automatic assignment. Contact head office.');
-   for(const fee of fees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+fee.id+'_'+recordId,JSON.stringify({student_id:recordId,title:fee.title,due_date:fee.due_date,amount_paise:fee.amount_paise,fee_structure_id:fee.id})));
+   for(const fee of fees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+fee.id+'_'+recordId,JSON.stringify({student_id:recordId,title:fee.title,due_date:fee.due_date,amount_paise:fee.amount_paise,fee_structure_id:fee.id,classroom_id:data.classroom_id,program:data.program,academic_year:data.academic_year})));
   }
   if(kind==='fee_structures'){
    const children=(await portalRows(env,school,'students')).filter(c=>c.classroom_id===data.classroom_id);
    if(children.length>80)fail('This class exceeds the automatic fee assignment limit of 80. Split into classroom sections.');
-   for(const child of children)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+recordId+'_'+child.id,JSON.stringify({student_id:child.id,title:data.title,due_date:data.due_date,amount_paise:data.amount_paise,fee_structure_id:recordId})));
+   for(const child of children)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices','FS_'+recordId+'_'+child.id,JSON.stringify({student_id:child.id,title:data.title,due_date:data.due_date,amount_paise:data.amount_paise,fee_structure_id:recordId,classroom_id:data.classroom_id,academic_year:(await portalRecord(env,school,'classrooms',data.classroom_id))?.academic_year||'',program:(await portalRecord(env,school,'classrooms',data.classroom_id))?.program||''})));
   }
   if(kind==='goods_receipts'&&request.method==='POST'){
    const po=await portalRecord(env,school,'purchase_orders',data.purchase_order_id),accepted=Math.max(0,Number(data.quantity||0)-Number(data.damaged_quantity||0));
