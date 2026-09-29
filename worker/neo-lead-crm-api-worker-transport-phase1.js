@@ -1184,8 +1184,9 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    }else if(kind==='announcements'){
     const classroom=b.classroom_id?await related('classrooms','classroom_id'):null;data={classroom_id:classroom?.id||'',title:str('title'),category:str('category',80,false)||'General',audience:b.audience?choice('audience',['Parents and teachers','Teachers only']):'Parents and teachers',message:str('message',2000),published:b.published===true};
    }else if(kind==='students'){
+    if(typeof b.classroom_id!=='string'||!b.classroom_id.trim())fail('Select an existing classroom before registering a student.');
     data={gender:b.gender?choice('gender',['Male','Female','Prefer not to say']):'',email:str('email',200,false),name:str('name'),dob:date('dob'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),parent:str('parent'),mobile:mobile(),academic_year:str('academic_year',9),previous_school:str('previous_school',200,false),previous_city:str('previous_city',120,false),nursery_status:choice('nursery_status',['Not applicable','Completed','In progress','Not attended']),lkg_status:choice('lkg_status',['Not applicable','Completed','In progress','Not attended'])};
-    if(b.classroom_id){const classroom=await related('classrooms','classroom_id');if(classroom.program!==data.program||classroom.academic_year!==data.academic_year)fail('Classroom must match student class and academic year.');data.classroom_id=classroom.id;}
+    const classroom=await related('classrooms','classroom_id');if(classroom.program!==data.program||classroom.academic_year!==data.academic_year)fail('Classroom must match student class and academic year.');data.classroom_id=classroom.id;
     if(data.dob>new Date().toISOString().slice(0,10))fail('DOB cannot be in the future.');
     if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter the academic starting year.');
     if(['LKG','UKG'].includes(data.program)&&data.nursery_status==='Not applicable')fail('Specify previous Nursery status.');
