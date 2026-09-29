@@ -1471,7 +1471,19 @@ recordId='HR_RULES_'+effectiveFrom;
   ) fail('Check recovery month.');
   }else if(kind==='enquiries')data={name:str('name'),mobile:mobile(),child_name:str('child_name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),follow_up:date('follow_up'),notes:str('notes',1000,false),status:'New'};
    else if(kind==='attendance'){const student=await related('students','student_id');data={student_id:student.id,date:date('date'),status:choice('status',['Present','Absent','Leave'])};if(data.date>new Date(Date.now()+330*60000).toISOString().slice(0,10))fail('Attendance cannot be in the future.');recordId=student.id+'_'+data.date;}
-   else if(kind==='invoices'){const student=await related('students','student_id');data={student_id:student.id,title:str('title'),due_date:date('due_date'),amount_paise:money()};}
+   else if(kind==='invoices'){
+    const student=await related('students','student_id');
+    data={student_id:student.id,title:str('title'),due_date:date('due_date'),amount_paise:money(),fee_structure_id:str('fee_structure_id',80,false),classroom_id:str('classroom_id',80,false),academic_year:str('academic_year',9,false)};
+    if(data.fee_structure_id){
+      const fee=await portalRecord(env,school,'fee_structures',data.fee_structure_id);if(!fee)fail('Fee structure not found.');
+      if(data.classroom_id&&String(data.classroom_id)!==String(fee.classroom_id))fail('Invoice classroom must match the Fee Structure.');
+      const classroom=await portalRecord(env,school,'classrooms',fee.classroom_id);
+      if(String(student.classroom_id)!==String(fee.classroom_id))fail('Student must belong to the Fee Structure classroom.');
+      data.classroom_id=fee.classroom_id;data.academic_year=classroom?.academic_year||fee.academic_year||student.academic_year;
+    }
+    if(!data.classroom_id)data.classroom_id=student.classroom_id||'';
+    if(!data.academic_year)data.academic_year=student.academic_year||'';
+  }
    else if(kind==='payments'){const invoice=await related('invoices','invoice_id'),paymentDate=date('date'),receiptNo=await nextFinanceNumber(env,school,'receipt',paymentDate);data={invoice_id:invoice.id,student_id:invoice.student_id,date:paymentDate,amount_paise:money(),method:choice('method',['Cash','UPI','Bank transfer','Cheque']),reference:str('reference',200),receipt_no:receiptNo,status:'Recorded by school'};if(data.date>new Date(Date.now()+330*60000).toISOString().slice(0,10))fail('Payment date cannot be in the future.');}
    else if(kind==='orders'){const quantity=b.quantity;if(!Number.isInteger(quantity)||quantity<1||quantity>1000)fail('Quantity must be 1â€“1000.');data={category:choice('category',['Books','Student kits','Uniforms']),item:str('item'),size:str('size',80,false),quantity,notes:str('notes',1000,false),status:'Submitted'};if(data.category==='Uniforms'&&!data.size)fail('Uniform size is required.');
     data.order_for=b.order_for?choice('order_for',['School stock','Classroom','Child']):'School stock';
