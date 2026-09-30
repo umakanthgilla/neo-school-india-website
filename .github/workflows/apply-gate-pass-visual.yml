@@ -1,0 +1,43 @@
+name: Apply Gate Pass Visual Polish
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-gate-pass-visual.yml'
+      - 'gate-pass-visual.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Load visual polish on gate pass
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('gate-checkin.html')
+          text=p.read_text()
+          tag='<script src="/gate-pass-visual.js?v=20260930-pass2"></script>'
+          if tag not in text:
+              if '</body>' not in text:
+                  raise SystemExit('gate-checkin body marker not found')
+              text=text.replace('</body>',tag+'\n</body>',1)
+              p.write_text(text)
+          PY
+          node --check gate-pass-visual.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add gate-checkin.html
+          if git diff --cached --quiet; then
+            echo 'Visual polish already loaded.'
+            exit 0
+          fi
+          git commit -m 'Load prominent Neo gate pass visual polish'
+          git push origin HEAD:main
