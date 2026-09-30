@@ -1,4 +1,4 @@
-/* Final school-portal handover UI cleanup: maintenance tabs + library rack map. */
+/* Final school-portal handover UI cleanup: maintenance dropdown + clear library rack map. */
 (()=>{
 'use strict';
 if(window.__neoHandoverUiCleanup)return;window.__neoHandoverUiCleanup=true;
@@ -8,8 +8,8 @@ let timer=0;
 
 const style=document.createElement('style');
 style.textContent=`
-.neo-module-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.neo-module-tabs button{border:1px solid #d7e2f2;border-radius:14px;background:#fff;color:#102052;padding:12px 10px;font-weight:800;box-shadow:0 4px 12px rgba(16,32,82,.06)}.neo-module-tabs button[aria-selected="true"]{background:linear-gradient(135deg,#0d2b6e,#1557a6);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(13,43,110,.2)}.neo-maint-panel[hidden],.neo-library-panel[hidden]{display:none!important}.neo-maint-panel{margin-top:8px}.neo-rack-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.neo-rack-card{border:1px solid #d7e2f2;border-radius:18px;background:linear-gradient(180deg,#fff,#f8fbff);padding:16px;box-shadow:0 8px 20px rgba(16,32,82,.07)}.neo-rack-card h4{margin:0 0 8px;color:#102052}.neo-rack-card p{margin:5px 0}.neo-rack-code{display:inline-flex;align-items:center;justify-content:center;min-width:54px;height:30px;border-radius:999px;background:#edf4ff;color:#0d2b6e;font-weight:800;margin-bottom:10px}.neo-library-note{border:1px solid #d7e2f2;border-radius:14px;padding:12px 14px;background:#f8fbff;margin:12px 0}.neo-library-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media(max-width:760px){.neo-module-tabs,.neo-library-tabs{grid-template-columns:1fr 1fr}.neo-rack-grid{grid-template-columns:1fr}}
+.neo-maint-chooser{margin:18px 0 14px;padding:16px;border:1px solid #d7e2f2;border-radius:16px;background:linear-gradient(180deg,#fff,#f7faff);box-shadow:0 7px 18px rgba(16,32,82,.06)}.neo-maint-chooser label{display:grid;gap:8px;margin:0;font-weight:800;color:#102052}.neo-maint-chooser select{width:100%;min-height:48px;padding:11px 14px;border:1px solid #bdcde5;border-radius:12px;background:#fff;color:#102052;font:inherit;font-weight:700}.neo-maint-help{margin:8px 0 0;font-size:.92rem;color:#61708b}.neo-maint-panel[hidden]{display:none!important}.neo-maint-panel{margin-top:10px}.neo-maint-empty{padding:22px;border:1px dashed #c8d6e9;border-radius:16px;background:#fbfdff;color:#61708b;text-align:center}.neo-maint-panel details.portal-editor{margin-top:0}.neo-library-shell{display:grid;gap:16px}.neo-library-intro{border:1px solid #d7e2f2;border-radius:16px;padding:14px 16px;background:#f8fbff}.neo-library-racks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.neo-library-rack{overflow:hidden;border:1px solid #d7e2f2;border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(16,32,82,.07)}.neo-library-rack-head{padding:15px 16px;background:linear-gradient(135deg,#0d2b6e,#1557a6);color:#fff}.neo-library-rack-head small{display:block;color:#dce9ff;margin-top:4px}.neo-library-shelves{padding:8px 14px 14px}.neo-library-shelf{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;padding:12px 0;border-bottom:1px solid #e6edf7}.neo-library-shelf:last-child{border-bottom:0}.neo-library-shelf b{display:inline-flex;align-items:center;justify-content:center;height:30px;border-radius:999px;background:#edf4ff;color:#0d2b6e;font-size:.82rem}.neo-library-shelf strong{display:block;color:#102052}.neo-library-shelf span{display:block;margin-top:3px;color:#61708b;font-size:.9rem;line-height:1.4}.neo-library-footer{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 15px;border:1px solid #d7e2f2;border-radius:14px;background:#fbfdff}.neo-library-footer p{margin:0}
+@media(max-width:820px){.neo-library-racks{grid-template-columns:1fr}.neo-library-footer{display:grid}}
 `;
 document.head.append(style);
 
@@ -19,37 +19,34 @@ function sectionPair(container,text){const heading=directHeading(container,text)
 function enhanceMaintenance(){
  if(activeTab()!=='maintenance')return;
  const area=root()?.querySelector('#portalContent'),fac=area?.querySelector('#neoFacilities');
- if(!fac||fac.dataset.handoverTabs==='true')return;
+ if(!fac||fac.dataset.handoverDropdown==='true')return;
  const editors=[...fac.querySelectorAll('details.portal-editor')].slice(0,4);if(editors.length<4)return;
- fac.dataset.handoverTabs='true';
  const formGrid=editors[0].parentElement;if(!formGrid)return;
+ fac.dataset.handoverDropdown='true';
  const assignment=sectionPair(fac,'Housekeeping assignments'),verification=sectionPair(fac,'Cleaning verification'),requests=sectionPair(fac,'Shortage & maintenance requests');
  const defs=[
-  ['areas','Areas & zones',editors[0],null],
-  ['assignments','Assignments',editors[1],assignment],
-  ['verification','Cleaning verification',editors[2],verification],
-  ['requests','Shortage / repairs',editors[3],requests]
+  ['areas','Area / Zone Setup',editors[0],null],
+  ['assignments','Assign Attendant & Verifier',editors[1],assignment],
+  ['verification','Cleaning Completion / Verification',editors[2],verification],
+  ['requests','Shortage / Repair Request',editors[3],requests]
  ];
- const nav=document.createElement('div');nav.className='neo-module-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label','Maintenance sections');
+ const chooser=document.createElement('div');chooser.className='neo-maint-chooser';chooser.innerHTML='<label>Choose Maintenance Activity<select data-maint-select><option value="">Select an activity…</option>'+defs.map(([id,label])=>'<option value="'+id+'">'+label+'</option>').join('')+'</select></label><p class="neo-maint-help">Select one activity. Only that form and its related records will open below.</p>';
  const panels=document.createElement('div');panels.className='neo-maint-panels';
- const activate=id=>{
-  nav.querySelectorAll('[data-maint-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.maintTab===id)));
-  panels.querySelectorAll('[data-maint-panel]').forEach(p=>p.hidden=p.dataset.maintPanel!==id);
- };
- defs.forEach(([id,label,editor,pair],index)=>{
-  const b=document.createElement('button');b.type='button';b.dataset.maintTab=id;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(index===0));b.textContent=label;b.onclick=()=>activate(id);nav.append(b);
-  const panel=document.createElement('section');panel.className='neo-maint-panel';panel.dataset.maintPanel=id;panel.hidden=index!==0;panel.append(editor);if(pair?.heading)panel.append(pair.heading);if(pair?.grid)panel.append(pair.grid);panels.append(panel);
+ const empty=document.createElement('div');empty.className='neo-maint-empty';empty.dataset.maintEmpty='true';empty.textContent='Choose a maintenance activity from the dropdown above.';panels.append(empty);
+ defs.forEach(([id,,editor,pair])=>{
+  editor.open=true;
+  const panel=document.createElement('section');panel.className='neo-maint-panel';panel.dataset.maintPanel=id;panel.hidden=true;panel.append(editor);if(pair?.heading)panel.append(pair.heading);if(pair?.grid)panel.append(pair.grid);panels.append(panel);
  });
- formGrid.before(nav);formGrid.replaceWith(panels);
+ const select=chooser.querySelector('[data-maint-select]');
+ select.onchange=()=>{const id=select.value;empty.hidden=!!id;panels.querySelectorAll('[data-maint-panel]').forEach(p=>p.hidden=p.dataset.maintPanel!==id)};
+ formGrid.before(chooser);formGrid.replaceWith(panels);
 }
 
-function rackPanel(id,title,subtitle,cards){return `<section class="neo-library-panel" data-library-panel="${id}" ${id==='rack1'?'':'hidden'}><h3>${title}</h3><p>${subtitle}</p><div class="neo-rack-grid">${cards.map(([code,name,detail])=>`<article class="neo-rack-card"><span class="neo-rack-code">${code}</span><h4>${name}</h4><p>${detail}</p></article>`).join('')}</div></section>`}
+const rack=(title,subtitle,shelves)=>`<article class="neo-library-rack"><div class="neo-library-rack-head"><strong>${title}</strong><small>${subtitle}</small></div><div class="neo-library-shelves">${shelves.map(([code,name,detail])=>`<div class="neo-library-shelf"><b>${code}</b><div><strong>${name}</strong><span>${detail}</span></div></div>`).join('')}</div></article>`;
 function enhanceLibrary(){
  if(activeTab()!=='library')return;
  const area=root()?.querySelector('#portalContent');if(!area||area.querySelector('#neoLibraryRacks'))return;
- area.innerHTML=`<div id="neoLibraryRacks"><span class="eyebrow">LIBRARY · PHYSICAL STORAGE MAP</span><h2>Library racks</h2><p>Keep the physical library simple with three clearly labelled racks. Quantity/stock remains in Inventory & Stores, so no duplicate stock register is created here.</p><div class="neo-library-note"><strong>Rack labels:</strong> RACK 1 · RACK 2 · RACK 3. Put the same labels on the physical shelves so staff can locate books quickly.</div><div class="neo-module-tabs neo-library-tabs" role="tablist" aria-label="Library racks"><button type="button" data-library-tab="rack1" aria-selected="true">Rack 1 · Learning books</button><button type="button" data-library-tab="rack2" aria-selected="false">Rack 2 · Stories & activity</button><button type="button" data-library-tab="rack3" aria-selected="false">Rack 3 · Teacher & spare</button></div>${rackPanel('rack1','Rack 1 · Student learning books','Core classroom learning books arranged shelf-wise.',[['1A','Literacy','Literacy and phonics / early-reading books'],['1B','Numeracy & readiness','Numeracy, readiness and practice books'],['1C','Language & EVS','Language and Environmental Studies books']])}${rackPanel('rack2','Rack 2 · Stories & activity books','Shared reading, creative and home-activity materials.',[['2A','Story / fantasy','Story, fantasy and read-aloud books'],['2B','Drawing & art','Drawing books and art/activity resources'],['2C','Home activity','Home activity and parent-child reading material']])}${rackPanel('rack3','Rack 3 · Teacher, reference & spare','Controlled copies and replacements kept separately.',[['3A','Teacher resources','Teacher guides and classroom reference copies'],['3B','Reference copies','Master/reference editions and school-use copies'],['3C','Spare / replacement','Extra books kept for replacement or new admissions']])}<div class="actions" style="margin-top:16px"><button type="button" class="secondary" data-library-inventory>Open Inventory & Stores</button></div></div>`;
- const activate=id=>{area.querySelectorAll('[data-library-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.libraryTab===id)));area.querySelectorAll('[data-library-panel]').forEach(p=>p.hidden=p.dataset.libraryPanel!==id)};
- area.querySelectorAll('[data-library-tab]').forEach(b=>b.onclick=()=>activate(b.dataset.libraryTab));
+ area.innerHTML=`<div id="neoLibraryRacks" class="neo-library-shell"><div><span class="eyebrow">LIBRARY · STORAGE MAP</span><h2>Library Rack Plan</h2><p>Simple physical rack map for daily use. No dropdowns and no duplicate stock register.</p></div><div class="neo-library-intro"><strong>How to use:</strong> Put physical labels <b>RACK 1</b>, <b>RACK 2</b>, <b>RACK 3</b> on the shelves. Inside each rack, use the shelf codes shown below. Staff can identify the location immediately.</div><div class="neo-library-racks">${rack('RACK 1 · Learning Books','Daily student learning / curriculum books',[['1A','Literacy & Phonics','Literacy, phonics and early-reading books'],['1B','Numeracy & Readiness','Numeracy, readiness and practice books'],['1C','Language & EVS','Language and Environmental Studies books']])}${rack('RACK 2 · Stories & Activities','Shared reading and creative material',[['2A','Story / Fantasy','Story, fantasy and read-aloud books'],['2B','Drawing & Art','Drawing, art and craft activity books'],['2C','Home Activity','Home activity and parent-child reading material']])}${rack('RACK 3 · Teacher & Spare','Controlled school copies and replacements',[['3A','Teacher Resources','Teacher guides and classroom reference material'],['3B','Master / Reference','Master editions and school-use reference copies'],['3C','Spare / Replacement','Extra copies for replacement or new admissions']])}</div><div class="neo-library-footer"><p><strong>Stock quantities:</strong> continue in Inventory & Stores. Library only shows the physical location.</p><button type="button" class="secondary" data-library-inventory>Open Inventory & Stores</button></div></div>`;
  area.querySelector('[data-library-inventory]')?.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('neo:open-tab',{detail:{tab:'inventory'}})));
 }
 function enhance(){enhanceMaintenance();enhanceLibrary()}
