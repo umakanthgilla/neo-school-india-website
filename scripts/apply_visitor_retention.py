@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 ext = Path('worker/gate-qr-parent-extension.js')
 s = ext.read_text()
@@ -48,9 +49,12 @@ if start_src < 0:
     raise SystemExit('gateQrParentPortal source function not found')
 src_func = s[start_src:].strip()
 start_w = w.find('async function gateQrParentPortal')
-end_w = w.find('async function visitorFacilitiesPortal', start_w)
-if start_w < 0 or end_w < 0:
-    raise SystemExit('combined Worker gate QR function boundaries not found')
+if start_w < 0:
+    raise SystemExit('combined Worker gate QR function start not found')
+next_match = re.search(r'\nasync function [A-Za-z0-9_]+\(', w[start_w + len('async function gateQrParentPortal'):])
+if not next_match:
+    raise SystemExit('combined Worker next function boundary not found')
+end_w = start_w + len('async function gateQrParentPortal') + next_match.start() + 1
 w = w[:start_w] + src_func + '\n\n' + w[end_w:]
 worker.write_text(w)
 
