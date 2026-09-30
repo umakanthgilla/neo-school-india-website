@@ -4063,6 +4063,17 @@ async function gateQrParentPortal(request,env,url,ctx){
   const activeParent=async(school,student)=>env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND student_id=? AND active=1').bind(school,student).first();
   const masked=v=>{const d=String(v||'').replace(/\D/g,'');return d.length>=4?'••••••'+d.slice(-4):'Recorded'};
   const alertParent=(school,student)=>queueTransportParentPush(ctx,env,school,[student]);
+  const purgeVisitors=async(school,actor,{id='',olderThanDays=0}={})=>{
+   const rows=await portalRows(env,school,'gate_visitors'),closed=new Set(['Exited','Rejected']);
+   let targets=rows.filter(x=>closed.has(x.status));
+   if(id){const row=rows.find(x=>String(x.id)===String(id));if(!row)return {error:'not_found',count:0};if(!closed.has(row.status))return {error:'active',count:0};targets=[row];}
+   else if(olderThanDays>0){const cutoff=Date.now()-olderThanDays*86400000;targets=targets.filter(x=>{const t=Date.parse(x.checkout_at||x.created_at||x.checkin_at||'');return Number.isFinite(t)&&t<=cutoff});}
+   if(!targets.length)return {count:0};
+   await env.DB.prepare("CREATE TABLE IF NOT EXISTS neo_gate_photos(school_id TEXT NOT NULL,kind TEXT NOT NULL,record_id TEXT NOT NULL,created_at TEXT NOT NULL,photo BLOB NOT NULL,PRIMARY KEY(school_id,kind,record_id))").run();
+   for(let i=0;i<targets.length;i+=40){const statements=[];for(const row of targets.slice(i,i+40)){statements.push(env.DB.prepare('DELETE FROM neo_gate_photos WHERE school_id=? AND kind=? AND record_id=?').bind(school,'gate_visitors',row.id));statements.push(env.DB.prepare('DELETE FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,'gate_visitors',row.id));}if(statements.length)await env.DB.batch(statements);}
+   await audit(school,actor,id?'DELETE:gate_visitors':'DELETE:gate_visitors:bulk',id||('count:'+targets.length)).run();
+   return {count:targets.length};
+  };
 
   if(isPublic){
    const p=url.pathname.split('/').filter(Boolean),resource=p[2],school=decodeURIComponent(p[3]||''),type=p[4]||'',id=p[5]?decodeURIComponent(p[5]):'';
@@ -4099,7 +4110,7 @@ async function gateQrParentPortal(request,env,url,ctx){
 
   /* Intercept school actions so safety rules are enforced server-side. */
   const parts=url.pathname.split('/').filter(Boolean);if(parts[0]!=='api'||parts[1]!=='visitor-gate'||parts[2]!=='school')return null;const school=decodeURIComponent(parts[3]||''),kind=parts[4]||'',id=parts[5]?decodeURIComponent(parts[5]):'';
-  if(!['visitor','pickup'].includes(kind))return null;if(!id&&request.method!=='POST')return null;
+  if(!['visitor','pickup'].includes(kind))return null;if(!id&&request.method!=='POST'&&!(kind==='visitor'&&request.method==='DELETE'))return null;
   const admin=await requireAdmin(request,env),session=admin?null:await schoolSession(request,env);if(!admin&&!session)return out({error:'School sign in required.'},401);if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);if(!await schoolExists(school))return out({error:'School not found.'},404);const actor=admin?'head-office':'school:'+school;
   if(kind==='visitor'&&request.method==='POST'&&!id){
    const b=await readBody(),rid=requestId(b);if(await portalRecord(env,school,'gate_visitors',rid))return out({error:'Submission already exists.'},409);const hostId=text(b,'host_staff_id',80),host=hostId?await portalRecord(env,school,'staff',hostId):null;if(hostId&&(!host||host.status==='Inactive'))return out({error:'Choose an active Staff ID.'},400);const idLast4=text(b,'id_last4',4);if(idLast4&&!/^\d{4}$/.test(idLast4))throw new TypeError('ID last 4 must contain four digits.');const purpose=text(b,'purpose',80,true);if(!['Meet teacher','Meet principal / in-charge','Admission enquiry','Vendor / delivery','Service / maintenance','Official visit','Other'].includes(purpose))throw new TypeError('Choose a valid visitor purpose.');const data={name:text(b,'name',120,true),mobile:phone(b),purpose,host_staff_id:host?.id||'',host_name:host?.name||'',company:text(b,'company',120),vehicle_no:text(b,'vehicle_no',30).toUpperCase(),id_type:text(b,'id_type',40),id_last4:idLast4,note:text(b,'note',500),gate_pass:'',status:'Waiting approval',source:'School gate desk',public_token:'',checkin_at:new Date().toISOString(),approved_at:'',valid_until:'',checkout_at:''};await save(school,'gate_visitors',rid,data,actor);return out({success:true,id:rid,status:data.status},201);
@@ -4116,12 +4127,6 @@ async function gateQrParentPortal(request,env,url,ctx){
  }catch(e){if(e instanceof TypeError)return out({error:e.message},400);if(String(e.message).includes('UNIQUE constraint'))return out({error:'This submission already exists. Refresh before retrying.'},409);console.error('Gate QR / parent pickup error',e);return out({error:'Gate safety service is temporarily unavailable.'},503)}
 }
 
-/* Private visitor / pickup photo storage for Gate QR.
-   Same D1 database; photos are kept out of neo_portal_records JSON so normal lists stay small.
-   Router integration:
-   const gatePhotoResponse = await gatePhotoPortal(request, env, url);
-   if (gatePhotoResponse) return gatePhotoResponse;
-*/
 async function gatePhotoPortal(request,env,url){
  if(!url.pathname.startsWith('/api/gate-photo/'))return null;
  const out=(body,status=200)=>json(body,status,request);
