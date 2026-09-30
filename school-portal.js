@@ -53,7 +53,7 @@ const select=(key,title,options)=>`<label>${title}<select name="${key}" required
 const chooseStudent=()=>select('student_id','Student',(records.students||[]).map(s=>[s.id,s.name+' · '+s.program]));
 const amount=()=>'<label>Amount (INR)<input name="amount" type="number" min="0.01" max="1000000" step="0.01" required></label>';
 const notes=()=>'<label>Notes<textarea name="notes" maxlength="1000" rows="3"></textarea></label>';
-const currentAcademicYearStart=()=>{const configured=String(records.academic_calendar?.academic_year||''),year=Number(configured.slice(0,4));if(/^[0-9]{4}$/.test(configured))return year;const d=new Date(),y=d.getFullYear();return d.getMonth()>=3?y:y-1};
+const currentAcademicYearStart=()=>{const calendar=records.academic_calendar,configured=String(calendar?.status==='Published'?calendar.academic_year||'':''),year=Number(configured.slice(0,4));if(/^[0-9]{4}$/.test(configured))return year;const d=new Date(),y=d.getFullYear();return d.getMonth()>=3?y:y-1};
 const academicYearLabel=y=>{const start=Number(y),current=currentAcademicYearStart();if(start===current)return 'Current · '+start+'-'+String(start+1).slice(-2);if(start===current-1)return 'Previous · '+start+'-'+String(start+1).slice(-2);return 'Historical · '+start+'-'+String(start+1).slice(-2)};
 const academicYearValue=y=>String(y)+'-'+String(Number(y)+1).slice(-2);
 const historicalAcademicYears=()=>{const current=currentAcademicYearStart(),years=new Set();for(const source of [records.classrooms||[],records.students||[],records.invoices||[],records.fee_structures||[]])for(const row of source){const value=String(row.academic_year||'');const m=value.match(/^(\d{4})/);if(m){const y=Number(m[1]);if(y<current)years.add(y)}}return [...years].sort((a,b)=>b-a)};
