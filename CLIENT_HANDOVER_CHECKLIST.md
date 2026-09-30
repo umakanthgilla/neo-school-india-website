@@ -7,9 +7,11 @@ Last updated: 30 September 2026
 - Repository: `umakanthgilla/neo-school-india-website`
 - Branch: `main`
 - School portal: `schools.html`
+- Parent portal: `parents.html`
+- Public gate page: `gate-checkin.html`
 - Current Worker source: `worker/neo-lead-crm-api-worker-transport-phase1.js`
-- Visitor / Facilities backend source has been merged into the current Worker source.
-- No new D1 tables are required for Visitor & Gate or Facilities & Housekeeping; both reuse `neo_portal_records` and `neo_portal_audit`.
+- Visitor / Facilities / Gate QR / parent-confirmed pickup backend is merged into the current Worker source.
+- No new D1 database is required; these workflows reuse existing Neo School records and audit storage.
 
 ## Handover status
 
@@ -36,7 +38,12 @@ Last updated: 30 September 2026
 - Inventory / stores and procurement flows already connected in the existing project
 - Transport Setup, child assignment, driver / attendant access, trip monitor, reports and documents
 - Visitor & Gate workflow
-- Child Pickup / Gate Release workflow
+- Permanent school Gate QR self check-in
+- Time-limited digital visitor pass after school approval
+- Parent-confirmed Child Pickup flow
+- School final approval before child pickup pass generation
+- 15-minute one-time child pickup pass
+- Optional browser phone alerts for signed-in parents who enable notifications
 - Facilities & Housekeeping workflow
 - Housekeeping verification / rework workflow
 - Material shortage and maintenance request workflow
@@ -51,21 +58,32 @@ Last updated: 30 September 2026
 - Money Out is created from vouchers / approved system payments.
 - No duplicate manual ledger postings.
 - Visitor and housekeeping records are stored server-side only; no browser-only operational records are used.
+- Public Gate QR does not expose the school student directory or parent contact details.
+- Parent approval alone cannot release a child; school approval is also required.
 
 ## Visitor & Gate acceptance test
 
-1. Sign in to the School Portal.
-2. Open **Visitor & Gate**.
-3. Create a visitor entry with name, mobile, purpose and whom they are meeting.
-4. Confirm a gate pass number is generated.
-5. Approve the visitor and confirm the status becomes **Inside**.
-6. Check the visitor out and confirm the status becomes **Exited**.
-7. Create another visitor and confirm **Reject** closes the request without marking the person Inside.
-8. Create a Child Pickup request against an existing Student ID.
-9. Verify the pickup person / authorisation method and release the child.
-10. Confirm the same closed pickup request cannot be released a second time.
+1. Sign in to the School Portal and open **Visitor & Gate**.
+2. Confirm the permanent school QR / self check-in link is visible.
+3. Scan the QR or open `gate-checkin.html?school_id=<school id>` on a second phone.
+4. Submit a Visitor Check-in from that public page.
+5. Confirm the visitor phone shows **Waiting approval** and does not show a usable pass yet.
+6. Approve the visitor in the School Portal.
+7. Confirm the visitor phone automatically shows the digital `VIS-...` pass and its validity time.
+8. Check the visitor out and confirm the pass status closes.
+9. Submit a Child Pickup request from the public gate page using an existing Student ID that has active Parent Access.
+10. Confirm the pickup person sees **Parent confirmation: Pending**.
+11. Sign in to the linked Parent Portal and approve the pickup person.
+12. Confirm the School Portal changes the request to **Parent confirmed**.
+13. Click **Approve gate pass** in the School Portal.
+14. Confirm the pickup person's phone shows a `PUP-...` pass with a 15-minute validity.
+15. Click **Release child** at the gate and confirm the public phone status becomes **Released**.
+16. Confirm an expired pickup pass cannot be used to release the child.
+17. Confirm the same closed pickup request cannot be released a second time.
 
-Privacy check: only optional ID type and last four digits are stored by this workflow; do not enter or store a full Aadhaar number in the visitor form.
+Phone alert note: a parent who has enabled browser **Phone alerts** can receive the existing Neo School push notification when a pickup confirmation requires attention. Parent Portal polling also surfaces the approval card while the portal is open. This is not an SMS or WhatsApp integration.
+
+Privacy check: do not store a full Aadhaar number in the visitor workflow. The public QR flow never displays student or parent lists.
 
 ## Facilities & Housekeeping acceptance test
 
@@ -133,7 +151,7 @@ Privacy check: only optional ID type and last four digits are stored by this wor
 
 ## Deployment requirement before final client sign-off
 
-The GitHub `main` branch contains the updated Visitor & Gate and Facilities & Housekeeping backend inside:
+The GitHub `main` branch contains the current backend inside:
 
 `worker/neo-lead-crm-api-worker-transport-phase1.js`
 
@@ -141,7 +159,7 @@ The production API used by the School Portal is:
 
 `https://neo-lead-crm-api.umakanthgilla.workers.dev`
 
-Before final handover, deploy the current Worker source to the existing `neo-lead-crm-api` Cloudflare Worker and run the Visitor / Facilities acceptance tests above against the live School Portal.
+Before final handover, deploy the current Worker source to the existing `neo-lead-crm-api` Cloudflare Worker and run the Gate QR / Parent Pickup / Facilities acceptance tests above against the live School Portal.
 
 Do not create a new Worker, new D1 database or parallel finance database for this deployment.
 
@@ -152,8 +170,8 @@ Client handover can be marked complete after all of the following are true:
 - Current `main` frontend is live.
 - Current Worker source is deployed to the existing Worker.
 - School login smoke test passes.
-- Visitor check-in / approval / checkout passes.
-- Child pickup authorisation / release passes.
+- QR visitor self check-in → school approval → digital pass → checkout passes.
+- Child pickup request → parent approval → school approval → one-time pass → release passes.
 - Housekeeping assignment / completion / verification passes.
 - Material shortage / maintenance request passes.
 - Fee receipt → ledger Money In passes.
