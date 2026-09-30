@@ -15,3 +15,6 @@ form.after(details);const request=details.querySelector('textarea'),status=detai
 function update(){const id=form.querySelector('[name="account_id"],[name="school_id"]')?.value.trim()||'[enter your login ID]';request.value='Please help me reset my Neo School India '+role+' login password. My login ID is '+id+'. Please verify my identity and share the replacement password privately.'}
 details.addEventListener('toggle',()=>{if(details.open)update()});form.addEventListener('input',update);details.querySelector('button').onclick=async()=>{update();try{await navigator.clipboard.writeText(request.value);status.textContent='Copied. Send this request privately to '+(school?'head office.':'your school administrator.')}catch{request.focus();request.select();status.textContent='Select and copy the request, then send it privately to your administrator.'}};
 })();
+
+/* School portal migration tools are isolated in their own module. */
+(()=>{if(document.querySelector('script[data-neo-bulk-upload]'))return;const s=document.createElement('script');s.src='/bulk-upload.js?v=20260930-bulk1';s.defer=true;s.dataset.neoBulkUpload='true';document.head.append(s)})();
