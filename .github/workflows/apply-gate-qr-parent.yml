@@ -1,0 +1,46 @@
+name: Apply Gate QR Parent Backend
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-gate-qr-parent.yml'
+      - 'worker/gate-qr-parent-extension.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Insert gate QR backend once
+        run: |
+          set -euo pipefail
+          TARGET='worker/neo-lead-crm-api-worker-transport-phase1.js'
+          EXT='worker/gate-qr-parent-extension.js'
+          if grep -q 'async function gateQrParentPortal' "$TARGET"; then
+            echo 'Gate QR / parent backend already applied.'
+            exit 0
+          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          target=Path('worker/neo-lead-crm-api-worker-transport-phase1.js')
+          ext=Path('worker/gate-qr-parent-extension.js').read_text()
+          text=target.read_text()
+          needle='    const url = new URL(request.url);\n    const visitorFacilitiesResponse = await visitorFacilitiesPortal(request, env, url);'
+          replacement='    const url = new URL(request.url);\n    const gateQrParentResponse = await gateQrParentPortal(request, env, url);\n    if (gateQrParentResponse) return gateQrParentResponse;\n    const visitorFacilitiesResponse = await visitorFacilitiesPortal(request, env, url);'
+          if needle not in text:
+              raise SystemExit('Worker router marker not found; no source changes made.')
+          text=text.replace(needle,replacement,1).rstrip()+'\n\n'+ext.rstrip()+'\n'
+          target.write_text(text)
+          PY
+          node --check "$TARGET"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET"
+          git commit -m 'Apply QR gate and parent-confirmed pickup backend'
+          git push origin HEAD:main
