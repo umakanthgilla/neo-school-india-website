@@ -16,5 +16,5 @@ function update(){const id=form.querySelector('[name="account_id"],[name="school
 details.addEventListener('toggle',()=>{if(details.open)update()});form.addEventListener('input',update);details.querySelector('button').onclick=async()=>{update();try{await navigator.clipboard.writeText(request.value);status.textContent='Copied. Send this request privately to '+(school?'head office.':'your school administrator.')}catch{request.focus();request.select();status.textContent='Select and copy the request, then send it privately to your administrator.'}};
 })();
 
-/* School portal migration tools are isolated in their own module. */
-(()=>{if(document.querySelector('script[data-neo-bulk-upload]'))return;const s=document.createElement('script');s.src='/bulk-upload.js?v=20260930-bulk1';s.defer=true;s.dataset.neoBulkUpload='true';document.head.append(s)})();
+/* School portal-only extension modules. */
+(()=>{if(typeof window.openNeoWorkspace!=='function'&&!document.getElementById('neoWorkspace'))return;for(const [src,key] of [['/portal-compat.js?v=20260930-ay1','neoPortalCompat'],['/bulk-upload.js?v=20260930-bulk1','neoBulkUpload']]){if(document.querySelector('script[data-'+key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase())+']'))continue;const s=document.createElement('script');s.src=src;s.defer=true;s.dataset[key]='true';document.head.append(s)}})();
