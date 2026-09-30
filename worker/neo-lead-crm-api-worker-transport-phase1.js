@@ -1180,7 +1180,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    else if(kind==='staff_leave'){const next=choice('status',['Approved','Rejected']);if(previous.status!=='Pending')return out({error:'Only Pending leave can be reviewed.'},409);data={...previous,status:next,reviewed_at:new Date().toISOString()};}
    else if(kind==='students'){const classroom=await related('classrooms','classroom_id');if(classroom.program!==previous.program||classroom.academic_year!==previous.academic_year)fail('Classroom must match student class and academic year.');data={...previous,classroom_id:classroom.id};}
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
-   else if(kind==='classrooms'){data={...previous,teacher:str('teacher'),name:str('name')};}
+   else if(kind==='classrooms'){data={...previous,name:str('name')};delete data.teacher;delete data.teacher_id;delete data.teacher_account_id;delete data.teacher_staff_id;}
    else data={...previous,status:choice('status',kind==='enquiries'?['New','Contacted','Visit planned','Converted','Lost']:kind==='orders'?['Submitted','Approved','Dispatched','Delivered','Cancelled']:kind==='purchase_orders'?['Submitted','Approved','Dispatched','Cancelled']:kind==='ledger'?['Pending verification','Verified','Rejected']:['Open','In progress','Resolved']),office_note:str('office_note',1000,false),...(kind==='purchase_orders'&&b.status==='Approved'?{approved_at:new Date().toISOString()}: {})};
   }else{
    // Repeated submission IDs cannot create duplicate fees or orders.
