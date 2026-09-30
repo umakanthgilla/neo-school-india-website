@@ -1,0 +1,68 @@
+name: Apply Gate Photo Backend
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-gate-photo.yml'
+      - 'worker/gate-photo-extension.js'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply gate photo backend and loaders
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          worker=Path('worker/neo-lead-crm-api-worker-transport-phase1.js')
+          ext=Path('worker/gate-photo-extension.js').read_text().strip()
+          text=worker.read_text()
+          router="    const gatePhotoResponse = await gatePhotoPortal(request, env, url);\n    if (gatePhotoResponse) return gatePhotoResponse;\n"
+          marker="    const gateQrParentResponse = await gateQrParentPortal(request, env, url, ctx);"
+          if router.strip() not in text:
+              if marker not in text:
+                  raise SystemExit('Gate router marker not found; no source changes made.')
+              text=text.replace(marker,router+marker,1)
+          if 'async function gatePhotoPortal' not in text:
+              text=text.rstrip()+'\n\n'+ext+'\n'
+          worker.write_text(text)
+
+          password=Path('password-access.js')
+          p=password.read_text()
+          p=p.replace("['/visitor-gate.js?v=20260930-gate2','neoVisitorGate']","['/visitor-gate.js?v=20260930-gate3','neoVisitorGate']")
+          photo_entry="['/gate-photo-ui.js?v=20260930-photo1','neoGatePhotoUi']"
+          visitor_entry="['/visitor-gate.js?v=20260930-gate3','neoVisitorGate']"
+          if photo_entry not in p:
+              p=p.replace(visitor_entry,visitor_entry+','+photo_entry,1)
+          password.write_text(p)
+
+          parents=Path('parents.html')
+          h=parents.read_text()
+          photo_script='<script src="/gate-photo-ui.js?v=20260930-photo1"></script>'
+          if photo_script not in h:
+              marker='<script src="/parent-pickup-approval.js?v=20260930-gate3"></script>'
+              if marker not in h:
+                  raise SystemExit('Parent pickup loader marker not found.')
+              h=h.replace(marker,marker+photo_script,1)
+          parents.write_text(h)
+          PY
+          node --check worker/neo-lead-crm-api-worker-transport-phase1.js
+          node --check gate-photo-ui.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add worker/neo-lead-crm-api-worker-transport-phase1.js password-access.js parents.html
+          if git diff --cached --quiet; then
+            echo 'Gate photo integration already applied.'
+            exit 0
+          fi
+          git commit -m 'Apply visitor selfie and pickup photo integration'
+          git push origin HEAD:main
