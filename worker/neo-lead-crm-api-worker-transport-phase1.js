@@ -218,6 +218,8 @@ export default {
     }
 
     const url = new URL(request.url);
+    const gateQrParentResponse = await gateQrParentPortal(request, env, url);
+    if (gateQrParentResponse) return gateQrParentResponse;
     const visitorFacilitiesResponse = await visitorFacilitiesPortal(request, env, url);
     if (visitorFacilitiesResponse) return visitorFacilitiesResponse;
     const transportOperationsResponse = await transportOperations(request, env, url, ctx);
@@ -4034,4 +4036,76 @@ async function visitorFacilitiesPortal(request,env,url){
   if(request.method==='PATCH'&&kind==='request'&&id){const b=await rawBody(),old=await exists('facilities_requests',id);if(!old)return out({error:'Facilities request not found.'},404);if(['Resolved','Closed'].includes(old.status))return out({error:'This request is already resolved.'},409);const action=text(b,'action',30,true),next={...old};delete next.id;delete next.created_at;if(action==='progress')next.status='In progress';else if(action==='resolve'){next.status='Resolved';next.resolved_at=new Date().toISOString();}else return out({error:'Invalid request action.'},400);return update('facilities_requests',id,next);}
   return out({error:'Not found.'},404);
  }catch(e){if(e instanceof TypeError)return out({error:e.message},400);if(String(e.message).includes('UNIQUE constraint'))return out({error:'This submission already exists. Refresh before retrying.'},409);console.error('Visitor/facilities error',e);return out({error:'Visitor / Facilities records are temporarily unavailable.'},503)}
+}
+
+/* Gate QR self check-in + parent-confirmed child pickup extension.
+   Insert one call near the top-level fetch router:
+   const gateQrParentResponse = await gateQrParentPortal(request, env, url);
+   if (gateQrParentResponse) return gateQrParentResponse;
+*/
+async function gateQrParentPortal(request,env,url){
+ const isPublic=url.pathname.startsWith('/api/gate-public/'),isParent=url.pathname.startsWith('/api/gate-parent/'),isGate=url.pathname.startsWith('/api/visitor-gate/');
+ if(!isPublic&&!isParent&&!isGate)return null;
+ const out=(body,status=200)=>json(body,status,request);
+ try{
+  await ensurePortalSchema(env);
+  const readBody=async()=>{const raw=await request.text();if(raw.length>12000)throw new TypeError('Request too large.');let b;try{b=JSON.parse(raw)}catch{throw new TypeError('Valid JSON is required.')}if(!b||typeof b!=='object'||Array.isArray(b))throw new TypeError('Invalid request.');return b};
+  const text=(b,k,max=160,required=false)=>{const v=typeof b?.[k]==='string'?b[k].trim():'';if(required&&!v)throw new TypeError(k+' is required.');if(v.length>max)throw new TypeError(k+' is too long.');return v};
+  const phone=(b,k='mobile')=>{const v=text(b,k,20,true),digits=v.replace(/\D/g,'');if(digits.length<10||digits.length>15)throw new TypeError('Enter a valid mobile number.');return v};
+  const requestId=b=>{const v=text(b,'request_id',80,true);if(!/^[A-Za-z0-9_-]{8,80}$/.test(v))throw new TypeError('Invalid request ID.');return v};
+  const passNo=prefix=>prefix+'-'+neoToday().replaceAll('-','')+'-'+crypto.randomUUID().replaceAll('-','').slice(0,5).toUpperCase();
+  const audit=(school,actor,action,id)=>env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,actor,action,id);
+  const save=async(school,kind,id,data,actor)=>{await env.DB.batch([env.DB.prepare('INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,kind,id,JSON.stringify(data)),audit(school,actor,'POST:'+kind,id)]);return id};
+  const update=async(school,kind,id,data,actor)=>{await env.DB.batch([env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=? AND id=?').bind(JSON.stringify(data),school,kind,id),audit(school,actor,'PATCH:'+kind,id)]);};
+  const schoolExists=async school=>env.DB.prepare('SELECT school_id,name,city FROM neo_schools WHERE school_id=? AND active=1').bind(school).first();
+  const activeParent=async(school,student)=>env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND student_id=? AND active=1').bind(school,student).first();
+  const masked=v=>{const d=String(v||'').replace(/\D/g,'');return d.length>=4?'••••••'+d.slice(-4):'Recorded'};
+
+  if(isPublic){
+   const p=url.pathname.split('/').filter(Boolean),resource=p[2],school=decodeURIComponent(p[3]||''),type=p[4]||'',id=p[5]?decodeURIComponent(p[5]):'';
+   if(resource==='school'&&request.method==='GET'){
+    const s=await schoolExists(school);if(!s)return out({error:'School gate QR is not active.'},404);return out({name:s.name,city:s.city});
+   }
+   if(!await schoolExists(school))return out({error:'School gate QR is not active.'},404);
+   if(resource==='visitor'&&request.method==='POST'){
+    const b=await readBody(),rid=requestId(b);if(await portalRecord(env,school,'gate_visitors',rid))return out({error:'Submission already exists.'},409);
+    const mobile=phone(b),recent=(await portalRows(env,school,'gate_visitors')).find(x=>x.mobile===mobile&&['Waiting approval','Inside'].includes(x.status)&&Date.now()-Date.parse(x.checkin_at||x.created_at||0)<10*60*1000);if(recent)return out({error:'An active visitor request already exists for this mobile number. Please wait for the gate desk.'},409);
+    const purpose=text(b,'purpose',80,true);if(!['Meet teacher','Meet principal / in-charge','Admission enquiry','Vendor / delivery','Service / maintenance','Official visit','Other'].includes(purpose))throw new TypeError('Choose a valid visitor purpose.');
+    const token=crypto.randomUUID()+crypto.randomUUID(),data={name:text(b,'name',120,true),mobile,purpose,host_staff_id:'',host_name:text(b,'meet_name',120),company:text(b,'company',120),vehicle_no:text(b,'vehicle_no',30).toUpperCase(),id_type:'',id_last4:'',note:text(b,'note',500),gate_pass:'',status:'Waiting approval',source:'Gate QR self check-in',public_token:token,checkin_at:new Date().toISOString(),approved_at:'',valid_until:'',checkout_at:''};
+    await save(school,'gate_visitors',rid,data,'public-gate');return out({success:true,id:rid,public_token:token,status:data.status},201);
+   }
+   if(resource==='pickup'&&request.method==='POST'){
+    const b=await readBody(),rid=requestId(b);if(await portalRecord(env,school,'gate_pickups',rid))return out({error:'Submission already exists.'},409);let studentId=text(b,'student_id',80,true),student=await portalRecord(env,school,'students',studentId);if(!student&&studentId!==studentId.toUpperCase()){studentId=studentId.toUpperCase();student=await portalRecord(env,school,'students',studentId)}if(!student||student.status==='Withdrawn')return out({error:'Student ID was not found. Please check the ID or contact the gate desk.'},400);if(!await activeParent(school,student.id))return out({error:'Parent confirmation is not active for this Student ID. Please contact the gate desk.'},409);
+    const open=(await portalRows(env,school,'gate_pickups')).find(x=>x.student_id===student.id&&['Waiting parent confirmation','Parent confirmed','Approved for release'].includes(x.status));if(open)return out({error:'A pickup request is already active for this child. Please wait for the school.'},409);
+    const token=crypto.randomUUID()+crypto.randomUUID(),mobile=phone(b),data={student_id:student.id,student_name:student.name,pickup_name:text(b,'pickup_name',120,true),mobile,relationship:text(b,'relationship',80,true),authorization_method:'Parent confirmation',reference:'',verifier_staff_id:'',verifier_name:'',note:text(b,'note',500),gate_pass:'',status:'Waiting parent confirmation',parent_status:'Pending',management_status:'Pending',source:'Gate QR self check-in',public_token:token,created_at:new Date().toISOString(),parent_confirmed_at:'',management_approved_at:'',valid_until:'',released_at:''};
+    await save(school,'gate_pickups',rid,data,'public-gate');return out({success:true,id:rid,public_token:token,status:data.status},201);
+   }
+   if(resource==='status'&&request.method==='POST'&&['visitor','pickup'].includes(type)&&id){
+    const b=await readBody(),token=text(b,'public_token',160,true),kind=type==='visitor'?'gate_visitors':'gate_pickups',row=await portalRecord(env,school,kind,id);if(!row||row.public_token!==token)return out({error:'This gate request could not be verified.'},404);const expired=!!(row.valid_until&&['Inside','Approved for release'].includes(row.status)&&Date.parse(row.valid_until)<=Date.now());
+    return type==='visitor'?out({status:row.status,pass_state:expired?'Expired':'Current',gate_pass:row.status==='Inside'||row.status==='Exited'?row.gate_pass:'',valid_until:row.valid_until||'',name:row.name,purpose:row.purpose,host_name:row.host_name||''}):out({status:row.status,pass_state:expired?'Expired':'Current',gate_pass:['Approved for release','Released'].includes(row.status)?row.gate_pass:'',valid_until:row.valid_until||'',student_name:row.student_name,pickup_name:row.pickup_name,parent_status:row.parent_status||'Pending',management_status:row.management_status||'Pending'});
+   }
+   return out({error:'Not found.'},404);
+  }
+
+  if(isParent){
+   const parent=await parentSession(request,env);if(!parent)return out({error:'Parent sign in required.'},401);const parts=url.pathname.split('/').filter(Boolean),resource=parts[2],id=parts[3]?decodeURIComponent(parts[3]):'';if(resource!=='pickups')return out({error:'Not found.'},404);
+   if(request.method==='GET'&&!id){const rows=(await portalRows(env,parent.school_id,'gate_pickups')).filter(x=>x.student_id===parent.student_id).slice(0,30).map(x=>({id:x.id,pickup_name:x.pickup_name,relationship:x.relationship,mobile_masked:masked(x.mobile),status:x.status,parent_status:x.parent_status||'',created_at:x.created_at,parent_confirmed_at:x.parent_confirmed_at||''}));return out({pickups:rows});}
+   if(request.method==='PATCH'&&id){const b=await readBody(),row=await portalRecord(env,parent.school_id,'gate_pickups',id);if(!row||row.student_id!==parent.student_id)return out({error:'Pickup request not found.'},404);if(row.parent_status!=='Pending'||row.status!=='Waiting parent confirmation')return out({error:'This pickup request is already decided.'},409);const action=text(b,'action',20,true),next={...row};delete next.id;delete next.created_at;if(action==='approve'){next.parent_status='Approved';next.status='Parent confirmed';next.parent_confirmed_at=new Date().toISOString();}else if(action==='reject'){next.parent_status='Rejected';next.status='Parent rejected';next.parent_confirmed_at=new Date().toISOString();}else return out({error:'Invalid parent decision.'},400);await update(parent.school_id,'gate_pickups',id,next,'parent:'+parent.account_id);return out({success:true,status:next.status,parent_status:next.parent_status});}
+   return out({error:'Method not allowed.'},405);
+  }
+
+  /* Intercept only the management actions that need the new two-step safety rules. */
+  const parts=url.pathname.split('/').filter(Boolean);if(parts[0]!=='api'||parts[1]!=='visitor-gate'||parts[2]!=='school')return null;const school=decodeURIComponent(parts[3]||''),kind=parts[4]||'',id=parts[5]?decodeURIComponent(parts[5]):'';
+  if(!['visitor','pickup'].includes(kind)||(!id&&!(kind==='pickup'&&request.method==='POST')))return null;
+  const admin=await requireAdmin(request,env),session=admin?null:await schoolSession(request,env);if(!admin&&!session)return out({error:'School sign in required.'},401);if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);if(!await schoolExists(school))return out({error:'School not found.'},404);const actor=admin?'head-office':'school:'+school;
+  if(kind==='pickup'&&request.method==='POST'&&!id){
+   const b=await readBody(),rid=requestId(b);if(await portalRecord(env,school,'gate_pickups',rid))return out({error:'Submission already exists.'},409);const student=await portalRecord(env,school,'students',text(b,'student_id',80,true));if(!student||student.status==='Withdrawn')return out({error:'Choose an active student.'},400);if(!await activeParent(school,student.id))return out({error:'This student does not have an active Parent Login. Create Parent Access before using parent-confirmed pickup.'},409);const open=(await portalRows(env,school,'gate_pickups')).find(x=>x.student_id===student.id&&['Waiting parent confirmation','Parent confirmed','Approved for release'].includes(x.status));if(open)return out({error:'A pickup request is already active for this child.'},409);const verifierId=text(b,'verifier_staff_id',80),verifier=verifierId?await portalRecord(env,school,'staff',verifierId):null;if(verifierId&&(!verifier||verifier.status==='Inactive'))return out({error:'Choose an active Staff ID.'},400);const data={student_id:student.id,student_name:student.name,pickup_name:text(b,'pickup_name',120,true),mobile:phone(b),relationship:text(b,'relationship',80,true),authorization_method:'Parent confirmation',reference:'',verifier_staff_id:verifier?.id||'',verifier_name:verifier?.name||'',note:text(b,'note',500),gate_pass:'',status:'Waiting parent confirmation',parent_status:'Pending',management_status:'Pending',source:'School gate desk',public_token:'',created_at:new Date().toISOString(),parent_confirmed_at:'',management_approved_at:'',valid_until:'',released_at:''};await save(school,'gate_pickups',rid,data,actor);return out({success:true,id:rid,status:data.status},201);
+  }
+  if(request.method!=='PATCH'||!id)return null;
+  const b=await readBody();
+  if(kind==='visitor'){
+   const old=await portalRecord(env,school,'gate_visitors',id);if(!old)return out({error:'Visitor record not found.'},404);const action=text(b,'action',30,true),next={...old};delete next.id;delete next.created_at;if(action==='approve'){if(old.status!=='Waiting approval')return out({error:'Only waiting visitors can be approved.'},409);next.status='Inside';next.gate_pass=old.gate_pass||passNo('VIS');next.approved_at=new Date().toISOString();next.valid_until=new Date(Date.now()+2*60*60*1000).toISOString();}else if(action==='reject'){if(old.status!=='Waiting approval')return out({error:'Only waiting visitors can be rejected.'},409);next.status='Rejected';next.checkout_at=new Date().toISOString();}else if(action==='checkout'){if(old.status!=='Inside')return out({error:'Only visitors currently inside can check out.'},409);next.status='Exited';next.checkout_at=new Date().toISOString();}else return out({error:'Invalid visitor action.'},400);await update(school,'gate_visitors',id,next,actor);return out({success:true,id,status:next.status,gate_pass:next.gate_pass||''});
+  }
+  const old=await portalRecord(env,school,'gate_pickups',id);if(!old)return out({error:'Pickup request not found.'},404);const action=text(b,'action',30,true),next={...old};delete next.id;delete next.created_at;if(action==='approve_gate_pass'){if(old.parent_status!=='Approved'||old.status!=='Parent confirmed')return out({error:'Parent confirmation is required before school approval.'},409);next.management_status='Approved';next.status='Approved for release';next.gate_pass=old.gate_pass||passNo('PUP');next.management_approved_at=new Date().toISOString();next.valid_until=new Date(Date.now()+15*60*1000).toISOString();}else if(action==='release'){if(old.status!=='Approved for release'||old.management_status!=='Approved')return out({error:'Approve the gate pass before releasing the child.'},409);if(!old.valid_until||Date.parse(old.valid_until)<=Date.now())return out({error:'This pickup pass has expired. Create a fresh pickup request.'},409);next.status='Released';next.released_at=new Date().toISOString();}else if(action==='reject'){if(['Released','Rejected','Parent rejected'].includes(old.status))return out({error:'This pickup request is already closed.'},409);next.status='Rejected';next.management_status='Rejected';next.released_at=new Date().toISOString();}else return out({error:'Invalid pickup action.'},400);await update(school,'gate_pickups',id,next,actor);return out({success:true,id,status:next.status,gate_pass:next.gate_pass||'',valid_until:next.valid_until||''});
+ }catch(e){if(e instanceof TypeError)return out({error:e.message},400);if(String(e.message).includes('UNIQUE constraint'))return out({error:'This submission already exists. Refresh before retrying.'},409);console.error('Gate QR / parent pickup error',e);return out({error:'Gate safety service is temporarily unavailable.'},503)}
 }
