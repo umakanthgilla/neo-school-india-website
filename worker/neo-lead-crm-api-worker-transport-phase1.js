@@ -1233,7 +1233,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    }else if(['assets','vendor_payables'].includes(kind))fail('This record is created automatically from procurement.');
    else if(kind==='classrooms'){
     if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1â€“200.');
-    data={name:str('name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),academic_year:str('academic_year',4),teacher:str('teacher',120,false),capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
+    data={name:str('name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),academic_year:str('academic_year',4),teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
    }else if(kind==='fee_structures'){
     const classroom=await related('classrooms','classroom_id');data={classroom_id:classroom.id,title:str('title'),amount_paise:money(),due_date:date('due_date')};
    }else if(kind==='homework'){
@@ -1655,10 +1655,43 @@ async function portalExtra(request,env,url,admin,session){
   const today=new Date(Date.now()+330*60000).toISOString().slice(0,10);
   return out({schools:schools.map(s=>{const own=decoded.filter(r=>r.school_id===s.school_id);const students=own.filter(r=>r.kind==='students').length,attendance=own.filter(r=>r.kind==='attendance'&&r.date===today);return {...s,students,attendance_marked:attendance.length,present:attendance.filter(r=>r.status==='Present').length,fees_charged:own.filter(r=>r.kind==='invoices').reduce((n,r)=>n+r.amount_paise,0),fees_collected:own.filter(r=>r.kind==='payments').reduce((n,r)=>n+r.amount_paise,0),parent_concerns:own.filter(r=>r.kind==='parent_tickets'&&!['Resolved','Closed'].includes(r.status)).length,pending_orders:own.filter(r=>r.kind==='orders'&&!['Delivered','Cancelled'].includes(r.status)).length,open_support:own.filter(r=>r.kind==='support'&&r.status!=='Resolved').length}}),orders:decoded.filter(r=>r.kind==='orders').sort((a,b)=>b.created_at.localeCompare(a.created_at)),date:today});
  }
- const m=url.pathname.match(/^\/api\/portal\/([^/]+)\/(parent_access|teacher_access|apply_fees)(?:\/([^/]+))?$/);
+ const m=url.pathname.match(/^\/api\/portal\/([^/]+)\/(parent_access|teacher_access|teacher_assignment|apply_fees)(?:\/([^/]+))?$/);
  if(!m)return null;
  const [,school,kind,id]=m;
  if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
+ if(kind==='teacher_assignment'&&request.method==='GET'){
+  const classrooms=await portalRows(env,school,'classrooms');
+  const accounts=await env.DB.prepare(`SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.active=1 AND e.staff_type='Teaching Staff'`).bind(school).all();
+  const teacherAccounts=(accounts.results||[]).map(x=>({...x,classroom_ids:JSON.parse(x.classroom_ids||'[]')}));
+  return out({classrooms,teacher_accounts:teacherAccounts});
+ }
+ if(kind==='teacher_assignment'){
+  if(request.method!=='POST')return out({error:'Method not allowed.'},405);
+  let b;try{b=await request.json()}catch{return out({error:'Invalid JSON.'},400)}
+  const classroomId=typeof b?.classroom_id==='string'?b.classroom_id.trim():'';
+  const teacherAccountId=typeof b?.teacher_account_id==='string'?b.teacher_account_id.trim():'';
+  if(!classroomId||!teacherAccountId)return out({error:'Choose an existing classroom and Teaching Staff member.'},400);
+  const classroom=await portalRecord(env,school,'classrooms',classroomId);
+  if(!classroom)return out({error:'Classroom not found in this school.'},404);
+  const teacher=await env.DB.prepare('SELECT account_id,name,staff_id,staff_type,active,classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
+  if(!teacher||!teacher.active||teacher.staff_type!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
+  const staff=await portalRecord(env,school,'staff',teacher.staff_id);
+  if(!staff||staff.status==='Inactive'||(staff.staff_type||'')!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
+  const existingTeacherRows=await env.DB.prepare('SELECT account_id,classroom_ids FROM neo_teacher_accounts WHERE school_id=?').bind(school).all();
+  const writes=[];
+  for(const row of (existingTeacherRows.results||[])){
+    let ids=[];try{ids=JSON.parse(row.classroom_ids||'[]')}catch{ids=[]}
+    const next=[...new Set((Array.isArray(ids)?ids:[]).filter(id=>String(id)!==classroomId))];
+    if(String(row.account_id)===teacherAccountId)next.push(classroomId);
+    writes.push(env.DB.prepare('UPDATE neo_teacher_accounts SET classroom_ids=? WHERE school_id=? AND account_id=?').bind(JSON.stringify([...new Set(next)]),school,row.account_id));
+  }
+  const nextClassroom={...classroom,teacher:teacher.name,teacher_account_id:teacherAccountId,teacher_staff_id:teacher.staff_id};
+  delete nextClassroom.id;delete nextClassroom.created_at;
+  writes.push(env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=\'classrooms\' AND id=?').bind(JSON.stringify(nextClassroom),school,classroomId));
+  writes.push(portalAudit(env,school,admin,'assign-teacher-to-classroom',classroomId));
+  await env.DB.batch(writes);
+  return out({success:true,classroom:{id:classroomId,...nextClassroom},teacher:{account_id:teacherAccountId,staff_id:teacher.staff_id,name:teacher.name}});
+ }
  if(kind==='teacher_access'&&request.method==='GET'){
   const [employees,legacy]=await Promise.all([
    env.DB.prepare(`SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e LEFT JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=?`).bind(school).all(),
