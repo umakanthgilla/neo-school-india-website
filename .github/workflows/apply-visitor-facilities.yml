@@ -1,0 +1,35 @@
+name: Apply Visitor Facilities Worker Patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-visitor-facilities.yml'
+      - 'worker/visitor-facilities.patch'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply patch once
+        run: |
+          set -euo pipefail
+          TARGET='worker/neo-lead-crm-api-worker-transport-phase1.js'
+          PATCH='worker/visitor-facilities.patch'
+          if grep -q 'async function visitorFacilitiesPortal' "$TARGET"; then
+            echo 'Visitor/Facilities backend already applied.'
+            exit 0
+          fi
+          git apply --check "$PATCH"
+          git apply "$PATCH"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$TARGET"
+          git commit -m 'Apply visitor gate and facilities backend'
+          git push origin HEAD:main
