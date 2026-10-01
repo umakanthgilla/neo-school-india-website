@@ -2,7 +2,8 @@ name: Patch V2 Daily Experiences Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - '.github/workflows/patch-v2-daily-experiences.yml'
 
@@ -16,121 +17,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch V2 daily experiences support
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          def must_replace(text, old, new, label, count=None):
-              actual=text.count(old)
-              if actual==0:
-                  raise SystemExit(f'Missing patch target: {label}')
-              if count is not None and actual!=count:
-                  raise SystemExit(f'Unexpected patch count for {label}: {actual} != {count}')
-              return text.replace(old,new, count if count is not None else -1)
-
-          # ---------- Worker ----------
-          p=Path('worker/neo-lead-crm-api-worker-transport-phase1.js')
-          s=p.read_text()
-          s=must_replace(s,"function validateLearningPlan(b){",r'''function validateDailyExperiences(value,fail){
- const rows=value===undefined||value===null||value===''?[]:value;
- if(!Array.isArray(rows))fail('Daily Experiences must be a list.');
- if(rows.length>1800)fail('Daily Experiences supports up to 1800 rows.');
- const ids=new Set();
- const out=rows.map((r,i)=>{
-  if(!r||typeof r!=='object')fail('Check Daily Experience '+(i+1)+'.');
-  const day=Number(r.day),experienceNo=Number(r.experience_no);
-  if(!Number.isInteger(day)||day<1||day>200)fail('Daily Experience '+(i+1)+': day must be 1–200.');
-  if(!Number.isInteger(experienceNo)||experienceNo<1||experienceNo>9)fail('Daily Experience '+(i+1)+': experience_no must be 1–9.');
-  const id=typeof r.id==='string'&&r.id.trim()?r.id.trim():'experience-'+day+'-'+experienceNo;
-  if(!/^[A-Za-z0-9_-]{1,80}$/.test(id)||ids.has(id))fail('Daily Experience IDs must be unique.');
-  ids.add(id);
-  const name=typeof r.experience_name==='string'?r.experience_name.trim():'';
-  const start=typeof r.start==='string'?r.start.trim():'';
-  const end=typeof r.end==='string'?r.end.trim():'';
-  if(!name||name.length>120)fail('Daily Experience '+(i+1)+': check experience_name.');
-  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)||start>=end)fail('Daily Experience '+(i+1)+': check start/end.');
-  const item={id,day,experience_no:experienceNo,experience_name:name,start,end};
-  const required=[['concept',180],['objective',700],['activity',2200]];
-  for(const [key,max] of required){const v=typeof r[key]==='string'?r[key].trim():'';if(!v||v.length>max)fail('Daily Experience '+(i+1)+': check '+key);item[key]=v;}
-  const optional=[['subject',120],['materials',1600],['teacher_language',1200],['observe_for',1200],['why_this_matters',1000],['support_scaffold',1200],['challenge_extension',1200],['inclusion_note',1200],['safety_supervision',1200],['portfolio_evidence',1200],['play_mode',120],['resource_id',120],['resource_type',100],['resource_title',240],['resource_url',1200],['classwork_home_either',40],['homework',1500],['ncf_curricular_goal',240],['ncf_competency',700]];
-  for(const [key,max] of optional){if(r[key]!==undefined&&(typeof r[key]!=='string'||r[key].length>max))fail('Daily Experience '+(i+1)+': check '+key);item[key]=typeof r[key]==='string'?r[key].trim():'';}
-  if(r.questions!==undefined){if(!Array.isArray(r.questions)||r.questions.length>5||r.questions.some(q=>typeof q!=='string'||!q.trim()||q.length>300))fail('Daily Experience '+(i+1)+': check questions.');item.questions=r.questions.map(q=>q.trim());}else item.questions=[];
-  return item;
- });
- for(let day=1;day<=200;day++){
-  const dayRows=out.filter(x=>x.day===day).sort((a,b)=>a.start.localeCompare(b.start));
-  for(let i=0;i<dayRows.length;i++)for(let j=i+1;j<dayRows.length;j++)if(dayRows[i].start<dayRows[j].end&&dayRows[j].start<dayRows[i].end)fail('Daily Experiences overlap on Day '+day+'.');
- }
- return out;
-}
-function validateLearningPlan(b){''','insert daily experience validator',1)
-          s=must_replace(s,"  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail)\n};","  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail),\n  daily_experiences:validateDailyExperiences(b.daily_experiences,fail)\n};",'learning plan daily experiences',1)
-          s=must_replace(s,"  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail)\n };","  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail),\n  daily_experiences:validateDailyExperiences(b.daily_experiences,fail)\n };",'master daily experiences',1)
-          s=s.replace("if(raw.length>1500000)\n  return out({error:'Master curriculum file is too large.'},413);","if(raw.length>8000000)\n  return out({error:'Master curriculum file is too large.'},413);")
-          s=s.replace("const raw=await request.text();if(raw.length>1500000)return out({error:'Curriculum file is too large.'},413);","const raw=await request.text();if(raw.length>8000000)return out({error:'Curriculum file is too large.'},413);")
-          publish_old=""" if(!testMode&&days!==200)\n  return out({\n   error:'Production publish requires curriculum concepts for all 200 days.'\n  },400);\n\n const status=testMode?'TestPublished':'Published';"""
-          publish_new=""" if(!testMode&&days!==200)\n  return out({\n   error:'Production publish requires curriculum concepts for all 200 days.'\n  },400);\n\n if(!testMode&&Array.isArray(checked.daily_experiences)&&checked.daily_experiences.length){\n  if(checked.daily_experiences.length!==1800)\n   return out({error:'V2 production publish requires exactly 9 Learning Experiences for each of 200 days.'},400);\n  for(let day=1;day<=200;day++){\n   const rows=checked.daily_experiences.filter(x=>x.day===day);\n   const nums=new Set(rows.map(x=>x.experience_no));\n   if(rows.length!==9||nums.size!==9||![1,2,3,4,5,6,7,8,9].every(n=>nums.has(n)))\n    return out({error:'Day '+day+' must contain Learning Experiences 1–9 exactly once.'},400);\n  }\n }\n\n const status=testMode?'TestPublished':'Published';"""
-          s=must_replace(s,publish_old,publish_new,'production 9-experience gate',1)
-          teacher_get_old="""const all=await plans();return out({today:neoToday(),plans:teacher?all.filter(p=>p.status==='Approved'&&teacher.classroom_ids.includes(p.classroom_id)).map(p=>({...p,lessons:p.lessons.filter(l=>p.working_dates[l.day-1]<=new Date(Date.parse(neoToday())+7*86400000).toISOString().slice(0,10))})):all});"""
-          teacher_get_new="""const all=await plans(),horizon=new Date(Date.parse(neoToday())+7*86400000).toISOString().slice(0,10);return out({today:neoToday(),plans:teacher?all.filter(p=>p.status==='Approved'&&teacher.classroom_ids.includes(p.classroom_id)).map(p=>({...p,lessons:p.lessons.filter(l=>p.working_dates[l.day-1]<=horizon),daily_experiences:Array.isArray(p.daily_experiences)?p.daily_experiences.filter(x=>p.working_dates[x.day-1]<=horizon):[]})):all});"""
-          s=must_replace(s,teacher_get_old,teacher_get_new,'teacher horizon daily experiences',1)
-          p.write_text(s)
-
-          # ---------- Head Office Curriculum Master ----------
-          p=Path('curriculum-master.html')
-          s=p.read_text()
-          s=must_replace(s,"let lessons=[],dailyRhythm=[],editing='';","let lessons=[],dailyRhythm=[],dailyExperiences=[],editing='';",'master state',1)
-          s=s.replace("if(f.size>1500000)throw Error('File is too large.');","if(f.size>8000000)throw Error('File is too large.');")
-          s=s.replace("sheetRows:1202","sheetRows:2002")
-          s=must_replace(s,"const rhythmName=wb.SheetNames.find(n=>String(n).trim().toLowerCase()==='daily rhythm');dailyRhythm=[];", "const rhythmName=wb.SheetNames.find(n=>String(n).trim().toLowerCase()==='daily rhythm');dailyRhythm=[];",'rhythm anchor',1)
-          exp_parse="""const expName=wb.SheetNames.find(n=>['daily experiences','v2 final 9 flow','final 9 flow','production daily experiences'].includes(String(n).trim().toLowerCase()));dailyExperiences=[];if(expName){const expSheet=wb.Sheets[expName];if(Object.values(expSheet).some(c=>c&&c.f))throw Error('Replace Daily Experiences formulas with values before uploading.');const er=XLSX.utils.sheet_to_json(expSheet,{defval:''});if(er.length>1800)throw Error('Daily Experiences supports up to 1800 rows.');const norm=er.map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim().toLowerCase(),v])));dailyExperiences=norm.filter(r=>r.day||r.experience_no||r.experience_name).map((r,i)=>({id:String(r.id||r.block_id||r.lesson_id||('experience-'+r.day+'-'+r.experience_no)),day:Number(r.day),experience_no:Number(r.experience_no),experience_name:String(r.experience_name||r.learning_experience||'').trim(),start:excelTime(r.start),end:excelTime(r.end),subject:String(r.subject||r.experience_name||'').trim(),concept:String(r.concept||r.day_concept||r.experience_name||'').trim(),objective:String(r.objective||r.observable_outcome||'').trim(),activity:String(r.activity||r.activity_or_micro_experiences||'').trim(),materials:String(r.materials||'').trim(),teacher_language:String(r.teacher_language||'').trim(),observe_for:String(r.observe_for||r.priority_observation||'').trim(),why_this_matters:String(r.why_this_matters||'').trim(),support_scaffold:String(r.support_scaffold||'').trim(),challenge_extension:String(r.challenge_extension||'').trim(),inclusion_note:String(r.inclusion_note||'').trim(),safety_supervision:String(r.safety_supervision||r.safety_note||'').trim(),portfolio_evidence:String(r.portfolio_evidence||'').trim(),play_mode:String(r.play_mode||'').trim(),resource_id:String(r.resource_id||'').trim(),resource_type:String(r.resource_type||'').trim(),resource_title:String(r.resource_title||r.student_resource_decision||'').trim(),resource_url:String(r.resource_url||'').trim(),classwork_home_either:String(r.classwork_home_either||'').trim(),homework:String(r.homework||r.home_connection||'').trim(),ncf_curricular_goal:String(r.ncf_curricular_goal||r.ncf_alignment_domain||'').trim(),ncf_competency:String(r.ncf_competency||r.ncf_alignment_focus||'').trim(),questions:[r.question_1,r.question_2,r.question_3].map(q=>String(q||'').trim()).filter(Boolean)}))}"""
-          anchor="inspectLessons();message('Excel loaded. '+dailyRhythm.length+' Daily Rhythm block(s) loaded. Review the day preview, then Save Draft for server validation.','ok')"
-          s=must_replace(s,anchor,exp_parse+";"+"inspectLessons();message('Excel loaded. '+dailyRhythm.length+' Daily Rhythm block(s) + '+dailyExperiences.length+' Daily Experience(s) loaded. Review the day preview, then Save Draft for server validation.','ok')",'daily experiences parse',1)
-          s=must_replace(s,"dailyRhythm=Array.isArray(x.daily_rhythm)?x.daily_rhythm:[];", "dailyRhythm=Array.isArray(x.daily_rhythm)?x.daily_rhythm:[];dailyExperiences=Array.isArray(x.daily_experiences)?x.daily_experiences:[];",'edit load daily experiences',1)
-          s=must_replace(s,"lessons,daily_rhythm:dailyRhythm});", "lessons,daily_rhythm:dailyRhythm,daily_experiences:dailyExperiences});",'master save payload',1)
-          s=must_replace(s,"editing='';lessons=[];dailyRhythm=[];", "editing='';lessons=[];dailyRhythm=[];dailyExperiences=[];",'publish clear state',1)
-          p.write_text(s)
-
-          # ---------- School Curriculum Admin ----------
-          p=Path('learning-admin.js')
-          s=p.read_text()
-          s=must_replace(s,"let lessons=[],dailyRhythm=[],editing='',masterCurricula=[];", "let lessons=[],dailyRhythm=[],dailyExperiences=[],editing='',masterCurricula=[];",'school state',1)
-          s=s.replace("dailyRhythm=Array.isArray(selectedMaster.daily_rhythm)?selectedMaster.daily_rhythm.map(r=>({...r})):[];", "dailyRhythm=Array.isArray(selectedMaster.daily_rhythm)?selectedMaster.daily_rhythm.map(r=>({...r})):[];dailyExperiences=Array.isArray(selectedMaster.daily_experiences)?selectedMaster.daily_experiences.map(r=>({...r})):[];")
-          s=s.replace("dailyRhythm=Array.isArray(master.daily_rhythm)?master.daily_rhythm.map(r=>({...r})):[];", "dailyRhythm=Array.isArray(master.daily_rhythm)?master.daily_rhythm.map(r=>({...r})):[];dailyExperiences=Array.isArray(master.daily_experiences)?master.daily_experiences.map(r=>({...r})):[];")
-          s=must_replace(s,"daily_rhythm:selectedMaster?dailyRhythm:(source.daily_rhythm||dailyRhythm)});", "daily_rhythm:selectedMaster?dailyRhythm:(source.daily_rhythm||dailyRhythm),daily_experiences:selectedMaster?dailyExperiences:(source.daily_experiences||dailyExperiences)});",'center save daily experiences',1)
-          s=must_replace(s,"dailyRhythm=Array.isArray(p.daily_rhythm)?p.daily_rhythm.map(r=>({...r})):[];", "dailyRhythm=Array.isArray(p.daily_rhythm)?p.daily_rhythm.map(r=>({...r})):[];dailyExperiences=Array.isArray(p.daily_experiences)?p.daily_experiences.map(r=>({...r})):[];",'edit plan daily experiences',1)
-          p.write_text(s)
-
-          # ---------- Teacher timetable ----------
-          p=Path('learning-family.js')
-          s=p.read_text()
-          old=""" const dated=activePlans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching',source:'Curriculum lesson'})));"""
-          new=""" const experiencePeriods=activePlans.flatMap(p=>(Array.isArray(p.daily_experiences)?p.daily_experiences:[]).filter(x=>x.start&&p.working_dates[x.day-1]===date).map(x=>({...x,subject:x.experience_name||x.subject||'Learning Experience',period:x.experience_name||x.period||'Learning Experience',classroom_id:p.classroom_id,type:'Teaching',source:'Curriculum experience'})));\n const dated=experiencePeriods.length?experiencePeriods:activePlans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching',source:'Curriculum lesson'})));"""
-          s=must_replace(s,old,new,'teacher daily experiences schedule',1)
-          s=must_replace(s,"const directLesson=s.source==='Curriculum lesson'?s:null;", "const directLesson=(s.source==='Curriculum lesson'||s.source==='Curriculum experience')?s:null;",'teacher direct experience metadata',1)
-          p.write_text(s)
-
-          # ---------- Teacher contextual guide ----------
-          p=Path('teacher-guide-v2.js')
-          s=p.read_text()
-          old="""    for(const plan of active){\n     const lesson=(plan.lessons||[]).find(l=>plan.working_dates?.[Number(l.day)-1]===date&&String(l.start||'')===start);\n     if(lesson){found={plan,lesson};break;}\n    }"""
-          new="""    for(const plan of active){\n     const lesson=(plan.daily_experiences||[]).find(l=>plan.working_dates?.[Number(l.day)-1]===date&&String(l.start||'')===start)||(plan.lessons||[]).find(l=>plan.working_dates?.[Number(l.day)-1]===date&&String(l.start||'')===start);\n     if(lesson){found={plan,lesson};break;}\n    }"""
-          s=must_replace(s,old,new,'teacher guide daily experiences lookup',1)
-          p.write_text(s)
-
-          print('V2 daily experiences pipeline patched successfully')
-          PY
-      - name: Validate Worker JavaScript
+      - name: Apply Worker daily experiences patch
+        run: python3 scripts/patch_v2_worker_daily_experiences.py
+      - name: Validate Worker syntax
         run: node --check worker/neo-lead-crm-api-worker-transport-phase1.js
-      - name: Commit patch
+      - name: Commit Worker patch
         run: |
+          if git diff --quiet; then
+            echo "No Worker changes needed."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add worker/neo-lead-crm-api-worker-transport-phase1.js curriculum-master.html learning-admin.js learning-family.js teacher-guide-v2.js
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Support V2 daily learning experiences pipeline"
-            git push
-          fi
+          git add worker/neo-lead-crm-api-worker-transport-phase1.js
+          git commit -m "Support V2 daily learning experiences in Worker"
+          git push
