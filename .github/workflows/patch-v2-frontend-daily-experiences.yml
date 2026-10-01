@@ -38,7 +38,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add curriculum-master.html learning-admin.js learning-family.js schools.html teachers.html
-          git commit -m "Support five V2 Learning Experience prompts"
+          git commit -m "Support V2 Learning Experience import capacity"
           for attempt in 1 2 3; do
             if git push; then
               exit 0
@@ -48,4 +48,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 6
+# Trigger revision: 7
