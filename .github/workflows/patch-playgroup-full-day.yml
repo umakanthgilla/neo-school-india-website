@@ -18,22 +18,52 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Apply full-day timetable patch
+      - name: Apply curriculum and timetable patch
         run: python3 scripts/patch-playgroup-full-day.py
 
       - name: Validate JavaScript
         run: |
           node --check learning-family.js
+          node --check learning-admin.js
           node --check timetable-full-day.js
+          node --check worker/neo-lead-crm-api-worker-transport-phase1.js
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path('curriculum-master.html').read_text()
+          scripts=re.findall(r'<script>([\s\S]*?)</script>',html)
+          Path('/tmp/curriculum-master.js').write_text('\n'.join(scripts))
+          PY
+          node --check /tmp/curriculum-master.js
 
       - name: Commit product changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add learning-family.js timetable-full-day.js teachers.html schools.html
+          git add curriculum-master.html learning-admin.js learning-family.js timetable-full-day.js teachers.html schools.html worker/neo-lead-crm-api-worker-transport-phase1.js
           if git diff --cached --quiet; then
-            echo 'Full-day timetable patch already applied.'
+            echo 'Curriculum rhythm patch already applied.'
           else
-            git commit -m 'Generate Playgroup full-day schedule from curriculum rhythm'
+            git commit -m 'Version curriculum daily rhythm with full-day timetable'
             git push origin HEAD:main
           fi
+
+      - name: Prepare Worker package
+        run: |
+          mkdir -p package
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js package/
+          cat > package/README.txt <<'EOF'
+          Neo School India - Curriculum Daily Rhythm Worker
+
+          Deploy ONLY to the existing Cloudflare Worker:
+          neo-lead-crm-api
+
+          Do not create a new Worker or D1 database.
+          This package preserves existing live modules and adds versioned Daily Rhythm metadata to curriculum masters and center plans.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NEO_WORKER_CURRICULUM_DAILY_RHYTHM
+          path: package/
+          retention-days: 1
