@@ -1,8 +1,5 @@
 name: Patch Playgroup full-day curriculum timetable
-on:
-  push:
-    paths:
-      - '.github/workflows/patch-playgroup-full-day.yml'
+on: [push]
 permissions:
   contents: write
 jobs:
@@ -11,10 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch teacher daily schedule
+        shell: bash
         run: |
-          python3 - <<'PY'
+          python3 <<'PY'
           from pathlib import Path
-
           p=Path('learning-family.js')
           s=p.read_text()
           room=" const room=id=>data.classrooms.find(c=>c.id===id)?.name||id;"
@@ -31,8 +28,7 @@ jobs:
   {id:'pg-rhythm-9',start:'12:15',end:'12:30',label:'Pack-up & Goodbye',type:'Routine'}
  ];
  const rhythmFor=p=>Array.isArray(p.daily_rhythm)&&p.daily_rhythm.length?p.daily_rhythm:(p.master_level==='Playgroup'&&p.master_version==='2026.2'?legacyPlaygroupRhythm:[]);"""
-          if room not in s:
-              raise SystemExit('room anchor not found')
+          if room not in s: raise SystemExit('room anchor not found')
           s=s.replace(room,rhythm,1)
           old="const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start<b.end&&b.start<a.end;const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));"
           new="""const activePlans=plans.filter(p=>p.status==='Approved'&&Array.isArray(p.working_dates)&&p.working_dates.includes(date));
@@ -41,8 +37,7 @@ jobs:
  const rhythm=activePlans.flatMap(p=>rhythmFor(p).map((r,i)=>({id:r.id||('rhythm-'+(i+1)),start:String(r.start||''),end:String(r.end||''),subject:String(r.label||r.learning_block||'Daily rhythm'),period:String(r.label||r.learning_block||'Daily rhythm'),classroom_id:p.classroom_id,type:r.type||'Routine',source:'Curriculum rhythm'}))).filter(r=>r.start&&r.end);
  const auto=[...dated,...rhythm.filter(r=>!dated.some(d=>overlaps(d,r)))];
  const slots=[...auto,...timetable.slots.filter(s=>s.weekday===weekday&&!auto.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));"""
-          if old not in s:
-              raise SystemExit('daily schedule anchor not found')
+          if old not in s: raise SystemExit('daily schedule anchor not found')
           s=s.replace(old,new,1)
           p.write_text(s)
 
@@ -55,7 +50,6 @@ jobs:
           p=Path('teachers.html')
           s=p.read_text().replace('/learning-family.js?v=20261001-daywise1','/learning-family.js?v=20261001-daywise2')
           p.write_text(s)
-
           p=Path('schools.html')
           s=p.read_text().replace('/timetable-full-day.js?v=20261001-daywise1','/timetable-full-day.js?v=20261001-daywise2')
           p.write_text(s)
@@ -66,8 +60,9 @@ jobs:
           node --check timetable-full-day.js
       - name: Commit patch
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add learning-family.js timetable-full-day.js teachers.html schools.html
-          git commit -m 'Generate Playgroup full-day schedule from curriculum rhythm'
+          git diff --cached --quiet && exit 0
+          git commit -m "Generate Playgroup full-day schedule from curriculum rhythm"
           git push
