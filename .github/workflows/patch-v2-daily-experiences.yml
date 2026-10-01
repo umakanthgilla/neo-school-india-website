@@ -19,6 +19,8 @@ jobs:
           fetch-depth: 0
       - name: Apply Worker daily experiences patch
         run: python3 scripts/patch_v2_worker_daily_experiences.py
+      - name: Apply Playgroup V2 publish schema
+        run: python3 scripts/patch_playgroup_v2_publish_schema.py
       - name: Validate Worker syntax
         run: node --check worker/neo-lead-crm-api-worker-transport-phase1.js
       - name: Commit Worker patch
@@ -30,5 +32,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add worker/neo-lead-crm-api-worker-transport-phase1.js
-          git commit -m "Support V2 daily learning experiences in Worker"
-          git push
+          git commit -m "Lock Playgroup V2 daily Learning Experience schema"
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push attempt ${attempt} failed; retrying..."
+            sleep 5
+          done
+          exit 1
+
+# Trigger revision: 2
