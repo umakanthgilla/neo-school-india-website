@@ -22,7 +22,7 @@
 <main class="wrap"><section class="hero"><h1>Master Curriculum Library</h1><p>Head Office publishes curriculum content once. Each center selects the approved version and maps Day 1–200 to its own academic calendar and sections.</p></section>
 <div class="flow"><b>Locked pipeline:</b> Head Office Master → Level → Version → Publish → Center Sync → Section + Academic Calendar → Teacher Activation</div>
 <section class="levels" id="levels"></section>
-<section class="panel"><h2 id="workspaceTitle">Master upload</h2><p>Upload your curriculum, daily lesson periods and homework in one master Excel per level. Day 1–200 maps to each centre’s saved working dates; holidays and events are skipped by the academic calendar.</p>
+<section class="panel"><h2 id="workspaceTitle">Master upload</h2><p>Upload one structured master Excel per level. For Playgroup V2, the workbook carries the 200-day core curriculum plus 9 Learning Experiences per day, resource links, teacher guidance, observation cues and home connection. Day 1–200 maps to each centre’s saved working dates.</p>
 <button class="btn" id="downloadTemplate" type="button">Download 200-day master template</button>
 <div class="fields"><label>Level<select id="level"><option>Playgroup</option><option>Nursery</option><option>LKG</option><option>UKG</option><option>Daycare</option></select></label><label>Version<input id="version" maxlength="40" placeholder="2026.1"></label><label>Title<input id="title" maxlength="160" placeholder="Playgroup Master Curriculum"></label><label>Master Excel (.xlsx)<input id="file" type="file" accept=".xlsx"></label></div>
 <div class="actions"><button class="btn primary" id="save">Validate & Save Draft</button><span id="preview" class="msg">No Excel loaded.</span></div><div id="dayPreview" class="panel" hidden><label>Inspect curriculum day <select id="inspectDay"></select></label><div id="dayDetail"></div></div><p id="message" class="msg" role="status"></p></section>
@@ -39,7 +39,45 @@ const message=(t,type='')=>{const e=document.querySelector('#message');e.textCon
 const workbook=()=>import('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm');
 const excelTime=v=>{if(typeof v==='number'&&Number.isFinite(v)){const mins=Math.round((v%1)*24*60);return String(Math.floor(mins/60)%24).padStart(2,'0')+':'+String(mins%60).padStart(2,'0')}return String(v||'').trim()};
 function inspectLessons(){const days=new Map();for(const l of lessons){if(!days.has(l.day))days.set(l.day,[]);days.get(l.day).push(l)}const missing=Array.from({length:200},(_,i)=>i+1).filter(d=>!days.has(d)),homework=lessons.filter(l=>String(l.homework||'').trim()).length,timed=lessons.filter(l=>l.start&&l.end).length;document.querySelector('#preview').textContent=lessons.length+' lessons · '+days.size+'/200 days · '+homework+' homework entries · '+timed+' timed periods · '+dailyRhythm.length+' daily rhythm blocks · '+dailyExperiences.length+' daily experiences'+(missing.length?' · Missing days: '+missing.slice(0,12).join(', ')+(missing.length>12?'…':''):' · All days covered');const box=document.querySelector('#dayPreview');box.hidden=!lessons.length;if(box.hidden)return;const select=document.querySelector('#inspectDay');select.innerHTML=Array.from({length:200},(_,i)=>'<option value="'+(i+1)+'">Day '+(i+1)+(days.has(i+1)?' · '+days.get(i+1).length+' lesson(s)':' · missing')+'</option>').join('');const draw=()=>{const rows=days.get(Number(select.value))||[];document.querySelector('#dayDetail').innerHTML=rows.map(l=>'<article class="version"><div><h3>'+esc(l.subject||'Subject')+' · '+esc(l.concept||'Lesson')+'</h3><p>'+esc([l.start&&l.end?l.start+'–'+l.end:'',l.period||''].filter(Boolean).join(' · '))+'</p><p><b>Objective:</b> '+esc(l.objective||'')+'</p><p><b>Activity:</b> '+esc(l.activity||'')+'</p><p><b>Homework:</b> '+esc(l.homework||'None')+'</p></div></article>').join('')||'<p class="msg">No lesson for this day. Add it before production publishing.</p>'};select.onchange=draw;draw()}
-document.querySelector('#downloadTemplate').onclick=async()=>{try{const XLSX=await workbook(),rows=Array.from({length:200},(_,i)=>({day:i+1,id:'lesson-'+(i+1),subject:'',concept:'',objective:'',activity:'',question_1:'',question_2:'',question_3:'',materials:'',homework:'',period:'',start:'',end:''})),sheet=XLSX.utils.json_to_sheet(rows),book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'Day 1-200');const rhythmRows=[{start:'',end:'',learning_block:'',type:'Routine'}],rhythmSheet=XLSX.utils.json_to_sheet(rhythmRows);XLSX.utils.book_append_sheet(book,rhythmSheet,'Daily Rhythm');XLSX.writeFile(book,'Neo-200-Day-Master-Template.xlsx');message('Template downloaded. Fill each day; add more rows for multiple subjects or periods on one day. Keep IDs unique.','ok')}catch(e){message('Could not prepare Excel template: '+e.message,'error')}};
+document.querySelector('#downloadTemplate').onclick=async()=>{try{
+ const XLSX=await workbook(),level=document.querySelector('#level').value;
+ const coreRows=Array.from({length:200},(_,i)=>({day:i+1,id:'lesson-'+String(i+1).padStart(3,'0'),subject:'',concept:'',objective:'',activity:'',question_1:'',question_2:'',question_3:'',materials:'',homework:'',period:'Core IMLS Experience',start:'10:25',end:'10:50'}));
+ const book=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(coreRows),'Day 1-200');
+ if(level==='Playgroup'){
+  const defs=[
+   [1,'Welcome & Discovery','09:30','09:45'],
+   [2,'Circle & Communication','09:45','10:05'],
+   [3,'Language & Story','10:05','10:25'],
+   [4,'Core IMLS Experience','10:25','10:50'],
+   [5,'Movement & Sensory','10:50','11:10'],
+   [6,'Snack & Life Skills','11:10','11:30'],
+   [7,'Maths, Thinking & Readiness','11:30','11:50'],
+   [8,'Create, Practice & Apply','11:50','12:10'],
+   [9,'Reflect, Pack & Goodbye','12:10','12:30']
+  ];
+  const experienceRows=Array.from({length:200},(_,i)=>defs.map(([experience_no,experience_name,start,end])=>({day:i+1,experience_no,experience_name,start,end,subject:experience_name,concept:'',objective:'',activity:'',materials:'',teacher_language:'',observe_for:'',why_this_matters:'',support_scaffold:'',challenge_extension:'',inclusion_note:'',safety_supervision:'',portfolio_evidence:'',play_mode:'',resource_id:'',resource_type:'',resource_title:'',resource_url:'',classwork_home_either:'Class',homework:'',ncf_curricular_goal:'',ncf_competency:'',question_1:'',question_2:'',question_3:'',question_4:'',question_5:''}))).flat();
+  XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(experienceRows),'Daily Experiences');
+  const resourceHeaders=['resource_id','day','experience_no','experience_name','resource_type','title','objective','file_path_or_url','classwork_home_either','parent_share','teacher_instruction','status','revision_note'];
+  XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet([resourceHeaders]),'Resource Manifest');
+  const instructions=[
+   ['Neo School India · Playgroup V2 Master Import'],
+   ['Rule','Day 1–200 remains independent of the academic calendar.'],
+   ['Core Sheet','Day 1-200 keeps one approved core curriculum record per day.'],
+   ['Daily Experiences','Exactly 9 Learning Experiences per day; names and times are locked for Playgroup V2.'],
+   ['Resources','Use stable Neo Resource IDs. Resource files/URLs are linked from Daily Experiences and Resource Manifest.'],
+   ['Teacher Guide','Materials, teacher language, observe-for, support/challenge, inclusion and safety flow to the Teacher Guide.'],
+   ['Parent','Home connection/homework is shared only through the approved parent workflow.'],
+   ['Publish','Production publish requires all 200 days and all 1800 Playgroup Learning Experiences.']
+  ];
+  XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet(instructions),'Instructions');
+ }
+ const rhythmRows=[{start:'',end:'',learning_block:'',type:'Routine'}];
+ XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(rhythmRows),'Daily Rhythm');
+ const fileName=level==='Playgroup'?'Neo-Playgroup-V2-200-Day-Master-Template.xlsx':'Neo-200-Day-Master-Template.xlsx';
+ XLSX.writeFile(book,fileName);
+ message(level==='Playgroup'?'Playgroup V2 template downloaded: 200 core days + 1800 Learning Experiences + Resource Manifest.':'200-day master template downloaded.','ok')
+ }catch(e){message('Could not prepare Excel template: '+e.message,'error')}};
 async function api(path,body){const r=await fetch(API+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');return d}
 function renderLevels(data=[]){document.querySelector('#levels').innerHTML=levels.map(level=>{const rows=data.filter(x=>x.level===level),pub=rows.find(x=>x.status==='Published'),test=rows.find(x=>x.status==='TestPublished');return '<article class="card" data-level="'+level+'"><span class="status">Master level</span><h3>'+level+'</h3><p>'+(pub?'Published '+esc(pub.version):test?'Test version '+esc(test.version):rows.length?rows.length+' saved version(s)':'No version saved yet')+'</p></article>'}).join('');document.querySelectorAll('[data-level]').forEach(c=>c.onclick=()=>{document.querySelector('#level').value=c.dataset.level;document.querySelector('#title').value=c.dataset.level+' Master Curriculum';document.querySelector('#workspaceTitle').textContent=c.dataset.level+' master upload';document.querySelector('#file').focus()})}
 function renderVersions(rows){
