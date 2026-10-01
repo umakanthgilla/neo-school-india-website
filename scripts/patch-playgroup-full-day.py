@@ -1,0 +1,47 @@
+from pathlib import Path
+
+p=Path('learning-family.js')
+s=p.read_text()
+room=" const room=id=>data.classrooms.find(c=>c.id===id)?.name||id;"
+rhythm=""" const room=id=>data.classrooms.find(c=>c.id===id)?.name||id;
+ const legacyPlaygroupRhythm=[
+  {id:'pg-rhythm-1',start:'09:30',end:'09:45',label:'Arrival & Settling',type:'Routine'},
+  {id:'pg-rhythm-2',start:'09:45',end:'10:05',label:'Circle Time',type:'Routine'},
+  {id:'pg-rhythm-3',start:'10:05',end:'10:30',label:'IMLS Core Experience',type:'Teaching'},
+  {id:'pg-rhythm-4',start:'10:30',end:'10:45',label:'Snack & Practical Life',type:'Routine'},
+  {id:'pg-rhythm-5',start:'10:45',end:'11:10',label:'Language / Story / Sound Play',type:'Routine'},
+  {id:'pg-rhythm-6',start:'11:10',end:'11:35',label:'Motor / Sensory / Outdoor',type:'Routine'},
+  {id:'pg-rhythm-7',start:'11:35',end:'12:00',label:'Creative / Concept Reinforcement',type:'Routine'},
+  {id:'pg-rhythm-8',start:'12:00',end:'12:15',label:'Reflection & My Neo Moment',type:'Routine'},
+  {id:'pg-rhythm-9',start:'12:15',end:'12:30',label:'Pack-up & Goodbye',type:'Routine'}
+ ];
+ const rhythmFor=p=>Array.isArray(p.daily_rhythm)&&p.daily_rhythm.length?p.daily_rhythm:(p.master_level==='Playgroup'&&p.master_version==='2026.2'?legacyPlaygroupRhythm:[]);"""
+if 'legacyPlaygroupRhythm' not in s:
+    if room not in s: raise SystemExit('room anchor not found')
+    s=s.replace(room,rhythm,1)
+old="const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start<b.end&&b.start<a.end;const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));"
+new="""const activePlans=plans.filter(p=>p.status==='Approved'&&Array.isArray(p.working_dates)&&p.working_dates.includes(date));
+ const dated=activePlans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching',source:'Curriculum lesson'})));
+ const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start&&a.end&&b.start&&b.end&&a.start<b.end&&b.start<a.end;
+ const rhythm=activePlans.flatMap(p=>rhythmFor(p).map((r,i)=>({id:r.id||('rhythm-'+(i+1)),start:String(r.start||''),end:String(r.end||''),subject:String(r.label||r.learning_block||'Daily rhythm'),period:String(r.label||r.learning_block||'Daily rhythm'),classroom_id:p.classroom_id,type:r.type||'Routine',source:'Curriculum rhythm'}))).filter(r=>r.start&&r.end);
+ const auto=[...dated,...rhythm.filter(r=>!dated.some(d=>overlaps(d,r)))];
+ const slots=[...auto,...timetable.slots.filter(s=>s.weekday===weekday&&!auto.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));"""
+if old in s:
+    s=s.replace(old,new,1)
+elif 'const activePlans=plans.filter' not in s:
+    raise SystemExit('daily schedule anchor not found')
+p.write_text(s)
+
+p=Path('timetable-full-day.js')
+s=p.read_text()
+s=s.replace("The approved Day 1–200 curriculum is the primary source for date-specific teaching periods. When curriculum rows include <b>period, start and end</b>, those periods automatically appear on the teacher's mapped working date.","The approved Day 1–200 curriculum is the primary source for the teacher day. Date-specific curriculum periods appear on the mapped working date, and a versioned <b>Daily Rhythm</b> supplies the remaining recurring school-day blocks when available.")
+s=s.replace("<strong>No Day-1 pilot timetable is inserted here.</strong> Use the weekly timetable below only for recurring Break / Planning / fallback blocks that are not supplied by the day-wise curriculum.","<strong>No Day-1 pilot timetable is inserted here.</strong> Curriculum lessons + Daily Rhythm build the normal school day. Use the weekly timetable below only for center-specific Break / Planning / fallback blocks that are not already supplied by the curriculum version.")
+p.write_text(s)
+
+p=Path('teachers.html')
+s=p.read_text().replace('/learning-family.js?v=20261001-daywise1','/learning-family.js?v=20261001-daywise2')
+p.write_text(s)
+
+p=Path('schools.html')
+s=p.read_text().replace('/timetable-full-day.js?v=20261001-daywise1','/timetable-full-day.js?v=20261001-daywise2')
+p.write_text(s)
