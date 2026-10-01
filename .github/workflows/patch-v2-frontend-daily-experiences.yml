@@ -35,6 +35,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add curriculum-master.html learning-admin.js learning-family.js schools.html teachers.html
           git commit -m "Refresh V2 daily experience portal assets"
-          git push
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push attempt ${attempt} failed; retrying..."
+            sleep 5
+          done
+          exit 1
 
-# Trigger revision: 2
+# Trigger revision: 3
