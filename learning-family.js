@@ -22,7 +22,7 @@ window.renderNeoLearningFamily=function(area,ctx){
  function draw(date){
  const body=area.querySelector('#teacherLearningBody'),weekday=new Date(date+'T00:00:00Z').getUTCDay();
  if(!Number.isFinite(weekday))return;
- const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>d.classroom_id===s.classroom_id))].sort((a,b)=>a.start.localeCompare(b.start));
+ const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start<b.end&&b.start<a.end;const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));
  const done=(p,l)=>feed.activities.find(a=>a.plan_id===p.id&&a.lesson_id===l.id);
  const concepts=plans.flatMap(p=>p.lessons.filter(l=>p.working_dates[l.day-1]===date).map(l=>({p,l})));
  let html='';
