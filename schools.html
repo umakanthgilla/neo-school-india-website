@@ -528,7 +528,7 @@ function renderAccess(area){
 setInterval(async()=>{if(!school||root.hidden||document.hidden)return;try{const result=await call('notifications');records.notifications=result.records||[];updateNotificationBadge();if(tab==='notifications')renderNotifications(root.querySelector('#portalContent'))}catch{}},30000);
 })();
 
-</script><script src="/head-office-portal.js?v=20260919-ho5"></script><script src="/password-access.js?v=20261001-stage1"></script><script>
+</script><script src="/head-office-portal.js?v=20260919-ho5"></script><script src="/password-access.js?v=20261001-admission1"></script><script>
 document.addEventListener('click',event=>{
   const control=event.target.closest('#neoWorkspace>.neo-department-nav button, #neoWorkspace>.neo-department-nav .neo-department>summary');
   if(!control)return;
