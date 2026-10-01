@@ -18,58 +18,38 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-
-          # Backend: allow TestPublished -> Published when all 200 days validate.
           p=Path('worker/neo-lead-crm-api-worker-transport-phase1.js')
           s=p.read_text(encoding='utf-8')
-          old=""" if(row.status==='Published'||row.status==='TestPublished')
-  return out({success:true,status:row.status});
-
- const checked=validateMasterCurriculum(JSON.parse(row.data));"""
-          new=""" if(row.status==='Published')
-  return out({success:true,status:row.status});
-
- // Repeated test-publish is idempotent, but a complete TestPublished version may be
- // promoted to production without re-uploading or changing its version number.
- if(row.status==='TestPublished'&&b.test_mode===true)
-  return out({success:true,status:row.status});
-
- const checked=validateMasterCurriculum(JSON.parse(row.data));"""
-          if old not in s:
-              raise SystemExit('backend published guard target not found')
+          old=" if(row.status==='Published'||row.status==='TestPublished')\n  return out({success:true,status:row.status});\n\n const checked=validateMasterCurriculum(JSON.parse(row.data));"
+          new=" if(row.status==='Published')\n  return out({success:true,status:row.status});\n\n // Repeated test publish is idempotent. A complete TestPublished version may be promoted.\n if(row.status==='TestPublished'&&b.test_mode===true)\n  return out({success:true,status:row.status});\n\n const checked=validateMasterCurriculum(JSON.parse(row.data));"
+          if old not in s: raise SystemExit('backend published guard target not found')
           s=s.replace(old,new,1)
-          old2=""" const saved=await env.DB.prepare(
-  \"UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status='Draft'\"
- ).bind(status,row.id).run();"""
-          new2=""" const saved=await env.DB.prepare(
-  \"UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status IN ('Draft','TestPublished')\"
- ).bind(status,row.id).run();"""
-          if old2 not in s:
-              raise SystemExit('backend publish update target not found')
+          old2=" const saved=await env.DB.prepare(\n  \"UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status='Draft'\"\n ).bind(status,row.id).run();"
+          new2=" const saved=await env.DB.prepare(\n  \"UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status IN ('Draft','TestPublished')\"\n ).bind(status,row.id).run();"
+          if old2 not in s: raise SystemExit('backend publish update target not found')
           s=s.replace(old2,new2,1)
           p.write_text(s,encoding='utf-8')
 
-          # Frontend: show a production promotion button for complete test versions.
           p=Path('curriculum-master.html')
           s=p.read_text(encoding='utf-8')
           pattern=r"function renderVersions\(rows\)\{.*?\}\nasync function load\(\)"
-          replacement="""function renderVersions(rows){
- const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;
- document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{
-  const days=dayCount(x);
-  const draft=x.status==='Draft'?'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button><button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>':'';
-  const promote=x.status==='TestPublished'&&days===200?'<button class=\"btn primary\" data-promote=\"'+esc(x.id)+'\">Promote to Production</button>':'';
-  return '<article class=\"version\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days</p></div><div class=\"actions\">'+draft+promote+'</div></article>';
- }).join(''):'<p class=\"msg\">No master curriculum versions saved yet.</p>';
- document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.edit);editing=x.id;lessons=x.lessons||[];document.querySelector('#level').value=x.level;document.querySelector('#version').value=x.version;document.querySelector('#title').value=x.title;inspectLessons();message('Editing saved draft. Upload a replacement Excel only if content changed.','ok')});
- document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>publish(b.dataset.test,true));
- document.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>publish(b.dataset.publish,false));
- document.querySelectorAll('[data-promote]').forEach(b=>b.onclick=()=>publish(b.dataset.promote,false));
-}
-async function load()"""
+          replacement=(
+            "function renderVersions(rows){\n"
+            " const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;\n"
+            " document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{\n"
+            "  const days=dayCount(x);\n"
+            "  const draft=x.status==='Draft'?'<button class=\\\"btn\\\" data-edit=\\\"'+esc(x.id)+'\\\">Edit</button><button class=\\\"btn\\\" data-test=\\\"'+esc(x.id)+'\\\">Publish Test</button><button class=\\\"btn primary\\\" data-publish=\\\"'+esc(x.id)+'\\\">Publish 200 Days</button>':'';\n"
+            "  const promote=x.status==='TestPublished'&&days===200?'<button class=\\\"btn primary\\\" data-promote=\\\"'+esc(x.id)+'\\\">Promote to Production</button>':'';\n"
+            "  return '<article class=\\\"version\\\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days</p></div><div class=\\\"actions\\\">'+draft+promote+'</div></article>';\n"
+            " }).join(''):'<p class=\\\"msg\\\">No master curriculum versions saved yet.</p>';\n"
+            " document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.edit);editing=x.id;lessons=x.lessons||[];document.querySelector('#level').value=x.level;document.querySelector('#version').value=x.version;document.querySelector('#title').value=x.title;inspectLessons();message('Editing saved draft. Upload a replacement Excel only if content changed.','ok')});\n"
+            " document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>publish(b.dataset.test,true));\n"
+            " document.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>publish(b.dataset.publish,false));\n"
+            " document.querySelectorAll('[data-promote]').forEach(b=>b.onclick=()=>publish(b.dataset.promote,false));\n"
+            "}\nasync function load()"
+          )
           ns,n=re.subn(pattern,replacement,s,count=1,flags=re.S)
-          if n!=1:
-              raise SystemExit(f'frontend renderVersions target count={n}')
+          if n!=1: raise SystemExit(f'frontend renderVersions target count={n}')
           p.write_text(ns,encoding='utf-8')
           PY
       - name: Commit promotion fix
