@@ -18,11 +18,28 @@ window.renderNeoLearningFamily=function(area,ctx){
  let id=crypto.randomUUID();area.querySelector('form').onsubmit=async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{await api('comment',{...Object.fromEntries(new FormData(e.target)),request_id:id});id=crypto.randomUUID();e.target.reset();status('Comment shared with this child’s parent.')}catch(err){status(err.message)}finally{button.disabled=false}};return;
  }
  const room=id=>data.classrooms.find(c=>c.id===id)?.name||id;
+ const legacyPlaygroupRhythm=[
+  {id:'pg-rhythm-1',start:'09:30',end:'09:45',label:'Arrival & Settling',type:'Routine'},
+  {id:'pg-rhythm-2',start:'09:45',end:'10:05',label:'Circle Time',type:'Routine'},
+  {id:'pg-rhythm-3',start:'10:05',end:'10:30',label:'IMLS Core Experience',type:'Teaching'},
+  {id:'pg-rhythm-4',start:'10:30',end:'10:45',label:'Snack & Practical Life',type:'Routine'},
+  {id:'pg-rhythm-5',start:'10:45',end:'11:10',label:'Language / Story / Sound Play',type:'Routine'},
+  {id:'pg-rhythm-6',start:'11:10',end:'11:35',label:'Motor / Sensory / Outdoor',type:'Routine'},
+  {id:'pg-rhythm-7',start:'11:35',end:'12:00',label:'Creative / Concept Reinforcement',type:'Routine'},
+  {id:'pg-rhythm-8',start:'12:00',end:'12:15',label:'Reflection & My Neo Moment',type:'Routine'},
+  {id:'pg-rhythm-9',start:'12:15',end:'12:30',label:'Pack-up & Goodbye',type:'Routine'}
+ ];
+ const rhythmFor=p=>Array.isArray(p.daily_rhythm)&&p.daily_rhythm.length?p.daily_rhythm:(p.master_level==='Playgroup'&&p.master_version==='2026.2'?legacyPlaygroupRhythm:[]);
  area.innerHTML=`<div class="learning-welcome"><div><span class="eyebrow">YOUR CLASSROOM DAY</span><h2>${tab==='timetable'?'My timetable':tab==='curriculum'?'My curriculum':'Today’s teaching plan'}</h2><p>${tab==='timetable'?'Prepare, conduct, observe and record each classroom block.':'Periods, learning concepts and parent updates in one place.'}</p></div><label>View date<input id="teachingDate" type="date" max="${new Date(Date.parse(today)+7*86400000).toISOString().slice(0,10)}" value="${today}"></label></div><div id="teacherLearningBody"></div>`;
  function draw(date){
  const body=area.querySelector('#teacherLearningBody'),weekday=new Date(date+'T00:00:00Z').getUTCDay();
  if(!Number.isFinite(weekday))return;
- const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start<b.end&&b.start<a.end;const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));
+ const activePlans=plans.filter(p=>p.status==='Approved'&&Array.isArray(p.working_dates)&&p.working_dates.includes(date));
+ const dated=activePlans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching',source:'Curriculum lesson'})));
+ const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start&&a.end&&b.start&&b.end&&a.start<b.end&&b.start<a.end;
+ const rhythm=activePlans.flatMap(p=>rhythmFor(p).map((r,i)=>({id:r.id||('rhythm-'+(i+1)),start:String(r.start||''),end:String(r.end||''),subject:String(r.label||r.learning_block||'Daily rhythm'),period:String(r.label||r.learning_block||'Daily rhythm'),classroom_id:p.classroom_id,type:r.type||'Routine',source:'Curriculum rhythm'}))).filter(r=>r.start&&r.end);
+ const auto=[...dated,...rhythm.filter(r=>!dated.some(d=>overlaps(d,r)))];
+ const slots=[...auto,...timetable.slots.filter(s=>s.weekday===weekday&&!auto.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));
  const done=(p,l)=>feed.activities.find(a=>a.plan_id===p.id&&a.lesson_id===l.id);
  const concepts=plans.flatMap(p=>p.lessons.filter(l=>p.working_dates[l.day-1]===date).map(l=>({p,l})));
  let html='';
