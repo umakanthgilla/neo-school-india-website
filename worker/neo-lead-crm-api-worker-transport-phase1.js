@@ -2015,7 +2015,7 @@ function validateLearningPlan(b){
  if(typeof b.title!=='string'||!b.title.trim()||b.title.length>160)fail('Enter a curriculum title.');
  if(!Array.isArray(b.working_dates)||b.working_dates.length!==200||!b.working_dates.every(learningDate)||b.working_dates.some((d,i)=>i>0&&d<=b.working_dates[i-1]))fail('Provide exactly 200 unique working dates in chronological order.');
  if(Date.parse(b.working_dates[199])-Date.parse(b.working_dates[0])>730*86400000)fail('Calendar must fit within two years.');
- if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>1200)fail('Provide 1â€“1200 concepts. Drafts may be incomplete; approval requires all 200 days.');
+ if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>2200)fail('Provide 1â€“2200 concepts. Drafts may be incomplete; approval requires all 200 days.');
  const ids=new Set();
  const lessons=b.lessons.map((l,i)=>{
   if(!Number.isInteger(l.day)||l.day<1||l.day>200)fail('Concept '+(i+1)+': day must be 1â€“200.');
@@ -2070,8 +2070,8 @@ function validateMasterCurriculum(b){
  if(typeof b.title!=='string'||!b.title.trim()||b.title.trim().length>160)
   fail('Enter a curriculum title.');
 
- if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>1200)
-  fail('Provide 1â€“1200 concepts.');
+ if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>2200)
+  fail('Provide 1â€“2200 concepts.');
 
  const ids=new Set();
 
@@ -2183,7 +2183,7 @@ if(url.pathname==='/api/learning/master-curricula'&&request.method==='POST'){
  if(!admin)return out({error:'Head-office access required.'},403);
 
  const raw=await request.text();
- if(raw.length>1500000)
+ if(raw.length>8000000)
   return out({error:'Master curriculum file is too large.'},413);
 
  let b;
@@ -2321,7 +2321,7 @@ const timetableResponse=await learningTimetable(request,env,url,{admin,schoolSes
 
 
  if(request.method!=='POST')return out({error:'Method not allowed.'},405);
- const raw=await request.text();if(raw.length>1500000)return out({error:'Curriculum file is too large.'},413);
+ const raw=await request.text();if(raw.length>8000000)return out({error:'Curriculum file is too large.'},413);
  let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid JSON.'},400)}
  if(!b||typeof b!=='object')return out({error:'Invalid request.'},400);
  if(url.pathname==='/api/learning/plans'){
