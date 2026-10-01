@@ -1,0 +1,41 @@
+  const publicEnquiry=url.pathname.match(/^\/api\/admission-workflow\/public\/enquiry\/([^/]+)$/);
+  if(publicEnquiry&&request.method==='POST'){
+   const schoolId=decodeURIComponent(publicEnquiry[1]),s=await env.DB.prepare('SELECT school_id,name,city,active FROM neo_schools WHERE school_id=? AND active=1').bind(schoolId).first();if(!s)return out({error:'School is not available for enquiries.'},404);
+   const b=await request.json(),name=admissionClean(b.parent_name||b.name,120),mobile=admissionClean(b.mobile,20),child=admissionClean(b.child_name,120),dob=admissionClean(b.dob,10),program=admissionClean(b.program,40),notes=admissionClean(b.notes,1000);
+   if(!name||!admissionValidMobile(mobile)||!child||!admissionValidDate(dob)||dob>neoToday()||!['Playgroup','Nursery','LKG','UKG','Daycare'].includes(program))return out({error:'Check parent name, mobile, child name, date of birth and class of interest.'},400);
+   if(b.confirmed!==true)return out({error:'Please confirm the enquiry details before submitting.'},400);
+   const id='ENQ_'+crypto.randomUUID().replaceAll('-','').slice(0,24),data={name,mobile,child_name:child,dob,program,follow_up:neoToday(),notes,status:'New',source:'Parent self-enquiry',admission_status:'Enquiry received'};
+   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'enquiries',?,?)").bind(schoolId,id,JSON.stringify(data)),portalAudit(env,schoolId,false,'PUBLIC:parent_enquiry',id)]);
+   return out({success:true,enquiry_id:id,message:'Your enquiry has been received. The school will contact you if it proceeds to admission.'},201);
+  }
+  if(url.pathname==='/api/admission-workflow/public/application'&&request.method==='GET'){
+   const token=url.searchParams.get('token')||'',app=await admissionPublicApp(env,token);if(!app)return out({error:'This admission link is invalid.'},404);if(app.expired)return out({error:'This admission link has expired. Please ask the school for a new link.'},410);
+   const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(app.school_id).first();return out(admissionPublicAppShape(app,school,await admissionDocs(env,app.id)));
+  }
+  const publicDoc=url.pathname.match(/^\/api\/admission-workflow\/public\/document\/([a-z_]+)$/);
+  if(publicDoc&&request.method==='POST'){
+   const token=url.searchParams.get('token')||'',app=await admissionPublicApp(env,token);if(!app)return out({error:'This admission link is invalid.'},404);if(app.expired)return out({error:'This admission link has expired.'},410);if(!['Admission Invited','Correction Required'].includes(app.status))return out({error:'Documents are locked while the application is under verification.'},409);
+   const docType=publicDoc[1];if(!['birth_certificate','aadhaar','previous_certificate'].includes(docType))return out({error:'Unsupported document type.'},400);
+   const b=await request.json(),fileName=admissionClean(b.file_name,160),mime=admissionClean(b.mime_type,80),encoded=typeof b.data_base64==='string'?b.data_base64:'';
+   if(!fileName||!['image/jpeg','image/png','application/pdf'].includes(mime)||!encoded)return out({error:'Upload a JPG, PNG or PDF document.'},400);
+   let bytes;try{const bin=atob(encoded);if(bin.length>1572864)return out({error:'Each document must be 1.5 MB or smaller.'},413);bytes=Uint8Array.from(bin,c=>c.charCodeAt(0))}catch{return out({error:'Document could not be read.'},400)}
+   const id='DOC_'+app.id+'_'+docType;
+   await env.DB.prepare(`INSERT INTO neo_admission_documents(id,application_id,school_id,doc_type,file_name,mime_type,body,size_bytes) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(application_id,doc_type) DO UPDATE SET id=excluded.id,file_name=excluded.file_name,mime_type=excluded.mime_type,body=excluded.body,size_bytes=excluded.size_bytes,created_at=CURRENT_TIMESTAMP`).bind(id,app.id,app.school_id,docType,fileName,mime,bytes,bytes.byteLength).run();
+   return out({success:true,document:{id,doc_type:docType,file_name:fileName,mime_type:mime,size_bytes:bytes.byteLength}});
+  }
+  if(url.pathname==='/api/admission-workflow/public/submit'&&request.method==='POST'){
+   const token=url.searchParams.get('token')||'',app=await admissionPublicApp(env,token);if(!app)return out({error:'This admission link is invalid.'},404);if(app.expired)return out({error:'This admission link has expired.'},410);if(!['Admission Invited','Correction Required'].includes(app.status))return out({error:'This application is already submitted for verification.'},409);
+   const b=await request.json();if(b.confirmed!==true)return out({error:'Review the details and confirm they are correct before submitting.'},400);
+   const child=admissionClean(b.child_name,120),dob=admissionClean(b.dob,10),gender=admissionClean(b.gender,40),primary=admissionClean(b.primary_parent_name,120),father=admissionClean(b.father_name,120),mother=admissionClean(b.mother_name,120),guardian=admissionClean(b.guardian_name,120),mobile=admissionClean(b.mobile,20),alternate=admissionClean(b.alternate_mobile,20),email=admissionClean(b.email,160),address=admissionClean(b.address,500),city=admissionClean(b.city,120),pincode=admissionClean(b.pincode,10),program=admissionClean(app.data.program,40);
+   if(!child||!admissionValidDate(dob)||dob>neoToday()||!['Male','Female','Prefer not to say'].includes(gender)||!primary||!admissionValidMobile(mobile)||!address||!city||!/^\d{6}$/.test(pincode))return out({error:'Complete the child, parent, contact and address details in the required format.'},400);
+   if(alternate&&!admissionValidMobile(alternate))return out({error:'Check the alternate mobile number.'},400);if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return out({error:'Check the email address.'},400);if(!father&&!mother&&!guardian)return out({error:'Enter at least one parent or guardian name.'},400);
+   const stage=admissionStageData(b,program),docs=await admissionDocs(env,app.id),types=new Set(docs.map(x=>x.doc_type));if(!types.has('birth_certificate'))return out({error:'Birth certificate is required before submission.'},400);if(['LKG','UKG'].includes(program)&&!types.has('previous_certificate'))return out({error:'Previous-class certificate is required for '+program+' admission.'},400);
+   const data={...app.data,child_name:child,dob,gender,primary_parent_name:primary,father_name:father,mother_name:mother,guardian_name:guardian,mobile,alternate_mobile:alternate,email,address,city,pincode,program,...stage,parent_confirmed_at:new Date().toISOString(),parent_confirmation:true};
+   await env.DB.batch([env.DB.prepare("UPDATE neo_admission_applications SET status='Verification Pending',data=?,correction_note=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(JSON.stringify(data),app.id),portalAudit(env,app.school_id,false,'ADMISSION:parent_submitted',app.id)]);await admissionUpdateEnquiry(env,app.school_id,app.enquiry_id,{admission_application_id:app.id,admission_status:'Verification Pending'});
+   return out({success:true,status:'Verification Pending',message:'Admission form submitted. The school will verify the details and documents.'});
+  }
+
+  const schoolInvite=url.pathname.match(/^\/api\/admission-workflow\/school\/([^/]+)\/enquiries\/([^/]+)\/invite$/);
+  const schoolApp=url.pathname.match(/^\/api\/admission-workflow\/school\/([^/]+)\/applications\/([^/]+)$/);
+  const schoolDoc=url.pathname.match(/^\/api\/admission-workflow\/school\/([^/]+)\/applications\/([^/]+)\/documents\/([^/]+)$/);
+  if(schoolInvite||schoolApp||schoolDoc){
