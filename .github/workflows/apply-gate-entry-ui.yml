@@ -1,0 +1,41 @@
+name: Apply Visitor Check-in UI Polish
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-gate-entry-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load visitor UI module
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('gate-checkin.html')
+          s=p.read_text()
+          tag='<script src="/gate-entry-ui.js?v=20261001-entry2"></script>'
+          if tag not in s:
+              anchor='<script src="/gate-pass-visual.js?v=20260930-pass3"></script>'
+              if anchor not in s:
+                  raise SystemExit('gate pass anchor not found')
+              s=s.replace(anchor, anchor+'\n'+tag)
+              p.write_text(s)
+          PY
+      - name: Validate files
+        run: |
+          test -s gate-entry-ui.js
+          grep -q 'gate-entry-ui.js?v=20261001-entry2' gate-checkin.html
+      - name: Commit product change and cleanup workflow
+        run: |
+          rm .github/workflows/apply-gate-entry-ui.yml
+          git config user.name 'umakanthgilla'
+          git config user.email 'umakanthgilla@gmail.com'
+          git add gate-checkin.html .github/workflows/apply-gate-entry-ui.yml
+          git diff --cached --quiet || git commit -m 'Polish visitor check-in interface'
+          git push
