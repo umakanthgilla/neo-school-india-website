@@ -1,6 +1,8 @@
 (()=>{
 'use strict';
 if(window.__neoGatePassVisual)return;window.__neoGatePassVisual=true;
+document.body.classList.add('neo-public-gate');
+if(!document.querySelector('link[data-neo-public-theme]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/neo-public-theme.css?v=20261001-public1';link.dataset.neoPublicTheme='true';document.head.append(link)}
 const style=document.createElement('style');
 style.textContent=`
 /* Neo Gate Pass — final clean framed pass */
