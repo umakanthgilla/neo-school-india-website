@@ -1,0 +1,112 @@
+/* Neo School India admission workflow extension.
+   Parent enquiry -> secure admission link -> parent form/documents -> school verification -> Student Master.
+*/
+const ADMISSION_SCHEMA=[
+ `CREATE TABLE IF NOT EXISTS neo_admission_applications (
+   id TEXT PRIMARY KEY,
+   school_id TEXT NOT NULL,
+   enquiry_id TEXT NOT NULL,
+   token_hash TEXT,
+   token_expires TEXT,
+   status TEXT NOT NULL DEFAULT 'Admission Invited',
+   data TEXT NOT NULL,
+   correction_note TEXT,
+   student_id TEXT,
+   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   UNIQUE(school_id,enquiry_id)
+ )`,
+ `CREATE INDEX IF NOT EXISTS neo_admission_school_status ON neo_admission_applications(school_id,status,updated_at DESC)`,
+ `CREATE TABLE IF NOT EXISTS neo_admission_documents (
+   id TEXT PRIMARY KEY,
+   application_id TEXT NOT NULL,
+   school_id TEXT NOT NULL,
+   doc_type TEXT NOT NULL,
+   file_name TEXT NOT NULL,
+   mime_type TEXT NOT NULL,
+   body BLOB NOT NULL,
+   size_bytes INTEGER NOT NULL,
+   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   UNIQUE(application_id,doc_type)
+ )`
+];
+const admissionSchemaReady=new WeakMap();
+async function ensureAdmissionSchema(env){
+ if(!admissionSchemaReady.has(env.DB)){
+  const p=env.DB.batch(ADMISSION_SCHEMA.map(x=>env.DB.prepare(x))).catch(e=>{admissionSchemaReady.delete(env.DB);throw e});
+  admissionSchemaReady.set(env.DB,p);
+ }
+ await admissionSchemaReady.get(env.DB);
+}
+async function admissionHash(value){
+ const raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(value||'')));
+ return base64urlEncode(new Uint8Array(raw));
+}
+function admissionToken(){return crypto.randomUUID().replaceAll('-','')+crypto.randomUUID().replaceAll('-','')}
+function admissionPublicUrl(token){return 'https://neoschoolindia.com/admission-form.html?token='+encodeURIComponent(token)}
+function admissionEnquiryUrl(school){return 'https://neoschoolindia.com/admission-enquiry.html?school='+encodeURIComponent(school)}
+function admissionClean(v,max=200){return typeof v==='string'?v.trim().slice(0,max):''}
+function admissionValidDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''))&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v}
+function admissionValidMobile(v){const x=String(v||'').trim();return /^\+?[0-9 ()-]{8,20}$/.test(x)&&x.replace(/\D/g,'').length>=10&&x.replace(/\D/g,'').length<=15}
+function admissionYear(v){const m=String(v||'').match(/20\d{2}/);return m?m[0]:''}
+async function admissionAppRow(env,school,enquiry){
+ const r=await env.DB.prepare('SELECT * FROM neo_admission_applications WHERE school_id=? AND enquiry_id=? LIMIT 1').bind(school,enquiry).first();
+ return r?{...r,data:JSON.parse(r.data||'{}')}:null;
+}
+async function admissionAppById(env,school,id){
+ const r=await env.DB.prepare('SELECT * FROM neo_admission_applications WHERE school_id=? AND id=? LIMIT 1').bind(school,id).first();
+ return r?{...r,data:JSON.parse(r.data||'{}')}:null;
+}
+async function admissionDocs(env,appId){
+ const r=await env.DB.prepare('SELECT id,doc_type,file_name,mime_type,size_bytes,created_at FROM neo_admission_documents WHERE application_id=? ORDER BY created_at').bind(appId).all();
+ return r.results||[];
+}
+async function admissionPublicApp(env,token){
+ const hash=await admissionHash(token),row=await env.DB.prepare("SELECT * FROM neo_admission_applications WHERE token_hash=? LIMIT 1").bind(hash).first();
+ if(!row)return null;
+ if(row.token_expires&&Date.parse(row.token_expires)<Date.now())return {expired:true};
+ return {...row,data:JSON.parse(row.data||'{}')};
+}
+async function admissionIssueToken(env,appId){
+ const token=admissionToken(),hash=await admissionHash(token),expires=new Date(Date.now()+14*86400000).toISOString();
+ await env.DB.prepare('UPDATE neo_admission_applications SET token_hash=?,token_expires=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(hash,expires,appId).run();
+ return {token,parent_url:admissionPublicUrl(token),expires};
+}
+async function admissionUpdateEnquiry(env,school,enquiryId,patch){
+ const old=await portalRecord(env,school,'enquiries',enquiryId);if(!old)return;
+ const next={...old,...patch};delete next.id;delete next.created_at;
+ await env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='enquiries' AND id=?").bind(JSON.stringify(next),school,enquiryId).run();
+}
+function admissionPublicAppShape(app,school,docs){
+ return {application_id:app.id,status:app.status,correction_note:app.correction_note||'',school:{name:school?.name||'',city:school?.city||''},data:app.data,documents:docs||[]};
+}
+function admissionSchoolAppShape(app,docs){return {application_id:app.id,enquiry_id:app.enquiry_id,status:app.status,correction_note:app.correction_note||'',student_id:app.student_id||'',data:app.data,documents:docs||[]}}
+function admissionStageData(body,program){
+ const out={playgroup_status:'Not applicable',nursery_status:'Not applicable',nursery_school:'',nursery_city:'',nursery_year:'',lkg_status:'Not applicable',lkg_school:'',lkg_city:'',lkg_year:'',previous_school:'',previous_city:''};
+ if(program==='Nursery'){
+  const p=admissionClean(body.playgroup_status,50);if(!['Completed','Not attended / First school'].includes(p))throw new TypeError('Choose whether Playgroup was completed or this is the child’s first school stage.');out.playgroup_status=p;
+ }
+ if(program==='LKG'){
+  if(admissionClean(body.nursery_status,40)!=='Completed')throw new TypeError('Nursery must be completed before LKG.');
+  out.nursery_status='Completed';out.nursery_school=admissionClean(body.nursery_school,200);out.nursery_city=admissionClean(body.nursery_city,120);out.nursery_year=admissionYear(body.nursery_year);
+  if(!out.nursery_school||!out.nursery_city||!out.nursery_year)throw new TypeError('Enter Nursery school, city and completion year.');out.previous_school=out.nursery_school;out.previous_city=out.nursery_city;
+ }
+ if(program==='UKG'){
+  if(admissionClean(body.nursery_status,40)!=='Completed'||admissionClean(body.lkg_status,40)!=='Completed')throw new TypeError('Nursery and LKG must be completed before UKG.');
+  out.nursery_status='Completed';out.lkg_status='Completed';out.nursery_school=admissionClean(body.nursery_school,200);out.nursery_city=admissionClean(body.nursery_city,120);out.nursery_year=admissionYear(body.nursery_year);out.lkg_school=admissionClean(body.lkg_school,200);out.lkg_city=admissionClean(body.lkg_city,120);out.lkg_year=admissionYear(body.lkg_year);
+  if(!out.nursery_school||!out.nursery_city||!out.nursery_year)throw new TypeError('Enter Nursery school, city and completion year.');
+  if(!out.lkg_school||!out.lkg_city||!out.lkg_year)throw new TypeError('Enter LKG school, city and completion year.');
+  if(Number(out.nursery_year)>Number(out.lkg_year))throw new TypeError('Nursery completion year must not be after LKG completion year.');out.previous_school=out.lkg_school;out.previous_city=out.lkg_city;
+ }
+ return out;
+}
+async function admissionWorkflowPortal(request,env,url){
+ if(!url.pathname.startsWith('/api/admission-workflow/'))return null;
+ const out=(b,s=200)=>json(b,s,request);
+ try{
+  await ensurePortalSchema(env);await ensureAdmissionSchema(env);
+  const publicSchool=url.pathname.match(/^\/api\/admission-workflow\/public\/school\/([^/]+)$/);
+  if(publicSchool&&request.method==='GET'){
+   const schoolId=decodeURIComponent(publicSchool[1]),s=await env.DB.prepare('SELECT school_id,name,city,active FROM neo_schools WHERE school_id=? AND active=1').bind(schoolId).first();
+   if(!s)return out({error:'School is not available for enquiries.'},404);return out({school:s,enquiry_url:admissionEnquiryUrl(schoolId)});
+  }
