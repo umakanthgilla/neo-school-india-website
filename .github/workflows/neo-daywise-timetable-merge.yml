@@ -1,0 +1,35 @@
+name: Neo Daywise Timetable Merge
+
+on:
+  push:
+    paths:
+      - '.github/workflows/neo-daywise-timetable-merge.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-daywise-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep non-overlapping recurring blocks with curriculum periods
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('learning-family.js')
+          s=p.read_text(encoding='utf-8')
+          old="const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>d.classroom_id===s.classroom_id))].sort((a,b)=>a.start.localeCompare(b.start));"
+          new="const dated=plans.flatMap(p=>p.lessons.filter(l=>l.start&&p.working_dates[l.day-1]===date).map(l=>({...l,classroom_id:p.classroom_id,type:'Teaching'})));const overlaps=(a,b)=>a.classroom_id&&b.classroom_id&&a.classroom_id===b.classroom_id&&a.start<b.end&&b.start<a.end;const slots=[...dated,...timetable.slots.filter(s=>s.weekday===weekday&&!dated.some(d=>overlaps(d,s)))].sort((a,b)=>a.start.localeCompare(b.start));"
+          if old not in s:
+              raise SystemExit('day-wise timetable merge target not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+      - name: Commit day-wise merge fix
+        run: |
+          git config user.name "neo-school-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add learning-family.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Preserve non-overlapping timetable blocks with daily curriculum"
+          git push
