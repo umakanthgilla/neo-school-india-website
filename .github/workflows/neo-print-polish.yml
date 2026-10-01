@@ -1,0 +1,37 @@
+name: Neo Print Polish
+
+on:
+  push:
+    paths:
+      - '.github/workflows/neo-print-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-print-layouts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Neo branded print shell
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('schools.html')
+          s = p.read_text(encoding='utf-8')
+          old = """const printDoc=(title,html)=>{const w=open('','_blank');if(!w)return;w.document.write('<!doctype html><title>'+esc(title)+'</title><style>body{font-family:Arial,sans-serif;padding:28px;color:#12213c}h1,h2{color:#071b52}.card{border:1px solid #ccd6e5;border-radius:12px;padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}@media print{button{display:none}}</style><h1>'+esc(title)+'</h1>'+html);w.document.close();w.print()};"""
+          new = """const printDoc=(title,html)=>{const w=open('','_blank');if(!w)return;const logo=location.origin+'/neo-top-logo.jpeg',mascot=location.origin+'/neo%20owl.jpeg';w.document.write('<!doctype html><html><head><meta charset=\"utf-8\"><title>'+esc(title)+'</title><style>@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#12213c;-webkit-print-color-adjust:exact;print-color-adjust:exact}.neo-print-sheet{position:relative;overflow:hidden;min-height:277mm;padding:17mm 14mm 14mm;border:1px solid #dce6f2;border-radius:26px;background:#fff}.neo-print-rainbow{position:absolute;left:0;right:0;top:0;height:7px;background:linear-gradient(90deg,#118be8 0 20%,#35ae63 20% 40%,#f4c400 40% 60%,#ff7a16 60% 80%,#ef3b78 80% 100%)}.neo-print-watermark{position:fixed;right:10mm;bottom:10mm;width:150px;opacity:.035;pointer-events:none}.neo-print-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 16px;margin-bottom:18px;border:1px solid #e0e9f4;border-radius:20px;background:linear-gradient(135deg,#f8fbff,#fffaf2)}.neo-print-head img{width:150px;height:auto}.neo-print-head h1{margin:0;text-align:right;font-size:25px;color:#071b52}.neo-print-sub{margin:4px 0 0;text-align:right;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#118be8}h1,h2,h3{color:#071b52}.card{position:relative;overflow:hidden;border:1px solid #dce6f2;border-radius:18px;padding:16px;margin:12px 0;background:#fff;box-shadow:0 6px 16px rgba(7,27,82,.045);break-inside:avoid}.card:before{content:\"\";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,#118be8,#35ae63,#f4c400,#ff7a16,#ef3b78)}.card h2{margin-top:5px}.card h3{margin-bottom:7px}.card p{line-height:1.5;color:#475a7a}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid>div{min-width:0}.card img{object-fit:cover}.neo-print-footer{margin-top:20px;text-align:center;font-size:10px;color:#7a8698}.neo-print-footer strong{color:#071b52}@media print{.neo-print-sheet{border-color:#dce6f2;box-shadow:none}}</style></head><body><main class=\"neo-print-sheet\"><div class=\"neo-print-rainbow\"></div><img class=\"neo-print-watermark\" src=\"'+mascot+'\" alt=\"\"><header class=\"neo-print-head\"><img src=\"'+logo+'\" alt=\"Neo School India\"><div><h1>'+esc(title)+'</h1><div class=\"neo-print-sub\">Neo School India · Learn · Grow · Lead</div></div></header>'+html+'<div class=\"neo-print-footer\"><strong>Neo School India</strong> · Official school document</div></main></body></html>');w.document.close();setTimeout(()=>w.print(),350)};"""
+          if old not in s:
+              raise SystemExit('printDoc target not found')
+          s = s.replace(old, new, 1)
+          s = s.replace('/student-tc-print.js?v=20260928-v23','/student-tc-print.js?v=20261001-print2',1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit print polish
+        run: |
+          git config user.name "neo-school-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add schools.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Polish school printable documents with Neo brand"
+          git push
