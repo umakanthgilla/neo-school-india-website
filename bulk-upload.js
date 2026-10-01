@@ -74,7 +74,7 @@ function validRecordId(v){return /^[A-Za-z0-9_-]{8,80}$/.test(v);}
 function academicStart(v){const m=String(v||'').match(/20\d{2}/);return m?m[0]:'';}
 function normalizeProgram(v){const map={playgroup:'Playgroup',nursery:'Nursery',lkg:'LKG',ukg:'UKG',daycare:'Daycare'};return map[String(v||'').trim().toLowerCase()]||'';}
 
-const STUDENT_HEADERS=['name','dob','gender','parent','mobile','email','program','academic_year','classroom','previous_school','previous_city','nursery_status','lkg_status'];
+const STUDENT_HEADERS=['name','dob','gender','parent','mobile','email','program','academic_year','classroom','playgroup_status','nursery_status','nursery_school','nursery_city','nursery_year','lkg_status','lkg_school','lkg_city','lkg_year'];
 const STUDENT_PROGRAM_ORDER=['Playgroup','Nursery','LKG','UKG','Daycare'];
 const STAFF_HEADERS=['staff_id','name','department','role','gender','dob','mobile','email','joining_date','monthly_salary','emergency_mobile','status'];
 const departments=['Teaching','Administration','Accounts','HR','Transport','Inventory / Stores','Maintenance / Housekeeping','Security','Other'];
@@ -105,13 +105,31 @@ function validateStudentRows(rows,classrooms,existing){
     if(existing.some(x=>String(x.name||'').trim().toLowerCase()===d.name.toLowerCase()&&String(x.dob||'')===d.dob&&String(x.mobile||'').replace(/\D/g,'')===d.mobile.replace(/\D/g,'')))errors.push('Possible existing student duplicate');
     const m=matchClassroom(row,classrooms);if(m.error)errors.push(m.error);
     const classroom=m.classroom,program=classroom?.program||normalizeProgram(d.program),academic_year=academicStart(classroom?.academic_year||d.academic_year);
-    const nursery=d.nursery_status||'Not applicable',lkg=d.lkg_status||'Not applicable';
-    if(!['Not applicable','Completed','In progress','Not attended'].includes(nursery))errors.push('Invalid Nursery status');
-    if(!['Not applicable','Completed','In progress','Not attended'].includes(lkg))errors.push('Invalid LKG status');
-    if(['LKG','UKG'].includes(program)&&nursery==='Not applicable')errors.push('Nursery history required for LKG/UKG');
-    if(program==='UKG'&&lkg==='Not applicable')errors.push('LKG history required for UKG');
-    if([nursery,lkg].some(x=>['Completed','In progress'].includes(x))&&(!d.previous_school||!d.previous_city))errors.push('Previous school and city required');
-    const body={name:d.name,dob:d.dob,gender:d.gender||'',email:d.email||'',program,parent:d.parent,mobile:d.mobile,academic_year,previous_school:d.previous_school||'',previous_city:d.previous_city||'',nursery_status:nursery,lkg_status:lkg,classroom_id:classroom?.id||''};
+    let playgroup='Not applicable',nursery='Not applicable',lkg='Not applicable';
+    let nurserySchool='',nurseryCity='',nurseryYear='',lkgSchool='',lkgCity='',lkgYear='';
+    if(program==='Nursery'){
+      playgroup=d.playgroup_status||'';
+      if(!['Completed','Not attended / First school'].includes(playgroup))errors.push('For Nursery, choose Playgroup: Completed or Not attended / First school');
+    }else if(program==='LKG'){
+      nursery=d.nursery_status||'';nurserySchool=d.nursery_school||d.previous_school||'';nurseryCity=d.nursery_city||d.previous_city||'';nurseryYear=academicStart(d.nursery_year);
+      if(nursery!=='Completed')errors.push('Nursery must be completed for LKG');
+      if(!nurserySchool||!nurseryCity)errors.push('Nursery completed school and city required for LKG');
+      if(!nurseryYear)errors.push('Nursery completion year required for LKG');
+      if(nurseryYear&&academic_year&&Number(nurseryYear)>Number(academic_year))errors.push('Nursery completion year cannot be after current academic year');
+    }else if(program==='UKG'){
+      nursery=d.nursery_status||'';lkg=d.lkg_status||'';
+      nurserySchool=d.nursery_school||'';nurseryCity=d.nursery_city||'';nurseryYear=academicStart(d.nursery_year);
+      lkgSchool=d.lkg_school||d.previous_school||'';lkgCity=d.lkg_city||d.previous_city||'';lkgYear=academicStart(d.lkg_year);
+      if(nursery!=='Completed')errors.push('Nursery must be completed for UKG');
+      if(!nurserySchool||!nurseryCity||!nurseryYear)errors.push('Nursery school, city and completion year required for UKG');
+      if(lkg!=='Completed')errors.push('LKG must be completed for UKG');
+      if(!lkgSchool||!lkgCity||!lkgYear)errors.push('LKG school, city and completion year required for UKG');
+      if(nurseryYear&&lkgYear&&Number(nurseryYear)>Number(lkgYear))errors.push('Nursery completion year must be before or equal to LKG completion year');
+      if(lkgYear&&academic_year&&Number(lkgYear)>Number(academic_year))errors.push('LKG completion year cannot be after current academic year');
+    }
+    const previousSchool=program==='UKG'?lkgSchool:program==='LKG'?nurserySchool:'';
+    const previousCity=program==='UKG'?lkgCity:program==='LKG'?nurseryCity:'';
+    const body={name:d.name,dob:d.dob,gender:d.gender||'',email:d.email||'',program,parent:d.parent,mobile:d.mobile,academic_year,playgroup_status:playgroup,nursery_status:nursery,nursery_school:nurserySchool,nursery_city:nurseryCity,nursery_year:nurseryYear,lkg_status:lkg,lkg_school:lkgSchool,lkg_city:lkgCity,lkg_year:lkgYear,previous_school:previousSchool,previous_city:previousCity,classroom_id:classroom?.id||''};
     return {...row,type:'student',recordId:'',body,errors,status:errors.length?'Invalid':'Ready'};
   });
 }
