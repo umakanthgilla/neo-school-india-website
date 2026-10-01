@@ -80,7 +80,6 @@ if "dailyExperiences=Array.isArray(p.daily_experiences)?p.daily_experiences.map(
         "dailyRhythm=Array.isArray(p.daily_rhythm)?p.daily_rhythm.map(r=>({...r})):[];dailyExperiences=Array.isArray(p.daily_experiences)?p.daily_experiences.map(r=>({...r})):[];",
         'school edit plan daily experiences')
 
-# Clear stale master experience state before a legacy/manual file import.
 if "dailyExperiences=[];const file=e.target.files[0]" not in s:
     s = replace_once(s,
         "area.querySelector('#curriculumFile').onchange=async e=>{try{await checkCalendar();const file=e.target.files[0];",
@@ -103,6 +102,25 @@ if "s.source==='Curriculum experience'" not in s:
         "const directLesson=s.source==='Curriculum lesson'?s:null;",
         "const directLesson=(s.source==='Curriculum lesson'||s.source==='Curriculum experience')?s:null;",
         'teacher direct experience metadata')
+
+# V2 teacher-facing terminology while keeping legacy lesson/timetable support neutral.
+if "scheduled learning items" not in s:
+    s = replace_once(s,
+        "<h3>${slots.length} scheduled blocks</h3><p>Open each block to prepare materials, conduct the activity, observe children and record the outcome.</p>",
+        "<h3>${slots.length} scheduled learning items</h3><p>Open each Learning Experience or timetable item to prepare materials, conduct the activity, observe children and record the outcome.</p>",
+        'teacher schedule summary wording')
+
+if "Learning Experiences, periods & breaks" not in s:
+    s = replace_once(s, "<h3>Periods & breaks</h3>", "<h3>Learning Experiences, periods & breaks</h3>", 'teacher schedule heading')
+
+if "s.source==='Curriculum experience'?'Learning Experience'" not in s:
+    s = replace_once(s,
+        "${specialSnack?'Snack & life skills':s.type==='Teaching'?'Teaching period':esc(s.type)}",
+        "${specialSnack?'Snack & life skills':s.source==='Curriculum experience'?'Learning Experience':s.type==='Teaching'?'Teaching period':esc(s.type)}",
+        'teacher experience pill')
+
+if "<summary>Open learning workflow</summary>" not in s:
+    s = replace_once(s, "<summary>Open period workflow</summary>", "<summary>Open learning workflow</summary>", 'teacher workflow summary')
 
 p.write_text(s)
 
