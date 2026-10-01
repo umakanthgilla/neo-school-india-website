@@ -1694,7 +1694,7 @@ async function portalExtra(request,env,url,admin,session){
   if(!classroomId||!teacherAccountId)return out({error:'Choose an existing classroom and Teaching Staff member.'},400);
   const classroom=await portalRecord(env,school,'classrooms',classroomId);
   if(!classroom)return out({error:'Classroom not found in this school.'},404);
-  const teacher=await env.DB.prepare('SELECT account_id,name,staff_id,staff_type,active,classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
+  const teacher=await env.DB.prepare('SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
   if(!teacher||!teacher.active||teacher.staff_type!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
   const staff=await portalRecord(env,school,'staff',teacher.staff_id);
   if(!staff||staff.status==='Inactive'||(staff.staff_type||'')!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
