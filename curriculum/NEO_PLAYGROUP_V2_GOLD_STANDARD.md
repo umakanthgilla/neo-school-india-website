@@ -21,7 +21,7 @@ The supplied worksheet examples use a useful implementation chain: objective →
 1. **Play at the centre.** Every day balances child-led/free play, guided play and structured play.
 2. **Outcome first.** Every planned experience maps to an observable developmental outcome.
 3. **One teacher screen, no manual hunting.** A teacher opens one Day Card and sees preparation, materials, sequence, teacher language, prompts, support/challenge, safety, observation cues, resources and parent connection.
-4. **Exactly nine teacher-facing Learning Experiences per day.** The count and order remain stable for teacher consistency; the actual activity/resource inside each experience changes by curriculum day.
+4. **Exactly nine teacher-facing Learning Experiences per day.** The count, names and order remain stable for teacher consistency; the actual activity/resource inside each experience changes by curriculum day.
 5. **Short, age-appropriate periods.** Playgroup experiences are 15–25 minutes in the final three-hour rhythm; no long lecture-style period.
 6. **Simple for the child.** Concrete materials, movement, senses, stories, music, imitation, choice and repetition are preferred over abstract explanation.
 7. **Simple for the parent.** Parent communication uses plain language: what the child explored, why it matters, what can be tried at home and any assigned practice.
@@ -59,7 +59,7 @@ The technical database may still use internal IDs, but the teacher-facing portal
 8. **11:50–12:10 — Create, Practice & Apply**  
    Creative expression, fine motor, worksheet/readiness page, project, portfolio artifact or application task.
 
-9. **12:10–12:30 — Reflect & Goodbye**  
+9. **12:10–12:30 — Reflect, Pack & Goodbye**  
    Recall, child voice, observation/evidence close, home connection, pack-up and safe handover.
 
 Total = 180 minutes.
@@ -214,6 +214,36 @@ Parents should not see curriculum jargon by default. Parent-facing output should
 
 The system must avoid implying mastery from one classroom participation event.
 
+## Final Neo Curriculum Pack pipeline
+
+The long-term Head Office upload should be a single versioned **Neo Curriculum Pack** rather than manually uploading unrelated files one by one.
+
+Recommended package:
+
+```text
+NEO_PLAYGROUP_V2/
+  Curriculum_Master.xlsx
+  Resource_Manifest.xlsx
+  Resources/
+    Worksheets/
+    Readiness/
+    Stories/
+    Flashcards/
+    Images/
+    Audio/
+    Printables/
+    Parent/
+  Teacher_Manual.pdf        (optional generated/reference output)
+```
+
+`Curriculum_Master.xlsx` is the source of truth for Day 1–200 × 9 Learning Experiences. `Resource_Manifest.xlsx` maps every worksheet/story/flashcard/audio/printable to its stable Resource ID, Day, Learning Experience, class/home rule and share status.
+
+Final import pipeline:
+
+**Upload Pack → Validate → Preview → Map Day 1–200 → Validate 9 Experiences/day → Validate Resource IDs/files → Generate Teacher Guides → Generate timetable → Build observation map → Build parent/home-practice mapping → Head Office Review → Publish Version**
+
+PDF can be generated as a Teacher Manual or used as a human-readable reference, but should not be the only source of truth because structured data is required for safe updates, resource replacement, timetable generation and version control.
+
 ## Academic quality gates for production publish
 
 A V2 Playgroup production version should not publish unless:
@@ -247,24 +277,15 @@ From the supplied benchmark materials, Neo adopts the principles of:
 
 Neo improves on the paper/manual model through Day 1–200 calendar mapping, version control, teacher classroom assignment, stable nine-experience timetable generation, exact resource linking, embedded observation, portfolio history and parent-safe digital communication.
 
-## Reference set used for this standard
-
-- User-supplied eKidzee reference: https://www.ekidzee.com/Download/Details
-- Supplied `PG_Time_Table.pdf`
-- Supplied Kidzee Teacher Manuals / Supplements bundle
-- Supplied Playgroup, Nursery, Jr KG and Sr KG observation sheets
-- Supplied worksheet samples including concept and mathematics resources
-- Supplied centre compliance and safety documents
-- NCF-FS 2022: https://www.education.gov.in/sites/upload_files/mhrd/files/NCF_for_Foundational_Stage_20_October_2022.pdf
-
 ## Revised build sequence — complete 200 days
 
 1. Preserve published Playgroup 2026.2 / V1 unchanged.
-2. Convert all 200 V1 core days into the expanded V2 field structure.
-3. Use the final nine Learning Experiences for every Day 1–200.
+2. Keep the final nine Learning Experience names/order fixed.
+3. Convert all 200 V1 core days into the expanded V2 field structure.
 4. Develop the full 200-day content inside those nine experiences; internal QA may happen in batches, but development does not stop at Day 20.
 5. For every day, set the student-resource decision and create/link original Neo resources where required.
 6. Build the Observation Map with repeat opportunities across the 200-day plan.
 7. Add NCF competency references, inclusion, differentiation and safety review.
-8. Generate Teacher Portal Day Cards and optional monthly Teacher Manual exports from the same source data.
-9. Review the complete V2 academically and operationally before publishing as a new version.
+8. Implement Neo Curriculum Pack validation/import.
+9. Generate Teacher Portal Day Cards, timetable, parent/home-practice mapping and optional monthly Teacher Manual exports from the same source data.
+10. Review the complete V2 academically and operationally before publishing as a new version.
