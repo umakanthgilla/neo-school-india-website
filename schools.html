@@ -489,10 +489,31 @@ function renderAccess(area){
     </div><button>Link Staff & activate teacher login</button></form>
     <div id="accessResult" role="status"></div>
    </details>
-   <div class="portal-grid">${accounts.map(a=>`<article class="portal-card"><h3>${esc(a.name)}</h3><p>Staff ID: ${esc(a.staff_id||'Legacy / not linked')}</p><p>Teacher Account: ${esc(a.account_id)}</p><p>${a.active?'Access enabled':'Access disabled'}</p><p>Assigned: ${esc((a.classroom_ids||[]).map(classroomName).join(', ')||'No classroom yet')}</p><button class="secondary" data-disable="${esc(a.account_id)}" ${!a.active?'disabled':''}>${a.active?'Disable access':'Access disabled'}</button></article>`).join('')}</div>`;
+   <div class="portal-grid">${accounts.map(a=>`<article class="portal-card"><h3>${esc(a.name)}</h3><p>Staff ID: ${esc(a.staff_id||'Legacy / not linked')}</p><p>Teacher Account: ${esc(a.account_id)}</p><p>${a.active?'Access enabled':'Access disabled'}</p><p>Assigned: ${esc((a.classroom_ids||[]).map(classroomName).join(', ')||'No classroom yet')}</p><div class="actions"><button type="button" class="secondary" data-assign-classroom="${esc(a.account_id)}" ${!a.active?'disabled':''}>Assign / change classroom</button><button class="secondary" data-disable="${esc(a.account_id)}" ${!a.active?'disabled':''}>${a.active?'Disable access':'Access disabled'}</button></div><div data-assignment-editor></div></article>`).join('')}</div>`;
    const openStaff=area.querySelector('#openStaffMasterFromTeacher');
  const presetStaff=sessionStorage.getItem('neo_teacher_link_staff_id');const staffSelect=area.querySelector('select[name="staff_id"]');if(staffSelect&&presetStaff){staffSelect.value=presetStaff;sessionStorage.removeItem('neo_teacher_link_staff_id');}
    if(openStaff)openStaff.onclick=()=>openPortalTab('staff','teacher_access');
+   area.querySelectorAll('[data-assign-classroom]').forEach(button=>button.onclick=()=>{
+    const account=accounts.find(a=>String(a.account_id)===String(button.dataset.assignClassroom));
+    const card=button.closest('.portal-card'),host=card?.querySelector('[data-assignment-editor]');
+    if(!account||!host)return;
+    if(host.dataset.open==='1'){host.innerHTML='';host.dataset.open='0';button.textContent='Assign / change classroom';return}
+    const rooms=(records.classrooms||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+    if(!rooms.length){portalNotice('Create the classroom / section first.');return}
+    host.dataset.open='1';button.textContent='Close assignment';
+    host.innerHTML=`<div class="portal-editor" style="margin-top:12px"><label>Classroom / section<select data-teacher-room><option value="">Choose classroom…</option>${rooms.map(c=>`<option value="${esc(c.id)}" ${(account.classroom_ids||[]).includes(c.id)?'selected':''}>${esc(c.name+' · '+c.program+' · '+c.academic_year)}</option>`).join('')}</select></label><button type="button" data-save-teacher-room>Save classroom assignment</button><p class="form-note">This links the existing Teacher Account and Staff ID to the selected classroom. It does not create another teacher or reset the password.</p></div>`;
+    host.querySelector('[data-save-teacher-room]').onclick=async e=>{
+     const classroomId=host.querySelector('[data-teacher-room]').value;
+     if(!classroomId){portalNotice('Choose a classroom / section.');return}
+     e.target.disabled=true;
+     try{
+      await call('teacher_assignment','POST',{classroom_id:classroomId,teacher_account_id:account.account_id});
+      await loadRecords();
+      portalNotice('Teacher classroom assignment saved.');
+      renderContent();
+     }catch(error){portalNotice(error.message);e.target.disabled=false}
+    };
+   });
  }else{
    area.innerHTML=`<h3>Parent access</h3><p>Create or reset the parent login for an existing child. Select the existing child; the Admission No. is the shareable reference and no second child record is created.</p><div class="portal-grid">${portalMetricCard('Access accounts',`<strong class="metric">${accounts.length}</strong><p>${activeCount} enabled · ${accounts.length-activeCount} disabled</p>`)}</div><a href="/parents.html" target="_blank" rel="noopener">Open parent sign in ↗</a><details class="portal-editor" open><summary>＋ Create / reset access</summary><form id="accessForm"><div class="fields">${chooseStudent()}<label>Initial / replacement password<input name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password"></label></div><button>Save access</button></form><div id="accessResult" role="status"></div></details><div class="portal-grid">${accounts.map(a=>`<article class="portal-card"><h3>${esc(student(a.student_id)?.name||'Student')}</h3><p>Admission No.: ${esc(student(a.student_id)?.admission_no||a.student_id)} · Account ID: ${esc(a.account_id)}</p><p>${a.active?'Access enabled':'Access disabled'}</p><button class="secondary" data-disable="${esc(a.student_id)}" ${!a.active?'disabled':''}>${a.active?'Disable access':'Access disabled'}</button></article>`).join('')}</div>`;
  }
