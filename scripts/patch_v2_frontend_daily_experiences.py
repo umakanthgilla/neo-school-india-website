@@ -86,6 +86,10 @@ if "dailyExperiences=[];const file=e.target.files[0]" not in s:
         "area.querySelector('#curriculumFile').onchange=async e=>{try{await checkCalendar();dailyExperiences=[];const file=e.target.files[0];",
         'school manual import clears daily experiences')
 
+# Keep the legacy/manual school-side importer aligned with the V2 Head Office capacity.
+s = s.replace("sheetRows:1202", "sheetRows:2202")
+s = s.replace("if(rawRows.length>1200)throw Error('Maximum 1200 lesson rows.');", "if(rawRows.length>2200)throw Error('Maximum 2200 lesson rows.');")
+
 p.write_text(s)
 
 # ---------- Teacher timetable / guide source ----------
