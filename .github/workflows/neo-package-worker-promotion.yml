@@ -1,0 +1,27 @@
+name: Neo Package Worker Promotion
+
+on:
+  push:
+    paths:
+      - '.github/workflows/neo-package-worker-promotion.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Worker zip
+        run: |
+          mkdir -p package
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js package/neo-lead-crm-api-worker-transport-phase1.js
+          cd package
+          zip -q ../NEO_WORKER_CURRICULUM_PROMOTION.zip neo-lead-crm-api-worker-transport-phase1.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NEO_WORKER_CURRICULUM_PROMOTION
+          path: NEO_WORKER_CURRICULUM_PROMOTION.zip
+          if-no-files-found: error
+          retention-days: 7
