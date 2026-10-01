@@ -34,3 +34,5 @@ jobs:
           git add curriculum-master.html learning-admin.js learning-family.js
           git commit -m "Connect V2 daily experiences through curriculum and teacher flow"
           git push
+
+# Trigger revision: 1
