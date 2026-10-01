@@ -74,7 +74,8 @@ function validRecordId(v){return /^[A-Za-z0-9_-]{8,80}$/.test(v);}
 function academicStart(v){const m=String(v||'').match(/20\d{2}/);return m?m[0]:'';}
 function normalizeProgram(v){const map={playgroup:'Playgroup',nursery:'Nursery',lkg:'LKG',ukg:'UKG',daycare:'Daycare'};return map[String(v||'').trim().toLowerCase()]||'';}
 
-const STUDENT_HEADERS=['student_id','name','dob','gender','parent','mobile','email','program','academic_year','classroom','previous_school','previous_city','nursery_status','lkg_status'];
+const STUDENT_HEADERS=['name','dob','gender','parent','mobile','email','program','academic_year','classroom','previous_school','previous_city','nursery_status','lkg_status'];
+const STUDENT_PROGRAM_ORDER=['Playgroup','Nursery','LKG','UKG','Daycare'];
 const STAFF_HEADERS=['staff_id','name','department','role','gender','dob','mobile','email','joining_date','monthly_salary','emergency_mobile','status'];
 const departments=['Teaching','Administration','Accounts','HR','Transport','Inventory / Stores','Maintenance / Housekeeping','Security','Other'];
 const genders=['','Male','Female','Prefer not to say'];
@@ -99,8 +100,6 @@ function validateStudentRows(rows,classrooms,existing){
     if(d.dob&&d.dob>new Date().toISOString().slice(0,10))errors.push('DOB cannot be future');
     if(!d.parent)errors.push('Parent/guardian required');
     if(!validMobile(d.mobile))errors.push('Valid parent mobile required');
-    if(d.student_id&&!validRecordId(d.student_id))errors.push('Student ID must be 8-80 letters/numbers/_/- or leave blank');
-    if(d.student_id&&existing.some(x=>String(x.id)===d.student_id))errors.push('Student ID already exists');
     const duplicateKey=[d.name.toLowerCase(),d.dob,d.mobile.replace(/\D/g,'')].join('|');
     if(seen.has(duplicateKey))errors.push('Duplicate row in file');else seen.add(duplicateKey);
     if(existing.some(x=>String(x.name||'').trim().toLowerCase()===d.name.toLowerCase()&&String(x.dob||'')===d.dob&&String(x.mobile||'').replace(/\D/g,'')===d.mobile.replace(/\D/g,'')))errors.push('Possible existing student duplicate');
@@ -113,7 +112,7 @@ function validateStudentRows(rows,classrooms,existing){
     if(program==='UKG'&&lkg==='Not applicable')errors.push('LKG history required for UKG');
     if([nursery,lkg].some(x=>['Completed','In progress'].includes(x))&&(!d.previous_school||!d.previous_city))errors.push('Previous school and city required');
     const body={name:d.name,dob:d.dob,gender:d.gender||'',email:d.email||'',program,parent:d.parent,mobile:d.mobile,academic_year,previous_school:d.previous_school||'',previous_city:d.previous_city||'',nursery_status:nursery,lkg_status:lkg,classroom_id:classroom?.id||''};
-    return {...row,type:'student',recordId:d.student_id||'',body,errors,status:errors.length?'Invalid':'Ready'};
+    return {...row,type:'student',recordId:'',body,errors,status:errors.length?'Invalid':'Ready'};
   });
 }
 
@@ -142,22 +141,22 @@ function validateStaffRows(rows,existing){
 }
 
 function renderPreview(panel,items){
-  const valid=items.filter(x=>!x.errors.length).length,invalid=items.length-valid;
+  const valid=items.filter(x=>!x.errors.length).length,invalid=items.length-valid,student=items.some(x=>x.type==='student');
   panel.querySelector('[data-bulk-summary]').innerHTML=`<article><small>Total rows</small><strong>${items.length}</strong></article><article><small>Ready</small><strong>${valid}</strong></article><article><small>Needs correction</small><strong>${invalid}</strong></article>`;
-  const tbody=items.slice(0,150).map(x=>`<tr><td>${x.row}</td><td>${esc(x.data.name||'')}</td><td>${esc(x.recordId||'Auto-generate')}</td><td class="${x.errors.length?'neo-bulk-bad':'neo-bulk-ok'}">${x.errors.length?esc(x.errors.join(' · ')):esc(x.status)}</td></tr>`).join('');
-  panel.querySelector('[data-bulk-preview]').innerHTML=`<div class="neo-bulk-table-wrap"><table class="neo-bulk-table"><thead><tr><th>Row</th><th>Name</th><th>Existing ID</th><th>Validation</th></tr></thead><tbody>${tbody}</tbody></table></div>${items.length>150?'<p>Preview shows first 150 rows. All rows are still validated and imported.</p>':''}`;
+  const tbody=items.slice(0,150).map(x=>`<tr><td>${x.row}</td><td>${esc(x.data.name||'')}</td><td>${student?'Auto after import':esc(x.recordId||'Auto-generate')}</td><td class="${x.errors.length?'neo-bulk-bad':'neo-bulk-ok'}">${x.errors.length?esc(x.errors.join(' · ')):esc(x.status)}</td></tr>`).join('');
+  panel.querySelector('[data-bulk-preview]').innerHTML=`<div class="neo-bulk-table-wrap"><table class="neo-bulk-table"><thead><tr><th>Row</th><th>Name</th><th>${student?'Admission No.':'Existing ID'}</th><th>Validation</th></tr></thead><tbody>${tbody}</tbody></table></div>${items.length>150?'<p>Preview shows first 150 rows. All rows are still validated and imported.</p>':''}`;
   const button=panel.querySelector('[data-bulk-import]');button.disabled=!valid;button.textContent='Import '+valid+' validated row'+(valid===1?'':'s');
 }
 
 async function importItems(panel,items,kind){
-  const ready=items.filter(x=>!x.errors.length);if(!ready.length)return;
+  const ready=items.filter(x=>!x.errors.length);if(kind==='students')ready.sort((a,b)=>{const ai=STUDENT_PROGRAM_ORDER.indexOf(a.body.program),bi=STUDENT_PROGRAM_ORDER.indexOf(b.body.program),ap=ai<0?99:ai,bp=bi<0?99:bi;if(ap!==bp)return ap-bp;const ac=String(a.data.classroom||a.data.section||''),bc=String(b.data.classroom||b.data.section||'');return ac.localeCompare(bc,undefined,{numeric:true,sensitivity:'base'})||a.row-b.row});if(!ready.length)return;
   if(!confirm('Import '+ready.length+' validated '+(kind==='students'?'student':'staff / teacher')+' record(s) into '+(currentSchool?.name||'this school')+'? Invalid rows will be skipped.'))return;
   const button=panel.querySelector('[data-bulk-import]'),result=panel.querySelector('[data-bulk-result]');button.disabled=true;result.textContent='Importing…';
   let success=0,failed=0;
   for(const item of ready){
     try{
       const body={...item.body};
-      if(kind==='students'&&!item.recordId)body.request_id=crypto.randomUUID();
+      if(kind==='students')body.request_id=crypto.randomUUID();
       await api(kind==='students'?'students':'staff','POST',body,item.recordId);
       item.status='Imported';success++;
     }catch(error){item.status='Failed';item.errors=[error.message];failed++;}
@@ -190,7 +189,7 @@ async function prepare(panel,kind,file){
 
 function buildPanel(kind){
   const student=kind==='students',panel=document.createElement('details');panel.id='neoBulkUploadPanel';panel.className='neo-bulk-panel';
-  panel.innerHTML=`<summary>⇧ Bulk Upload ${student?'Students':'Teachers / Staff'}</summary><p>${student?'Migrate confirmed students from an existing school database. Classroom, programme and academic year are validated against this school before import.':'Migrate teachers or other employees into HR → Staff Master. Teachers should use Department = Teaching; login/classroom access is linked later from Manage Teachers.'}</p><div class="neo-bulk-note"><b>Excel workflow:</b> Download the template → fill it in Excel → Save As <b>CSV UTF-8 (.csv)</b> → upload here. Existing IDs are preserved when they meet Neo ID rules; leave the ID blank to generate a new one.</div><div class="neo-bulk-actions"><button type="button" class="secondary" data-bulk-template>Download Excel-compatible CSV template</button><label class="neo-bulk-file">Choose CSV <input type="file" accept=".csv,text/csv" data-bulk-file></label><button type="button" data-bulk-import disabled>Import validated rows</button></div><div class="neo-bulk-summary" data-bulk-summary></div><div data-bulk-preview></div><div class="neo-bulk-result" data-bulk-result role="status" aria-live="polite"></div>`;
+  panel.innerHTML=`<summary>⇧ Bulk Upload ${student?'Students':'Teachers / Staff'}</summary><p>${student?'Migrate confirmed students from an existing school database. Classroom, programme and academic year are validated against this school before import.':'Migrate teachers or other employees into HR → Staff Master. Teachers should use Department = Teaching; login/classroom access is linked later from Manage Teachers.'}</p><div class="neo-bulk-note"><b>Excel workflow:</b> ${student?'Download the template → fill student details → upload Excel / CSV. Do not enter a Student ID or Admission No. The system generates both automatically. Valid rows are imported class-wise in the order Playgroup → Nursery → LKG → UKG → Daycare, then receive the next permanent Admission No.':'Download the template → fill it in Excel → upload Excel / CSV. Existing Staff IDs are preserved when valid; leave Staff ID blank to generate a new one.'}</div><div class="neo-bulk-actions"><button type="button" class="secondary" data-bulk-template>Download Excel-compatible CSV template</button><label class="neo-bulk-file">Choose CSV <input type="file" accept=".csv,text/csv" data-bulk-file></label><button type="button" data-bulk-import disabled>Import validated rows</button></div><div class="neo-bulk-summary" data-bulk-summary></div><div data-bulk-preview></div><div class="neo-bulk-result" data-bulk-result role="status" aria-live="polite"></div>`;
   panel.querySelector('[data-bulk-template]').onclick=()=>downloadCsv(student?'neo-student-bulk-template.csv':'neo-teacher-staff-bulk-template.csv',student?STUDENT_HEADERS:STAFF_HEADERS);
   panel.querySelector('[data-bulk-file]').onchange=e=>{const file=e.target.files?.[0];if(file)prepare(panel,kind,file)};
   panel.querySelector('[data-bulk-import]').onclick=()=>importItems(panel,panel._bulkItems||[],kind);
