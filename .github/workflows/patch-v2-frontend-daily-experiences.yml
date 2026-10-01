@@ -19,6 +19,8 @@ jobs:
           fetch-depth: 0
       - name: Apply V2 frontend daily experiences patch
         run: python3 scripts/patch_v2_frontend_daily_experiences.py
+      - name: Refresh V2 asset cache versions
+        run: python3 scripts/patch_v2_cache_bust.py
       - name: Validate JavaScript syntax
         run: |
           node --check learning-admin.js
@@ -31,8 +33,8 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add curriculum-master.html learning-admin.js learning-family.js
-          git commit -m "Connect V2 daily experiences through curriculum and teacher flow"
+          git add curriculum-master.html learning-admin.js learning-family.js schools.html teachers.html
+          git commit -m "Refresh V2 daily experience portal assets"
           git push
 
-# Trigger revision: 1
+# Trigger revision: 2
