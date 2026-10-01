@@ -3,7 +3,8 @@
  if(typeof original!=='function'||window.__neoTeacherGuideV2)return;
  window.__neoTeacherGuideV2=true;
 
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+ const text=(v)=>String(v??'').trim();
 
  const installStyle=()=>{
   if(document.getElementById('neoTeacherGuideV2Style'))return;
@@ -20,6 +21,7 @@
    .neo-guide-card p,.neo-guide-card li{margin:0;color:#51617a;font-size:12px;line-height:1.55;white-space:pre-wrap}
    .neo-guide-card ol{margin:0;padding-left:20px}
    .neo-guide-resource{display:inline-flex;margin-top:7px;padding:8px 11px;border-radius:10px;background:#09265d;color:#fff!important;text-decoration:none;font-weight:800;font-size:11px}
+   .neo-guide-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.neo-guide-tag{display:inline-flex;padding:5px 8px;border-radius:999px;background:#eef5ff;color:#09265d;font-size:10px;font-weight:850}
    .neo-guide-note{font-size:11px;color:#6c7890;line-height:1.45}
    @media(max-width:720px){.neo-guide-grid{grid-template-columns:1fr}}
   `;
@@ -54,14 +56,37 @@
     if(!found)return;
 
     const {lesson}=found;
-    const objective=String(lesson.objective||'').trim();
-    const activity=String(lesson.activity||'').trim();
-    const materials=String(lesson.materials||'').trim();
-    const homework=String(lesson.homework||'').trim();
+    const objective=text(lesson.objective);
+    const activity=text(lesson.activity);
+    const materials=text(lesson.materials);
+    const homework=text(lesson.homework);
     const questions=Array.isArray(lesson.questions)?lesson.questions.filter(Boolean):[];
-    const resourceUrl=String(lesson.resource_url||lesson.worksheet_url||'').trim();
-    const resourceTitle=String(lesson.resource_title||'Open worksheet / resource').trim();
-    const concept=String(lesson.concept||title||'Curriculum lesson').trim();
+    const resourceUrl=text(lesson.resource_url||lesson.worksheet_url);
+    const resourceTitle=text(lesson.resource_title)||'Open worksheet / resource';
+    const resourceType=text(lesson.resource_type);
+    const resourceId=text(lesson.resource_id);
+    const concept=text(lesson.concept)||title||'Curriculum lesson';
+    const why=text(lesson.why_this_matters);
+    const teacherLanguage=text(lesson.teacher_language);
+    const observeFor=text(lesson.observe_for||lesson.teacher_note);
+    const support=text(lesson.support_scaffold);
+    const challenge=text(lesson.challenge_extension);
+    const inclusion=text(lesson.inclusion_note);
+    const safety=text(lesson.safety_supervision);
+    const evidence=text(lesson.portfolio_evidence);
+    const playMode=text(lesson.play_mode);
+    const ncfGoal=text(lesson.ncf_curricular_goal);
+    const ncfCompetency=text(lesson.ncf_competency);
+    const extraCards=[
+      why?`<section class="neo-guide-card"><h4>💡 Why this matters</h4><p>${esc(why)}</p></section>`:'',
+      teacherLanguage?`<section class="neo-guide-card"><h4>🗣️ Teacher language</h4><p>${esc(teacherLanguage)}</p></section>`:'',
+      observeFor?`<section class="neo-guide-card"><h4>👀 Observe for</h4><p>${esc(observeFor)}</p></section>`:'',
+      evidence?`<section class="neo-guide-card"><h4>📸 Evidence / portfolio cue</h4><p>${esc(evidence)}</p></section>`:'',
+      support?`<section class="neo-guide-card"><h4>🤝 Support / scaffold</h4><p>${esc(support)}</p></section>`:'',
+      challenge?`<section class="neo-guide-card"><h4>🚀 Extend / challenge</h4><p>${esc(challenge)}</p></section>`:'',
+      inclusion?`<section class="neo-guide-card"><h4>🌈 Inclusion note</h4><p>${esc(inclusion)}</p></section>`:'',
+      safety?`<section class="neo-guide-card"><h4>🛡️ Safety / supervision</h4><p>${esc(safety)}</p></section>`:''
+    ].filter(Boolean).join('');
 
     const guide=document.createElement('details');
     guide.className='neo-teacher-guide';
@@ -69,16 +94,18 @@
      <summary>📘 Teacher Guide · Day ${esc(lesson.day)} · ${esc(concept)}</summary>
      <div class="neo-guide-body">
       <div class="neo-guide-grid">
-       <section class="neo-guide-card"><h4>🎯 Learning focus</h4><p>${esc(objective||'Use the approved curriculum objective for this lesson.')}</p></section>
+       <section class="neo-guide-card"><h4>🎯 Learning focus</h4><p>${esc(objective||'Use the approved curriculum objective for this lesson.')}</p>${playMode?`<div class="neo-guide-tags"><span class="neo-guide-tag">${esc(playMode)}</span></div>`:''}</section>
        <section class="neo-guide-card"><h4>🧺 Preparation & materials</h4><p>${esc(materials||'No special materials listed for this lesson.')}</p></section>
       </div>
       <section class="neo-guide-card"><h4>🧭 What to do — teaching sequence</h4><p>${esc(activity||'Follow the approved curriculum activity for this lesson.')}</p></section>
+      ${extraCards?`<div class="neo-guide-grid">${extraCards}</div>`:''}
       <div class="neo-guide-grid">
-       <section class="neo-guide-card"><h4>💬 Teacher prompts / approved questions</h4>${questions.length?`<ol>${questions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>`:'<p>No additional prompt is listed yet.</p>'}</section>
+       <section class="neo-guide-card"><h4>💬 Approved prompts / questions</h4>${questions.length?`<ol>${questions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>`:'<p>No additional prompt is listed yet.</p>'}</section>
        <section class="neo-guide-card"><h4>🏠 Home connection</h4><p>${esc(homework||'No home connection is scheduled for this lesson.')}</p></section>
       </div>
-      <section class="neo-guide-card"><h4>📎 Worksheet / resource</h4>${resourceUrl?`<p>A linked curriculum resource is available.</p><a class="neo-guide-resource" href="${esc(resourceUrl)}" target="_blank" rel="noopener">${esc(resourceTitle)}</a>`:'<p>No worksheet/resource is attached yet. Worksheets are optional and should be used only when they strengthen the play-based learning goal.</p>'}</section>
-      <p class="neo-guide-note">This guide brings the approved curriculum into the teacher’s daily workflow. It does not replace professional observation or require a worksheet for every lesson.</p>
+      ${(ncfGoal||ncfCompetency)?`<section class="neo-guide-card"><h4>🧩 Curriculum alignment</h4><p>${ncfGoal?`<strong>Goal:</strong> ${esc(ncfGoal)}`:''}${ncfGoal&&ncfCompetency?'\n':''}${ncfCompetency?`<strong>Competency:</strong> ${esc(ncfCompetency)}`:''}</p></section>`:''}
+      <section class="neo-guide-card"><h4>📎 Worksheet / resource</h4>${resourceUrl?`<p>${resourceType?esc(resourceType)+' · ':''}${resourceId?esc(resourceId)+' · ':''}A linked curriculum resource is ready.</p><a class="neo-guide-resource" href="${esc(resourceUrl)}" target="_blank" rel="noopener">${esc(resourceTitle)}</a>`:'<p>No worksheet/resource is attached yet. Worksheets are optional and should be used only when they strengthen the play-based learning goal.</p>'}</section>
+      <p class="neo-guide-note">Teacher Manual content is delivered here in context, beside the exact period. The monthly printable manual can be generated from the same approved curriculum; teachers do not need to maintain a second version manually.</p>
      </div>`;
 
     const workflow=card.querySelector('.portal-editor');
