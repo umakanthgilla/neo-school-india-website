@@ -21,6 +21,8 @@ jobs:
         run: python3 scripts/patch_v2_frontend_daily_experiences.py
       - name: Add V2 downloadable master template
         run: python3 scripts/patch_v2_master_template.py
+      - name: Enable five Daily Experience prompts
+        run: python3 scripts/patch_v2_five_prompts.py
       - name: Refresh V2 asset cache versions
         run: python3 scripts/patch_v2_cache_bust.py
       - name: Validate JavaScript syntax
@@ -36,7 +38,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add curriculum-master.html learning-admin.js learning-family.js schools.html teachers.html
-          git commit -m "Add Playgroup V2 master import template"
+          git commit -m "Support five V2 Learning Experience prompts"
           for attempt in 1 2 3; do
             if git push; then
               exit 0
@@ -46,4 +48,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 5
+# Trigger revision: 6
