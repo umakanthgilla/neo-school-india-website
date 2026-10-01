@@ -2033,8 +2033,28 @@ function validateLearningPlan(b){
   master_curriculum_id:typeof b.master_curriculum_id==='string'?b.master_curriculum_id:'',
   master_level:typeof b.master_level==='string'?b.master_level:'',
   master_version:typeof b.master_version==='string'?b.master_version:'',
-  master_status:typeof b.master_status==='string'?b.master_status:''
+  master_status:typeof b.master_status==='string'?b.master_status:'',
+  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail)
 };
+}
+function validateDailyRhythm(value,fail){
+ if(value===undefined||value===null||value==='')return [];
+ if(!Array.isArray(value))fail('Daily Rhythm must be a list.');
+ if(value.length>24)fail('Daily Rhythm supports up to 24 blocks.');
+ const allowed=new Set(['Routine','Teaching','Break','Planning']);
+ const rows=value.map((r,i)=>{
+  if(!r||typeof r!=='object')fail('Check Daily Rhythm row '+(i+1)+'.');
+  const start=typeof r.start==='string'?r.start.trim():'';
+  const end=typeof r.end==='string'?r.end.trim():'';
+  const label=typeof r.label==='string'?r.label.trim():(typeof r.learning_block==='string'?r.learning_block.trim():'');
+  const type=typeof r.type==='string'&&r.type.trim()?r.type.trim():'Routine';
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)||start>=end)fail('Check Daily Rhythm start/end times.');
+  if(!label||label.length>120)fail('Each Daily Rhythm block needs a label.');
+  if(!allowed.has(type))fail('Daily Rhythm type must be Routine, Teaching, Break or Planning.');
+  return {id:typeof r.id==='string'&&r.id.trim()?r.id.trim().slice(0,80):'rhythm-'+(i+1),start,end,label,type};
+ });
+ for(let i=0;i<rows.length;i++)for(let j=i+1;j<rows.length;j++)if(rows[i].start<rows[j].end&&rows[j].start<rows[i].end)fail('Daily Rhythm blocks overlap.');
+ return rows;
 }
 function validateMasterCurriculum(b){
  const fail=m=>{throw new TypeError(m)};
@@ -2114,7 +2134,8 @@ function validateMasterCurriculum(b){
   level:b.level.trim(),
   version:b.version.trim(),
   title:b.title.trim(),
-  lessons
+  lessons,
+  daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail)
  };
 }
 
