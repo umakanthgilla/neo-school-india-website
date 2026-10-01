@@ -3,7 +3,7 @@
  if(typeof original!=='function'||window.__neoTeacherGuideV2)return;
  window.__neoTeacherGuideV2=true;
 
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const text=(v)=>String(v??'').trim();
 
  const installStyle=()=>{
@@ -50,12 +50,14 @@
 
     let found=null;
     for(const plan of active){
+     const experience=(Array.isArray(plan.daily_experiences)?plan.daily_experiences:[]).find(x=>plan.working_dates?.[Number(x.day)-1]===date&&String(x.start||'')===start);
+     if(experience){found={plan,lesson:experience,isExperience:true};break;}
      const lesson=(plan.lessons||[]).find(l=>plan.working_dates?.[Number(l.day)-1]===date&&String(l.start||'')===start);
-     if(lesson){found={plan,lesson};break;}
+     if(lesson){found={plan,lesson,isExperience:false};break;}
     }
     if(!found)return;
 
-    const {lesson}=found;
+    const {lesson,isExperience}=found;
     const objective=text(lesson.objective);
     const activity=text(lesson.activity);
     const materials=text(lesson.materials);
@@ -65,7 +67,7 @@
     const resourceTitle=text(lesson.resource_title)||'Open worksheet / resource';
     const resourceType=text(lesson.resource_type);
     const resourceId=text(lesson.resource_id);
-    const concept=text(lesson.concept)||title||'Curriculum lesson';
+    const concept=text(lesson.concept)||text(lesson.experience_name)||title||'Curriculum learning';
     const why=text(lesson.why_this_matters);
     const teacherLanguage=text(lesson.teacher_language);
     const observeFor=text(lesson.observe_for||lesson.teacher_note);
@@ -77,6 +79,8 @@
     const playMode=text(lesson.play_mode);
     const ncfGoal=text(lesson.ncf_curricular_goal);
     const ncfCompetency=text(lesson.ncf_competency);
+    const experienceNo=Number(lesson.experience_no);
+    const experienceName=text(lesson.experience_name);
     const extraCards=[
       why?`<section class="neo-guide-card"><h4>💡 Why this matters</h4><p>${esc(why)}</p></section>`:'',
       teacherLanguage?`<section class="neo-guide-card"><h4>🗣️ Teacher language</h4><p>${esc(teacherLanguage)}</p></section>`:'',
@@ -90,22 +94,28 @@
 
     const guide=document.createElement('details');
     guide.className='neo-teacher-guide';
+    const experienceLabel=isExperience&&Number.isInteger(experienceNo)?` · Experience ${experienceNo}${experienceName?' · '+esc(experienceName):''}`:'';
+    const resourceBody=resourceUrl
+      ?`<p>${resourceType?esc(resourceType)+' · ':''}${resourceId?esc(resourceId)+' · ':''}A linked curriculum resource is ready.</p><a class="neo-guide-resource" href="${esc(resourceUrl)}" target="_blank" rel="noopener">${esc(resourceTitle)}</a>`
+      :(resourceId||resourceType)
+        ?`<p><strong>Planned resource:</strong> ${esc([resourceType,resourceId,resourceTitle].filter(Boolean).join(' · '))}</p><p>The approved file/link has not been attached yet.</p>`
+        :'<p>No separate digital resource is linked to this Learning Experience.</p>';
     guide.innerHTML=`
-     <summary>📘 Teacher Guide · Day ${esc(lesson.day)} · ${esc(concept)}</summary>
+     <summary>📘 Teacher Guide · Day ${esc(lesson.day)}${experienceLabel} · ${esc(concept)}</summary>
      <div class="neo-guide-body">
       <div class="neo-guide-grid">
-       <section class="neo-guide-card"><h4>🎯 Learning focus</h4><p>${esc(objective||'Use the approved curriculum objective for this lesson.')}</p>${playMode?`<div class="neo-guide-tags"><span class="neo-guide-tag">${esc(playMode)}</span></div>`:''}</section>
-       <section class="neo-guide-card"><h4>🧺 Preparation & materials</h4><p>${esc(materials||'No special materials listed for this lesson.')}</p></section>
+       <section class="neo-guide-card"><h4>🎯 Learning focus</h4><p>${esc(objective||'Use the approved curriculum objective for this Learning Experience.')}</p>${playMode?`<div class="neo-guide-tags"><span class="neo-guide-tag">${esc(playMode)}</span></div>`:''}</section>
+       <section class="neo-guide-card"><h4>🧺 Preparation & materials</h4><p>${esc(materials||'No special materials listed for this Learning Experience.')}</p></section>
       </div>
-      <section class="neo-guide-card"><h4>🧭 What to do — teaching sequence</h4><p>${esc(activity||'Follow the approved curriculum activity for this lesson.')}</p></section>
+      <section class="neo-guide-card"><h4>🧭 What to do — teaching sequence</h4><p>${esc(activity||'Follow the approved curriculum activity for this Learning Experience.')}</p></section>
       ${extraCards?`<div class="neo-guide-grid">${extraCards}</div>`:''}
       <div class="neo-guide-grid">
        <section class="neo-guide-card"><h4>💬 Approved prompts / questions</h4>${questions.length?`<ol>${questions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>`:'<p>No additional prompt is listed yet.</p>'}</section>
-       <section class="neo-guide-card"><h4>🏠 Home connection</h4><p>${esc(homework||'No home connection is scheduled for this lesson.')}</p></section>
+       <section class="neo-guide-card"><h4>🏠 Home connection</h4><p>${esc(homework||'No home connection is scheduled for this Learning Experience.')}</p></section>
       </div>
       ${(ncfGoal||ncfCompetency)?`<section class="neo-guide-card"><h4>🧩 Curriculum alignment</h4><p>${ncfGoal?`<strong>Goal:</strong> ${esc(ncfGoal)}`:''}${ncfGoal&&ncfCompetency?'\n':''}${ncfCompetency?`<strong>Competency:</strong> ${esc(ncfCompetency)}`:''}</p></section>`:''}
-      <section class="neo-guide-card"><h4>📎 Worksheet / resource</h4>${resourceUrl?`<p>${resourceType?esc(resourceType)+' · ':''}${resourceId?esc(resourceId)+' · ':''}A linked curriculum resource is ready.</p><a class="neo-guide-resource" href="${esc(resourceUrl)}" target="_blank" rel="noopener">${esc(resourceTitle)}</a>`:'<p>No worksheet/resource is attached yet. Worksheets are optional and should be used only when they strengthen the play-based learning goal.</p>'}</section>
-      <p class="neo-guide-note">Teacher Manual content is delivered here in context, beside the exact period. The monthly printable manual can be generated from the same approved curriculum; teachers do not need to maintain a second version manually.</p>
+      <section class="neo-guide-card"><h4>📎 Worksheet / resource</h4>${resourceBody}</section>
+      <p class="neo-guide-note">Teacher Manual guidance is delivered here beside the exact Learning Experience. A printable monthly manual can be generated from the same approved curriculum; teachers do not maintain a second curriculum copy manually.</p>
      </div>`;
 
     const workflow=card.querySelector('.portal-editor');
