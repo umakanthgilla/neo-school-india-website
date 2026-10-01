@@ -8,41 +8,93 @@ Neo Playgroup V2 must be easier to implement than a traditional preschool manual
 
 External alignment reference: National Curriculum Framework for Foundational Stage (NCF-FS) 2022, Ministry of Education / NCERT.
 
-## Benchmark findings that change the V2 design
+## Benchmark findings used in V2
 
-The supplied Playgroup timetable does not use one identical day structure all week. It shows two weekly timetable profiles: three days without the Readiness Book and two days with the Readiness Book. The listed activity durations vary from 5 to 30 minutes. The Readiness Book is not used in Theme 1, is introduced once a week in Theme 2, and is used twice a week from Theme 3 onward. The same source explicitly says worksheets that cannot be completed as classwork may be sent home as practice sheets.
+The supplied Playgroup timetable uses short activity periods and varies resource use across the week. It shows three days without Readiness Book and two days with Readiness Book. Activity durations range from 5 to 30 minutes. Theme 1 has no Readiness Book, Theme 2 introduces it once a week, and later themes use it more frequently. Suitable worksheets not completed as classwork may be used as home practice.
 
-The supplied Playgroup observation sheet maps developmental goals to specific Week/Day/Session codes, often giving several observation opportunities for the same skill. It is therefore not a model of testing every skill for every child every day.
+The supplied Playgroup observation sheet maps developmental goals to specific Week/Day/Session codes, often with several observation opportunities for the same skill. This supports planned repeat observation rather than testing every skill every day.
 
-The supplied worksheet examples use a strong implementation chain: objective → materials/resources → teacher/parent activity → worksheet instructions → supported child completion. Neo V2 adopts that implementation clarity without copying proprietary wording, layouts or worksheets.
+The supplied worksheet examples use a useful implementation chain: objective → materials/resources → activity guidance → worksheet instructions → supported child completion. Neo V2 adopts this clarity without copying proprietary wording, layouts or worksheets.
 
 ## Non-negotiable design principles
 
-1. **Play at the centre.** Every day balances child-led/free play, guided play and structured play. Worksheets are important planned resources where appropriate, but they are not the curriculum by themselves.
-2. **Outcome first.** Every planned experience maps to an observable developmental outcome. Outcomes are developmental trajectories, not pass/fail targets.
-3. **One teacher screen, no manual hunting.** A teacher should be able to open one Day Card and see preparation, materials, steps, teacher language, questions, support/challenge, safety, observation cues, student resources and parent connection.
-4. **Flexible full-day flow.** Neo is not locked to exactly nine blocks. The number, duration and type of blocks may change by level, theme, day profile, child attention span, resource use and pedagogical purpose.
-5. **Short, age-appropriate blocks.** Playgroup blocks should normally stay short and active; 5–30 minute blocks are acceptable where the activity genuinely needs that time.
+1. **Play at the centre.** Every day balances child-led/free play, guided play and structured play.
+2. **Outcome first.** Every planned experience maps to an observable developmental outcome.
+3. **One teacher screen, no manual hunting.** A teacher opens one Day Card and sees preparation, materials, sequence, teacher language, prompts, support/challenge, safety, observation cues, resources and parent connection.
+4. **Exactly nine teacher-facing Learning Experiences per day.** The count and order remain stable for teacher consistency; the actual activity/resource inside each experience changes by curriculum day.
+5. **Short, age-appropriate periods.** Playgroup experiences are 15–25 minutes in the final three-hour rhythm; no long lecture-style period.
 6. **Simple for the child.** Concrete materials, movement, senses, stories, music, imitation, choice and repetition are preferred over abstract explanation.
-7. **Simple for the parent.** Parent communication uses plain language: what the child explored, why it matters, what can be tried at home and any assigned resource/practice.
+7. **Simple for the parent.** Parent communication uses plain language: what the child explored, why it matters, what can be tried at home and any assigned practice.
 8. **Evidence without over-testing.** Observation is embedded in normal play. No marks, ranks or worksheet scores for Playgroup.
-9. **Inclusion by design.** Every core learning experience includes a support path and, where useful, an extension path. Participation can be verbal, gestural, visual, motor or assisted.
-10. **Resource separation with exact linking.** Worksheets, readiness pages, flashcards, story cards, audio, printables, portfolio artifacts and parent cards live in a versioned Resource Library and link to exact Day/Block/Lesson IDs.
+9. **Inclusion by design.** Every core learning experience includes a support path and, where useful, an extension path.
+10. **Resource separation with exact linking.** Worksheets, readiness pages, flashcards, story cards, audio, printables, portfolio artifacts and parent cards live in a versioned Resource Library and link to exact Day / Learning Experience / Lesson IDs.
 11. **Version safety.** Published curriculum is immutable. New academic/government changes create V2/V3 instead of overwriting historical delivery.
-12. **Complete-year standard.** V2 is a full Day 1–200 curriculum. Development may be quality-checked in internal batches, but the production deliverable is the complete 200-day version, not only Day 1–20.
+12. **Complete-year standard.** V2 is a full Day 1–200 curriculum. Internal QA may be done in batches, but production is the complete 200-day version.
 
-## V2 lesson / block record
+## Final Playgroup V2 daily rhythm — 9 Learning Experiences
 
-Every planned teaching block should support these fields.
+The technical database may still use internal IDs, but the teacher-facing portal should prefer **Learning Experience** or the experience name instead of the word “block.”
+
+1. **09:30–09:45 — Welcome & Discovery**  
+   Arrival, settling, free choice, belonging and smooth transition from home to school.
+
+2. **09:45–10:05 — Circle & Communication**  
+   Greeting, social connection, music/rhyme, listening, name response and group communication.
+
+3. **10:05–10:25 — Language & Story**  
+   Vocabulary, picture talk, rhyme, story, sound awareness and expressive/receptive language.
+
+4. **10:25–10:50 — Core IMLS Experience**  
+   Primary theme/concept experience for the day using guided, hands-on and play-based learning.
+
+5. **10:50–11:10 — Movement & Sensory**  
+   Gross motor, sensory exploration, music/movement, outdoor or indoor physical experience.
+
+6. **11:10–11:30 — Snack & Life Skills**  
+   Hygiene, self-help, snack routine, practical life, independence and social habits.
+
+7. **11:30–11:50 — Maths, Thinking & Readiness**  
+   Early numeracy, matching, sorting, patterning, problem-solving and readiness/practice when appropriate.
+
+8. **11:50–12:10 — Create, Practice & Apply**  
+   Creative expression, fine motor, worksheet/readiness page, project, portfolio artifact or application task.
+
+9. **12:10–12:30 — Reflect & Goodbye**  
+   Recall, child voice, observation/evidence close, home connection, pack-up and safe handover.
+
+Total = 180 minutes.
+
+This nine-experience structure is deliberately stable. A day does **not** become ten or twelve teacher-facing periods simply because it contains extra micro-activities. Short sub-activities, story moments, songs, practice, observation, worksheet use or transition cues stay inside the most relevant Learning Experience.
+
+This keeps the teacher workflow predictable without reducing curriculum breadth.
+
+## Why nothing is lost by using nine experiences
+
+The nine experiences cover the major Playgroup needs across the day:
+
+- belonging / free exploration,
+- social communication,
+- language / story / sound,
+- core concept / IMLS,
+- gross motor / sensory / outdoor,
+- life skills / hygiene / snack,
+- numeracy / thinking / readiness,
+- creative / fine motor / worksheet / application,
+- reflection / portfolio / parent connection / safe closure.
+
+Worksheet, homework, observation, story assets and portfolio evidence are **linked layers**, not extra timetable periods. Therefore they do not require a tenth or twelfth Learning Experience.
+
+## V2 lesson / learning-experience record
+
+Every planned Learning Experience should support these fields.
 
 ### Identity and mapping
 - Day 1–200
-- Block ID / Lesson ID
+- Learning Experience number 1–9
+- Experience ID / Lesson ID
 - Level / curriculum version
 - Month / week / local day
-- Day profile
 - Start/end time and duration
-- Block type: Arrival / Circle / Language / Core / Maths-Thinking / Movement / Snack-Life Skills / Creative / Story / Outdoor / Reflection / Resource-Practice / other approved type
 - Neo learning domain
 - Skill / sub-skill
 - NCF curricular goal / competency / learning-outcome reference where appropriate
@@ -88,47 +140,35 @@ Every planned teaching block should support these fields.
 - Assigned home practice / worksheet when planned
 - Due/return rule only when genuinely required
 
-## Dynamic Playgroup day instead of a fixed nine-block rule
-
-The old nine-block rhythm is no longer a locked V2 standard. It remains a useful fallback for the currently published V1 only.
-
-V2 uses a **Dynamic Daily Flow**. A 9:30–12:30 Playgroup day will typically contain roughly 10–12 short blocks, but the exact count is curriculum-driven. A day may use fewer longer blocks or more shorter transitions when appropriate.
-
-The existing Neo Day-1 pilot already demonstrates the preferred direction with twelve blocks across the three-hour session: Arrival & Discovery; Hello Neo Circle; Talk & Language; Core IMLS 1; Move with Neo; Maths & Thinking; Snack & Life Skills; Create/Touch/Make; Core IMLS 2; Story/Picture Talk; Outdoor/Movement; Reflect/Pack/Goodbye.
-
-The scheduler therefore must support day-specific blocks rather than assuming the same nine blocks every working day.
-
 ## Worksheet / readiness / homework policy
 
-Neo V2 does **not** adopt a blanket rule of either “worksheet every day” or “no worksheet every day.” The resource decision is made from the learning purpose.
+Neo V2 does **not** use a blanket rule of “worksheet every day” or “no worksheet every day.” Every Day 1–200 receives an intentional student-resource decision.
 
-For Playgroup, the supplied benchmark gives a useful minimum reference pattern:
-- settling theme: no Readiness Book pages;
-- next theme: approximately once a week;
-- later themes: approximately twice a week;
-- unfinished suitable worksheets may become home practice.
+That decision may be:
+- worksheet,
+- readiness/practice page,
+- creative artifact,
+- manipulative task,
+- story response,
+- portfolio evidence,
+- home-practice activity,
+- or explicitly “no paper asset” where play/observation is the stronger method.
 
-Neo V2 will use this as a benchmark, not a ceiling. The stronger Neo rule is:
+Every resource is tagged as **Classwork / Home practice / Either**.
 
-**Every Day 1–200 must have an intentional student-resource decision.**
-
-That decision may be a worksheet, readiness/practice page, creative artifact, manipulative task, story response, portfolio evidence or explicitly “no paper asset” where play/observation is the stronger method.
-
-Every day can still have a simple parent home connection. Formal take-home worksheet/homework is assigned when it strengthens the learning goal, not just to create volume.
-
-Older levels (Nursery/LKG/UKG) may appropriately carry a higher worksheet/practice frequency after their benchmark materials are mapped; Playgroup should remain developmentally appropriate.
+Every day may still have a simple parent home connection. Formal take-home worksheet/homework is assigned when it strengthens the learning goal, not merely to create volume.
 
 ## Observation model
 
-Observation must be planned across the year rather than added as a generic checkbox after teaching.
+Observation is planned across the year rather than added as a generic checkbox after teaching.
 
-For each developmental goal, V2 should identify multiple planned observation opportunities across different days/contexts where useful. A teacher sees only a small number of priority observation cues during one block, so observation remains practical while teaching.
+For each developmental goal, V2 identifies multiple planned observation opportunities across different days/contexts where useful. A teacher sees only a small number of priority observation cues during one Learning Experience.
 
 Recommended chain:
 
-**Domain → Skill → Observable Outcome → Planned Day/Block → Repeat Opportunity → Teacher Observation → Evidence → Portfolio → Parent-safe summary → My Neo Journey**
+**Domain → Skill → Observable Outcome → Planned Day/Experience → Repeat Opportunity → Teacher Observation → Evidence → Portfolio → Parent-safe summary → My Neo Journey**
 
-The system should avoid asking a teacher to assess every child against every competency every day.
+The system must not ask a teacher to assess every child against every competency every day.
 
 ## Resource Library standard
 
@@ -142,22 +182,23 @@ Recommended pattern:
 
 Examples of TYPE: `WS` worksheet, `RP` readiness/practice, `FC` flashcard, `SC` story card, `AU` audio, `PR` printable, `PC` parent card, `AC` activity card, `ART` portfolio artifact.
 
-A resource record stores: Resource ID, level, version, day, block/lesson ID, type, title, objective, materials, teacher use, classwork/home-practice rule, parent use, file/URL, share permission, status and revision note.
+A resource record stores: Resource ID, level, version, day, Learning Experience / lesson ID, type, title, objective, materials, teacher use, classwork/home-practice rule, parent use, file/URL, share permission, status and revision note.
 
 ## Teacher implementation standard
 
 A new teacher should be able to conduct the day without opening multiple manuals. The teacher experience should prioritize:
 
-- Today’s dynamic blocks in correct order
-- Duration and transition at a glance
-- Preparation/materials before class
-- One-tap detailed teaching sequence
-- Teacher language and prompts
-- Worksheet/readiness/resource beside the exact block
-- Priority observe-for cues beside the activity
-- ACCESS / CORE / EXTEND or equivalent support paths where appropriate
-- Simple completion/partial/follow-up status
-- Parent sharing controlled separately from teacher notes
+- the same nine Learning Experiences in order every day,
+- today’s specific activity/resource inside each experience,
+- duration and transition at a glance,
+- preparation/materials before class,
+- one-tap detailed teaching sequence,
+- teacher language and prompts,
+- worksheet/readiness/resource beside the exact experience,
+- priority observe-for cues beside the activity,
+- support / core / extension guidance where appropriate,
+- simple completion/partial/follow-up status,
+- parent sharing controlled separately from teacher notes.
 
 A monthly printable Teacher Manual may still be generated from the same structured data, but the portal Day Card is the operational source for teachers.
 
@@ -177,23 +218,22 @@ The system must avoid implying mastery from one classroom participation event.
 
 A V2 Playgroup production version should not publish unless:
 
-- All 200 curriculum days are covered.
-- Every day has a complete dynamic daily flow with no time overlap.
-- Every meaningful teaching block has objective, activity/sequence, materials and teacher guidance.
-- Every day has an explicit student-resource decision.
-- Every assigned worksheet/readiness/home-practice item has a valid stable Resource ID and approved file/reference.
-- Observation goals are mapped to planned session opportunities and important skills have repeat opportunities where appropriate.
-- Teacher language or modelling guidance is present for all core learning experiences.
-- Safety-sensitive activities contain a supervision/safety note.
-- Resource links do not use third-party copyrighted worksheets unless licensed/authorized.
+- all 200 curriculum days are covered,
+- every day contains exactly the nine final Learning Experiences with no time overlap,
+- every meaningful teaching experience has objective, activity/sequence, materials and teacher guidance,
+- every day has an explicit student-resource decision,
+- every assigned worksheet/readiness/home-practice item has a valid stable Resource ID and approved file/reference,
+- observation goals are mapped to planned session opportunities and important skills have repeat opportunities where appropriate,
+- teacher language or modelling guidance is present for all core learning experiences,
+- safety-sensitive activities contain a supervision/safety note,
+- resource links do not use third-party copyrighted worksheets unless licensed/authorized,
 - Head Office academic review is complete.
 
 ## Reference strengths incorporated without copying
 
 From the supplied benchmark materials, Neo adopts the principles of:
 
-- variable timetable profiles instead of a single rigid week,
-- age-appropriate short activity durations,
+- short age-appropriate activity periods,
 - explicit objectives,
 - materials lists,
 - sequenced teacher instructions,
@@ -205,7 +245,7 @@ From the supplied benchmark materials, Neo adopts the principles of:
 - parent connection,
 - safety and centre-operating discipline.
 
-Neo improves on the paper/manual model through Day 1–200 calendar mapping, version control, teacher classroom assignment, dynamic timetable generation, exact resource linking, embedded observation, portfolio history and parent-safe digital communication.
+Neo improves on the paper/manual model through Day 1–200 calendar mapping, version control, teacher classroom assignment, stable nine-experience timetable generation, exact resource linking, embedded observation, portfolio history and parent-safe digital communication.
 
 ## Reference set used for this standard
 
@@ -221,8 +261,8 @@ Neo improves on the paper/manual model through Day 1–200 calendar mapping, ver
 
 1. Preserve published Playgroup 2026.2 / V1 unchanged.
 2. Convert all 200 V1 core days into the expanded V2 field structure.
-3. Replace the fixed 9-block planning assumption with a Day 1–200 Dynamic Daily Flow.
-4. Develop the full 200-day block plan; internal QA may happen in batches, but development does not stop at Day 20.
+3. Use the final nine Learning Experiences for every Day 1–200.
+4. Develop the full 200-day content inside those nine experiences; internal QA may happen in batches, but development does not stop at Day 20.
 5. For every day, set the student-resource decision and create/link original Neo resources where required.
 6. Build the Observation Map with repeat opportunities across the 200-day plan.
 7. Add NCF competency references, inclusion, differentiation and safety review.
