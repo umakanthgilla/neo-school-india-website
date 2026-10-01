@@ -1,0 +1,36 @@
+name: Patch V2 Frontend Daily Experiences
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/patch-v2-frontend-daily-experiences.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply V2 frontend daily experiences patch
+        run: python3 scripts/patch_v2_frontend_daily_experiences.py
+      - name: Validate JavaScript syntax
+        run: |
+          node --check learning-admin.js
+          node --check learning-family.js
+      - name: Commit frontend patch
+        run: |
+          if git diff --quiet; then
+            echo "No frontend changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add curriculum-master.html learning-admin.js learning-family.js
+          git commit -m "Connect V2 daily experiences through curriculum and teacher flow"
+          git push
