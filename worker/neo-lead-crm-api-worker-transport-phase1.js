@@ -2223,7 +2223,11 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
 
  if(!row)return out({error:'Master curriculum not found.'},404);
 
- if(row.status==='Published'||row.status==='TestPublished')
+ if(row.status==='Published')
+  return out({success:true,status:row.status});
+
+ // Repeated test publish is idempotent. A complete TestPublished version may be promoted.
+ if(row.status==='TestPublished'&&b.test_mode===true)
   return out({success:true,status:row.status});
 
  const checked=validateMasterCurriculum(JSON.parse(row.data));
@@ -2240,7 +2244,7 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
  const status=testMode?'TestPublished':'Published';
 
  const saved=await env.DB.prepare(
-  "UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status='Draft'"
+  "UPDATE neo_master_curricula SET status=?,published_at=CURRENT_TIMESTAMP WHERE id=? AND status IN ('Draft','TestPublished')"
  ).bind(status,row.id).run();
 
  if(Number(saved.meta?.changes??saved.changes??0)!==1)
