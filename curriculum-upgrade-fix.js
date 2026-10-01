@@ -4,7 +4,7 @@
 if(window.neoCurriculumUpgradeFix)return;
 window.neoCurriculumUpgradeFix=true;
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
 const API='https://neo-lead-crm-api.umakanthgilla.workers.dev/api/learning/';
 
 async function enhance(area,ctx){
@@ -21,13 +21,31 @@ async function enhance(area,ctx){
     const body=await r.json();
     const plans=Array.isArray(body.plans)?body.plans:[];
     const same=(a,b)=>a.classroom_id===b.classroom_id&&String(a.academic_year||'')===String(b.academic_year||'');
-    const pending=plans.filter(p=>p.status==='Draft'&&plans.some(x=>same(x,p)&&x.status==='Approved'));
+    const dayCount=p=>new Set((p.lessons||[]).map(l=>Number(l.day)).filter(Boolean)).size;
+    const timeOf=p=>{const n=Date.parse(p.updated_at||'');return Number.isFinite(n)?n:0};
+
+    /*
+      Legacy Day-1 test drafts created before the production master was activated
+      must not remain as a clickable "pending update". Keep the record in storage,
+      but hide it when a newer complete Approved plan is already active.
+    */
+    const pending=plans.filter(p=>{
+      if(p.status!=='Draft')return false;
+      const approved=plans.find(x=>same(x,p)&&x.status==='Approved');
+      if(!approved)return false;
+      const legacyNoMaster=!p.master_curriculum_id&&!p.master_version;
+      const approvedIsComplete=dayCount(approved)>=200;
+      const approvedIsNewer=timeOf(approved)>=timeOf(p);
+      if(legacyNoMaster&&approvedIsComplete&&approvedIsNewer)return false;
+      return true;
+    });
+
     grid.querySelectorAll('.neo-curriculum-upgrade-card').forEach(x=>x.remove());
     if(!pending.length)return;
 
     for(const p of pending){
       const classroom=ctx.classrooms?.find(c=>c.id===p.classroom_id)?.name||p.classroom_id||'Section';
-      const days=new Set((p.lessons||[]).map(l=>Number(l.day)).filter(Boolean)).size;
+      const days=dayCount(p);
       const card=document.createElement('article');
       card.className='portal-card neo-curriculum-upgrade-card';
       card.style.border='2px solid #1ca9e8';
