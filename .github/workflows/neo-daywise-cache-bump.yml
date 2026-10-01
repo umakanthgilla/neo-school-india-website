@@ -1,0 +1,36 @@
+name: Neo Daywise Cache Bump
+
+on:
+  push:
+    paths:
+      - '.github/workflows/neo-daywise-cache-bump.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cache-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump day-wise curriculum scripts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          changes={
+            'schools.html':('/timetable-full-day.js?v=20260917-fullday1','/timetable-full-day.js?v=20261001-daywise1'),
+            'teachers.html':('/learning-family.js?v=20260917-execution1','/learning-family.js?v=20261001-daywise1')
+          }
+          for name,(old,new) in changes.items():
+              p=Path(name);s=p.read_text(encoding='utf-8')
+              if old not in s: raise SystemExit(f'{name}: cache target not found')
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+      - name: Commit cache bump
+        run: |
+          git config user.name "neo-school-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add schools.html teachers.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Cache-bust day-wise curriculum timetable updates"
+          git push
