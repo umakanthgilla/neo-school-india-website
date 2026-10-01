@@ -1,0 +1,53 @@
+name: Fix Student Stage History
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-student-stage-history.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply student stage history rules
+        run: python3 scripts/fix-student-stage-history.py
+      - name: Validate JavaScript
+        run: |
+          node --check bulk-upload.js
+          node --check bulk-upload-plus.js
+          node --check student-stage-history.js
+          node --check password-access.js
+          node --check worker/neo-lead-crm-api-worker-transport-phase1.js
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add bulk-upload.js bulk-upload-plus.js student-stage-history.js password-access.js schools.html worker/neo-lead-crm-api-worker-transport-phase1.js
+          if git diff --cached --quiet; then
+            echo 'Student stage history rules already applied.'
+          else
+            git commit -m 'Fix student previous-stage admission logic'
+            git push origin HEAD:main
+          fi
+      - name: Prepare latest Worker package
+        run: |
+          mkdir -p package
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js package/
+          cat > package/README.txt <<'EOF'
+          Neo School India latest Worker.
+          Includes student Admission No., visitor cleanup, gate photos, and corrected class-stage admission history rules.
+          Replace code only in the existing Cloudflare Worker neo-lead-crm-api.
+          Do not create a new Worker or D1 database.
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NEO_LATEST_WORKER_STAGE_HISTORY
+          path: package/
+          retention-days: 1
