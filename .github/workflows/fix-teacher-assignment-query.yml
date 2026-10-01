@@ -1,0 +1,50 @@
+name: Fix Teacher Assignment Query
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-teacher-assignment-query.yml'
+      - 'scripts/fix-teacher-assignment-query.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch Worker query
+        run: python3 scripts/fix-teacher-assignment-query.py
+
+      - name: Validate Worker JavaScript
+        run: node --check worker/neo-lead-crm-api-worker-transport-phase1.js
+
+      - name: Commit Worker fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add worker/neo-lead-crm-api-worker-transport-phase1.js
+          if git diff --cached --quiet; then
+            echo 'Teacher assignment query fix already applied.'
+          else
+            git commit -m 'Fix teacher classroom assignment query'
+            git push origin HEAD:main
+          fi
+
+      - name: Prepare Worker package
+        run: |
+          mkdir -p package
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js package/worker.js
+          cd package
+          zip -9 ../NEO_WORKER_TEACHER_ASSIGNMENT_FIX.zip worker.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NEO_WORKER_TEACHER_ASSIGNMENT_FIX
+          path: NEO_WORKER_TEACHER_ASSIGNMENT_FIX.zip
+          retention-days: 1
