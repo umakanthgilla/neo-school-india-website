@@ -32,6 +32,8 @@ jobs:
           node --check family-portal.js
           node --check parent-pickup-approval.js
           node --check transport-portal.js
+          node --check school-portal.js
+          node --check people-documents.js
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -42,6 +44,18 @@ jobs:
           Path('/tmp/curriculum-master-inline.js').write_text('\n'.join(scripts))
           PY
           node --check /tmp/curriculum-master-inline.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('schools.html').read_text()
+          scripts=[m.group(1) for m in re.finditer(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,flags=re.S|re.I)]
+          if not scripts:
+              raise SystemExit('No inline school portal scripts found')
+          for i,script in enumerate(scripts):
+              Path(f'/tmp/schools-inline-{i}.js').write_text(script)
+          print(len(scripts))
+          PY
+          for file in /tmp/schools-inline-*.js; do node --check "$file"; done
       - name: Commit frontend patch
         run: |
           if git diff --quiet; then
@@ -61,4 +75,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 20
+# Trigger revision: 21
