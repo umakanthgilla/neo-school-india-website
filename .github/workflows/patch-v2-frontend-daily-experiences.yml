@@ -29,6 +29,7 @@ jobs:
         run: |
           node --check learning-admin.js
           node --check learning-family.js
+          node --check family-portal.js
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -58,4 +59,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 16
+# Trigger revision: 17
