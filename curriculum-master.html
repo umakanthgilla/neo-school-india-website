@@ -185,10 +185,139 @@ async function extendPlaygroupV2Draft(source){
 }
 
 
-function v2DayIssues(day,experiences){
- const defs=[
-  [1,'Welcome & Discovery','09:30','09:45'],[2,'Circle & Communication','09:45','10:05'],[3,'Language & Story','10:05','10:25'],[4,'Core IMLS Experience','10:25','10:50'],[5,'Movement & Sensory','10:50','11:10'],[6,'Snack & Life Skills','11:10','11:30'],[7,'Maths, Thinking & Readiness','11:30','11:50'],[8,'Create, Practice & Apply','11:50','12:10'],[9,'Reflect, Pack & Goodbye','12:10','12:30']
- ],rows=(experiences||[]).filter(x=>Number(x.day)===Number(day)),issues=[];
+
+const nurseryV2Defs=[
+ [1,'Welcome, Choice & Conversation','09:30','09:45','Routine'],
+ [2,'Circle, Rhyme & Communication','09:45','10:05','Teaching'],
+ [3,'Language & Early Literacy','10:05','10:25','Teaching'],
+ [4,'Core IMLS Experience','10:25','10:50','Teaching'],
+ [5,'Movement & Sensory','10:50','11:10','Teaching'],
+ [6,'Snack & Life Skills','11:10','11:30','Break'],
+ [7,'Maths & Thinking','11:30','11:50','Teaching'],
+ [8,'Creative & Pre-Writing','11:50','12:10','Teaching'],
+ [9,'Reflect, Pack & Goodbye','12:10','12:30','Routine']
+];
+const v2DefsBySchema={'playgroup-v2':playgroupV2Defs,'nursery-v2':nurseryV2Defs};
+
+const nurseryV2Weeks=[
+ ['Me & My School',['My name and identity','Classroom spaces','Teacher and friends','My belongings','Our classroom routines']],
+ ['My Body',['Major body parts','My face','Hands and fingers','How my body moves','Caring for my body']],
+ ['My Five Senses',['I can see','I can hear','I can smell','I can taste','I can touch and feel']],
+ ['Feelings & Self-Regulation',['Happy and sad','Angry and calm','Worried and safe','Excited and waiting','Kindness and empathy']],
+ ['My Family',['Family members','Home routines','Helping at home','How families can be alike or different','Caring for one another']],
+ ['Colours Around Me',['Red','Yellow','Blue','Green','Choosing and combining colours']],
+ ['Shapes Around Me',['Circle','Square','Triangle','Rectangle','Shape hunt and matching']],
+ ['Compare & Describe',['Big and small','Long and short','Tall and short','Heavy and light through handling','More and less']],
+ ['Numbers 1–3',['One','Two','Three','Match numerals and small quantities','Compare groups to three']],
+ ['Numbers 4–5',['Four','Five','Count 1–5','One-to-one matching to five','Make and compare groups to five']],
+ ['Patterns',['AB object patterns','Movement patterns','Colour patterns','Sound patterns','Create my own simple pattern']],
+ ['Position & Space',['In and out','On and under','Near and far','Up and down','Beside and between through play']],
+ ['Sorting & Classifying',['Sort by colour','Sort by shape','Sort by size','Sort by use or category','Sort using two visible features']],
+ ['Pre-Writing Foundations',['Vertical lines','Horizontal lines','Curved lines','Circular movements','Paths, tracks and zigzags']],
+ ['Listening to Sounds',['Environmental sounds','Loud and soft','Same and different sounds','Listen for beginning sounds','Rhyme awareness through songs']],
+ ['Books & Stories',['How to handle a book','Characters in a story','First and next','Predict what may happen','Retell with pictures and props']],
+ ['Farm & Pet Animals',['Cow','Goat and sheep','Hen and chick','Dog and cat','Caring for domestic animals']],
+ ['Wild Animals',['Lion and tiger','Elephant','Monkey','Deer and zebra','Where wild animals live']],
+ ['Birds',['Parts of a bird','Nests','Beaks and feet','Bird sounds and movement','Watching and caring for birds safely']],
+ ['Small Creatures & Insects',['Butterfly','Ant','Bee','Ladybird and beetles','Observe small creatures safely']],
+ ['Plants Grow',['Seed','Root and stem','Leaves','Flowers','Caring for a class plant']],
+ ['Fruits',['Common fruits','Fruit colours and shapes','Inside and outside a fruit','Taste and texture words','Fruit as a healthy choice']],
+ ['Vegetables',['Common vegetables','Vegetable colours and shapes','Growing above and below the soil','Market pretend play','Vegetables as healthy food']],
+ ['Food & Healthy Habits',['Meals of the day','Drinking water','Everyday and occasional foods','Table manners','Kitchen and food safety']],
+ ['Weather',['Sunny day','Rainy day','Cloudy and windy day','Clothes for weather','Observe and record today’s weather']],
+ ['Water',['Uses of water','Pouring and transferring','Float and sink exploration','Saving water','Water safety']],
+ ['Air & Wind',['Feeling moving air','Things wind can move','Blowing safely','Pinwheels and streamers','Clean air and breathing space']],
+ ['Road Transport',['Car and bus','Bicycle and two-wheelers','Traffic lights','Safe road crossing habits','Public transport manners']],
+ ['Travel by Rail, Water & Air',['Train','Boat','Aeroplane','Compare ways of travelling','Pretend journey and travel story']],
+ ['Community Helpers',['Doctor and nurse','Teacher','Police officer','Firefighter','Sanitation worker and community care']],
+ ['Places Around Us',['School','Hospital or clinic','Market or shop','Park or playground','Post office and community places']],
+ ['Clothes & Independence',['Clothes for different weather','Buttons, zips and fasteners','Sort clothes','Fold and care for clothes','Dress with increasing independence']],
+ ['Homes',['Rooms in a home','Different kinds of homes','Materials used in homes','Animal homes','Keeping home spaces safe and tidy']],
+ ['My Day & Sequence',['Morning','Afternoon','Night','Before and after','Sequence my daily routine']],
+ ['Nature Around Us',['Sun','Moon and night sky','Light and shadow','Leaves, stones and natural collections','Care for nature']],
+ ['Celebrations & Culture',['Greetings and welcome','Music and movement','Decorations and patterns','Sharing food and joy','Respect different family celebrations']],
+ ['Staying Safe',['Safe playground choices','Hot, sharp and breakable things','Known adults who can help','What to do in a simple emergency','Safe travel and school routines']],
+ ['Friendship & Cooperation',['Sharing materials','Taking turns','Asking for help','Solving small disagreements with words','Working together']],
+ ['Apply What I Know',['Colours and shapes challenge','Numbers and patterns challenge','Language and story challenge','World discovery challenge','Motor and life-skills challenge']],
+ ['My Growth & Transition',['Things I can do now','My favourite learning','Independent classroom habits','Friends and memories','Ready for my next learning year']]
+];
+const nurseryDomains=['Language & Communication','Maths & Thinking','World Discovery','Creative & Motor','Life Skills & Social'];
+function nurseryCoreLesson(day){
+ const week=Math.floor((day-1)/5),slot=(day-1)%5,[theme,focuses]=nurseryV2Weeks[week],focus=focuses[slot],subject=nurseryDomains[slot];
+ const objectives=[
+  'Use words, gestures and attentive listening to communicate about '+focus+'.',
+  'Notice, compare, match, count, sort or describe a simple relationship connected to '+focus+'.',
+  'Observe '+focus+' through concrete examples and describe at least one feature, use or relationship.',
+  'Represent or practise '+focus+' through drawing, making, movement or controlled hand use.',
+  'Apply '+focus+' through a practical classroom or social routine with increasing independence.'
+ ];
+ const activities=[
+  'Begin with a real object, picture or short conversation about '+focus+'. Model two or three useful words, invite children to point, name, describe or act, and close with a short rhyme or oral recall.',
+  'Use concrete objects for a hands-on thinking task about '+focus+'. Model one example, then let children match, sort, count, compare or solve a small problem and explain or show their choice.',
+  'Set up a simple discovery invitation for '+focus+'. Encourage looking, touching when safe, noticing similarities/differences, asking questions and connecting the idea to familiar life.',
+  'Explore '+focus+' through an open-ended making or motor task. Demonstrate safe tool/material use, then let children create, trace, build, move or arrange in their own way.',
+  'Turn '+focus+' into a real-life routine or role-play. Practise taking turns, requesting help, caring for materials, making a safe choice or completing a simple self-help sequence.'
+ ];
+ const materials=[
+  'Real object or large picture cards; story/rhyme cue; vocabulary visuals.',
+  'Counters, sorting objects, shape/number cards or other concrete manipulatives linked to the focus.',
+  'Safe real-life objects, photos, nature items or simple observation materials linked to the focus.',
+  'Large crayons/markers, dough, collage or construction materials; child-safe fine-motor tools.',
+  'Visual routine cards and familiar practical-life or role-play materials.'
+ ];
+ const home=[
+  'Talk for two minutes about '+focus+' and invite the child to name, point or describe one familiar example.',
+  'Find or count a few safe examples of '+focus+' at home through play; avoid formal drill.',
+  'Notice one real-life example of '+focus+' together and let the child tell or show what they observe.',
+  'Offer paper, blocks, dough or another simple material to recreate or practise '+focus+' without expecting identical work.',
+  'Let the child practise one safe independent step connected to '+focus+' at home.'
+ ];
+ return {id:'nr-core-d'+String(day).padStart(3,'0'),day,subject,concept:theme+' · '+focus,objective:objectives[slot],activity:activities[slot],materials:materials[slot],homework:home[slot],period:'IMLS Core Experience',start:'10:25',end:'10:50',questions:['What did you notice about '+focus+'?','Can you show or tell me one thing you remember?']};
+}
+function buildNurseryCoreLessons(){return Array.from({length:200},(_,i)=>nurseryCoreLesson(i+1))}
+function nurseryV2SeedExperience(day,def,core){
+ const x=v2SeedExperience(day,def,core),no=Number(x.experience_no),focus=clip(core?.concept||core?.subject||('Day '+day+' focus'),120);
+ x.id='nr-v2-d'+String(day).padStart(3,'0')+'-e'+no;
+ x.classwork_home_either='Class';
+ if(no===1){x.objective='Enter confidently, make a purposeful choice and use a word, phrase, gesture or question to connect with the classroom.';x.activity='Offer two purposeful table or play invitations linked to '+focus+'. Greet each child, invite a choice, encourage a short conversation and observe independence, peer connection and help-seeking.';x.play_mode='Child-led choice and conversation'}
+ if(no===2){x.objective='Join a short circle, follow a rhyme/rhythm and contribute through words, actions or turn-taking.';x.activity='Use greeting, rhyme, rhythm and a brief oral-language exchange connected to '+focus+'. Build listening, turn-taking and expressive confidence without requiring every child to answer in the same way.';x.play_mode='Guided circle and rhyme'}
+ if(no===3){x.objective='Build vocabulary, listening comprehension and early sound/print awareness through meaningful language play.';x.activity='Use a picture, prop, rhyme or short story related to '+focus+'. Invite naming, describing, sequencing, prediction or sound noticing; keep print exposure playful and developmentally appropriate.';x.play_mode='Interactive early-literacy play'}
+ if(no===4)x.safety_supervision=String(x.safety_supervision||'').replace('Playgroup age-safety','Nursery age-safety');
+ if(no===7){x.objective='Use concrete materials to compare, classify, count, match, notice patterns or solve a simple problem connected to '+focus+'.';x.play_mode='Hands-on maths and thinking'}
+ if(no===8){x.objective='Strengthen fine-motor control and early mark-making through an open-ended creative or pre-writing experience connected to '+focus+'.';x.activity='Provide a choice of drawing, dough, collage, threading, tracing-path, construction or mark-making linked to '+focus+'. Demonstrate grip/movement or safe tool use, then allow individual solutions rather than identical products.';x.play_mode='Creative and pre-writing practice'}
+ return x;
+}
+async function startNurseryV2Draft(allRows){
+ try{
+  if((allRows||[]).some(x=>x.curriculum_schema==='nursery-v2'))throw Error('A Nursery V2 version already exists.');
+  const lessons=buildNurseryCoreLessons(),base='2026.1-V2';let version=base,n=2;
+  while((allRows||[]).some(x=>x.level==='Nursery'&&String(x.version)===version))version=(base+'-'+n++).slice(0,40);
+  const daily_experiences=[];
+  for(let day=1;day<=20;day++){const core=lessons[day-1];for(const def of nurseryV2Defs)daily_experiences.push(nurseryV2SeedExperience(day,def,core))}
+  const daily_rhythm=nurseryV2Defs.map(([num,label,start,end,type])=>({id:'nr-v2-rhythm-'+num,start,end,label,type}));
+  await api('master-curricula',{level:'Nursery',version,title:'Nursery V2 Development · 200-Day Progression',curriculum_schema:'nursery-v2',academic_review_status:'Pending',academic_review_notes:'',academic_reviewed_at:'',lessons,daily_rhythm,daily_experiences});
+  message('Nursery V2 draft created: 200 core curriculum days + Day 1–20 expanded to 180/1800 Learning Experiences. Build in controlled 20-day QA batches.','ok');
+  await load();
+ }catch(e){message(e.message,'error')}
+}
+async function extendNurseryV2Draft(source){
+ try{
+  if(!source||source.status!=='Draft'||source.curriculum_schema!=='nursery-v2')throw Error('Choose a Nursery V2 draft.');
+  const lessons=Array.isArray(source.lessons)?source.lessons:[],current=Array.isArray(source.daily_experiences)?source.daily_experiences.slice():[];
+  const completeDays=new Set();
+  for(let day=1;day<=200;day++){const rows=current.filter(x=>Number(x.day)===day),nums=new Set(rows.map(x=>Number(x.experience_no)));if(rows.length===9&&nums.size===9)completeDays.add(day)}
+  let start=1;while(start<=200&&completeDays.has(start))start++;
+  if(start>200){message('All 200 Nursery V2 days are already expanded: 1800/1800 Learning Experiences.','ok');return}
+  const end=Math.min(200,start+19);
+  for(let day=start;day<=end;day++){const core=lessons.find(l=>Number(l.day)===day);if(!core)throw Error('Missing Nursery core curriculum for Day '+day+'.');for(const def of nurseryV2Defs)current.push(nurseryV2SeedExperience(day,def,core))}
+  await api('master-curricula',{id:source.id,level:'Nursery',version:source.version,title:source.title,curriculum_schema:'nursery-v2',academic_review_status:source.academic_review_status||'Pending',academic_review_notes:source.academic_review_notes||'',academic_reviewed_at:source.academic_reviewed_at||'',lessons,daily_rhythm:Array.isArray(source.daily_rhythm)&&source.daily_rhythm.length?source.daily_rhythm:nurseryV2Defs.map(([num,label,start,end,type])=>({id:'nr-v2-rhythm-'+num,start,end,label,type})),daily_experiences:current});
+  message('Nursery V2 batch added: Day '+start+'–'+end+'. Draft now has '+current.length+'/1800 Learning Experiences.','ok');
+  await load();
+ }catch(e){message(e.message,'error')}
+}
+
+function v2DayIssues(day,experiences,schema='playgroup-v2'){
+ const defs=v2DefsBySchema[schema]||playgroupV2Defs,rows=(experiences||[]).filter(x=>Number(x.day)===Number(day)),issues=[];
  if(rows.length!==9)issues.push('expected 9 experiences, found '+rows.length);
  const nums=new Set(rows.map(x=>Number(x.experience_no)));
  if(nums.size!==rows.length)issues.push('duplicate experience number');
@@ -204,8 +333,8 @@ function v2DayIssues(day,experiences){
  return [...new Set(issues)];
 }
 function v2BatchQa(x){
- const experiences=Array.isArray(x?.daily_experiences)?x.daily_experiences:[],expanded=Math.floor(experiences.length/9),days=Math.min(200,expanded),failed=[];
- for(let day=1;day<=days;day++){const issues=v2DayIssues(day,experiences);if(issues.length)failed.push({day,issues})}
+ const experiences=Array.isArray(x?.daily_experiences)?x.daily_experiences:[],expanded=Math.floor(experiences.length/9),days=Math.min(200,expanded),failed=[],schema=x?.curriculum_schema||'playgroup-v2';
+ for(let day=1;day<=days;day++){const issues=v2DayIssues(day,experiences,schema);if(issues.length)failed.push({day,issues})}
  return {days,passed:Math.max(0,days-failed.length),failed};
 }
 
@@ -282,7 +411,7 @@ const V2_VARIANTS={
   8:['open-ended collage or sticking','dough press, roll and form','large-tool mark making','block or loose-part construction','thread, transfer or place-and-press fine-motor task'],
   9:['object-cue recall','two-picture favourite choice','one-sentence or gesture child voice','action recap and pack-up sequence','peer/adult share-back before safe handover']
 };
-function enrichV2Row(row,core){
+function enrichV2Row(row,core,schema='playgroup-v2'){
  const x={...row},day=Number(x.day),no=Number(x.experience_no),focus=clip(core?.concept||core?.subject||x.concept||('Day '+day+' focus'),120),variant=(day-1)%5,map=fixedNcfMap(no,core);
  x.ncf_curricular_goal=map[0];x.ncf_competency=map[1];
  x.classwork_home_either='Classwork';
@@ -305,7 +434,7 @@ function enrichV2Row(row,core){
    ['Portfolio evidence','ART','Construction/application evidence · '+focus],
    ['Guided practice','AC','Fine-motor guided practice · '+focus]
   ],r=choices[variant];
-  x.resource_type=r[0];x.resource_id='PG-V2-D'+String(day).padStart(3,'0')+'-'+r[1]+'01';x.resource_title=r[2];x.resource_url='';
+  const prefix=schema==='nursery-v2'?'NR':'PG';x.resource_type=r[0];x.resource_id=prefix+'-V2-D'+String(day).padStart(3,'0')+'-'+r[1]+'01';x.resource_title=r[2];x.resource_url='';
  }
  if(!Array.isArray(x.questions)||!x.questions.length)x.questions=['What did you notice or enjoy today?'];
  if(x.questions.length===1)x.questions=[x.questions[0],'Can you show or tell me one thing you remember?'];
@@ -314,52 +443,54 @@ function enrichV2Row(row,core){
 }
 async function applyV2AcademicEnrichment(source){
  try{
-  if(!source||source.status!=='Draft'||source.curriculum_schema!=='playgroup-v2')throw Error('Choose the Playgroup V2 draft.');
+  if(!source||source.status!=='Draft'||!['playgroup-v2','nursery-v2'].includes(source.curriculum_schema))throw Error('Choose a V2 curriculum draft.');
   const qa=v2BatchQa(source);if((source.daily_experiences||[]).length!==1800||qa.failed.length)throw Error('Complete 200/200 Structure QA before academic enrichment.');
   const lessons=Array.isArray(source.lessons)?source.lessons:[],byDay=new Map();
   for(const l of lessons){const d=Number(l.day);if(!byDay.has(d))byDay.set(d,[]);byDay.get(d).push(l)}
-  const enriched=(source.daily_experiences||[]).map(x=>{const rows=byDay.get(Number(x.day))||[],core=rows.find(l=>/core|imls/i.test(String(l.period||'')+' '+String(l.subject||'')))||rows[0];return enrichV2Row(x,core)});
-  const payload={id:source.id,level:source.level,version:source.version,title:source.title,curriculum_schema:'playgroup-v2',academic_review_status:'ReadyForReview',academic_review_notes:'NCF-FS mapping, varied teacher implementation strategies and explicit Day 1–200 student-output decisions applied. Head Office academic approval still required.',academic_reviewed_at:'',lessons,daily_rhythm:Array.isArray(source.daily_rhythm)?source.daily_rhythm:[],daily_experiences:enriched};
+  const enriched=(source.daily_experiences||[]).map(x=>{const rows=byDay.get(Number(x.day))||[],core=rows.find(l=>/core|imls/i.test(String(l.period||'')+' '+String(l.subject||'')))||rows[0];return enrichV2Row(x,core,source.curriculum_schema)});
+  const payload={id:source.id,level:source.level,version:source.version,title:source.title,curriculum_schema:source.curriculum_schema,academic_review_status:'ReadyForReview',academic_review_notes:'NCF-FS mapping, varied teacher implementation strategies and explicit Day 1–200 student-output decisions applied. Head Office academic approval still required.',academic_reviewed_at:'',lessons,daily_rhythm:Array.isArray(source.daily_rhythm)?source.daily_rhythm:[],daily_experiences:enriched};
   await api('master-curricula',payload);
-  message('Academic enrichment applied to 1800/1800 Learning Experiences. NCF mapping and Day 1–200 output decisions are ready for final Head Office review.','ok');
+  message(source.level+' V2 academic enrichment applied to 1800/1800 Learning Experiences. NCF mapping and Day 1–200 output decisions are ready for final Head Office review.','ok');
   await load();
  }catch(e){message(e.message,'error')}
 }
 async function approveV2AcademicReview(source){
  try{
-  if(!source||source.status!=='Draft'||source.curriculum_schema!=='playgroup-v2')throw Error('Choose the Playgroup V2 draft.');
+  if(!source||source.status!=='Draft'||!['playgroup-v2','nursery-v2'].includes(source.curriculum_schema))throw Error('Choose a V2 curriculum draft.');
   const audit=v2AcademicAudit(source);if(!audit.ready)throw Error('Academic QA still has gaps: '+audit.issues.join(' | '));
-  const payload={id:source.id,level:source.level,version:source.version,title:source.title,curriculum_schema:'playgroup-v2',academic_review_status:'Approved',academic_review_notes:'Head Office academic review approved after complete Structure QA and automated NCF/resource/evidence checks.',academic_reviewed_at:new Date().toISOString(),lessons:source.lessons||[],daily_rhythm:source.daily_rhythm||[],daily_experiences:source.daily_experiences||[]};
+  const payload={id:source.id,level:source.level,version:source.version,title:source.title,curriculum_schema:source.curriculum_schema,academic_review_status:'Approved',academic_review_notes:'Head Office academic review approved after complete Structure QA and automated NCF/resource/evidence checks.',academic_reviewed_at:new Date().toISOString(),lessons:source.lessons||[],daily_rhythm:source.daily_rhythm||[],daily_experiences:source.daily_experiences||[]};
   await api('master-curricula',payload);
-  message('Head Office Academic QA approved. Production publish is now eligible, but publish remains a separate action.','ok');
+  message(source.level+' Head Office Academic QA approved. Production publish is now eligible, but publish remains a separate action.','ok');
   await load();
  }catch(e){message(e.message,'error')}
 }
 
 function renderVersions(rows){
- const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;
- document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{
-  const days=dayCount(x);
-  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800,qa=x.curriculum_schema==='playgroup-v2'?v2BatchQa(x):null,academic=x.curriculum_schema==='playgroup-v2'&&!v2Incomplete?v2AcademicAudit(x):null,reviewStatus=x.academic_review_status||'Pending';
+ const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size,isV2=x=>['playgroup-v2','nursery-v2'].includes(x.curriculum_schema);
+ const nurseryStarter=!rows.some(x=>x.curriculum_schema==='nursery-v2')?'<article class="version"><div><h3>Nursery · V2</h3><p>New 200-day Nursery progression · 9 Learning Experiences per day · NCF-FS aligned QA pipeline</p></div><div class="actions"><button class="btn primary" data-start-nursery-v2>Start Nursery V2 Draft</button></div></article>':'';
+ const cards=rows.map(x=>{
+  const days=dayCount(x),v2=isV2(x),v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=v2&&v2Count<1800,qa=v2?v2BatchQa(x):null,academic=v2&&!v2Incomplete?v2AcademicAudit(x):null,reviewStatus=x.academic_review_status||'Pending';
   const qaOk=!qa||qa.failed.length===0;
-  const qaBadge=qa?'<span class=\"status\" style=\"margin-right:6px\">'+qa.passed+'/'+qa.days+' Structure QA '+(qaOk?'PASS':'CHECK')+'</span>':'';
-  const academicBadge=academic?'<span class=\"status\" style=\"margin-right:6px\">'+(reviewStatus==='Approved'?'Academic QA APPROVED':academic.ready?'Academic QA READY':'Academic QA · '+academic.issues.length+' gap'+(academic.issues.length===1?'':'s'))+'</span>':'';
+  const qaBadge=qa?'<span class="status" style="margin-right:6px">'+qa.passed+'/'+qa.days+' Structure QA '+(qaOk?'PASS':'CHECK')+'</span>':'';
+  const academicBadge=academic?'<span class="status" style="margin-right:6px">'+(reviewStatus==='Approved'?'Academic QA APPROVED':academic.ready?'Academic QA READY':'Academic QA · '+academic.issues.length+' gap'+(academic.issues.length===1?'':'s'))+'</span>':'';
   let v2Actions='';
-  if(x.status==='Draft'&&x.curriculum_schema==='playgroup-v2'){
-   if(v2Incomplete)v2Actions=qaOk?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" disabled>Resolve Structure QA First</button>';
-   else if(!academic?.ready)v2Actions='<button class=\"btn primary\" data-enrich=\"'+esc(x.id)+'\">Apply Academic Enrichment</button><button class=\"btn\" data-academic=\"'+esc(x.id)+'\">Review Academic Gaps</button><button class=\"btn\" disabled>Publish Locked</button>';
-   else if(reviewStatus!=='Approved')v2Actions='<button class=\"btn\" data-academic=\"'+esc(x.id)+'\">Review Academic QA</button><button class=\"btn primary\" data-approve-academic=\"'+esc(x.id)+'\">Approve Academic QA</button><button class=\"btn\" disabled>Publish Locked</button>';
-   else v2Actions='<button class=\"btn\" data-academic=\"'+esc(x.id)+'\">Review Academic QA</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>';
+  if(x.status==='Draft'&&v2){
+   if(v2Incomplete)v2Actions=qaOk?'<button class="btn primary" data-v2-next="'+esc(x.id)+'">Build Next 20 Days</button>':'<button class="btn" disabled>Resolve Structure QA First</button>';
+   else if(!academic?.ready)v2Actions='<button class="btn primary" data-enrich="'+esc(x.id)+'">Apply Academic Enrichment</button><button class="btn" data-academic="'+esc(x.id)+'">Review Academic Gaps</button><button class="btn" disabled>Publish Locked</button>';
+   else if(reviewStatus!=='Approved')v2Actions='<button class="btn" data-academic="'+esc(x.id)+'">Review Academic QA</button><button class="btn primary" data-approve-academic="'+esc(x.id)+'">Approve Academic QA</button><button class="btn" disabled>Publish Locked</button>';
+   else v2Actions='<button class="btn" data-academic="'+esc(x.id)+'">Review Academic QA</button><button class="btn primary" data-publish="'+esc(x.id)+'">Publish 200 Days</button>';
   }
-  const draft=x.status==='Draft'?qaBadge+academicBadge+'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(x.curriculum_schema==='playgroup-v2'?v2Actions:'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
+  const draft=x.status==='Draft'?qaBadge+academicBadge+'<button class="btn" data-edit="'+esc(x.id)+'">Edit</button>'+(v2?v2Actions:'<button class="btn" data-test="'+esc(x.id)+'">Publish Test</button><button class="btn primary" data-publish="'+esc(x.id)+'">Publish 200 Days</button>'):'';
   const derivedV2=rows.find(y=>y.level==='Playgroup'&&y.curriculum_schema==='playgroup-v2'&&(String(y.version||'')===String(x.version||'')+'-V2'||String(y.title||'').includes('· '+String(x.version||''))));
-  const hasDerivedV2=!!derivedV2;
-  const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'&&!hasDerivedV2?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
-  const promote=x.status==='TestPublished'&&days===200?'<button class=\"btn primary\" data-promote=\"'+esc(x.id)+'\">Promote to Production</button>':'';
-  const schema=x.curriculum_schema==='playgroup-v2'?' · <b>Playgroup V2</b> · '+((x.daily_experiences||[]).length)+'/1800 experiences':'';return '<article class=\"version\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days'+schema+'</p></div><div class=\"actions\">'+migrate+draft+promote+'</div></article>';
- }).join(''):'<p class=\"msg\">No master curriculum versions saved yet.</p>';
+  const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'&&!derivedV2?'<button class="btn" data-start-v2="'+esc(x.id)+'">Start V2 Draft</button>':'';
+  const promote=x.status==='TestPublished'&&days===200?'<button class="btn primary" data-promote="'+esc(x.id)+'">Promote to Production</button>':'';
+  const schema=v2?' · <b>'+esc(x.level)+' V2</b> · '+v2Count+'/1800 experiences':'';
+  return '<article class="version"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days'+schema+'</p></div><div class="actions">'+migrate+draft+promote+'</div></article>';
+ }).join('');
+ document.querySelector('#versions').innerHTML=nurseryStarter+cards||(nurseryStarter||'<p class="msg">No master curriculum versions saved yet.</p>');
+ document.querySelectorAll('[data-start-nursery-v2]').forEach(b=>b.onclick=()=>startNurseryV2Draft(rows));
  document.querySelectorAll('[data-start-v2]').forEach(b=>b.onclick=()=>startPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.startV2),rows));
- document.querySelectorAll('[data-v2-next]').forEach(b=>b.onclick=()=>extendPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.v2Next)));
+ document.querySelectorAll('[data-v2-next]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.v2Next);return x?.curriculum_schema==='nursery-v2'?extendNurseryV2Draft(x):extendPlaygroupV2Draft(x)});
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.edit);editing=x.id;editingAcademicReviewStatus=x.academic_review_status||'Pending';editingAcademicReviewNotes=x.academic_review_notes||'';editingAcademicReviewedAt=x.academic_reviewed_at||'';lessons=x.lessons||[];dailyRhythm=Array.isArray(x.daily_rhythm)?x.daily_rhythm:[];dailyExperiences=Array.isArray(x.daily_experiences)?x.daily_experiences:[];document.querySelector('#level').value=x.level;document.querySelector('#version').value=x.version;document.querySelector('#title').value=x.title;inspectLessons();message('Editing saved draft. Upload a replacement Excel only if content changed.','ok')});
  document.querySelectorAll('[data-enrich]').forEach(b=>b.onclick=()=>applyV2AcademicEnrichment(rows.find(r=>r.id===b.dataset.enrich)));
  document.querySelectorAll('[data-academic]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.academic),a=v2AcademicAudit(x),w=a.warnings.length?' Warnings: '+a.warnings.join(' | '):'';message(a.ready?'Academic QA READY: NCF '+a.ncfGoals+'/1800 · output decisions '+a.outputDecisions+'/200 · prompts/evidence complete.'+w:'Academic QA gaps: '+a.issues.join(' | ')+w,a.ready?'ok':'error')});
@@ -368,9 +499,10 @@ function renderVersions(rows){
  document.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>publish(b.dataset.publish,false));
  document.querySelectorAll('[data-promote]').forEach(b=>b.onclick=()=>publish(b.dataset.promote,false));
 }
+
 async function load(){if(!token){message('Head Office sign-in required. Open Head Office, sign in, then return here.','error');renderLevels();document.querySelector('#versions').innerHTML='<p class="msg">Waiting for Head Office sign-in.</p>';return}try{const d=await api('master-curricula');const all=d.curricula||[];renderLevels(all);renderVersions(all.filter(x=>x.status==='Draft'||x.status==='Published'||x.status==='TestPublished'))}catch(e){message(e.message,'error');renderLevels();document.querySelector('#versions').innerHTML='<p class="msg">'+esc(e.message)+'</p>'}}
 document.querySelector('#file').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>8000000)throw Error('File is too large.');const XLSX=await workbook();const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true,sheetRows:2202});const sheet=wb.Sheets[wb.SheetNames[0]];if(Object.values(sheet).some(c=>c&&c.f))throw Error('Replace Excel formulas with values before uploading.');const raw=XLSX.utils.sheet_to_json(sheet,{defval:''});if(!raw.length||raw.length>2200)throw Error('Excel must contain 1–2200 Learning Experience rows.');const rows=raw.map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim().toLowerCase(),v])));lessons=rows.map((r,i)=>({id:String(r.id||'lesson-'+(i+1)),day:Number(r.day),subject:String(r.subject||'').trim(),concept:String(r.concept||'').trim(),objective:String(r.objective||'').trim(),activity:String(r.activity||'').trim(),materials:String(r.materials||'').trim(),homework:String(r.homework||'').trim(),period:String(r.period||'').trim(),start:String(r.start||'').trim(),end:String(r.end||'').trim(),questions:[r.question_1,r.question_2,r.question_3].map(q=>String(q||'').trim()).filter(Boolean)}));const rhythmName=wb.SheetNames.find(n=>String(n).trim().toLowerCase()==='daily rhythm');dailyRhythm=[];if(rhythmName){const rhythmSheet=wb.Sheets[rhythmName];if(Object.values(rhythmSheet).some(c=>c&&c.f))throw Error('Replace Daily Rhythm formulas with values before uploading.');const rr=XLSX.utils.sheet_to_json(rhythmSheet,{defval:''}).map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim().toLowerCase(),v])));dailyRhythm=rr.filter(r=>r.start||r.end||r.learning_block||r.label).map((r,i)=>({id:String(r.id||'rhythm-'+(i+1)),start:excelTime(r.start),end:excelTime(r.end),label:String(r.learning_block||r.label||'').trim(),type:String(r.type||'Routine').trim()}))}const expName=wb.SheetNames.find(n=>['daily experiences','v2 final 9 flow','final 9 flow','production daily experiences'].includes(String(n).trim().toLowerCase()));dailyExperiences=[];if(expName){const expSheet=wb.Sheets[expName];if(Object.values(expSheet).some(c=>c&&c.f))throw Error('Replace Daily Experiences formulas with values before uploading.');const er=XLSX.utils.sheet_to_json(expSheet,{defval:''});if(er.length>1800)throw Error('Daily Experiences supports up to 1800 rows.');const norm=er.map(r=>Object.fromEntries(Object.entries(r).map(([k,v])=>[String(k).trim().toLowerCase(),v])));dailyExperiences=norm.filter(r=>r.day||r.experience_no||r.experience_name).map((r,i)=>({id:String(r.id||r.block_id||r.lesson_id||('experience-'+r.day+'-'+r.experience_no)),day:Number(r.day),experience_no:Number(r.experience_no),experience_name:String(r.experience_name||r.learning_experience||'').trim(),start:excelTime(r.start),end:excelTime(r.end),subject:String(r.subject||r.experience_name||'').trim(),concept:String(r.concept||r.day_concept||r.experience_name||'').trim(),objective:String(r.objective||r.observable_outcome||'').trim(),activity:String(r.activity||r.activity_or_micro_experiences||'').trim(),materials:String(r.materials||'').trim(),teacher_language:String(r.teacher_language||'').trim(),observe_for:String(r.observe_for||r.priority_observation||'').trim(),why_this_matters:String(r.why_this_matters||'').trim(),support_scaffold:String(r.support_scaffold||'').trim(),challenge_extension:String(r.challenge_extension||'').trim(),inclusion_note:String(r.inclusion_note||'').trim(),safety_supervision:String(r.safety_supervision||r.safety_note||'').trim(),portfolio_evidence:String(r.portfolio_evidence||'').trim(),play_mode:String(r.play_mode||'').trim(),resource_id:String(r.resource_id||'').trim(),resource_type:String(r.resource_type||'').trim(),resource_title:String(r.resource_title||r.student_resource_decision||'').trim(),resource_url:String(r.resource_url||'').trim(),classwork_home_either:String(r.classwork_home_either||'').trim(),homework:String(r.homework||r.home_connection||'').trim(),ncf_curricular_goal:String(r.ncf_curricular_goal||r.ncf_alignment_domain||'').trim(),ncf_competency:String(r.ncf_competency||r.ncf_alignment_focus||'').trim(),questions:[r.question_1,r.question_2,r.question_3,r.question_4,r.question_5].map(q=>String(q||'').trim()).filter(Boolean)}))};inspectLessons();message('Excel loaded. '+dailyRhythm.length+' Daily Rhythm block(s) + '+dailyExperiences.length+' Daily Experience(s) loaded. Review the day preview, then Save Draft for server validation.','ok')}catch(err){lessons=[];dailyRhythm=[];dailyExperiences=[];inspectLessons();message(err.message,'error')}};
-document.querySelector('#save').onclick=async()=>{const b=document.querySelector('#save');b.disabled=true;try{if(!token)throw Error('Head Office sign-in required.');if(!lessons.length)throw Error('Upload a master Excel first.');const level=document.querySelector('#level').value,version=document.querySelector('#version').value.trim(),title=document.querySelector('#title').value.trim();const curriculum_schema=level==='Playgroup'?'playgroup-v2':'';const d=await api('master-curricula',{id:editing||undefined,level,version,title,curriculum_schema,academic_review_status:editingAcademicReviewStatus,academic_review_notes:editingAcademicReviewNotes,academic_reviewed_at:editingAcademicReviewedAt,lessons,daily_rhythm:dailyRhythm,daily_experiences:dailyExperiences});editing=d.id;message('Draft saved and validated. '+d.days_covered+' curriculum day(s) covered. Head Office controls publishing; schools only select published versions.','ok');await load()}catch(e){message(e.message,'error')}finally{b.disabled=false}};
+document.querySelector('#save').onclick=async()=>{const b=document.querySelector('#save');b.disabled=true;try{if(!token)throw Error('Head Office sign-in required.');if(!lessons.length)throw Error('Upload a master Excel first.');const level=document.querySelector('#level').value,version=document.querySelector('#version').value.trim(),title=document.querySelector('#title').value.trim();const curriculum_schema=level==='Playgroup'?'playgroup-v2':level==='Nursery'&&dailyExperiences.length?'nursery-v2':'';const d=await api('master-curricula',{id:editing||undefined,level,version,title,curriculum_schema,academic_review_status:editingAcademicReviewStatus,academic_review_notes:editingAcademicReviewNotes,academic_reviewed_at:editingAcademicReviewedAt,lessons,daily_rhythm:dailyRhythm,daily_experiences:dailyExperiences});editing=d.id;message('Draft saved and validated. '+d.days_covered+' curriculum day(s) covered. Head Office controls publishing; schools only select published versions.','ok');await load()}catch(e){message(e.message,'error')}finally{b.disabled=false}};
 async function publish(id,test){if(!confirm(test?'Publish this incomplete curriculum as a controlled TEST version?':'Publish this full 200-day master curriculum to centers?'))return;try{const d=await api('master-curricula/publish',{id,test_mode:test});message(d.status+' successfully.','ok');editing='';lessons=[];dailyRhythm=[];dailyExperiences=[];document.querySelector('#file').value='';document.querySelector('#preview').textContent='No Excel loaded.';document.querySelector('#dayPreview').hidden=true;await load()}catch(e){message(e.message,'error')}}
 renderLevels();load();
 </script></body></html>
