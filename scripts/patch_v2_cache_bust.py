@@ -1,21 +1,29 @@
 from pathlib import Path
+import re
 
 updates = {
-    'schools.html': [('/learning-admin.js?v=20261001-rhythm1','/learning-admin.js?v=20261001-v2exp1')],
-    'teachers.html': [('/learning-family.js?v=20261001-daywise2','/learning-family.js?v=20261001-v2exp1')],
+    'schools.html': ('learning-admin.js', '20261001-rhythm1', '20261001-v2exp1'),
+    'teachers.html': ('learning-family.js', '20261001-daywise2', '20261001-v2exp1'),
 }
 
-for name, pairs in updates.items():
+for name, (asset, old_version, target_version) in updates.items():
     p = Path(name)
     s = p.read_text()
-    changed = False
-    for old, new in pairs:
-        if new in s:
-            continue
-        if old not in s:
-            raise SystemExit(f'{name}: missing cache target {old}')
-        s = s.replace(old, new, 1)
-        changed = True
-    if changed:
-        p.write_text(s)
+    old = f'/{asset}?v={old_version}'
+    new = f'/{asset}?v={target_version}'
+
+    if new in s:
+        print(f'{name}: cache target already applied.')
+        continue
+
+    if old in s:
+        p.write_text(s.replace(old, new, 1))
         print(f'Updated {name}')
+        continue
+
+    match = re.search(r'/' + re.escape(asset) + r'\?v=([^"\']+)', s)
+    if match:
+        print(f'{name}: keeping existing newer/different cache version {match.group(1)}.')
+        continue
+
+    raise SystemExit(f'{name}: missing {asset} script reference')
