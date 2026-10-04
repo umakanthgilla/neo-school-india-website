@@ -55,8 +55,8 @@ jobs:
           - V2 production structure: Day 1–200, exactly 9 teacher-facing Learning Experiences per day.
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
-          - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp3.
+          - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.\n          - Playgroup V2 production publish is additionally locked until Head Office Academic QA is Approved.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp4.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -70,7 +70,7 @@ jobs:
           9. 12:10–12:30 — Reflect, Pack & Goodbye
 
           CURRENT NEXT STEP
-          Continue actual Playgroup V2 Day 1–200 curriculum content filling and validation using this exact source state.
+          Apply the V2 Academic Enrichment flow, review NCF/resource/evidence checks, approve Academic QA at Head Office, then publish only after approval.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -85,7 +85,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp3
+             build: 2026-10-04-v2exp4
           EOF
 
       - name: Upload continuation pack
@@ -96,4 +96,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 2
+# Trigger revision: 3
