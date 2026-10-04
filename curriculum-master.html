@@ -132,16 +132,43 @@ async function startPlaygroupV2Draft(source,allRows){
  }catch(e){message(e.message,'error')}
 }
 
+
+async function extendPlaygroupV2Draft(source){
+ try{
+  if(!source||source.status!=='Draft'||source.curriculum_schema!=='playgroup-v2')throw Error('Choose a Playgroup V2 draft.');
+  const lessons=Array.isArray(source.lessons)?source.lessons:[],current=Array.isArray(source.daily_experiences)?source.daily_experiences.slice():[];
+  const completeDays=new Set();
+  for(let day=1;day<=200;day++){
+   const rows=current.filter(x=>Number(x.day)===day),nums=new Set(rows.map(x=>Number(x.experience_no)));
+   if(rows.length===9&&nums.size===9)completeDays.add(day);
+  }
+  let start=1;while(start<=200&&completeDays.has(start))start++;
+  if(start>200){message('All 200 V2 days are already expanded: 1800/1800 Learning Experiences.','ok');return}
+  const end=Math.min(200,start+19);
+  for(let day=start;day<=end;day++){
+   const dayRows=lessons.filter(l=>Number(l.day)===day);
+   const core=dayRows.find(l=>/core|imls/i.test(String(l.period||'')+' '+String(l.subject||'')))||dayRows[0];
+   if(!core)throw Error('Missing source core curriculum for Day '+day+'.');
+   for(const def of playgroupV2Defs)current.push(v2SeedExperience(day,def,core));
+  }
+  await api('master-curricula',{id:source.id,level:source.level,version:source.version,title:source.title,curriculum_schema:'playgroup-v2',lessons,daily_rhythm:Array.isArray(source.daily_rhythm)&&source.daily_rhythm.length?source.daily_rhythm:playgroupV2Defs.map(([n,label,start,end,type])=>({id:'pg-v2-rhythm-'+n,start,end,label,type})),daily_experiences:current});
+  message('V2 development batch added: Day '+start+'–'+end+'. Draft now has '+current.length+'/1800 Learning Experiences. Review this batch before building the next one.','ok');
+  await load();
+ }catch(e){message(e.message,'error')}
+}
+
 function renderVersions(rows){
  const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;
  document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{
   const days=dayCount(x);
-  const draft=x.status==='Draft'?'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button><button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>':'';
+  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800;
+  const draft=x.status==='Draft'?'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
   const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
   const promote=x.status==='TestPublished'&&days===200?'<button class=\"btn primary\" data-promote=\"'+esc(x.id)+'\">Promote to Production</button>':'';
   const schema=x.curriculum_schema==='playgroup-v2'?' · <b>Playgroup V2</b> · '+((x.daily_experiences||[]).length)+'/1800 experiences':'';return '<article class=\"version\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days'+schema+'</p></div><div class=\"actions\">'+migrate+draft+promote+'</div></article>';
  }).join(''):'<p class=\"msg\">No master curriculum versions saved yet.</p>';
  document.querySelectorAll('[data-start-v2]').forEach(b=>b.onclick=()=>startPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.startV2),rows));
+ document.querySelectorAll('[data-v2-next]').forEach(b=>b.onclick=()=>extendPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.v2Next)));
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.edit);editing=x.id;lessons=x.lessons||[];dailyRhythm=Array.isArray(x.daily_rhythm)?x.daily_rhythm:[];dailyExperiences=Array.isArray(x.daily_experiences)?x.daily_experiences:[];document.querySelector('#level').value=x.level;document.querySelector('#version').value=x.version;document.querySelector('#title').value=x.title;inspectLessons();message('Editing saved draft. Upload a replacement Excel only if content changed.','ok')});
  document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>publish(b.dataset.test,true));
  document.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>publish(b.dataset.publish,false));
