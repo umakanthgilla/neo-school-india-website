@@ -30,6 +30,8 @@ jobs:
           cp learning-family.js "$PACK/"
           cp teacher-guide-v2.js "$PACK/"
           cp schools.html "$PACK/"
+          cp school-portal.js "$PACK/"
+          cp people-documents.js "$PACK/"
           cp teachers.html "$PACK/"
           cp parents.html "$PACK/"
           cp family-portal.js "$PACK/"
@@ -63,7 +65,7 @@ jobs:
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
           - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.\n          - Playgroup V2 production publish is additionally locked until Head Office Academic QA is Approved.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp7.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp8.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -76,8 +78,16 @@ jobs:
           8. 11:50–12:10 — Create, Practice & Apply
           9. 12:10–12:30 — Reflect, Pack & Goodbye
 
+          STAFF / CLASSROOM MANAGEMENT
+          - Staff details can be edited without changing the Staff ID.
+          - Edited Staff names sync to linked employee/teacher accounts and classroom teacher display.
+          - Only unused test staff can be permanently deleted; operational history blocks deletion.
+          - Classroom Class/Programme is primary; Section name and Capacity are editable.
+          - Classroom edits preserve teacher assignment.
+          - Existing Teaching Staff can be reassigned or unassigned from classrooms without recreating the employee.
+
           CURRENT NEXT STEP
-          After v2exp7 deploy, open Head Office Curriculum Master and start Nursery V2. It creates a new 200-day Nursery core progression with Day 1–20 expanded to 180/1800 Learning Experiences. Preserve published Playgroup V2 unchanged.
+          First verify Staff/Classroom management after v2exp8 deploy: edit Staff name/details, guarded delete for unused test staff, Class-first classroom cards, editable Section name/Capacity, and teacher reassignment/unassign. Then return to Nursery 2026.1-V2 Academic QA approval and publishing.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -92,7 +102,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp7
+             build: 2026-10-04-v2exp8
           EOF
 
       - name: Upload continuation pack
@@ -103,4 +113,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 7
+# Trigger revision: 8
