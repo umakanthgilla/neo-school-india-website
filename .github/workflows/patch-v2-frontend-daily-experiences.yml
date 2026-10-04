@@ -29,6 +29,16 @@ jobs:
         run: |
           node --check learning-admin.js
           node --check learning-family.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('curriculum-master.html').read_text()
+          scripts=re.findall(r'<script>(.*?)</script>',html,flags=re.S)
+          if not scripts:
+              raise SystemExit('No inline curriculum script found')
+          Path('/tmp/curriculum-master-inline.js').write_text('\n'.join(scripts))
+          PY
+          node --check /tmp/curriculum-master-inline.js
       - name: Commit frontend patch
         run: |
           if git diff --quiet; then
@@ -48,4 +58,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 7
+# Trigger revision: 8
