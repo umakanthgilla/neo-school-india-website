@@ -13,7 +13,7 @@ old = """ if(!testMode&&Array.isArray(checked.daily_experiences)&&checked.daily_
   }
  }"""
 
-new = """ if(!testMode&&checked.level==='Playgroup'&&Array.isArray(checked.daily_experiences)&&checked.daily_experiences.length){
+new = """ if(!testMode&&checked.level==='Playgroup'&&(checked.curriculum_schema==='playgroup-v2'||checked.daily_experiences.length>0)){
   const playgroupV2Schema=[
    [1,'Welcome & Discovery','09:30','09:45'],
    [2,'Circle & Communication','09:45','10:05'],
@@ -43,7 +43,7 @@ if new in s:
     print('Playgroup V2 publish schema already applied.')
 elif old in s:
     s = s.replace(old, new, 1)
-    p.write_text(s)
+    # Playgroup V2 schema marker guard is maintained in the Worker source.\n# New Playgroup drafts are tagged curriculum_schema=playgroup-v2 by curriculum-master.html.\np.write_text(s)
     print('Playgroup V2 publish schema applied.')
 else:
     raise SystemExit('Current V2 publish gate target was not found.')
