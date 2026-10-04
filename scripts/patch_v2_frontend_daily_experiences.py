@@ -11,7 +11,7 @@ def replace_once(text, old, new, label):
 p = Path('curriculum-master.html')
 s = p.read_text()
 
-if "let lessons=[],dailyRhythm=[],dailyExperiences=[],editing='';" not in s:
+if "let lessons=[],dailyRhythm=[],dailyExperiences=[]" not in s:
     s = replace_once(s, "let lessons=[],dailyRhythm=[],editing='';", "let lessons=[],dailyRhythm=[],dailyExperiences=[],editing='';", 'master state')
 
 if "dailyExperiences.length+' daily experiences'" not in s:
