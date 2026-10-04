@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp11",
+          build: "2026-10-04-v2exp12",
         },
         200,
         request
@@ -1774,9 +1774,13 @@ async function portalExtra(request,env,url,admin,session){
   }
 
   const teacher=await env.DB.prepare('SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
-  if(!teacher||!teacher.active||teacher.staff_type!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
+  const teacherCategory=normalizeStaffCategory(teacher?.staff_type||'');
+  if(!teacher||!teacher.active||teacherCategory!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
   const staff=await portalRecord(env,school,'staff',teacher.staff_id);
-  if(!staff||staff.status==='Inactive'||(staff.staff_type||'')!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
+  const staffCategory=normalizeStaffCategory(staff?.staff_type||staff?.staff_category||staff?.department,staff?.role);
+  if(!staff||staff.status==='Inactive'||staffCategory!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
+  if(teacher.staff_type!=='Teaching Staff')writes.push(env.DB.prepare('UPDATE neo_employee_accounts SET staff_type=? WHERE school_id=? AND account_id=?').bind('Teaching Staff',school,teacherAccountId));
+  if(staff.staff_type!=='Teaching Staff'||staff.department!=='Teaching Staff')writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.staff_type',?,'$.department',?) WHERE school_id=? AND kind='staff' AND id=?").bind('Teaching Staff','Teaching Staff',school,teacher.staff_id));
 
   const nextClassroom={...classroom,teacher:staff.name||teacher.name,teacher_account_id:teacherAccountId,teacher_staff_id:teacher.staff_id};
   delete nextClassroom.id;delete nextClassroom.created_at;
