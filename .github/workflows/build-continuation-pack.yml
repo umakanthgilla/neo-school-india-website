@@ -1,0 +1,97 @@
+name: Build Neo School India Continuation Pack
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-continuation-pack.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build continuation pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACK="NEO_SCHOOL_INDIA_CONTINUE_PACK_2026-10-04"
+          mkdir -p "$PACK/worker" "$PACK/scripts" "$PACK/workflows"
+
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js "$PACK/worker/"
+          cp curriculum-master.html "$PACK/"
+          cp learning-admin.js "$PACK/"
+          cp learning-family.js "$PACK/"
+          cp teacher-guide-v2.js "$PACK/"
+          cp schools.html "$PACK/"
+          cp teachers.html "$PACK/"
+
+          cp scripts/patch_v2_worker_daily_experiences.py "$PACK/scripts/"
+          cp scripts/patch_playgroup_v2_publish_schema.py "$PACK/scripts/"
+          cp scripts/patch_v2_frontend_daily_experiences.py "$PACK/scripts/"
+          cp scripts/patch_v2_master_template.py "$PACK/scripts/"
+          cp scripts/patch_v2_five_prompts.py "$PACK/scripts/"
+
+          cp .github/workflows/patch-v2-daily-experiences.yml "$PACK/workflows/"
+          cp .github/workflows/patch-v2-frontend-daily-experiences.yml "$PACK/workflows/"
+
+          cat > "$PACK/NEO_SCHOOL_INDIA_MASTER_HANDOFF.txt" <<EOF
+          NEO SCHOOL INDIA — CONTINUATION PACK
+          Date: 2026-10-04
+          Repository: umakanthgilla/neo-school-india-website
+          Branch: main
+          Source commit: $(git rev-parse HEAD)
+
+          IMPORTANT CONTINUITY RULES
+          - Continue existing implementation. Do not restart or redesign completed work.
+          - Published Playgroup 2026.2 / V1 is production history. Do not overwrite or delete it.
+          - Playgroup V2 is a new curriculum version.
+          - V2 production structure: Day 1–200, exactly 9 teacher-facing Learning Experiences per day.
+          - Production total: 1800 Learning Experiences.
+          - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
+          - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp2.
+
+          LOCKED DAILY STRUCTURE
+          1. 09:30–09:45 — Welcome & Discovery
+          2. 09:45–10:05 — Circle & Communication
+          3. 10:05–10:25 — Language & Story
+          4. 10:25–10:50 — Core IMLS Experience
+          5. 10:50–11:10 — Movement & Sensory
+          6. 11:10–11:30 — Snack & Life Skills
+          7. 11:30–11:50 — Maths, Thinking & Readiness
+          8. 11:50–12:10 — Create, Practice & Apply
+          9. 12:10–12:30 — Reflect, Pack & Goodbye
+
+          CURRENT NEXT STEP
+          Continue actual Playgroup V2 Day 1–200 curriculum content filling and validation using this exact source state.
+
+          PRODUCTION WORKER
+          worker/neo-lead-crm-api-worker-transport-phase1.js
+
+          Production Worker URL:
+          https://neo-lead-crm-api.umakanthgilla.workers.dev
+          EOF
+
+          cat > "$PACK/DEPLOY_NOTE.txt" <<EOF
+          DEPLOY NOTE
+          1. Website/frontend source is already in GitHub main.
+          2. If Cloudflare Worker is not auto-deployed, deploy:
+             worker/neo-lead-crm-api-worker-transport-phase1.js
+          3. Verify health response contains:
+             build: 2026-10-04-v2exp2
+          EOF
+
+      - name: Upload continuation pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEO_SCHOOL_INDIA_CONTINUE_PACK_2026-10-04
+          path: NEO_SCHOOL_INDIA_CONTINUE_PACK_2026-10-04/
+          if-no-files-found: error
+          retention-days: 30
