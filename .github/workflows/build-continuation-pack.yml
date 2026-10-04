@@ -56,7 +56,7 @@ jobs:
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
           - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp2.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp3.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -85,7 +85,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp2
+             build: 2026-10-04-v2exp3
           EOF
 
       - name: Upload continuation pack
@@ -95,3 +95,5 @@ jobs:
           path: NEO_SCHOOL_INDIA_CONTINUE_PACK_2026-10-04/
           if-no-files-found: error
           retention-days: 30
+
+# Trigger revision: 2
