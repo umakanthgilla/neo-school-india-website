@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp7",
+          build: "2026-10-04-v2exp8",
         },
         200,
         request
@@ -1123,6 +1123,33 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
      return out({records,fee_summaries});
    }
    return out({records});
+  }
+  if(request.method==='DELETE'){
+   if(kind!=='staff'||!id)return out({error:'Only unused staff test records can be removed here.'},405);
+   const person=await portalRecord(env,school,'staff',id);
+   if(!person)return out({error:'Staff record not found.'},404);
+   const employee=await env.DB.prepare('SELECT account_id FROM neo_employee_accounts WHERE school_id=? AND staff_id=?').bind(school,id).first();
+   const accountId=employee?.account_id||'';
+   for(const linkedKind of ['staff_attendance','payroll','staff_leave','salary_advances','salary_setup']){
+    const hit=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind=? AND json_extract(data,'$.staff_id')=? LIMIT 1").bind(school,linkedKind,id).first();
+    if(hit)return out({error:'This Staff ID already has operational history ('+linkedKind.replaceAll('_',' ')+'). Use Inactive instead of deleting it.'},409);
+   }
+   const assigned=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=? LIMIT 1").bind(school,id).first();
+   if(assigned)return out({error:'This teacher is still assigned to a classroom. Change or remove that assignment first.'},409);
+   if(accountId){
+    const task=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='teacher_tasks' AND json_extract(data,'$.teacher_id')=? LIMIT 1").bind(school,accountId).first();
+    if(task)return out({error:'This teacher already has task history. Use Inactive instead of deleting it.'},409);
+    const learning=await env.DB.prepare('SELECT plan_id FROM neo_learning_completed WHERE school_id=? AND teacher_id=? LIMIT 1').bind(school,accountId).first();
+    if(learning)return out({error:'This teacher already has learning execution history. Use Inactive instead of deleting it.'},409);
+   }
+   const writes=[env.DB.prepare("DELETE FROM neo_portal_records WHERE school_id=? AND kind='staff' AND id=?").bind(school,id),portalAudit(env,school,admin,'DELETE:test-staff',id)];
+   if(accountId)writes.unshift(
+    env.DB.prepare('DELETE FROM neo_teacher_staff_links WHERE school_id=? AND staff_id=?').bind(school,id),
+    env.DB.prepare('DELETE FROM neo_teacher_accounts WHERE school_id=? AND account_id=?').bind(school,accountId),
+    env.DB.prepare('DELETE FROM neo_employee_accounts WHERE school_id=? AND account_id=?').bind(school,accountId)
+   );
+   await env.DB.batch(writes);
+   return out({success:true,id,deleted:true});
   }
   if(!['POST','PATCH'].includes(request.method))return out({error:'Method not allowed.'},405);
   const text=await request.text();if(text.length>16000)return out({error:'Request too large.'},413);
