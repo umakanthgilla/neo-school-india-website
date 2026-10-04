@@ -77,7 +77,7 @@ jobs:
           9. 12:10–12:30 — Reflect, Pack & Goodbye
 
           CURRENT NEXT STEP
-          Verify Parent Portal after v2exp6 deploy: Child timetable must use active approved V2 dates and show 9 Learning Experiences; pickup phone-alert boxes must not float above the portal; Transport nav appears only for children with an active transport assignment.
+          Verify Parent Portal after v2exp6 deploy: Child timetable must use active approved V2 dates and show 9 Learning Experiences; pickup phone-alert boxes must not float above the portal; Transport tab remains available, while transport alerts and phone-alert opt-in are child-scoped and only activate when that child has an active transport assignment.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -103,4 +103,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 5
+# Trigger revision: 6
