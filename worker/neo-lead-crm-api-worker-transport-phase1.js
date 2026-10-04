@@ -1692,27 +1692,39 @@ async function portalExtra(request,env,url,admin,session){
   let b;try{b=await request.json()}catch{return out({error:'Invalid JSON.'},400)}
   const classroomId=typeof b?.classroom_id==='string'?b.classroom_id.trim():'';
   const teacherAccountId=typeof b?.teacher_account_id==='string'?b.teacher_account_id.trim():'';
-  if(!classroomId||!teacherAccountId)return out({error:'Choose an existing classroom and Teaching Staff member.'},400);
+  if(!classroomId)return out({error:'Choose an existing classroom.'},400);
   const classroom=await portalRecord(env,school,'classrooms',classroomId);
   if(!classroom)return out({error:'Classroom not found in this school.'},404);
-  const teacher=await env.DB.prepare('SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
-  if(!teacher||!teacher.active||teacher.staff_type!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
-  const staff=await portalRecord(env,school,'staff',teacher.staff_id);
-  if(!staff||staff.status==='Inactive'||(staff.staff_type||'')!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
+
   const existingTeacherRows=await env.DB.prepare('SELECT account_id,classroom_ids FROM neo_teacher_accounts WHERE school_id=?').bind(school).all();
   const writes=[];
   for(const row of (existingTeacherRows.results||[])){
     let ids=[];try{ids=JSON.parse(row.classroom_ids||'[]')}catch{ids=[]}
     const next=[...new Set((Array.isArray(ids)?ids:[]).filter(id=>String(id)!==classroomId))];
-    if(String(row.account_id)===teacherAccountId)next.push(classroomId);
+    if(teacherAccountId&&String(row.account_id)===teacherAccountId)next.push(classroomId);
     writes.push(env.DB.prepare('UPDATE neo_teacher_accounts SET classroom_ids=? WHERE school_id=? AND account_id=?').bind(JSON.stringify([...new Set(next)]),school,row.account_id));
   }
-  const nextClassroom={...classroom,teacher:teacher.name,teacher_account_id:teacherAccountId,teacher_staff_id:teacher.staff_id};
+
+  if(!teacherAccountId){
+    const nextClassroom={...classroom,teacher:'',teacher_account_id:'',teacher_staff_id:''};
+    delete nextClassroom.id;delete nextClassroom.created_at;
+    writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='classrooms' AND id=?").bind(JSON.stringify(nextClassroom),school,classroomId));
+    writes.push(portalAudit(env,school,admin,'unassign-teacher-from-classroom',classroomId));
+    await env.DB.batch(writes);
+    return out({success:true,classroom:{id:classroomId,...nextClassroom},teacher:null});
+  }
+
+  const teacher=await env.DB.prepare('SELECT e.account_id,e.name,e.staff_id,e.staff_type,e.active,a.classroom_ids FROM neo_employee_accounts e JOIN neo_teacher_accounts a ON a.account_id=e.account_id AND a.school_id=e.school_id WHERE e.school_id=? AND e.account_id=?').bind(school,teacherAccountId).first();
+  if(!teacher||!teacher.active||teacher.staff_type!=='Teaching Staff'||!teacher.staff_id)return out({error:'Choose an active Teaching Staff member from the Teacher Master.'},400);
+  const staff=await portalRecord(env,school,'staff',teacher.staff_id);
+  if(!staff||staff.status==='Inactive'||(staff.staff_type||'')!=='Teaching Staff')return out({error:'The selected Staff ID is not an active Teaching Staff master record.'},400);
+
+  const nextClassroom={...classroom,teacher:staff.name||teacher.name,teacher_account_id:teacherAccountId,teacher_staff_id:teacher.staff_id};
   delete nextClassroom.id;delete nextClassroom.created_at;
-  writes.push(env.DB.prepare('UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind=\'classrooms\' AND id=?').bind(JSON.stringify(nextClassroom),school,classroomId));
+  writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='classrooms' AND id=?").bind(JSON.stringify(nextClassroom),school,classroomId));
   writes.push(portalAudit(env,school,admin,'assign-teacher-to-classroom',classroomId));
   await env.DB.batch(writes);
-  return out({success:true,classroom:{id:classroomId,...nextClassroom},teacher:{account_id:teacherAccountId,staff_id:teacher.staff_id,name:teacher.name}});
+  return out({success:true,classroom:{id:classroomId,...nextClassroom},teacher:{account_id:teacherAccountId,staff_id:teacher.staff_id,name:staff.name||teacher.name}});
  }
  if(kind==='teacher_access'&&request.method==='GET'){
   const [employees,legacy]=await Promise.all([
