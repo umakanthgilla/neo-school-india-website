@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp8",
+          build: "2026-10-04-v2exp9",
         },
         200,
         request
@@ -1227,14 +1227,20 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    else if(kind==='staff_leave'){const next=choice('status',['Approved','Rejected']);if(previous.status!=='Pending')return out({error:'Only Pending leave can be reviewed.'},409);data={...previous,status:next,reviewed_at:new Date().toISOString()};}
    else if(kind==='students'){const classroom=await related('classrooms','classroom_id');if(classroom.program!==previous.program||classroom.academic_year!==previous.academic_year)fail('Classroom must match student class and academic year.');data={...previous,classroom_id:classroom.id};}
    else if(kind==='staff'){
-    const departments=['Teaching','Administration','Accounts','HR','Transport','Inventory / Stores','Maintenance / Housekeeping','Security','Other'];
+    const departments=['Teaching Staff','Administration','Non-Teaching Staff','Support Staff','Teaching','Administrative Staff','Accounts','HR','Transport','Inventory / Stores','Maintenance / Housekeeping','Security','Other'];
     const genders=['','Male','Female','Prefer not to say'];
-    const staffMobile=mobile(),emergency=str('emergency_mobile',20,false),dob=str('dob',10,false);
+    const staffMobile=mobile(),emergency=str('emergency_mobile',20,false),dob=str('dob',10,false),departmentRaw=choice('department',departments),department=normalizeStaffCategory(departmentRaw);
+    if(!department)fail('Choose a valid staff category.');
     if(emergency&&!/^\+?[0-9 ()-]{8,20}$/.test(emergency))fail('Check emergency contact number.');
     if(dob&&(!/^\d{4}-\d{2}-\d{2}$/.test(dob)||!Number.isFinite(Date.parse(dob))||new Date(dob).toISOString().slice(0,10)!==dob||dob>neoToday()))fail('Check date of birth.');
     const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND id<>? AND json_extract(data,'$.mobile')=? LIMIT 1").bind(school,id,staffMobile).first();
     if(duplicate)fail('A staff record already uses this mobile number.');
-    data={...previous,name:str('name',120),department:choice('department',departments),role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:date('joining_date'),emergency_mobile:emergency,status:choice('status',['Active','Inactive'])};
+    const previousCategory=normalizeStaffCategory(previous.staff_type||previous.staff_category||previous.department);
+    if(previousCategory==='Teaching Staff'&&department!=='Teaching Staff'){
+      const assigned=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=? LIMIT 1").bind(school,id).first();
+      if(assigned)return out({error:'Remove this teacher from the classroom assignment before changing the staff category.'},409);
+    }
+    data={...previous,name:str('name',120),department,staff_type:department,role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:date('joining_date'),emergency_mobile:emergency,status:choice('status',['Active','Inactive'])};
    }
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
    else if(kind==='classrooms'){const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');data={...previous,name:str('name',120),capacity:cap};}
@@ -1310,8 +1316,12 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(data.program==='UKG'){if(data.nursery_status!=='Completed'||data.lkg_status!=='Completed')fail('Nursery and LKG must be completed before UKG.');if(!data.nursery_school||!data.nursery_city||!/^20\d{2}$/.test(data.nursery_year))fail('Enter Nursery school, city and completion year.');if(!data.lkg_school||!data.lkg_city||!/^20\d{2}$/.test(data.lkg_year))fail('Enter LKG school, city and completion year.');if(Number(data.nursery_year)>Number(data.lkg_year))fail('Nursery completion year must be before or equal to LKG completion year.');if(Number(data.lkg_year)>Number(data.academic_year))fail('LKG completion year cannot be after the current academic year.');data.playgroup_status='Not applicable';data.previous_school=data.lkg_school;data.previous_city=data.lkg_city;}
    }else if(kind==='staff'){
   const departments=[
-    'Teaching',
+    'Teaching Staff',
     'Administration',
+    'Non-Teaching Staff',
+    'Support Staff',
+    'Teaching',
+    'Administrative Staff',
     'Accounts',
     'HR',
     'Transport',
@@ -1331,6 +1341,8 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   const staffMobile=mobile();
   const emergency=str('emergency_mobile',20,false);
   const dob=str('dob',10,false);
+  const department=normalizeStaffCategory(choice('department',departments));
+  if(!department)fail('Choose a valid staff category.');
 
   if(
     emergency &&
@@ -1361,7 +1373,8 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
 
   data={
     name:str('name',120),
-    department:choice('department',departments),
+    department,
+    staff_type:department,
     role:str('role',120),
     gender:genders.includes(b.gender||'')
       ? (b.gender||'')
@@ -1375,6 +1388,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     status:choice('status',['Active','Inactive'])
   };
 
+}
 }else if(kind==='staff_attendance'){
   const staffMember=await related('staff','staff_id');
   const tv=(k)=>{const v=str(k,5,false);if(v&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(v))fail('Check '+k.replaceAll('_',' ')+'.');return v};
@@ -1588,8 +1602,8 @@ recordId='HR_RULES_'+effectiveFrom;
   const writes=[env.DB.prepare(sql).bind(school,kind,recordId,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,admin?'head-office':'school:'+school,request.method+':'+kind,recordId)];
   if(kind==='staff'&&request.method==='PATCH'){
    writes.push(
-    env.DB.prepare('UPDATE neo_employee_accounts SET name=? WHERE school_id=? AND staff_id=?').bind(data.name,school,recordId),
-    env.DB.prepare("UPDATE neo_teacher_accounts SET name=? WHERE school_id=? AND account_id IN (SELECT account_id FROM neo_teacher_staff_links WHERE school_id=? AND staff_id=?)").bind(data.name,school,school,recordId),
+    env.DB.prepare('UPDATE neo_employee_accounts SET name=?,staff_type=?,active=? WHERE school_id=? AND staff_id=?').bind(data.name,data.staff_type,data.status==='Inactive'?0:1,school,recordId),
+    env.DB.prepare("UPDATE neo_teacher_accounts SET name=?,active=? WHERE school_id=? AND account_id IN (SELECT account_id FROM neo_teacher_staff_links WHERE school_id=? AND staff_id=?)").bind(data.name,(data.staff_type==='Teaching Staff'&&data.status!=='Inactive')?1:0,school,school,recordId),
     env.DB.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.teacher',?) WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=?").bind(data.name,school,recordId)
    );
   }
@@ -1665,6 +1679,7 @@ async function nextFinanceNumber(env,school,docType,docDate){
  const n=Number(row?.last_no);if(!Number.isSafeInteger(n)||n<1)throw new Error('Finance document number could not be generated.');
  return (docType==='receipt'?'RCPT':'PV')+'-'+year+'-'+String(n).padStart(6,'0');
 }
+function normalizeStaffCategory(value){const v=String(value||'').trim(),m={Teaching:'Teaching Staff','Teaching Staff':'Teaching Staff',Administration:'Administration','Administrative Staff':'Administration',Accounts:'Administration',HR:'Administration',Transport:'Non-Teaching Staff','Inventory / Stores':'Non-Teaching Staff',Other:'Non-Teaching Staff','Non-Teaching Staff':'Non-Teaching Staff','Maintenance / Housekeeping':'Support Staff',Security:'Support Staff','Support Staff':'Support Staff'};return m[v]||''}
 async function portalRows(env,school,kind){const r=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? ORDER BY created_at DESC,id').bind(school,kind).all();return (r.results||[]).map(x=>({...JSON.parse(x.data),id:x.id,created_at:x.created_at}))}
 async function portalRecord(env,school,kind,id){const r=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();return r?{...JSON.parse(r.data),id}:null}
 function headOfficePaymentVoucher(payment,paymentId,voucherNo){
@@ -1797,23 +1812,23 @@ async function portalExtra(request,env,url,admin,session){
   if(staffId){
     staffMember=await portalRecord(env,school,'staff',staffId);
     if(!staffMember||staffMember.status==='Inactive')return out({error:'Choose an active Staff ID from this school.'},400);
-    const existingCategory=staffMember.staff_type||staffMember.staff_category||(staffMember.department==='Teaching'?'Teaching Staff':'');
+    const existingCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department);
     if(b.classroom_ids.length&&existingCategory!=='Teaching Staff')return out({error:'Classroom access can be assigned only to Teaching Staff.'},400);
   }else{
     const p=b?.teacher_profile&&typeof b.teacher_profile==='object'&&!Array.isArray(b.teacher_profile)?b.teacher_profile:{};
     const clean=(v,max)=>typeof v==='string'?v.trim().slice(0,max):'';
     const name=clean(p.name,120),role=clean(p.role,120),staffCategory=clean(p.staff_type,40),mobile=clean(p.mobile,20).replace(/\s+/g,''),email=clean(p.email,160),joining=clean(p.joining_date,10);
-    const allowedCategories=['Teaching Staff','Administrative Staff','Support Staff'];
+    const allowedCategories=['Teaching Staff','Administration','Administrative Staff','Non-Teaching Staff','Support Staff'];
     if(!name||!role||!allowedCategories.includes(staffCategory)||!/^\+?[0-9]{10,15}$/.test(mobile)||!/^\d{4}-\d{2}-\d{2}$/.test(joining)||!Number.isFinite(Date.parse(joining))||new Date(joining).toISOString().slice(0,10)!==joining)return out({error:'Enter employee name, staff category, role, valid mobile and joining date.'},400);
     const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND json_extract(data,'$.mobile')=?").bind(school,mobile).first();
     if(duplicate)return out({error:'A staff record already uses this mobile number. Use the existing teacher record instead of creating a duplicate.'},409);
     staffId='NEO'+String(new Date().getFullYear()).slice(-2)+crypto.randomUUID().replace(/-/g,'').slice(0,4).toUpperCase();
-    const department=staffCategory==='Teaching Staff'?'Teaching':staffCategory==='Administrative Staff'?'Administration':'Other';
-    newStaffData={name,staff_type:staffCategory,department,role,gender:'',dob:'',mobile,email,joining_date:joining,salary_paise:0,emergency_mobile:'',status:'Active'};
+    const normalizedCategory=normalizeStaffCategory(staffCategory);
+    newStaffData={name,staff_type:normalizedCategory,department:normalizedCategory,role,gender:'',dob:'',mobile,email,joining_date:joining,salary_paise:0,emergency_mobile:'',status:'Active'};
     staffMember={...newStaffData,id:staffId};
   }
 
-  const effectiveCategory=staffMember.staff_type||staffMember.staff_category||(staffMember.department==='Teaching'?'Teaching Staff':'');
+  const effectiveCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department);
   const isTeaching=effectiveCategory==='Teaching Staff';
   if(!isTeaching&&b.classroom_ids.length)return out({error:'Classroom access can be assigned only to Teaching Staff.'},400);
   const existingEmployee=await env.DB.prepare('SELECT account_id FROM neo_employee_accounts WHERE school_id=? AND staff_id=?').bind(school,staffId).first();
