@@ -3,12 +3,10 @@ from pathlib import Path
 p = Path('worker/neo-lead-crm-api-worker-transport-phase1.js')
 s = p.read_text()
 
-# Playgroup V2 schema marker + Head Office academic approval gate.
-marker_validation = """ const curriculumSchema=typeof b.curriculum_schema==='string'?b.curriculum_schema.trim():'';
- if(curriculumSchema&&curriculumSchema!=='playgroup-v2')
-  fail('Unsupported curriculum schema.');
- if(curriculumSchema==='playgroup-v2'&&b.level.trim()!=='Playgroup')
-  fail('Playgroup V2 schema can only be used for Playgroup.');
+# Foundational V2 schema marker + Head Office academic approval gate.
+# Existing Playgroup V2 production history stays backward compatible.
+title_anchor = """ if(typeof b.title!=='string'||!b.title.trim()||b.title.trim().length>160)
+  fail('Enter a curriculum title.');
 
 """
 
@@ -22,8 +20,12 @@ academic_validation = """ const academicReviewStatus=typeof b.academic_review_st
 
 """
 
-title_anchor = """ if(typeof b.title!=='string'||!b.title.trim()||b.title.trim().length>160)
-  fail('Enter a curriculum title.');
+schema_validation = """ const curriculumSchema=typeof b.curriculum_schema==='string'?b.curriculum_schema.trim():'';
+ const v2LevelBySchema={'playgroup-v2':'Playgroup','nursery-v2':'Nursery'};
+ if(curriculumSchema&&!v2LevelBySchema[curriculumSchema])
+  fail('Unsupported curriculum schema.');
+ if(curriculumSchema&&b.level.trim()!==v2LevelBySchema[curriculumSchema])
+  fail(v2LevelBySchema[curriculumSchema]+' V2 schema can only be used for '+v2LevelBySchema[curriculumSchema]+'.');
 
 """
 
@@ -32,10 +34,14 @@ if "const academicReviewStatus=typeof b.academic_review_status" not in s:
         raise SystemExit('Academic review validation anchor not found uniquely')
     s = s.replace(title_anchor, title_anchor + academic_validation, 1)
 
-if "const curriculumSchema=typeof b.curriculum_schema" not in s:
-    if s.count(title_anchor) != 1:
-        raise SystemExit('Master curriculum title validation marker not found uniquely')
-    s = s.replace(title_anchor, title_anchor + marker_validation, 1)
+if "const v2LevelBySchema={'playgroup-v2':'Playgroup','nursery-v2':'Nursery'}" not in s:
+    old_schema_start = " const curriculumSchema=typeof b.curriculum_schema==='string'?b.curriculum_schema.trim():'';"
+    start = s.find(old_schema_start)
+    lesson_anchor = "\n if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>2200)"
+    end = s.find(lesson_anchor, start)
+    if start < 0 or end < 0:
+        raise SystemExit('Master curriculum schema validation marker not found')
+    s = s[:start] + schema_validation.rstrip() + s[end:]
 
 if "curriculum_schema:curriculumSchema" not in s:
     anchor = """  title:b.title.trim(),
@@ -59,21 +65,16 @@ if "academic_review_status:academicReviewStatus" not in s:
         raise SystemExit('Academic review return anchor not found uniquely')
     s = s.replace(anchor, replacement, 1)
 
-old_gate = "if(!testMode&&checked.level==='Playgroup'&&Array.isArray(checked.daily_experiences)&&checked.daily_experiences.length){"
-new_gate = "if(!testMode&&checked.level==='Playgroup'&&(checked.curriculum_schema==='playgroup-v2'||checked.daily_experiences.length>0)){"
-if old_gate in s:
-    s = s.replace(old_gate, new_gate, 1)
-elif new_gate not in s:
-    raise SystemExit('Playgroup V2 publish gate marker not found')
-
-academic_gate = """if(!testMode&&checked.level==='Playgroup'&&checked.curriculum_schema==='playgroup-v2'&&checked.academic_review_status!=='Approved')
-  return out({error:'Playgroup V2 production publish is locked until Head Office academic review is approved.'},400);
-
-"""
-if "Playgroup V2 production publish is locked until Head Office academic review is approved." not in s:
-    if s.count(new_gate) != 1:
-        raise SystemExit('Playgroup V2 academic gate anchor not found uniquely')
-    s = s.replace(new_gate, academic_gate + new_gate, 1)
+# Current production source must protect both V2 levels.
+required = [
+    "['playgroup-v2','nursery-v2'].includes(checked.curriculum_schema)",
+    "'nursery-v2':[",
+    "checked.daily_experiences.length!==1800",
+    "academic review is approved."
+]
+missing = [item for item in required if item not in s]
+if missing:
+    raise SystemExit('Foundational V2 publish guards missing: ' + ', '.join(missing))
 
 p.write_text(s)
-print('Playgroup V2 schema marker, academic approval and production publish guards applied.')
+print('Foundational V2 schema markers and production publish guards verified.')
