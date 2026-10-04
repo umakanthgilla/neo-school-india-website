@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp9",
+          build: "2026-10-04-v2exp10",
         },
         200,
         request
@@ -1389,7 +1389,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   };
 
 }
-}else if(kind==='staff_attendance'){
+else if(kind==='staff_attendance'){
   const staffMember=await related('staff','staff_id');
   const tv=(k)=>{const v=str(k,5,false);if(v&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(v))fail('Check '+k.replaceAll('_',' ')+'.');return v};
   const attendanceStatus=choice('status',['Present','Absent','Leave','Half day']),checkIn=tv('check_in_time'),checkOut=tv('check_out_time');
