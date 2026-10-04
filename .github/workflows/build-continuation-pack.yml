@@ -65,7 +65,7 @@ jobs:
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
           - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.\n          - Playgroup V2 production publish is additionally locked until Head Office Academic QA is Approved.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp10.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp11.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -77,6 +77,11 @@ jobs:
           7. 11:30–11:50 — Maths, Thinking & Readiness
           8. 11:50–12:10 — Create, Practice & Apply
           9. 12:10–12:30 — Reflect, Pack & Goodbye
+
+          DRIVER / SUPPORT STAFF MAPPING
+          - Driver, Bus Driver, Bus Helper, Conductor, Ayah, Caretaker, Housekeeping, Security and Helper roles map to Support Staff.
+          - Transport Coordinator / Transport In-charge remain Non-Teaching Staff.
+          - Legacy Transport records are role-aware: driver/helper roles display and save as Support Staff.
 
           FOUR STAFF CATEGORIES
           - Staff Master uses only: Teaching Staff, Administration, Non-Teaching Staff, Support Staff.
@@ -94,7 +99,7 @@ jobs:
           - Existing Teaching Staff can be reassigned or unassigned from classrooms without recreating the employee.
 
           CURRENT NEXT STEP
-          Deploy v2exp10, then verify Staff Master shows the four-category dropdown and category/search filters. After that continue the existing Staff/Classroom checks, then return to Nursery 2026.1-V2 Academic QA approval and publishing.
+          Deploy v2exp11, then verify Staff Master shows the four-category dropdown and category/search filters. After that continue the existing Staff/Classroom checks, then return to Nursery 2026.1-V2 Academic QA approval and publishing.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -109,7 +114,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp10
+             build: 2026-10-04-v2exp11
           EOF
 
       - name: Upload continuation pack
@@ -120,4 +125,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 10
+# Trigger revision: 11
