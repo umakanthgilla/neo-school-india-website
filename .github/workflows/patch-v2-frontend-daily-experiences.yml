@@ -30,6 +30,7 @@ jobs:
           node --check learning-admin.js
           node --check learning-family.js
           node --check family-portal.js
+          node --check parent-pickup-approval.js
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -59,4 +60,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 17
+# Trigger revision: 18
