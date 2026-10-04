@@ -209,14 +209,36 @@ function v2BatchQa(x){
  return {days,passed:Math.max(0,days-failed.length),failed};
 }
 
+function v2AcademicAudit(x){
+ const experiences=Array.isArray(x?.daily_experiences)?x.daily_experiences:[],lessons=Array.isArray(x?.lessons)?x.lessons:[],issues=[];
+ const structure=v2BatchQa(x);
+ if(experiences.length!==1800||structure.days!==200||structure.failed.length)issues.push('Complete 200-day structure QA first.');
+ const core=experiences.filter(e=>Number(e.experience_no)===4);
+ const ncfGoals=core.filter(e=>String(e.ncf_curricular_goal||'').trim()).length;
+ const ncfCompetencies=core.filter(e=>String(e.ncf_competency||'').trim()).length;
+ if(ncfGoals<200)issues.push('NCF curricular-goal mapping is '+ncfGoals+'/200 for Core IMLS Experiences.');
+ if(ncfCompetencies<200)issues.push('NCF competency mapping is '+ncfCompetencies+'/200 for Core IMLS Experiences.');
+ const noQuestions=experiences.filter(e=>!Array.isArray(e.questions)||!e.questions.length).length;
+ if(noQuestions)issues.push(noQuestions+' Learning Experiences need at least one approved prompt/question.');
+ const weakEvidence=experiences.filter(e=>!String(e.observe_for||'').trim()||!String(e.portfolio_evidence||'').trim()).length;
+ if(weakEvidence)issues.push(weakEvidence+' Learning Experiences need observation/evidence guidance.');
+ const exp8=experiences.filter(e=>Number(e.experience_no)===8);
+ const outputDecisions=exp8.filter(e=>String(e.portfolio_evidence||'').trim()||String(e.resource_type||'').trim()||String(e.homework||'').trim()).length;
+ if(exp8.length===200&&outputDecisions<200)issues.push('Create/Practice/Apply needs an explicit student-output/resource decision on every day.');
+ const concepts=new Set(lessons.map(l=>String(l.concept||'').trim().toLowerCase()).filter(Boolean));
+ if(lessons.length>=200&&concepts.size<80)issues.push('Core curriculum concept variety is low ('+concepts.size+' unique concepts across '+lessons.length+' days).');
+ return {ready:issues.length===0,issues,ncfGoals,ncfCompetencies,noQuestions,weakEvidence,concepts:concepts.size};
+}
+
 function renderVersions(rows){
  const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;
  document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{
   const days=dayCount(x);
-  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800,qa=x.curriculum_schema==='playgroup-v2'?v2BatchQa(x):null;
+  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800,qa=x.curriculum_schema==='playgroup-v2'?v2BatchQa(x):null,academic=x.curriculum_schema==='playgroup-v2'&&!v2Incomplete?v2AcademicAudit(x):null;
   const qaOk=!qa||qa.failed.length===0;
-  const qaBadge=qa?'<span class=\"status\" style=\"margin-right:6px\">'+qa.passed+'/'+qa.days+' expanded days QA '+(qaOk?'PASS':'CHECK')+'</span>':'';
-  const draft=x.status==='Draft'?qaBadge+'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?(qaOk?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" disabled title=\"Resolve V2 QA issues first\">Resolve QA First</button>'):'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
+  const qaBadge=qa?'<span class=\"status\" style=\"margin-right:6px\">'+qa.passed+'/'+qa.days+' Structure QA '+(qaOk?'PASS':'CHECK')+'</span>':'';
+  const academicBadge=academic?'<span class=\"status\" style=\"margin-right:6px\">'+(academic.ready?'Academic QA READY':'Academic QA · '+academic.issues.length+' gap'+(academic.issues.length===1?'':'s'))+'</span>':'';
+  const draft=x.status==='Draft'?qaBadge+academicBadge+'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?(qaOk?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" disabled title=\"Resolve V2 structure QA issues first\">Resolve Structure QA First</button>'):(academic&&academic.ready?'<button class=\"btn\" data-academic=\"'+esc(x.id)+'\">Review Academic QA</button><button class=\"btn\" disabled title=\"Head Office academic approval gate will unlock production publish\">Await Academic Approval</button>':'<button class=\"btn primary\" data-academic=\"'+esc(x.id)+'\">Review Academic Gaps</button><button class=\"btn\" disabled title=\"Academic QA must be complete before production publish\">Publish Locked</button>')):'';
   const derivedV2=rows.find(y=>y.level==='Playgroup'&&y.curriculum_schema==='playgroup-v2'&&(String(y.version||'')===String(x.version||'')+'-V2'||String(y.title||'').includes('· '+String(x.version||''))));
   const hasDerivedV2=!!derivedV2;
   const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'&&!hasDerivedV2?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
@@ -226,6 +248,7 @@ function renderVersions(rows){
  document.querySelectorAll('[data-start-v2]').forEach(b=>b.onclick=()=>startPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.startV2),rows));
  document.querySelectorAll('[data-v2-next]').forEach(b=>b.onclick=()=>extendPlaygroupV2Draft(rows.find(r=>r.id===b.dataset.v2Next)));
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.edit);editing=x.id;lessons=x.lessons||[];dailyRhythm=Array.isArray(x.daily_rhythm)?x.daily_rhythm:[];dailyExperiences=Array.isArray(x.daily_experiences)?x.daily_experiences:[];document.querySelector('#level').value=x.level;document.querySelector('#version').value=x.version;document.querySelector('#title').value=x.title;inspectLessons();message('Editing saved draft. Upload a replacement Excel only if content changed.','ok')});
+ document.querySelectorAll('[data-academic]').forEach(b=>b.onclick=()=>{const x=rows.find(r=>r.id===b.dataset.academic),a=v2AcademicAudit(x);message(a.ready?'Automated academic checks are ready for Head Office review. Do not publish until the final academic approval gate is completed.':'Academic QA is not ready: '+a.issues.join(' | '),'error')});
  document.querySelectorAll('[data-test]').forEach(b=>b.onclick=()=>publish(b.dataset.test,true));
  document.querySelectorAll('[data-publish]').forEach(b=>b.onclick=()=>publish(b.dataset.publish,false));
  document.querySelectorAll('[data-promote]').forEach(b=>b.onclick=()=>publish(b.dataset.promote,false));
