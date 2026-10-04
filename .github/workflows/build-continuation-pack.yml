@@ -65,7 +65,7 @@ jobs:
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
           - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.\n          - Playgroup V2 production publish is additionally locked until Head Office Academic QA is Approved.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp9.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp10.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -94,7 +94,7 @@ jobs:
           - Existing Teaching Staff can be reassigned or unassigned from classrooms without recreating the employee.
 
           CURRENT NEXT STEP
-          Deploy v2exp9, then verify Staff Master shows the four-category dropdown and category/search filters. After that continue the existing Staff/Classroom checks, then return to Nursery 2026.1-V2 Academic QA approval and publishing.
+          Deploy v2exp10, then verify Staff Master shows the four-category dropdown and category/search filters. After that continue the existing Staff/Classroom checks, then return to Nursery 2026.1-V2 Academic QA approval and publishing.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -109,7 +109,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp9
+             build: 2026-10-04-v2exp10
           EOF
 
       - name: Upload continuation pack
@@ -120,4 +120,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 9
+# Trigger revision: 10
