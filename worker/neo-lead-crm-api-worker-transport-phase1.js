@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp1",
+          build: "2026-10-04-v2exp2",
         },
         200,
         request
