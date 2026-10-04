@@ -21,7 +21,7 @@ validator = r'''function validateDailyExperiences(value,fail){
   const start=typeof r.start==='string'?r.start.trim():'';
   const end=typeof r.end==='string'?r.end.trim():'';
   if(!name||name.length>120)fail('Daily Experience '+(i+1)+': check experience_name.');
-  if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(start)||!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(end)||start>=end)fail('Daily Experience '+(i+1)+': check start/end.');
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)||start>=end)fail('Daily Experience '+(i+1)+': check start/end.');
   const item={id,day,experience_no:experienceNo,experience_name:name,start,end};
   for(const [key,max] of [['concept',180],['objective',700],['activity',2200]]){
    const v=typeof r[key]==='string'?r[key].trim():'';
