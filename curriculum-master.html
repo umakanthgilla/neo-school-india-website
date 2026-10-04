@@ -163,7 +163,8 @@ function renderVersions(rows){
   const days=dayCount(x);
   const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800;
   const draft=x.status==='Draft'?'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
-  const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
+  const hasDerivedV2=x.level==='Playgroup'&&rows.some(y=>y.level==='Playgroup'&&y.curriculum_schema==='playgroup-v2'&&String(y.version||'').startsWith(String(x.version||'')+'-V2'));
+  const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'&&!hasDerivedV2?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
   const promote=x.status==='TestPublished'&&days===200?'<button class=\"btn primary\" data-promote=\"'+esc(x.id)+'\">Promote to Production</button>':'';
   const schema=x.curriculum_schema==='playgroup-v2'?' · <b>Playgroup V2</b> · '+((x.daily_experiences||[]).length)+'/1800 experiences':'';return '<article class=\"version\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days'+schema+'</p></div><div class=\"actions\">'+migrate+draft+promote+'</div></article>';
  }).join(''):'<p class=\"msg\">No master curriculum versions saved yet.</p>';
