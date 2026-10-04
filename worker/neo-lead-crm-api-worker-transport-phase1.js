@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp3",
+          build: "2026-10-04-v2exp4",
         },
         200,
         request
@@ -2112,6 +2112,14 @@ function validateMasterCurriculum(b){
  if(typeof b.title!=='string'||!b.title.trim()||b.title.trim().length>160)
   fail('Enter a curriculum title.');
 
+ const academicReviewStatus=typeof b.academic_review_status==='string'&&b.academic_review_status.trim()?b.academic_review_status.trim():'Pending';
+ if(!['Pending','ReadyForReview','Approved'].includes(academicReviewStatus))
+  fail('Invalid academic review status.');
+ const academicReviewNotes=typeof b.academic_review_notes==='string'?b.academic_review_notes.trim():'';
+ if(academicReviewNotes.length>4000)fail('Academic review notes are too long.');
+ const academicReviewedAt=typeof b.academic_reviewed_at==='string'?b.academic_reviewed_at.trim():'';
+ if(academicReviewedAt.length>40)fail('Invalid academic review timestamp.');
+
  const curriculumSchema=typeof b.curriculum_schema==='string'?b.curriculum_schema.trim():'';
  if(curriculumSchema&&curriculumSchema!=='playgroup-v2')
   fail('Unsupported curriculum schema.');
@@ -2183,6 +2191,9 @@ function validateMasterCurriculum(b){
   version:b.version.trim(),
   title:b.title.trim(),
   curriculum_schema:curriculumSchema,
+  academic_review_status:academicReviewStatus,
+  academic_review_notes:academicReviewNotes,
+  academic_reviewed_at:academicReviewedAt,
   lessons,
   daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail),
   daily_experiences:validateDailyExperiences(b.daily_experiences,fail)
@@ -2311,6 +2322,9 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
   return out({
    error:'Production publish requires curriculum concepts for all 200 days.'
   },400);
+
+ if(!testMode&&checked.level==='Playgroup'&&checked.curriculum_schema==='playgroup-v2'&&checked.academic_review_status!=='Approved')
+  return out({error:'Playgroup V2 production publish is locked until Head Office academic review is approved.'},400);
 
  if(!testMode&&checked.level==='Playgroup'&&(checked.curriculum_schema==='playgroup-v2'||checked.daily_experiences.length>0)){
   const playgroupV2Schema=[
