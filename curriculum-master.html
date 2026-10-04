@@ -56,12 +56,11 @@ function inspectLessons(){
    const locked=[
     [1,'Welcome & Discovery','09:30','09:45'],[2,'Circle & Communication','09:45','10:05'],[3,'Language & Story','10:05','10:25'],[4,'Core IMLS Experience','10:25','10:50'],[5,'Movement & Sensory','10:50','11:10'],[6,'Snack & Life Skills','11:10','11:30'],[7,'Maths, Thinking & Readiness','11:30','11:50'],[8,'Create, Practice & Apply','11:50','12:10'],[9,'Reflect, Pack & Goodbye','12:10','12:30']
    ];
-   const issues=[];
-   if(exps.length!==9)issues.push('needs exactly 9 experiences');
-   for(const [n,name,st,en] of locked){const x=exps.find(r=>Number(r.experience_no)===n);if(!x){issues.push('missing Experience '+n);continue}if(x.experience_name!==name||x.start!==st||x.end!==en)issues.push('Experience '+n+' name/time differs from locked structure');for(const k of ['concept','objective','activity','materials','teacher_language','observe_for','why_this_matters','support_scaffold','inclusion_note','safety_supervision'])if(!String(x[k]||'').trim())issues.push('Experience '+n+' missing '+k)}
+   const issues=v2DayIssues(day,dailyExperiences);
    const qa='<div class="v2-batch"><b>Day '+day+' V2 QA:</b> <span class="'+(issues.length?'qa-warn':'qa-good')+'">'+(issues.length?issues.slice(0,6).map(esc).join(' · ')+(issues.length>6?' · +'+(issues.length-6)+' more':''):'PASS · 9/9 locked experiences and required teacher fields present')+'</span></div>';
+   const batch=v2BatchQa({daily_experiences:dailyExperiences}),batchHtml='<div class="v2-batch"><b>Expanded batch QA:</b> <span class="'+(batch.failed.length?'qa-warn':'qa-good')+'">'+(batch.failed.length?(batch.passed+'/'+batch.days+' days pass · Check Day '+batch.failed.slice(0,10).map(x=>x.day).join(', ')+(batch.failed.length>10?'…':'')):(batch.passed+'/'+batch.days+' days PASS'))+'</span></div>';
    const cards=exps.map(x=>'<article class="v2-exp"><h4>'+esc(x.experience_no)+'. '+esc(x.experience_name)+'</h4><div class="meta">'+esc(x.start)+'–'+esc(x.end)+' · '+esc(x.play_mode||'Learning Experience')+'</div><div class="v2-grid"><p><b>Concept:</b> '+esc(x.concept||'')+'</p><p><b>Objective:</b> '+esc(x.objective||'')+'</p><p><b>Activity:</b> '+esc(x.activity||'')+'</p><p><b>Materials:</b> '+esc(x.materials||'')+'</p><p><b>Teacher language:</b> '+esc(x.teacher_language||'')+'</p><p><b>Observe for:</b> '+esc(x.observe_for||'')+'</p><p><b>Why it matters:</b> '+esc(x.why_this_matters||'')+'</p><p><b>Support:</b> '+esc(x.support_scaffold||'')+'</p><p><b>Challenge:</b> '+esc(x.challenge_extension||'')+'</p><p><b>Inclusion:</b> '+esc(x.inclusion_note||'')+'</p><p><b>Safety:</b> '+esc(x.safety_supervision||'')+'</p><p><b>Home connection:</b> '+esc(x.homework||'')+'</p></div></article>').join('');
-   expHtml='<h3 style="margin-top:16px">V2 Learning Experiences</h3>'+qa+'<div class="v2-review">'+(cards||'<p class="msg">This day is not expanded to V2 yet.</p>')+'</div>';
+   expHtml='<h3 style="margin-top:16px">V2 Learning Experiences</h3>'+batchHtml+qa+'<div class="v2-review">'+(cards||'<p class="msg">This day is not expanded to V2 yet.</p>')+'</div>';
   }
   document.querySelector('#dayDetail').innerHTML=coreHtml+expHtml;
  };
@@ -185,13 +184,41 @@ async function extendPlaygroupV2Draft(source){
  }catch(e){message(e.message,'error')}
 }
 
+
+function v2DayIssues(day,experiences){
+ const defs=[
+  [1,'Welcome & Discovery','09:30','09:45'],[2,'Circle & Communication','09:45','10:05'],[3,'Language & Story','10:05','10:25'],[4,'Core IMLS Experience','10:25','10:50'],[5,'Movement & Sensory','10:50','11:10'],[6,'Snack & Life Skills','11:10','11:30'],[7,'Maths, Thinking & Readiness','11:30','11:50'],[8,'Create, Practice & Apply','11:50','12:10'],[9,'Reflect, Pack & Goodbye','12:10','12:30']
+ ],rows=(experiences||[]).filter(x=>Number(x.day)===Number(day)),issues=[];
+ if(rows.length!==9)issues.push('expected 9 experiences, found '+rows.length);
+ const nums=new Set(rows.map(x=>Number(x.experience_no)));
+ if(nums.size!==rows.length)issues.push('duplicate experience number');
+ for(const [n,name,start,end] of defs){
+  const x=rows.find(r=>Number(r.experience_no)===n);
+  if(!x){issues.push('missing Experience '+n);continue}
+  if(x.experience_name!==name)issues.push('Experience '+n+' name');
+  if(x.start!==start||x.end!==end)issues.push('Experience '+n+' time');
+  for(const k of ['concept','objective','activity','materials','teacher_language','observe_for','why_this_matters','support_scaffold','inclusion_note','safety_supervision']){
+   if(!String(x[k]||'').trim())issues.push('Experience '+n+' '+k);
+  }
+ }
+ return [...new Set(issues)];
+}
+function v2BatchQa(x){
+ const experiences=Array.isArray(x?.daily_experiences)?x.daily_experiences:[],expanded=Math.floor(experiences.length/9),days=Math.min(200,expanded),failed=[];
+ for(let day=1;day<=days;day++){const issues=v2DayIssues(day,experiences);if(issues.length)failed.push({day,issues})}
+ return {days,passed:Math.max(0,days-failed.length),failed};
+}
+
 function renderVersions(rows){
  const dayCount=x=>new Set((x.lessons||[]).map(l=>l.day)).size;
  document.querySelector('#versions').innerHTML=rows.length?rows.map(x=>{
   const days=dayCount(x);
-  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800;
-  const draft=x.status==='Draft'?'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
-  const hasDerivedV2=x.level==='Playgroup'&&rows.some(y=>y.level==='Playgroup'&&y.curriculum_schema==='playgroup-v2'&&String(y.version||'').startsWith(String(x.version||'')+'-V2'));
+  const v2Count=Array.isArray(x.daily_experiences)?x.daily_experiences.length:0,v2Incomplete=x.curriculum_schema==='playgroup-v2'&&v2Count<1800,qa=x.curriculum_schema==='playgroup-v2'?v2BatchQa(x):null;
+  const qaOk=!qa||qa.failed.length===0;
+  const qaBadge=qa?'<span class=\"status\" style=\"margin-right:6px\">'+qa.passed+'/'+qa.days+' expanded days QA '+(qaOk?'PASS':'CHECK')+'</span>':'';
+  const draft=x.status==='Draft'?qaBadge+'<button class=\"btn\" data-edit=\"'+esc(x.id)+'\">Edit</button>'+(v2Incomplete?(qaOk?'<button class=\"btn primary\" data-v2-next=\"'+esc(x.id)+'\">Build Next 20 Days</button>':'<button class=\"btn\" disabled title=\"Resolve V2 QA issues first\">Resolve QA First</button>'):'<button class=\"btn\" data-test=\"'+esc(x.id)+'\">Publish Test</button><button class=\"btn primary\" data-publish=\"'+esc(x.id)+'\">Publish 200 Days</button>'):'';
+  const derivedV2=rows.find(y=>y.level==='Playgroup'&&y.curriculum_schema==='playgroup-v2'&&(String(y.version||'')===String(x.version||'')+'-V2'||String(y.title||'').includes('· '+String(x.version||''))));
+  const hasDerivedV2=!!derivedV2;
   const migrate=x.level==='Playgroup'&&x.status==='Published'&&x.curriculum_schema!=='playgroup-v2'&&!hasDerivedV2?'<button class=\"btn\" data-start-v2=\"'+esc(x.id)+'\">Start V2 Draft</button>':'';
   const promote=x.status==='TestPublished'&&days===200?'<button class=\"btn primary\" data-promote=\"'+esc(x.id)+'\">Promote to Production</button>':'';
   const schema=x.curriculum_schema==='playgroup-v2'?' · <b>Playgroup V2</b> · '+((x.daily_experiences||[]).length)+'/1800 experiences':'';return '<article class=\"version\"><div><h3>'+esc(x.level)+' · '+esc(x.version)+'</h3><p>'+esc(x.title)+' · <b>'+esc(x.status)+'</b> · '+days+' days'+schema+'</p></div><div class=\"actions\">'+migrate+draft+promote+'</div></article>';
