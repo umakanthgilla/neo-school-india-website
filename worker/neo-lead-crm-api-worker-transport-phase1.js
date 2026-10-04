@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp10",
+          build: "2026-10-04-v2exp11",
         },
         200,
         request
@@ -1235,7 +1235,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(dob&&(!/^\d{4}-\d{2}-\d{2}$/.test(dob)||!Number.isFinite(Date.parse(dob))||new Date(dob).toISOString().slice(0,10)!==dob||dob>neoToday()))fail('Check date of birth.');
     const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND id<>? AND json_extract(data,'$.mobile')=? LIMIT 1").bind(school,id,staffMobile).first();
     if(duplicate)fail('A staff record already uses this mobile number.');
-    const previousCategory=normalizeStaffCategory(previous.staff_type||previous.staff_category||previous.department);
+    const previousCategory=normalizeStaffCategory(previous.staff_type||previous.staff_category||previous.department,previous.role);
     if(previousCategory==='Teaching Staff'&&department!=='Teaching Staff'){
       const assigned=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=? LIMIT 1").bind(school,id).first();
       if(assigned)return out({error:'Remove this teacher from the classroom assignment before changing the staff category.'},409);
@@ -1679,7 +1679,7 @@ async function nextFinanceNumber(env,school,docType,docDate){
  const n=Number(row?.last_no);if(!Number.isSafeInteger(n)||n<1)throw new Error('Finance document number could not be generated.');
  return (docType==='receipt'?'RCPT':'PV')+'-'+year+'-'+String(n).padStart(6,'0');
 }
-function normalizeStaffCategory(value){const v=String(value||'').trim(),m={Teaching:'Teaching Staff','Teaching Staff':'Teaching Staff',Administration:'Administration','Administrative Staff':'Administration',Accounts:'Administration',HR:'Administration',Transport:'Non-Teaching Staff','Inventory / Stores':'Non-Teaching Staff',Other:'Non-Teaching Staff','Non-Teaching Staff':'Non-Teaching Staff','Maintenance / Housekeeping':'Support Staff',Security:'Support Staff','Support Staff':'Support Staff'};return m[v]||''}
+function normalizeStaffCategory(value,role=''){const r=String(role||'').trim();if(/\b(driver|bus\s*driver|bus\s*helper|conductor|ayah|caretaker|housekeeping|security|helper)\b/i.test(r))return 'Support Staff';const v=String(value||'').trim(),m={Teaching:'Teaching Staff','Teaching Staff':'Teaching Staff',Administration:'Administration','Administrative Staff':'Administration',Accounts:'Administration',HR:'Administration',Transport:'Non-Teaching Staff','Inventory / Stores':'Non-Teaching Staff',Other:'Non-Teaching Staff','Non-Teaching Staff':'Non-Teaching Staff','Maintenance / Housekeeping':'Support Staff',Security:'Support Staff','Support Staff':'Support Staff'};return m[v]||''}
 async function portalRows(env,school,kind){const r=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? ORDER BY created_at DESC,id').bind(school,kind).all();return (r.results||[]).map(x=>({...JSON.parse(x.data),id:x.id,created_at:x.created_at}))}
 async function portalRecord(env,school,kind,id){const r=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();return r?{...JSON.parse(r.data),id}:null}
 function headOfficePaymentVoucher(payment,paymentId,voucherNo){
@@ -1812,7 +1812,7 @@ async function portalExtra(request,env,url,admin,session){
   if(staffId){
     staffMember=await portalRecord(env,school,'staff',staffId);
     if(!staffMember||staffMember.status==='Inactive')return out({error:'Choose an active Staff ID from this school.'},400);
-    const existingCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department);
+    const existingCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department,staffMember.role);
     if(b.classroom_ids.length&&existingCategory!=='Teaching Staff')return out({error:'Classroom access can be assigned only to Teaching Staff.'},400);
   }else{
     const p=b?.teacher_profile&&typeof b.teacher_profile==='object'&&!Array.isArray(b.teacher_profile)?b.teacher_profile:{};
@@ -1828,7 +1828,7 @@ async function portalExtra(request,env,url,admin,session){
     staffMember={...newStaffData,id:staffId};
   }
 
-  const effectiveCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department);
+  const effectiveCategory=normalizeStaffCategory(staffMember.staff_type||staffMember.staff_category||staffMember.department,staffMember.role);
   const isTeaching=effectiveCategory==='Teaching Staff';
   if(!isTeaching&&b.classroom_ids.length)return out({error:'Classroom access can be assigned only to Teaching Staff.'},400);
   const existingEmployee=await env.DB.prepare('SELECT account_id FROM neo_employee_accounts WHERE school_id=? AND staff_id=?').bind(school,staffId).first();
