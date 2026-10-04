@@ -21,6 +21,20 @@ jobs:
         run: python3 scripts/patch_v2_worker_daily_experiences.py
       - name: Apply Playgroup V2 publish schema
         run: python3 scripts/patch_playgroup_v2_publish_schema.py
+      - name: Validate V2 time parsing
+        run: |
+          node -e "const t=/^([01]\\d|2[0-3]):[0-5]\\d$/; if(!t.test('09:30')||!t.test('12:30')||t.test('29:99')) process.exit(1)"
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('worker/neo-lead-crm-api-worker-transport-phase1.js').read_text()
+          a=s.index('function validateDailyExperiences')
+          b=s.index('function validateLearningPlan',a)
+          block=s[a:b]
+          if '\\\\d' in block:
+              raise SystemExit('Daily Experience time regex still contains double escaping')
+          if "check start/end" not in block:
+              raise SystemExit('Daily Experience validator missing')
+          PY
       - name: Validate Worker syntax
         run: node --check worker/neo-lead-crm-api-worker-transport-phase1.js
       - name: Commit Worker patch
@@ -42,4 +56,4 @@ jobs:
           done
           exit 1
 
-# Trigger revision: 4
+# Trigger revision: 5
