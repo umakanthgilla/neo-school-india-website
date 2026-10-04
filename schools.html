@@ -484,7 +484,7 @@ function renderAccess(area){
      </label>
      <label>Classroom assignment
       <select name="classroom_ids" multiple size="${Math.min(6,Math.max(2,(records.classrooms||[]).length||2))}">
-       ${(records.classrooms||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.name+' · '+c.program+' · '+c.academic_year)}</option>`).join('')}
+       ${(records.classrooms||[]).map(c=>`<option value="${esc(c.id)}">${esc(c.program+' · '+c.name+' · '+c.academic_year)}</option>`).join('')}
       </select>
       <small>Optional. This links the teacher to existing classroom IDs. No classroom or teacher master record is duplicated.</small>
      </label>
@@ -504,7 +504,7 @@ function renderAccess(area){
     const rooms=(records.classrooms||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
     if(!rooms.length){portalNotice('Create the classroom / section first.');return}
     host.dataset.open='1';button.textContent='Close assignment';
-    host.innerHTML=`<div class="portal-editor" style="margin-top:12px"><label>Classroom / section<select data-teacher-room><option value="">Choose classroom…</option>${rooms.map(c=>`<option value="${esc(c.id)}" ${(account.classroom_ids||[]).includes(c.id)?'selected':''}>${esc(c.name+' · '+c.program+' · '+c.academic_year)}</option>`).join('')}</select></label><button type="button" data-save-teacher-room>Save classroom assignment</button><p class="form-note">This links the existing Teacher Account and Staff ID to the selected classroom. It does not create another teacher or reset the password.</p></div>`;
+    host.innerHTML=`<div class="portal-editor" style="margin-top:12px"><label>Class / section<select data-teacher-room><option value="">Choose classroom…</option>${rooms.map(c=>`<option value="${esc(c.id)}" ${(account.classroom_ids||[]).includes(c.id)?'selected':''}>${esc(c.program+' · '+c.name+' · '+c.academic_year)}</option>`).join('')}</select></label><div class="actions"><button type="button" data-save-teacher-room>Assign / change to this teacher</button><button type="button" class="secondary" data-remove-teacher-room>Remove teacher from selected class</button></div><p class="form-note">Assignment changes reuse the existing Staff ID. Removing a classroom assignment does not delete or disable the teacher.</p></div>`;
     host.querySelector('[data-save-teacher-room]').onclick=async e=>{
      const classroomId=host.querySelector('[data-teacher-room]').value;
      if(!classroomId){portalNotice('Choose a classroom / section.');return}
@@ -513,6 +513,18 @@ function renderAccess(area){
       await call('teacher_assignment','POST',{classroom_id:classroomId,teacher_account_id:account.account_id});
       await loadRecords();
       portalNotice('Teacher classroom assignment saved.');
+      renderContent();
+     }catch(error){portalNotice(error.message);e.target.disabled=false}
+    };
+    host.querySelector('[data-remove-teacher-room]').onclick=async e=>{
+     const classroomId=host.querySelector('[data-teacher-room]').value;
+     if(!classroomId){portalNotice('Choose the classroom whose teacher assignment should be removed.');return}
+     if(!confirm('Remove the teacher assignment from this classroom? The Staff ID and login will remain active.'))return;
+     e.target.disabled=true;
+     try{
+      await call('teacher_assignment','POST',{classroom_id:classroomId,teacher_account_id:''});
+      await loadRecords();
+      portalNotice('Teacher removed from classroom assignment. Staff master and login were preserved.');
       renderContent();
      }catch(error){portalNotice(error.message);e.target.disabled=false}
     };
