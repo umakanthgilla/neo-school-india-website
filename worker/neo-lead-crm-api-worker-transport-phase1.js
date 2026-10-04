@@ -2112,6 +2112,12 @@ function validateMasterCurriculum(b){
  if(typeof b.title!=='string'||!b.title.trim()||b.title.trim().length>160)
   fail('Enter a curriculum title.');
 
+ const curriculumSchema=typeof b.curriculum_schema==='string'?b.curriculum_schema.trim():'';
+ if(curriculumSchema&&curriculumSchema!=='playgroup-v2')
+  fail('Unsupported curriculum schema.');
+ if(curriculumSchema==='playgroup-v2'&&b.level.trim()!=='Playgroup')
+  fail('Playgroup V2 schema can only be used for Playgroup.');
+
  if(!Array.isArray(b.lessons)||b.lessons.length<1||b.lessons.length>2200)
   fail('Provide 1â€“2200 concepts.');
 
@@ -2176,6 +2182,7 @@ function validateMasterCurriculum(b){
   level:b.level.trim(),
   version:b.version.trim(),
   title:b.title.trim(),
+  curriculum_schema:curriculumSchema,
   lessons,
   daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail),
   daily_experiences:validateDailyExperiences(b.daily_experiences,fail)
@@ -2305,7 +2312,7 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
    error:'Production publish requires curriculum concepts for all 200 days.'
   },400);
 
- if(!testMode&&checked.level==='Playgroup'&&Array.isArray(checked.daily_experiences)&&checked.daily_experiences.length){
+ if(!testMode&&checked.level==='Playgroup'&&(checked.curriculum_schema==='playgroup-v2'||checked.daily_experiences.length>0)){
   const playgroupV2Schema=[
    [1,'Welcome & Discovery','09:30','09:45'],
    [2,'Circle & Communication','09:45','10:05'],
