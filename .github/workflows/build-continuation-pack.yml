@@ -35,6 +35,9 @@ jobs:
           cp family-portal.js "$PACK/"
           cp teacher-period-execution.js "$PACK/"
           cp teacher-execution.css "$PACK/"
+          cp parent-pickup-approval.js "$PACK/"
+          cp neo-transport-push.js "$PACK/"
+          cp transport-portal.js "$PACK/"
 
           cp scripts/patch_v2_worker_daily_experiences.py "$PACK/scripts/"
           cp scripts/patch_playgroup_v2_publish_schema.py "$PACK/scripts/"
@@ -60,7 +63,7 @@ jobs:
           - Production total: 1800 Learning Experiences.
           - New Playgroup drafts are tagged curriculum_schema=playgroup-v2.
           - Worker production publish validates the V2 schema and prevents missing Daily Experiences from bypassing validation.\n          - Playgroup V2 production publish is additionally locked until Head Office Academic QA is Approved.
-          - Worker health build marker expected after deploy: 2026-10-04-v2exp5.
+          - Worker health build marker expected after deploy: 2026-10-04-v2exp6.
 
           LOCKED DAILY STRUCTURE
           1. 09:30–09:45 — Welcome & Discovery
@@ -74,7 +77,7 @@ jobs:
           9. 12:10–12:30 — Reflect, Pack & Goodbye
 
           CURRENT NEXT STEP
-          Verify Parent Portal Child timetable reads the active approved V2 plan and shows exactly 9 Learning Experiences with locked V2 timings; then continue parent-visible learning/home-connection verification.
+          Verify Parent Portal after v2exp6 deploy: Child timetable must use active approved V2 dates and show 9 Learning Experiences; pickup phone-alert boxes must not float above the portal; Transport nav appears only for children with an active transport assignment.
 
           PRODUCTION WORKER
           worker/neo-lead-crm-api-worker-transport-phase1.js
@@ -89,7 +92,7 @@ jobs:
           2. If Cloudflare Worker is not auto-deployed, deploy:
              worker/neo-lead-crm-api-worker-transport-phase1.js
           3. Verify health response contains:
-             build: 2026-10-04-v2exp5
+             build: 2026-10-04-v2exp6
           EOF
 
       - name: Upload continuation pack
@@ -100,4 +103,4 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-# Trigger revision: 4
+# Trigger revision: 5
