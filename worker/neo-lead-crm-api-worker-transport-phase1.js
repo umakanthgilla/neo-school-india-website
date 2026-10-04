@@ -1189,7 +1189,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   }
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(recordId))fail('Invalid record ID.');
   if(request.method==='PATCH'){
-   const schoolPatch=['students','classrooms','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders'];
+   const schoolPatch=['students','classrooms','staff','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders'];
    const headOfficePatch=['orders','purchase_orders','ledger','support','staff_leave','salary_advances','payroll'];
    if(!id||(!admin&&!schoolPatch.includes(kind))||![...schoolPatch,...headOfficePatch].includes(kind))return out({error:'This update is not permitted for your role.'},403);
    const old=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();if(!old)return out({error:'Not found.'},404);const previous=JSON.parse(old.data);
@@ -1199,8 +1199,18 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    else if(kind==='salary_advances'){const next=choice('status',['Approved','Rejected','Released']);if(['Approved','Rejected'].includes(next)){if(previous.status!=='Pending')return out({error:'Only Pending advances can be reviewed.'},409);data={...previous,status:next,reviewed_at:new Date().toISOString()};}else{if(previous.status!=='Approved')return out({error:'Only Approved advances can be released.'},409);data={...previous,status:'Released',released_at:new Date().toISOString(),recovered_paise:Number(previous.recovered_paise||0),outstanding_paise:Math.max(0,Number(previous.amount_paise||0)-Number(previous.recovered_paise||0))};}}
    else if(kind==='staff_leave'){const next=choice('status',['Approved','Rejected']);if(previous.status!=='Pending')return out({error:'Only Pending leave can be reviewed.'},409);data={...previous,status:next,reviewed_at:new Date().toISOString()};}
    else if(kind==='students'){const classroom=await related('classrooms','classroom_id');if(classroom.program!==previous.program||classroom.academic_year!==previous.academic_year)fail('Classroom must match student class and academic year.');data={...previous,classroom_id:classroom.id};}
+   else if(kind==='staff'){
+    const departments=['Teaching','Administration','Accounts','HR','Transport','Inventory / Stores','Maintenance / Housekeeping','Security','Other'];
+    const genders=['','Male','Female','Prefer not to say'];
+    const staffMobile=mobile(),emergency=str('emergency_mobile',20,false),dob=str('dob',10,false);
+    if(emergency&&!/^\+?[0-9 ()-]{8,20}$/.test(emergency))fail('Check emergency contact number.');
+    if(dob&&(!/^\d{4}-\d{2}-\d{2}$/.test(dob)||!Number.isFinite(Date.parse(dob))||new Date(dob).toISOString().slice(0,10)!==dob||dob>neoToday()))fail('Check date of birth.');
+    const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND id<>? AND json_extract(data,'$.mobile')=? LIMIT 1").bind(school,id,staffMobile).first();
+    if(duplicate)fail('A staff record already uses this mobile number.');
+    data={...previous,name:str('name',120),department:choice('department',departments),role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:date('joining_date'),emergency_mobile:emergency,status:choice('status',['Active','Inactive'])};
+   }
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
-   else if(kind==='classrooms'){data={...previous,name:str('name')};delete data.teacher;delete data.teacher_id;delete data.teacher_account_id;delete data.teacher_staff_id;}
+   else if(kind==='classrooms'){const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');data={...previous,name:str('name',120),capacity:cap};}
    else data={...previous,status:choice('status',kind==='enquiries'?['New','Contacted','Visit planned','Converted','Lost']:kind==='orders'?['Submitted','Approved','Dispatched','Delivered','Cancelled']:kind==='purchase_orders'?['Submitted','Approved','Dispatched','Cancelled']:kind==='ledger'?['Pending verification','Verified','Rejected']:['Open','In progress','Resolved']),office_note:str('office_note',1000,false),...(kind==='purchase_orders'&&b.status==='Approved'?{approved_at:new Date().toISOString()}: {})};
   }else{
    // Repeated submission IDs cannot create duplicate fees or orders.
@@ -1549,6 +1559,13 @@ recordId='HR_RULES_'+effectiveFrom;
   sql+=' ON CONFLICT(school_id,kind,id) DO UPDATE SET data=excluded.data';
 }
   const writes=[env.DB.prepare(sql).bind(school,kind,recordId,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,admin?'head-office':'school:'+school,request.method+':'+kind,recordId)];
+  if(kind==='staff'&&request.method==='PATCH'){
+   writes.push(
+    env.DB.prepare('UPDATE neo_employee_accounts SET name=? WHERE school_id=? AND staff_id=?').bind(data.name,school,recordId),
+    env.DB.prepare("UPDATE neo_teacher_accounts SET name=? WHERE school_id=? AND account_id IN (SELECT account_id FROM neo_teacher_staff_links WHERE school_id=? AND staff_id=?)").bind(data.name,school,school,recordId),
+    env.DB.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.teacher',?) WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=?").bind(data.name,school,recordId)
+   );
+  }
   if(kind==='student_movements'&&lifecycleStudentUpdate){writes.push(env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='students' AND id=?").bind(JSON.stringify(lifecycleStudentUpdate),school,lifecycleStudentId));for(const fee of lifecycleNewFees)writes.push(env.DB.prepare('INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'invoices',fee.id,JSON.stringify(fee)));}
   if(kind==='students'&&data.classroom_id){
    const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===data.classroom_id&&String(data.status||'Active')!=='Withdrawn');
