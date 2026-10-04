@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp4",
+          build: "2026-10-04-v2exp5",
         },
         200,
         request
@@ -3182,11 +3182,50 @@ async function learningTimetable(request,env,url,actor){
       s=>s.classroom_id===child.classroom_id
     );
 
+    /*
+      Parent timetable follows the active approved curriculum first.
+      For V2, daily_experiences are the authoritative 9-block classroom day.
+      The weekly timetable remains a fallback for legacy/non-V2 plans.
+    */
+    let periods=[],curriculumVersion='',curriculumLevel='',curriculumPlanId='';
+    const active=await env.DB.prepare(
+      "SELECT id,data FROM neo_learning_plans WHERE school_id=? AND classroom_id=? AND status='Approved' ORDER BY created_at DESC LIMIT 1"
+    ).bind(school,child.classroom_id||'').first();
+
+    if(active?.data){
+      try{
+        const plan=JSON.parse(active.data),experiences=Array.isArray(plan.daily_experiences)?plan.daily_experiences:[],dates=Array.isArray(plan.working_dates)?plan.working_dates:[];
+        if(experiences.length&&dates.length===200){
+          periods=experiences
+            .filter(x=>Number.isInteger(Number(x.day))&&Number(x.day)>=1&&Number(x.day)<=200&&dates[Number(x.day)-1]&&x.start&&x.end)
+            .map(x=>({
+              id:String(x.id||('v2-'+x.day+'-'+x.experience_no)),
+              date:dates[Number(x.day)-1],
+              start:String(x.start),
+              end:String(x.end),
+              subject:String(x.experience_name||x.subject||'Learning Experience'),
+              period:Number(x.experience_no)===6?'Break':'Learning Experience',
+              type:Number(x.experience_no)===6?'Break':'Teaching',
+              day:Number(x.day),
+              experience_no:Number(x.experience_no)||0,
+              source:'Curriculum experience'
+            }))
+            .sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+          curriculumVersion=String(plan.master_version||'');
+          curriculumLevel=String(plan.master_level||child.program||'');
+          curriculumPlanId=String(active.id||'');
+        }
+      }catch(_e){}
+    }
+
     return out({
-      status:old?.status==='Published'?'Published':'Not published',
+      status:periods.length?'Curriculum active':(old?.status==='Published'?'Published':'Not published'),
       revision:Number(old?.revision||0),
-      slots:old?.status==='Published'||!old?.status?slots:[],
-      periods:[],
+      slots:periods.length?[]:(old?.status==='Published'||!old?.status?slots:[]),
+      periods,
+      curriculum_version:curriculumVersion,
+      curriculum_level:curriculumLevel,
+      curriculum_plan_id:curriculumPlanId,
       today:neoToday()
     });
   }
