@@ -261,7 +261,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp5",
+          build: "2026-10-04-v2exp6",
         },
         200,
         request
@@ -1901,6 +1901,7 @@ async function parentPortal(request,env,url){
  await ensureStudentAdmissionNumbers(env,a.school_id);
  const child=await portalRecord(env,a.school_id,'students',a.student_id);if(!child)return out({error:'Student record not available. Contact your school.'},404);
  const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(a.school_id).first();
+ const transportAssignment=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='transport_assignments' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.active')=1 LIMIT 1").bind(a.school_id,a.student_id).first();
  const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders','transport_alerts'];
  const pairs=await Promise.all(kinds.map(async k=>{
   if(k==='transport_alerts'){
@@ -1912,7 +1913,7 @@ async function parentPortal(request,env,url){
   const arg=['homework','announcements'].includes(k)?(child.classroom_id||'UNASSIGNED'):a.student_id;
   const rows=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? AND '+sql+' ORDER BY created_at DESC,id').bind(a.school_id,k,arg).all();return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
  }));
- return out({school,child:{name:child.name,program:child.program,academic_year:child.academic_year},...Object.fromEntries(pairs)});
+ return out({school,child:{name:child.name,program:child.program,academic_year:child.academic_year},transport_assigned:!!transportAssignment,...Object.fromEntries(pairs)});
  }catch(e){console.error('Parent portal error',e);return out({error:'Parent portal unavailable. Please contact your school.'},503)}
 }
 
