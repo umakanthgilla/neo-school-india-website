@@ -253,3 +253,93 @@ body.transport-authenticated #message:not(:empty){position:fixed;left:50%;bottom
 
 #app .transport-trip-blocked{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border:1px solid #e5cf9a;border-radius:10px;background:#fff8e9;color:#5d4820;font-weight:700;line-height:1.4}
 #app .transport-trip-blocked .transport-icon{flex:none}
+
+
+/* 2026-10-06: align the signed-in Transport Portal with Parent/Teacher portal UI. */
+#app>.transport-portal-hero h2{color:#fff!important}
+#app>.transport-portal-hero p{color:#dfeeff!important}
+#app .transport-sidebar .transport-work-bar button,
+#app .transport-sidebar .transport-menu-panel button,
+#app .transport-sidebar .transport-nav-group>summary,
+#app .transport-side-signout{
+  background:#17356c!important;
+  color:#fff!important;
+  border-color:#2b4a80!important;
+  box-shadow:none!important;
+}
+#app .transport-sidebar .transport-work-bar button[aria-current=true],
+#app .transport-sidebar .transport-menu-panel button[aria-current=true]{
+  background:#17356c!important;
+  color:#fff!important;
+  border-color:#2b4a80!important;
+}
+#app .transport-sidebar .transport-work-bar button,
+#app .transport-sidebar .transport-nav-group>summary{position:relative;overflow:hidden}
+#app .transport-sidebar .transport-work-bar button:after,
+#app .transport-sidebar .transport-nav-group>summary:before{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;height:3px;
+  background:var(--transport-gradient);
+}
+#app .transport-sidebar .transport-work-bar button:active,
+#app .transport-sidebar .transport-menu-panel button:active,
+#app .transport-sidebar .transport-nav-group>summary:active{
+  background:#fff!important;color:#102657!important;
+}
+#app .transport-sidebar .transport-push-slot .neo-push-optin{
+  display:block;margin:8px 0 12px;padding:0;background:transparent;border:0;color:#fff;
+}
+#app .transport-sidebar .transport-push-slot .neo-push-optin button{
+  width:100%;min-height:46px;margin:0;padding:10px 12px;
+  background:#17356c!important;color:#fff!important;border:1px solid #2b4a80!important;
+  border-radius:12px;text-align:left;font-weight:800;
+}
+#app .transport-sidebar .transport-push-slot .neo-push-optin span{display:block;margin-top:6px;color:#dfe8f6}
+#app .transport-sidebar .transport-menu-reminders{
+  background:#17356c!important;border:1px solid #2b4a80;color:#fff;
+}
+#app .transport-sidebar .transport-menu-reminders strong{display:flex;align-items:center;gap:7px;color:#fff}
+#app .transport-sidebar .transport-menu-reminders p{color:#dfe8f6!important}
+@media(min-width:761px){
+  body.transport-authenticated>.transport-main{
+    height:100dvh!important;
+    padding:24px 28px!important;
+    background:#0b2055!important;
+  }
+  #app:not([hidden]){
+    height:calc(100dvh - 48px)!important;
+    grid-template-columns:255px minmax(0,1fr)!important;
+    grid-template-rows:200px minmax(0,1fr)!important;
+    gap:20px 22px!important;
+  }
+  #app>.transport-sidebar{
+    padding:26px 18px 18px!important;
+    background:#102a60!important;
+    border-color:#294579!important;
+    box-shadow:0 12px 32px #06163720!important;
+  }
+  .transport-sidebar-logo{margin:0 9px 20px!important}
+  .transport-sidebar-logo img{
+    width:100%!important;height:82px!important;padding:8px!important;
+    border:1px solid #e5edf7!important;border-radius:15px!important;
+    box-shadow:0 10px 28px #00133335!important;
+  }
+  #app>.transport-portal-hero{
+    height:200px!important;
+    padding:26px 32px!important;
+    border-radius:20px!important;
+    box-shadow:0 14px 38px #06163726!important;
+  }
+  #app>.transport-content{
+    background:#f7fbff!important;
+    border-radius:18px!important;
+    padding:18px 20px 30px!important;
+    box-shadow:0 12px 36px #00133325!important;
+  }
+}
+@media(max-width:760px){
+  body.transport-authenticated>.transport-main{padding:10px!important;background:#0b2055!important}
+  #app>.transport-sidebar{background:#102a60!important;border-color:#294579!important}
+  #app>.transport-content{background:#f7fbff!important;border-radius:16px!important;padding:16px!important}
+}
