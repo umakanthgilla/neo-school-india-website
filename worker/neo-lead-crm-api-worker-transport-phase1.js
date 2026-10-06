@@ -1071,6 +1071,8 @@ const PORTAL_SCHEMA = [
  `CREATE TABLE IF NOT EXISTS neo_parent_student_links (account_id TEXT NOT NULL, school_id TEXT NOT NULL, student_id TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(account_id,student_id))`,
  `CREATE INDEX IF NOT EXISTS neo_parent_student_links_student ON neo_parent_student_links(school_id,student_id,active)`,
  `CREATE TABLE IF NOT EXISTS neo_portal_records (school_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(school_id,kind,id))`,
+ `CREATE TABLE IF NOT EXISTS neo_student_performance_photos (performance_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, student_id TEXT NOT NULL, teacher_id TEXT NOT NULL, photo BLOB NOT NULL, uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+ `CREATE INDEX IF NOT EXISTS neo_student_performance_photos_student ON neo_student_performance_photos(school_id,student_id,uploaded_at)`,
  `CREATE TABLE IF NOT EXISTS neo_portal_audit (id TEXT PRIMARY KEY, school_id TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, record_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
  `CREATE TABLE IF NOT EXISTS neo_finance_sequences (school_id TEXT NOT NULL, doc_type TEXT NOT NULL, year TEXT NOT NULL, last_no INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(school_id,doc_type,year))`,
  `CREATE TRIGGER IF NOT EXISTS neo_stock_nonnegative BEFORE INSERT ON neo_portal_records WHEN NEW.kind='stock_moves' BEGIN
@@ -2024,9 +2026,19 @@ async function parentPortal(request,env,url){
  }
  const a=await parentSession(request,env);if(!a)return out({error:'Parent sign in required.'},401);
  if(url.pathname==='/api/parent/password'&&request.method==='POST'){
-  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
+  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
   if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);
   const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(hash,salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'parent:'+a.account_id,'password-change',a.student_id)]);return out({success:true});
+ }
+ const parentPerformancePhoto=url.pathname.match(/^\/api\/parent\/performance-photo\/([^/]+)$/);
+ if(parentPerformancePhoto&&request.method==='GET'){
+  await ensurePortalSchema(env);
+  const id=decodeURIComponent(parentPerformancePhoto[1]);
+  const record=await portalRecord(env,a.school_id,'student_performance',id);
+  if(!record||record.student_id!==a.student_id||record.parent_visible!==true||record.has_photo!==true)return out({error:'Photo not found.'},404);
+  const row=await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,a.student_id).first();
+  if(!row?.photo)return out({error:'Photo not found.'},404);
+  return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
  }
  if(url.pathname!=='/api/parent/me'||request.method!=='GET')return out({error:'Not found.'},404);
  await ensureStudentAdmissionNumbers(env,a.school_id);
@@ -2036,14 +2048,14 @@ async function parentPortal(request,env,url){
  const linkedIds=[...new Set((linkedRows.results||[]).map(x=>x.student_id).filter(Boolean))];
  const linkedChildren=[];for(const studentId of linkedIds){const s=await portalRecord(env,a.school_id,'students',studentId);if(s&&String(s.status||'Active')!=='Withdrawn')linkedChildren.push({id:s.id,name:s.name,program:s.program,academic_year:s.academic_year,admission_no:s.admission_no||''})}
  const transportAssignment=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='transport_assignments' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.active')=1 LIMIT 1").bind(a.school_id,a.student_id).first();
- const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders','transport_alerts'];
+ const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders','transport_alerts','student_performance'];
  const pairs=await Promise.all(kinds.map(async k=>{
   if(k==='transport_alerts'){
    const rows=await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_alerts' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.date')=? ORDER BY created_at DESC,id LIMIT 50").bind(a.school_id,a.student_id,neoToday()).all();
    return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
   }
   // Only fetch this child's rows or explicitly published classroom/school content.
-  const sql=k==='homework'?"json_extract(data,'$.published')=1 AND json_extract(data,'$.classroom_id')=?":k==='announcements'?"COALESCE(json_extract(data,'$.audience'),'Parents and teachers')!='Teachers only' AND json_extract(data,'$.published')=1 AND (json_extract(data,'$.classroom_id')='' OR json_extract(data,'$.classroom_id')=?)":"json_extract(data,'$.student_id')=?";
+  const sql=k==='homework'?"json_extract(data,'$.published')=1 AND json_extract(data,'$.classroom_id')=?":k==='announcements'?"COALESCE(json_extract(data,'$.audience'),'Parents and teachers')!='Teachers only' AND json_extract(data,'$.published')=1 AND (json_extract(data,'$.classroom_id')='' OR json_extract(data,'$.classroom_id')=?)":k==='student_performance'?"json_extract(data,'$.student_id')=? AND json_extract(data,'$.parent_visible')=1":"json_extract(data,'$.student_id')=?";
   const arg=['homework','announcements'].includes(k)?(child.classroom_id||'UNASSIGNED'):a.student_id;
   const rows=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? AND '+sql+' ORDER BY created_at DESC,id').bind(a.school_id,k,arg).all();return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
  }));
@@ -2084,6 +2096,7 @@ async function teacherPortal(request,env,url){
   return out({token:await teacherToken(a,env.ADMIN_PASSWORD)});
  }
  const a=await teacherSession(request,env);if(!a)return out({error:'Teacher sign in required.'},401);
+ await ensurePortalSchema(env);
  const students=(await portalRows(env,a.school_id,'students')).filter(s=>a.classroom_ids.includes(s.classroom_id));
  if(url.pathname==='/api/teacher/me'&&request.method==='GET'){
   const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(a.school_id).first();
@@ -2092,7 +2105,9 @@ async function teacherPortal(request,env,url){
   const homework=(await portalRows(env,a.school_id,'homework')).filter(r=>a.classroom_ids.includes(r.classroom_id));
   const announcements=(await portalRows(env,a.school_id,'announcements')).filter(n=>n.published&&(!n.classroom_id||a.classroom_ids.includes(n.classroom_id)));
   const tasks=(await portalRows(env,a.school_id,'teacher_tasks')).filter(t=>t.teacher_id===a.account_id);
-  return out({tasks,announcements,name:a.name,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework});
+  const studentIds=new Set(students.map(s=>s.id));
+  const student_performance=(await portalRows(env,a.school_id,'student_performance')).filter(r=>studentIds.has(r.student_id)).sort((x,y)=>String(y.date||y.created_at||'').localeCompare(String(x.date||x.created_at||''))).slice(0,250);
+  return out({tasks,announcements,name:a.name,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance});
  }
  if(url.pathname==='/api/teacher/hr'&&request.method==='GET'){
   const link=await env.DB.prepare('SELECT staff_id FROM neo_teacher_staff_links WHERE school_id=? AND account_id=?').bind(a.school_id,a.account_id).first();if(!link)return out({error:'Teacher login is not linked to Staff Master. Contact HR.'},409);
@@ -2106,7 +2121,7 @@ async function teacherPortal(request,env,url){
   const link=await env.DB.prepare('SELECT staff_id FROM neo_teacher_staff_links WHERE school_id=? AND account_id=?').bind(a.school_id,a.account_id).first();if(!link)return out({error:'Teacher login is not linked to Staff Master. Contact HR.'},409);const b=await request.json(),amount=Number(b.amount_paise),installments=Number(b.installments||1);if(!Number.isSafeInteger(amount)||amount<=0||amount>100000000||!Number.isInteger(installments)||installments<1||installments>24||!/^20\d{2}-(0[1-9]|1[0-2])$/.test(String(b.recovery_month||''))||typeof b.reason!=='string'||!b.reason.trim()||b.reason.length>1000)return out({error:'Check advance amount, recovery plan and reason.'},400);const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={staff_id:link.staff_id,amount_paise:amount,request_date:neoToday(),reason:b.reason.trim(),recovery_month:b.recovery_month,installments,status:'Pending',requested_by:'teacher:'+a.account_id};await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'salary_advances',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:salary_advances',id),portalNotification(env,a.school_id,'hr','New salary advance request',a.name+' submitted a salary advance request.','salary_advances',id,'Unread','hr_workflow')]);return out({success:true,id,status:'Pending'},201);
  }
  if(url.pathname==='/api/teacher/password'&&request.method==='POST'){
-  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
+  const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
   if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);
   const salt=crypto.randomUUID();await env.DB.batch([env.DB.prepare('UPDATE neo_teacher_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(await schoolPassword(b.password,salt),salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'password-change',a.account_id)]);return out({success:true});
  }
@@ -2118,6 +2133,42 @@ async function teacherPortal(request,env,url){
   const result=await env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='teacher_tasks' AND id=? AND json_extract(data,'$.revision')=?").bind(JSON.stringify(data),a.school_id,b.id,task.revision).run();
   if(Number(result.meta?.changes??result.changes??0)!==1)return out({error:'Task changed. Refresh before saving.'},409);
   return out({success:true});
+ }
+ const teacherPerformancePhoto=url.pathname.match(/^\/api\/teacher\/performance-photo\/([^/]+)$/);
+ if(teacherPerformancePhoto&&request.method==='GET'){
+  const id=decodeURIComponent(teacherPerformancePhoto[1]),record=await portalRecord(env,a.school_id,'student_performance',id);
+  if(!record||!students.some(s=>s.id===record.student_id)||record.has_photo!==true)return out({error:'Photo not found.'},404);
+  const row=await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,record.student_id).first();
+  if(!row?.photo)return out({error:'Photo not found.'},404);
+  return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
+ }
+ if(url.pathname==='/api/teacher/performance'&&request.method==='POST'){
+  const raw=await request.text();if(raw.length>230000)return out({error:'Photo request is too large.'},413);
+  let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid performance record.'},400)}
+  const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+  const student=students.find(s=>s.id===b.student_id),outcomes=['Participated','With support','Independent','Needs follow-up','Excellent progress'];
+  if(!student)return out({error:'Choose a child from your assigned classroom.'},403);
+  if(!validDate(b.date)||b.date>neoToday())return out({error:'Choose today or an earlier activity date.'},400);
+  if(typeof b.activity!=='string'||!b.activity.trim()||b.activity.trim().length>200)return out({error:'Enter the activity or learning area.'},400);
+  if(!outcomes.includes(b.outcome))return out({error:'Choose a valid performance outcome.'},400);
+  if(typeof b.observation!=='string'||!b.observation.trim()||b.observation.trim().length>1500)return out({error:'Add a short child performance observation.'},400);
+  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID();
+  if(await portalRecord(env,a.school_id,'student_performance',id))return out({error:'This performance update was already saved. Refresh before submitting again.'},409);
+  let bytes=null;
+  if(b.photo){
+   const photo=String(b.photo);
+   if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Activity photo must be a JPEG under 150 KB.'},400);
+   const decoded=atob(photo.split(',')[1]);if(decoded.length<4||decoded.length>150000||decoded.charCodeAt(0)!==255||decoded.charCodeAt(1)!==216||decoded.charCodeAt(decoded.length-2)!==255||decoded.charCodeAt(decoded.length-1)!==217)return out({error:'Upload a valid JPEG photo under 150 KB.'},400);
+   bytes=Uint8Array.from(decoded,ch=>ch.charCodeAt(0));
+  }
+  const record={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id,date:b.date,activity:b.activity.trim(),outcome:b.outcome,observation:b.observation.trim(),parent_visible:b.parent_visible===true,has_photo:!!bytes,teacher_id:a.account_id,teacher_name:a.name,created_at:new Date().toISOString()};
+  const writes=[
+   env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'student_performance',?,?)").bind(a.school_id,id,JSON.stringify(record)),
+   env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:student_performance',id)
+  ];
+  if(bytes)writes.push(env.DB.prepare('INSERT INTO neo_student_performance_photos(performance_id,school_id,student_id,teacher_id,photo) VALUES (?,?,?,?,?)').bind(id,a.school_id,student.id,a.account_id,bytes));
+  await env.DB.batch(writes);
+  return out({success:true,id,...record},201);
  }
  const kind=url.pathname==='/api/teacher/attendance'?'attendance':url.pathname==='/api/teacher/homework'?'homework':null;
  if(!kind||request.method!=='POST')return out({error:'Not found.'},404);
