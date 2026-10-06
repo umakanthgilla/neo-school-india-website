@@ -1870,15 +1870,31 @@ async function portalExtra(request,env,url,admin,session){
    const accountId=String(b.link_account_id||'').trim().toUpperCase();
    const account=await env.DB.prepare('SELECT account_id,active FROM neo_parent_accounts WHERE school_id=? AND account_id=?').bind(school,accountId).first();
    if(!account||!account.active)return out({error:'Choose an active Parent ID from this school.'},400);
-   await env.DB.batch([
+
+   const existingRows=await env.DB.prepare(
+    "SELECT DISTINCT a.account_id FROM neo_parent_accounts a LEFT JOIN neo_parent_student_links l ON l.account_id=a.account_id AND l.school_id=a.school_id AND l.student_id=? AND l.active=1 WHERE a.school_id=? AND a.active=1 AND (a.student_id=? OR l.student_id IS NOT NULL)"
+   ).bind(id,school,id).all();
+   const otherAccounts=(existingRows.results||[]).map(x=>x.account_id).filter(x=>x&&x!==accountId);
+
+   const writes=[
     env.DB.prepare('INSERT INTO neo_parent_student_links(account_id,school_id,student_id,active) VALUES (?,?,?,1) ON CONFLICT(account_id,student_id) DO UPDATE SET active=1').bind(accountId,school,id),
     portalAudit(env,school,admin,'link-parent-child',accountId+':'+id)
-   ]);
-   return out({success:true,account_id:accountId,student_id:id,linked:true});
+   ];
+   const disabledAccounts=[];
+   for(const oldAccountId of otherAccounts){
+    writes.push(env.DB.prepare('UPDATE neo_parent_student_links SET active=0 WHERE account_id=? AND school_id=? AND student_id=?').bind(oldAccountId,school,id));
+    const remaining=await env.DB.prepare('SELECT COUNT(*) AS n FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND active=1 AND student_id<>?').bind(oldAccountId,school,id).first();
+    if(Number(remaining?.n||0)===0){
+     writes.push(env.DB.prepare('UPDATE neo_parent_accounts SET active=0 WHERE school_id=? AND account_id=?').bind(school,oldAccountId));
+     disabledAccounts.push(oldAccountId);
+    }
+   }
+   await env.DB.batch(writes);
+   return out({success:true,account_id:accountId,student_id:id,linked:true,moved_from:otherAccounts,disabled_accounts:disabledAccounts});
   }
   const old=await env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND student_id=?').bind(school,id).first();
   if(b?.disable===true){if(!old)return out({error:'Parent account not found.'},404);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET active=0 WHERE school_id=? AND student_id=?').bind(school,id),env.DB.prepare('UPDATE neo_parent_student_links SET active=0 WHERE account_id=? AND school_id=?').bind(old.account_id,school),portalAudit(env,school,admin,'disable-parent-access',id)]);return out({success:true})}
-  if(!strongPortalPassword(b?.password))return out({error:'Choose a password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
+  if(!strongPortalPassword(b?.password))return out({error:'Choose a password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
   const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt),account=old?.account_id||'NP-'+crypto.randomUUID().slice(0,12).toUpperCase();
   await env.DB.batch([
    env.DB.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt,active) VALUES (?,?,?,?,?,1) ON CONFLICT(school_id,student_id) DO UPDATE SET password_hash=excluded.password_hash,salt=excluded.salt,active=1').bind(account,school,id,hash,salt),
@@ -1982,6 +1998,12 @@ async function parentSession(request,env){
   if(requested){
    const linked=await env.DB.prepare('SELECT student_id FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND student_id=? AND active=1').bind(a.account_id,a.school_id,requested).first();
    if(linked)a.student_id=linked.student_id;
+  }else{
+   const primary=await env.DB.prepare('SELECT student_id FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND student_id=? AND active=1').bind(a.account_id,a.school_id,a.student_id).first();
+   if(!primary){
+    const fallback=await env.DB.prepare('SELECT student_id FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND active=1 ORDER BY created_at,student_id LIMIT 1').bind(a.account_id,a.school_id).first();
+    if(fallback)a.student_id=fallback.student_id;
+   }
   }
   return a;
  }catch{return null}
