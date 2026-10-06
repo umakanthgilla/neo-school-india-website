@@ -1171,3 +1171,10 @@ body[data-role="parent"] #familyApp .family-nav-scroll button{display:flex!impor
 #neoWorkspace .transport-report-table :is(th,td){padding:8px 10px;border-bottom:1px solid #e4ecf5;text-align:left;white-space:nowrap}
 #neoWorkspace .transport-report-table th{color:#254775;background:#f1f6fd}
 @media(max-width:700px){#neoWorkspace .transport-report-controls,#neoWorkspace .transport-report-stats{grid-template-columns:minmax(0,1fr)}}
+
+
+/* 2026-10-06: keep Parent/Teacher hero identity readable on the corporate navy header. */
+body[data-role="parent"] #familyApp>.portal-hero h2,
+body[data-role="teacher"] #familyApp>.portal-hero h2{color:#fff!important}
+body[data-role="parent"] #familyApp>.portal-hero p,
+body[data-role="teacher"] #familyApp>.portal-hero p{color:#dfeeff!important}
