@@ -1310,3 +1310,83 @@ body[data-role="parent"] #familyApp .family-child-switch select{
   body[data-role="parent"] #familyApp .family-child-switch{width:100%;border-radius:12px;padding:6px 8px}
   body[data-role="parent"] #familyApp .family-child-switch select{flex:1;min-width:0;max-width:none}
 }
+
+
+/* 2026-10-06 Teacher child performance & activity workspace. */
+#familyApp .performance-entry-panel{margin:0 0 20px}
+#familyApp .performance-step-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 18px;
+}
+#familyApp .performance-step{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:68px;
+  padding:11px 12px;
+  border:1px solid #d8e4f2;
+  border-radius:14px;
+  background:#f8fbff;
+  color:#102a61;
+}
+#familyApp .performance-step b{display:block;font-size:12px;line-height:1.25}
+#familyApp .performance-step small{display:block;margin-top:3px;color:#687b92;font-size:10px;line-height:1.3}
+#familyApp .performance-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+#familyApp .performance-form-grid label{margin:0}
+#familyApp .performance-wide{grid-column:1/-1}
+#familyApp .performance-photo-field{
+  padding:14px;
+  border:1px dashed #b9cee5;
+  border-radius:14px;
+  background:#f8fbff;
+}
+#familyApp .performance-photo-field small{display:block;margin-top:6px;color:#667990}
+#familyApp #performancePhotoPreview,
+#familyApp .performance-evidence-photo{
+  display:block;
+  max-width:100%;
+  width:auto;
+  max-height:360px;
+  object-fit:contain;
+  margin-top:12px;
+  border-radius:14px;
+  border:1px solid #d6e2ef;
+  background:#fff;
+}
+#familyApp .performance-share{
+  display:flex!important;
+  align-items:flex-start;
+  gap:10px;
+  padding:13px 14px;
+  border:1px solid #dce7f2;
+  border-radius:14px;
+  background:#f8fbff;
+}
+#familyApp .performance-share input{width:auto!important;margin-top:3px}
+#familyApp .performance-share span{display:block}
+#familyApp .performance-share strong{display:block;color:#102a61}
+#familyApp .performance-share small{display:block;margin-top:3px;color:#687b92}
+#familyApp .performance-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:9px;
+}
+#familyApp .performance-photo-slot{margin-top:10px}
+@media(max-width:900px){
+  #familyApp .performance-step-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  #familyApp .performance-form-grid{grid-template-columns:1fr}
+  #familyApp .performance-wide{grid-column:1}
+}
+@media(max-width:480px){
+  #familyApp .performance-step-grid{grid-template-columns:1fr}
+}
