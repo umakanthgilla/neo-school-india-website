@@ -1273,3 +1273,40 @@ body[data-role="teacher"] #familyApp>.portal-hero p{color:#dfeeff!important}
 @media(max-width:480px){
   #familyApp .ticket-department-grid{grid-template-columns:1fr}
 }
+
+
+/* 2026-10-06 multi-child Parent ID switcher. */
+body[data-role="parent"] #familyApp .family-child-switch{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin:0;
+  min-height:34px;
+  padding:3px 5px 3px 10px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:999px;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+}
+body[data-role="parent"] #familyApp .family-child-switch span{white-space:nowrap}
+body[data-role="parent"] #familyApp .family-child-switch select{
+  width:auto;
+  min-width:170px;
+  max-width:280px;
+  min-height:28px;
+  padding:4px 28px 4px 9px;
+  margin:0;
+  border:0;
+  border-radius:999px;
+  background:#fff;
+  color:#102a61;
+  font-size:12px;
+  font-weight:800;
+  outline-offset:1px;
+}
+@media(max-width:760px){
+  body[data-role="parent"] #familyApp .family-child-switch{width:100%;border-radius:12px;padding:6px 8px}
+  body[data-role="parent"] #familyApp .family-child-switch select{flex:1;min-width:0;max-width:none}
+}
