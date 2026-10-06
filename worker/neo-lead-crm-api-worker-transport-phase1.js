@@ -39,7 +39,7 @@ function cors(request) {
       ? origin
       : "https://neo-school-india-website.pages.dev",
     "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Neo-Student",
     "Vary": "Origin",
   };
 }
