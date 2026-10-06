@@ -1068,6 +1068,8 @@ const PORTAL_SCHEMA = [
  `CREATE TABLE IF NOT EXISTS neo_teacher_accounts (account_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, name TEXT NOT NULL, classroom_ids TEXT NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1)`,
  `CREATE TABLE IF NOT EXISTS neo_teacher_staff_links (account_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, staff_id TEXT NOT NULL, UNIQUE(school_id,staff_id))`,
  `CREATE TABLE IF NOT EXISTS neo_parent_accounts (account_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, student_id TEXT NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, UNIQUE(school_id,student_id))`,
+ `CREATE TABLE IF NOT EXISTS neo_parent_student_links (account_id TEXT NOT NULL, school_id TEXT NOT NULL, student_id TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(account_id,student_id))`,
+ `CREATE INDEX IF NOT EXISTS neo_parent_student_links_student ON neo_parent_student_links(school_id,student_id,active)`,
  `CREATE TABLE IF NOT EXISTS neo_portal_records (school_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(school_id,kind,id))`,
  `CREATE TABLE IF NOT EXISTS neo_portal_audit (id TEXT PRIMARY KEY, school_id TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, record_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
  `CREATE TABLE IF NOT EXISTS neo_finance_sequences (school_id TEXT NOT NULL, doc_type TEXT NOT NULL, year TEXT NOT NULL, last_no INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(school_id,doc_type,year))`,
@@ -1669,7 +1671,7 @@ recordId='HR_RULES_'+effectiveFrom;
 // Additive setup is retried after failure and automatically runs on first authenticated use.
 const portalSchemaReady=new WeakMap();
 async function ensurePortalSchema(env){
- if(!portalSchemaReady.has(env.DB)){const promise=env.DB.batch(PORTAL_SCHEMA.map(sql=>env.DB.prepare(sql))).catch(e=>{portalSchemaReady.delete(env.DB);throw e});portalSchemaReady.set(env.DB,promise)}
+ if(!portalSchemaReady.has(env.DB)){const promise=(async()=>{await env.DB.batch(PORTAL_SCHEMA.map(sql=>env.DB.prepare(sql)));await env.DB.prepare("INSERT OR IGNORE INTO neo_parent_student_links(account_id,school_id,student_id,active) SELECT account_id,school_id,student_id,active FROM neo_parent_accounts").run()})().catch(e=>{portalSchemaReady.delete(env.DB);throw e});portalSchemaReady.set(env.DB,promise)}
  await portalSchemaReady.get(env.DB);
 }
 async function nextFinanceNumber(env,school,docType,docDate){
@@ -1800,7 +1802,14 @@ async function portalExtra(request,env,url,admin,session){
   return out({accounts});
  }
  if(kind==='parent_access'&&request.method==='GET'){
-  const r=await env.DB.prepare('SELECT account_id,student_id,active FROM neo_parent_accounts WHERE school_id=?').bind(school).all();return out({accounts:r.results||[]});
+  await ensurePortalSchema(env);
+  const [accounts,links]=await Promise.all([
+   env.DB.prepare('SELECT account_id,student_id,active FROM neo_parent_accounts WHERE school_id=? ORDER BY account_id').bind(school).all(),
+   env.DB.prepare('SELECT account_id,student_id,active FROM neo_parent_student_links WHERE school_id=? ORDER BY created_at,student_id').bind(school).all()
+  ]);
+  const linkedByAccount=new Map();
+  for(const link of links.results||[]){if(!link.active)continue;if(!linkedByAccount.has(link.account_id))linkedByAccount.set(link.account_id,[]);linkedByAccount.get(link.account_id).push(link.student_id)}
+  return out({accounts:(accounts.results||[]).map(a=>({...a,student_ids:[...new Set([a.student_id,...(linkedByAccount.get(a.account_id)||[])])]}))});
  }
  if(request.method!=='POST')return out({error:'Method not allowed.'},405);
  let b;try{b=await request.json()}catch{return out({error:'Invalid JSON.'},400)}
@@ -1855,12 +1864,27 @@ async function portalExtra(request,env,url,admin,session){
   return out({success:true,account_id:account,staff_id:staffId,staff_created:!!newStaffData,salary_setup_status:newStaffData?'Pending HR setup':'Existing staff',academic_access:isTeaching?'Teacher login active':'Employee self-service active'});
  }
  if(kind==='parent_access'){
+  await ensurePortalSchema(env);
   const child=await portalRecord(env,school,'students',id);if(!child)return out({error:'Student not found.'},404);
+  if(b?.link_account_id){
+   const accountId=String(b.link_account_id||'').trim().toUpperCase();
+   const account=await env.DB.prepare('SELECT account_id,active FROM neo_parent_accounts WHERE school_id=? AND account_id=?').bind(school,accountId).first();
+   if(!account||!account.active)return out({error:'Choose an active Parent ID from this school.'},400);
+   await env.DB.batch([
+    env.DB.prepare('INSERT INTO neo_parent_student_links(account_id,school_id,student_id,active) VALUES (?,?,?,1) ON CONFLICT(account_id,student_id) DO UPDATE SET active=1').bind(accountId,school,id),
+    portalAudit(env,school,admin,'link-parent-child',accountId+':'+id)
+   ]);
+   return out({success:true,account_id:accountId,student_id:id,linked:true});
+  }
   const old=await env.DB.prepare('SELECT account_id FROM neo_parent_accounts WHERE school_id=? AND student_id=?').bind(school,id).first();
-  if(b?.disable===true){if(!old)return out({error:'Parent account not found.'},404);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET active=0 WHERE school_id=? AND student_id=?').bind(school,id),portalAudit(env,school,admin,'disable-parent-access',id)]);return out({success:true})}
+  if(b?.disable===true){if(!old)return out({error:'Parent account not found.'},404);await env.DB.batch([env.DB.prepare('UPDATE neo_parent_accounts SET active=0 WHERE school_id=? AND student_id=?').bind(school,id),env.DB.prepare('UPDATE neo_parent_student_links SET active=0 WHERE account_id=? AND school_id=?').bind(old.account_id,school),portalAudit(env,school,admin,'disable-parent-access',id)]);return out({success:true})}
   if(!strongPortalPassword(b?.password))return out({error:'Choose a password of 8â€“128 characters with uppercase, lowercase, number and symbol.'},400);
   const salt=crypto.randomUUID(),hash=await schoolPassword(b.password,salt),account=old?.account_id||'NP-'+crypto.randomUUID().slice(0,12).toUpperCase();
-  await env.DB.batch([env.DB.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt,active) VALUES (?,?,?,?,?,1) ON CONFLICT(school_id,student_id) DO UPDATE SET password_hash=excluded.password_hash,salt=excluded.salt,active=1').bind(account,school,id,hash,salt),portalAudit(env,school,admin,'set-parent-access',id)]);
+  await env.DB.batch([
+   env.DB.prepare('INSERT INTO neo_parent_accounts(account_id,school_id,student_id,password_hash,salt,active) VALUES (?,?,?,?,?,1) ON CONFLICT(school_id,student_id) DO UPDATE SET password_hash=excluded.password_hash,salt=excluded.salt,active=1').bind(account,school,id,hash,salt),
+   env.DB.prepare('INSERT INTO neo_parent_student_links(account_id,school_id,student_id,active) VALUES (?,?,?,1) ON CONFLICT(account_id,student_id) DO UPDATE SET active=1').bind(account,school,id),
+   portalAudit(env,school,admin,'set-parent-access',id)
+  ]);
   return out({success:true,account_id:account});
  }
  const fee=await portalRecord(env,school,'fee_structures',id);if(!fee)return out({error:'Fee structure not found.'},404);
@@ -1946,10 +1970,20 @@ function portalNotification(env,school,target,title,message,source_kind,source_i
 function portalAudit(env,school,admin,action,id){return env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),school,admin?'head-office':'school:'+school,action,id)}
 async function signParent(account,secret){const payload=base64urlEncode(JSON.stringify({role:'parent',account_id:account.account_id,version:account.password_hash,exp:Date.now()+8*3600000}));return payload+'.'+base64urlEncode(new Uint8Array(await crypto.subtle.sign('HMAC',await getSigningKey(secret),new TextEncoder().encode(payload))))}
 async function parentSession(request,env){
- try{const parts=(request.headers.get('Authorization')||'').replace(/^Bearer /,'').split('.');if(parts.length!==2)return null;
- if(!await crypto.subtle.verify('HMAC',await getSigningKey(env.ADMIN_PASSWORD),base64urlDecode(parts[1]),new TextEncoder().encode(parts[0])))return null;
- const p=JSON.parse(new TextDecoder().decode(base64urlDecode(parts[0])));if(p.role!=='parent'||p.exp<=Date.now())return null;
- const a=await env.DB.prepare('SELECT a.* FROM neo_parent_accounts a JOIN neo_schools s ON s.school_id=a.school_id WHERE a.account_id=? AND a.active=1 AND s.active=1').bind(p.account_id).first();return a&&a.password_hash===p.version?a:null;
+ try{
+  await ensurePortalSchema(env);
+  const parts=(request.headers.get('Authorization')||'').replace(/^Bearer /,'').split('.');if(parts.length!==2)return null;
+  if(!await crypto.subtle.verify('HMAC',await getSigningKey(env.ADMIN_PASSWORD),base64urlDecode(parts[1]),new TextEncoder().encode(parts[0])))return null;
+  const p=JSON.parse(new TextDecoder().decode(base64urlDecode(parts[0])));if(p.role!=='parent'||p.exp<=Date.now())return null;
+  const a=await env.DB.prepare('SELECT a.* FROM neo_parent_accounts a JOIN neo_schools s ON s.school_id=a.school_id WHERE a.account_id=? AND a.active=1 AND s.active=1').bind(p.account_id).first();
+  if(!a||a.password_hash!==p.version)return null;
+  await env.DB.prepare('INSERT OR IGNORE INTO neo_parent_student_links(account_id,school_id,student_id,active) VALUES (?,?,?,1)').bind(a.account_id,a.school_id,a.student_id).run();
+  const requested=String(request.headers.get('X-Neo-Student')||'').trim();
+  if(requested){
+   const linked=await env.DB.prepare('SELECT student_id FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND student_id=? AND active=1').bind(a.account_id,a.school_id,requested).first();
+   if(linked)a.student_id=linked.student_id;
+  }
+  return a;
  }catch{return null}
 }
 async function parentPortal(request,env,url){
@@ -1976,6 +2010,9 @@ async function parentPortal(request,env,url){
  await ensureStudentAdmissionNumbers(env,a.school_id);
  const child=await portalRecord(env,a.school_id,'students',a.student_id);if(!child)return out({error:'Student record not available. Contact your school.'},404);
  const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(a.school_id).first();
+ const linkedRows=await env.DB.prepare('SELECT student_id FROM neo_parent_student_links WHERE account_id=? AND school_id=? AND active=1 ORDER BY created_at,student_id').bind(a.account_id,a.school_id).all();
+ const linkedIds=[...new Set((linkedRows.results||[]).map(x=>x.student_id).filter(Boolean))];
+ const linkedChildren=[];for(const studentId of linkedIds){const s=await portalRecord(env,a.school_id,'students',studentId);if(s&&String(s.status||'Active')!=='Withdrawn')linkedChildren.push({id:s.id,name:s.name,program:s.program,academic_year:s.academic_year,admission_no:s.admission_no||''})}
  const transportAssignment=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='transport_assignments' AND json_extract(data,'$.student_id')=? AND json_extract(data,'$.active')=1 LIMIT 1").bind(a.school_id,a.student_id).first();
  const kinds=['attendance','invoices','payments','homework','announcements','stock_moves','orders','transport_alerts'];
  const pairs=await Promise.all(kinds.map(async k=>{
@@ -1988,7 +2025,7 @@ async function parentPortal(request,env,url){
   const arg=['homework','announcements'].includes(k)?(child.classroom_id||'UNASSIGNED'):a.student_id;
   const rows=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? AND '+sql+' ORDER BY created_at DESC,id').bind(a.school_id,k,arg).all();return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
  }));
- return out({school,child:{name:child.name,program:child.program,academic_year:child.academic_year},transport_assigned:!!transportAssignment,...Object.fromEntries(pairs)});
+ return out({school,child:{id:child.id,name:child.name,program:child.program,academic_year:child.academic_year,admission_no:child.admission_no||''},children:linkedChildren,selected_student_id:child.id,transport_assigned:!!transportAssignment,...Object.fromEntries(pairs)});
  }catch(e){console.error('Parent portal error',e);return out({error:'Parent portal unavailable. Please contact your school.'},503)}
 }
 
