@@ -1,0 +1,20 @@
+name: Package latest worker artifact
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/package-latest-worker-artifact.yml"
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload worker source
+        uses: actions/upload-artifact@v4
+        with:
+          name: neo-school-india-worker-latest
+          path: worker/neo-lead-crm-api-worker-transport-phase1.js
+          if-no-files-found: error
+          retention-days: 1
