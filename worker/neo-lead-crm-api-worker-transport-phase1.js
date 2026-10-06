@@ -1072,6 +1072,8 @@ const PORTAL_SCHEMA = [
  `CREATE INDEX IF NOT EXISTS neo_parent_student_links_student ON neo_parent_student_links(school_id,student_id,active)`,
  `CREATE TABLE IF NOT EXISTS neo_portal_records (school_id TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(school_id,kind,id))`,
  `CREATE TABLE IF NOT EXISTS neo_student_performance_photos (performance_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, student_id TEXT NOT NULL, teacher_id TEXT NOT NULL, photo BLOB NOT NULL, uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+ `CREATE TABLE IF NOT EXISTS neo_performance_shared_photos (photo_id TEXT PRIMARY KEY, school_id TEXT NOT NULL, teacher_id TEXT NOT NULL, photo BLOB NOT NULL, uploaded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+ `CREATE INDEX IF NOT EXISTS neo_performance_shared_photos_school ON neo_performance_shared_photos(school_id,uploaded_at)`,
  `CREATE INDEX IF NOT EXISTS neo_student_performance_photos_student ON neo_student_performance_photos(school_id,student_id,uploaded_at)`,
  `CREATE TABLE IF NOT EXISTS neo_portal_audit (id TEXT PRIMARY KEY, school_id TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, record_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
  `CREATE TABLE IF NOT EXISTS neo_finance_sequences (school_id TEXT NOT NULL, doc_type TEXT NOT NULL, year TEXT NOT NULL, last_no INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(school_id,doc_type,year))`,
@@ -2036,7 +2038,9 @@ async function parentPortal(request,env,url){
   const id=decodeURIComponent(parentPerformancePhoto[1]);
   const record=await portalRecord(env,a.school_id,'student_performance',id);
   if(!record||record.student_id!==a.student_id||record.parent_visible!==true||record.has_photo!==true)return out({error:'Photo not found.'},404);
-  const row=await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,a.student_id).first();
+  const row=record.photo_id
+   ?await env.DB.prepare('SELECT photo FROM neo_performance_shared_photos WHERE photo_id=? AND school_id=?').bind(record.photo_id,a.school_id).first()
+   :await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,a.student_id).first();
   if(!row?.photo)return out({error:'Photo not found.'},404);
   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
  }
@@ -2138,9 +2142,43 @@ async function teacherPortal(request,env,url){
  if(teacherPerformancePhoto&&request.method==='GET'){
   const id=decodeURIComponent(teacherPerformancePhoto[1]),record=await portalRecord(env,a.school_id,'student_performance',id);
   if(!record||!students.some(s=>s.id===record.student_id)||record.has_photo!==true)return out({error:'Photo not found.'},404);
-  const row=await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,record.student_id).first();
+  const row=record.photo_id
+   ?await env.DB.prepare('SELECT photo FROM neo_performance_shared_photos WHERE photo_id=? AND school_id=?').bind(record.photo_id,a.school_id).first()
+   :await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,record.student_id).first();
   if(!row?.photo)return out({error:'Photo not found.'},404);
   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
+ }
+ if(url.pathname==='/api/teacher/performance-photo-batch'&&request.method==='POST'){
+  const raw=await request.text();if(raw.length>235000)return out({error:'Photo request is too large.'},413);
+  let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid activity photo record.'},400)}
+  const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+  const outcomes=['Participated','With support','Independent','Needs follow-up','Excellent progress'];
+  const classroomId=typeof b.classroom_id==='string'?b.classroom_id.trim():'';
+  if(!a.classroom_ids.includes(classroomId))return out({error:'Choose a classroom assigned to you.'},403);
+  if(!validDate(b.date)||b.date>neoToday())return out({error:'Choose today or an earlier activity date.'},400);
+  if(typeof b.activity!=='string'||!b.activity.trim()||b.activity.trim().length>200)return out({error:'Enter the activity or learning area.'},400);
+  if(!outcomes.includes(b.outcome))return out({error:'Choose a valid outcome for the tagged children.'},400);
+  if(typeof b.observation!=='string'||!b.observation.trim()||b.observation.trim().length>1000)return out({error:'Add a short photo caption / observation.'},400);
+  const ids=Array.isArray(b.student_ids)?[...new Set(b.student_ids.filter(x=>typeof x==='string'))]:[];
+  if(!ids.length||ids.length>40)return out({error:'Tag between 1 and 40 children.'},400);
+  const classStudents=students.filter(s=>s.classroom_id===classroomId),allowed=new Map(classStudents.map(s=>[s.id,s]));
+  if(ids.some(id=>!allowed.has(id)))return out({error:'A tagged child is outside this classroom.'},403);
+  const photo=String(b.photo||'');
+  if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)||photo.length>205000)return out({error:'Activity photo must be a JPEG under 150 KB.'},400);
+  const decoded=atob(photo.split(',')[1]);
+  if(decoded.length<4||decoded.length>150000||decoded.charCodeAt(0)!==255||decoded.charCodeAt(1)!==216||decoded.charCodeAt(decoded.length-2)!==255||decoded.charCodeAt(decoded.length-1)!==217)return out({error:'Upload a valid JPEG photo under 150 KB.'},400);
+  const bytes=Uint8Array.from(decoded,ch=>ch.charCodeAt(0)),requestId=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,70}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),photoId='PPH-'+crypto.randomUUID();
+  const writes=[env.DB.prepare('INSERT INTO neo_performance_shared_photos(photo_id,school_id,teacher_id,photo) VALUES (?,?,?,?)').bind(photoId,a.school_id,a.account_id,bytes)];
+  const created=[];
+  ids.forEach((studentId,index)=>{
+   const student=allowed.get(studentId),id=requestId+'-'+String(index+1);
+   const record={student_id:student.id,student_name:student.name,classroom_id:classroomId,date:b.date,activity:b.activity.trim(),outcome:b.outcome,observation:b.observation.trim(),parent_visible:b.parent_visible===true,has_photo:true,photo_id:photoId,teacher_id:a.account_id,teacher_name:a.name,source:'Tagged activity photo',created_at:new Date().toISOString()};
+   writes.push(env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'student_performance',?,?)").bind(a.school_id,id,JSON.stringify(record)));
+   created.push({id,...record});
+  });
+  writes.push(env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:performance-photo-batch',photoId));
+  await env.DB.batch(writes);
+  return out({success:true,photo_id:photoId,count:created.length,records:created},201);
  }
  if(url.pathname==='/api/teacher/performance'&&request.method==='POST'){
   const raw=await request.text();if(raw.length>230000)return out({error:'Photo request is too large.'},413);
