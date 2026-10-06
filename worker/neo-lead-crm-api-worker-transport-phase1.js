@@ -2929,7 +2929,7 @@ async function neoPeriodExecution(request,env,url,a){
     b.date+'T00:00:00Z'
   ).getUTCDay();
 
-  const slot=published.find(s=>
+  let slot=published.find(s=>
     s.teacher_id===teacher.account_id &&
     s.classroom_id===b.classroom_id &&
     s.weekday===weekday &&
@@ -2937,9 +2937,69 @@ async function neoPeriodExecution(request,env,url,a){
     s.end===b.end
   );
 
+  /*
+    V2 curriculum Learning Experiences are generated from the approved
+    curriculum calendar rather than duplicated into the legacy weekly
+    timetable. Treat the exact approved curriculum block as a valid
+    teacher execution slot for assigned classrooms.
+  */
+  if(!slot){
+    const activePlan=await env.DB.prepare(
+      "SELECT data FROM neo_learning_plans WHERE school_id=? AND classroom_id=? AND status='Approved' ORDER BY created_at DESC LIMIT 1"
+    ).bind(school,b.classroom_id).first();
+
+    if(activePlan?.data){
+      try{
+        const plan=JSON.parse(activePlan.data),
+              dates=Array.isArray(plan.working_dates)?plan.working_dates:[],
+              dayIndex=dates.indexOf(b.date),
+              day=dayIndex+1,
+              experiences=Array.isArray(plan.daily_experiences)?plan.daily_experiences:[],
+              lessons=Array.isArray(plan.lessons)?plan.lessons:[],
+              rhythm=Array.isArray(plan.daily_rhythm)?plan.daily_rhythm:[];
+
+        const experience=experiences.find(x=>
+          Number(x.day)===day &&
+          String(x.start||'')===b.start &&
+          String(x.end||'')===b.end
+        );
+
+        const lesson=experience?null:lessons.find(x=>
+          Number(x.day)===day &&
+          String(x.start||'')===b.start &&
+          String(x.end||'')===b.end
+        );
+
+        const routine=(experience||lesson)?null:rhythm.find(x=>
+          String(x.start||'')===b.start &&
+          String(x.end||'')===b.end
+        );
+
+        if(day>0&&(experience||lesson||routine)){
+          const source=experience||lesson||routine;
+          slot={
+            teacher_id:teacher.account_id,
+            classroom_id:b.classroom_id,
+            weekday,
+            start:b.start,
+            end:b.end,
+            type:experience||lesson?'Teaching':String(source.type||'Routine'),
+            subject:String(
+              source.experience_name ||
+              source.subject ||
+              source.label ||
+              source.learning_block ||
+              'Learning Experience'
+            )
+          };
+        }
+      }catch(_e){}
+    }
+  }
+
   if(!slot)
     return out({
-      error:'This period is not in your published timetable.'
+      error:'This period is not in your published timetable or approved curriculum.'
     },403);
 
   const periodType=slot.type;
