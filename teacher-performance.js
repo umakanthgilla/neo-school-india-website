@@ -56,7 +56,20 @@ window.renderNeoTeacherPerformance=function(area,ctx){
       '<label>Outcome<select id="performanceFilterOutcome"><option value="">All outcomes</option><option>Excellent progress</option><option>Independent</option><option>Participated</option><option>With support</option><option>Needs follow-up</option></select></label>'+
     '</div></section>'+
     '<h3>Performance history</h3><div id="performanceHistory" class="portal-grid performance-history"></div>'+
-    '<details class="portal-editor performance-extra-entry"><summary>＋ Add photo / extra observation</summary><p class="form-note">Use this only for evidence or a child-specific observation that is not already captured in Record execution.</p><form id="childPerformanceForm">'+
+    '<details class="portal-editor performance-group-photo"><summary>＋ Quick activity photo · tag children</summary><p class="form-note">Upload one activity photo once, then tag all children visible in that photo. The same secure photo is linked to each tagged child without uploading separate copies.</p><form id="groupActivityPhotoForm">'+
+      '<div class="performance-form-grid">'+
+        '<label>Classroom<select name="classroom_id" required><option value="">Choose classroom…</option>'+classrooms.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>';}).join('')+'</select></label>'+
+        '<label>Activity date<input name="date" type="date" max="'+today+'" value="'+today+'" required></label>'+
+        '<label>Activity / learning area<input name="activity" maxlength="200" required placeholder="Example: Colour sorting activity"></label>'+
+        '<label>Common outcome<select name="outcome" required><option>Participated</option><option>Independent</option><option>With support</option><option>Needs follow-up</option><option>Excellent progress</option></select></label>'+
+        '<label class="performance-wide">Photo caption / observation<textarea name="observation" maxlength="1000" rows="3" required placeholder="Example: Children worked together to sort colours and identify matching objects."></textarea></label>'+
+        '<label class="performance-wide performance-photo-field">Activity photo<input name="photo_file" type="file" accept="image/*" capture="environment" required><small>One photo can be tagged to multiple children. It is compressed before upload.</small><img id="groupPhotoPreview" alt="Group activity photo preview" hidden></label>'+
+        '<div class="performance-wide"><div class="performance-tag-toolbar"><strong>Tag children in this photo</strong><div><button type="button" class="secondary" id="tagAllPresent">Select all present</button><button type="button" class="secondary" id="clearTaggedChildren">Clear</button></div></div><div id="groupPhotoChildren" class="performance-tag-grid"><p class="portal-empty">Choose a classroom.</p></div></div>'+
+        '<label class="performance-share performance-wide"><input name="parent_visible" type="checkbox"><span><strong>Share this photo update with tagged children’s parents</strong><small>Each parent only sees the photo through their own tagged child.</small></span></label>'+
+      '</div>'+
+      '<button type="submit">Save photo for tagged children</button> <span id="groupPhotoSaveState" class="form-note"></span>'+
+    '</form></details>'+
+    '<details class="portal-editor performance-extra-entry"><summary>＋ Add single-child extra observation</summary><p class="form-note">Use this only for a child-specific note or photo that is not already captured in Record execution.</p><form id="childPerformanceForm">'+
       '<div class="performance-form-grid">'+
         '<label>Classroom<select name="classroom_id" required><option value="">Choose classroom…</option>'+classrooms.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>';}).join('')+'</select></label>'+
         '<label>Child<select name="student_id" required><option value="">Choose classroom first…</option></select></label>'+
@@ -95,6 +108,28 @@ window.renderNeoTeacherPerformance=function(area,ctx){
     var button=document.querySelector('#familyApp [data-tab="timetable"]');if(button)button.click();
   };
 
+  var groupForm=area.querySelector('#groupActivityPhotoForm');
+  var groupClass=groupForm.elements.classroom_id,groupDate=groupForm.elements.date,groupFile=groupForm.elements.photo_file,groupPreview=area.querySelector('#groupPhotoPreview'),groupChildren=area.querySelector('#groupPhotoChildren'),groupPreviewUrl='';
+  function drawGroupChildren(){
+    var rows=students.filter(function(s){return s.classroom_id===groupClass.value;});
+    var attendance=(data.attendance||[]).filter(function(a){return a.date===groupDate.value;});
+    var attMap=new Map(attendance.map(function(a){return [a.student_id,a.status];}));
+    groupChildren.innerHTML=rows.map(function(s){
+      var st=attMap.get(s.id)||'',blocked=st==='Absent'||st==='Leave';
+      return '<label class="performance-tag-child '+(blocked?'performance-tag-child-disabled':'')+'"><input type="checkbox" value="'+esc(s.id)+'" '+(blocked?'disabled':'')+'><span><strong>'+esc(s.name)+'</strong><small>'+(st?esc(st):'Attendance not marked')+'</small></span></label>';
+    }).join('')||'<p class="portal-empty">No children in this classroom.</p>';
+  }
+  groupClass.onchange=drawGroupChildren;groupDate.onchange=drawGroupChildren;
+  if(classrooms.length===1){groupClass.value=classrooms[0].id;drawGroupChildren();}
+  area.querySelector('#tagAllPresent').onclick=function(){groupChildren.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(function(x){x.checked=true;});};
+  area.querySelector('#clearTaggedChildren').onclick=function(){groupChildren.querySelectorAll('input[type="checkbox"]').forEach(function(x){x.checked=false;});};
+  groupFile.onchange=function(){
+    if(groupPreviewUrl)URL.revokeObjectURL(groupPreviewUrl);
+    var file=groupFile.files&&groupFile.files[0];
+    if(!file){groupPreview.hidden=true;groupPreview.removeAttribute('src');return;}
+    groupPreviewUrl=URL.createObjectURL(file);groupPreview.src=groupPreviewUrl;groupPreview.hidden=false;
+  };
+
   var form=area.querySelector('#childPerformanceForm'),classroom=form.elements.classroom_id,child=form.elements.student_id,fileInput=form.elements.photo_file,preview=area.querySelector('#performancePhotoPreview'),previewUrl='';
   function fillChildren(){var rows=students.filter(function(s){return s.classroom_id===classroom.value;});child.innerHTML='<option value="">Choose child…</option>'+rows.map(function(s){return '<option value="'+esc(s.id)+'">'+esc(s.name+' · '+(s.program||roomName(s.classroom_id)))+'</option>';}).join('');}
   classroom.onchange=fillChildren;if(classrooms.length===1){classroom.value=classrooms[0].id;fillChildren();}
@@ -107,6 +142,28 @@ window.renderNeoTeacherPerformance=function(area,ctx){
     for(var attempt=0;attempt<10;attempt++){var canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);last=canvas.toDataURL('image/jpeg',quality);if(last.length<=195000)return last;if(quality>.48)quality-=.09;else scale*=.78;}
     throw Error('Photo is still too large. Choose a smaller image.');
   }
+  groupForm.onsubmit=async function(e){
+    e.preventDefault();
+    var button=e.submitter,state=area.querySelector('#groupPhotoSaveState');
+    var tagged=[...groupChildren.querySelectorAll('input[type="checkbox"]:checked')].map(function(x){return x.value;});
+    if(!tagged.length){state.textContent='Tag at least one child.';status('Tag at least one child in the photo.');return;}
+    button.disabled=true;state.textContent='Preparing photo…';
+    try{
+      var body=Object.fromEntries(new FormData(groupForm));
+      delete body.photo_file;
+      body.student_ids=tagged;
+      body.parent_visible=groupForm.elements.parent_visible.checked;
+      body.request_id=crypto.randomUUID();
+      state.textContent='Compressing photo…';
+      body.photo=await compressPhoto(groupFile.files&&groupFile.files[0]);
+      state.textContent='Saving one photo for '+tagged.length+' tagged children…';
+      var result=await api('performance-photo-batch','POST',body);
+      if(groupPreviewUrl)URL.revokeObjectURL(groupPreviewUrl);
+      status('✓ Activity photo saved once and linked to '+result.count+' tagged children.');
+      await refresh();
+    }catch(err){state.textContent=err.message;status(err.message);button.disabled=false;}
+  };
+
   form.onsubmit=async function(e){
     e.preventDefault();var button=e.submitter,state=area.querySelector('#performanceSaveState');button.disabled=true;state.textContent='Preparing update…';
     try{var body=Object.fromEntries(new FormData(form));body.parent_visible=form.elements.parent_visible.checked;body.request_id=crypto.randomUUID();delete body.photo_file;var file=fileInput.files&&fileInput.files[0];if(file){state.textContent='Compressing photo…';body.photo=await compressPhoto(file);}state.textContent='Saving…';await api('performance','POST',body);if(previewUrl)URL.revokeObjectURL(previewUrl);status(body.parent_visible?'✓ Extra observation saved and shared with parent.':'✓ Extra observation saved privately.');await refresh();}
