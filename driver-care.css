@@ -343,3 +343,54 @@ body.transport-authenticated #message:not(:empty){position:fixed;left:50%;bottom
   #app>.transport-sidebar{background:#102a60!important;border-color:#294579!important}
   #app>.transport-content{background:#f7fbff!important;border-radius:16px!important;padding:16px!important}
 }
+
+
+/* 2026-10-06 transport rail correction: match Parent/School logo scale and tab feedback exactly. */
+@media(min-width:761px){
+  #app>.transport-sidebar .transport-sidebar-logo{
+    display:block!important;
+    width:calc(100% - 18px)!important;
+    height:82px!important;
+    margin:0 9px 20px!important;
+  }
+  #app>.transport-sidebar .transport-sidebar-logo img{
+    display:block!important;
+    width:100%!important;
+    height:82px!important;
+    object-fit:contain!important;
+    padding:8px!important;
+    box-sizing:border-box!important;
+  }
+}
+#app .transport-sidebar .transport-work-bar button,
+#app .transport-sidebar .transport-menu-panel button,
+#app .transport-sidebar .transport-nav-group>summary{
+  position:relative!important;
+  overflow:hidden!important;
+}
+#app .transport-sidebar .transport-work-bar button:after,
+#app .transport-sidebar .transport-menu-panel button:after,
+#app .transport-sidebar .transport-nav-group>summary:before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;right:0!important;bottom:0!important;height:3px!important;
+  background:var(--transport-gradient)!important;
+}
+#app .transport-sidebar .transport-work-bar button[aria-current=true],
+#app .transport-sidebar .transport-menu-panel button[aria-current=true]{
+  background:#17356c!important;
+  color:#fff!important;
+  border-color:#2b4a80!important;
+}
+@keyframes neoTransportTabFlash{
+  0%,58%{background:#fff;color:#102657;border-color:#fff}
+  100%{background:#17356c;color:#fff;border-color:#2b4a80}
+}
+#app .transport-sidebar .transport-work-bar button[aria-current=true],
+#app .transport-sidebar .transport-menu-panel button[aria-current=true]{
+  animation:neoTransportTabFlash .42s ease-out 1;
+}
+@media(prefers-reduced-motion:reduce){
+  #app .transport-sidebar .transport-work-bar button[aria-current=true],
+  #app .transport-sidebar .transport-menu-panel button[aria-current=true]{animation:none}
+}
