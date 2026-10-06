@@ -34,3 +34,47 @@ body[data-role="teacher"] #teacherLearningBody>.learning-secondary:first-child .
 body[data-role="teacher"] .px-head{padding:4px 54px 18px 0;border-bottom:1px solid #e5edf5;margin-bottom:4px}body[data-role="teacher"] .px-head h3{font-size:24px;margin:8px 0 2px}body[data-role="teacher"] .px-section{padding:20px 0;border-bottom:1px solid #e6edf5}body[data-role="teacher"] .px-section h4{font-size:18px;color:#0b2055;margin:0 0 12px}body[data-role="teacher"] .px-field{display:block;margin:11px 0}body[data-role="teacher"] .px-field>span{display:block;font-size:12px;font-weight:800;color:#50647a;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}body[data-role="teacher"] .px-field input,body[data-role="teacher"] .px-field select,body[data-role="teacher"] .px-field textarea{width:100%;box-sizing:border-box}body[data-role="teacher"] .px-children{display:grid;gap:10px}body[data-role="teacher"] .px-child{padding:13px 14px;border:1px solid #e1e9f1;border-radius:14px;background:#fbfdff}body[data-role="teacher"] .px-child strong{display:block;color:#0b2055;margin-bottom:6px}body[data-role="teacher"] .px-check{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin:10px 0}body[data-role="teacher"] .px-check input{width:auto;margin-top:2px}body[data-role="teacher"] .px-actions{position:sticky;bottom:-34px;background:#fff;padding:16px 0 6px;border-top:1px solid #e5edf5;display:flex;align-items:center;gap:12px}body[data-role="teacher"] .px-save-state{font-size:13px;font-weight:700;color:#245b74}body[data-role="teacher"] .px-status-pill{margin:5px 0}
 @media(max-width:900px){body[data-role="teacher"] .period-card>.period-time+div{grid-template-columns:1fr}body[data-role="teacher"] .period-card .portal-editor{grid-column:1;grid-row:auto;margin-top:9px}}
 @media(max-width:640px){body[data-role="teacher"] .period-card{grid-template-columns:72px minmax(0,1fr);padding:15px 12px;gap:10px}body[data-role="teacher"] .timetable-list:before{left:31px}body[data-role="teacher"] .period-card:before{left:23px}body[data-role="teacher"] .period-time{padding-left:22px;font-size:16px}body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary{right:8px;top:8px;bottom:8px;width:calc(100vw - 16px);padding:22px 20px;border-radius:18px}body[data-role="teacher"] .period-card .portal-editor[open]>summary{right:22px;top:20px}body[data-role="teacher"] .period-card .portal-editor[open]>.learning-secondary:after{font-size:18px}}
+
+
+/* 2026-10-06 Quick Period Execution for large classrooms */
+body[data-role="teacher"] .px-quick-form .px-head{padding-bottom:14px;margin-bottom:2px}
+body[data-role="teacher"] .px-quick-form .px-head h3{margin:6px 0 2px;font-size:22px}
+body[data-role="teacher"] .px-quick-form .px-quick-section{padding:16px 0}
+body[data-role="teacher"] .px-conduct-compact{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+body[data-role="teacher"] .px-conduct-compact>h4{grid-column:1/-1;margin-bottom:0!important}
+body[data-role="teacher"] .px-conduct-compact>.px-field:first-of-type{grid-column:1}
+body[data-role="teacher"] .px-conduct-compact>.px-compact-field{grid-column:auto}
+body[data-role="teacher"] .px-conduct-compact>.px-parent-share{grid-column:1/-1}
+body[data-role="teacher"] .px-conduct-compact textarea{min-height:72px}
+body[data-role="teacher"] .px-roster-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:4px 0 10px;padding:10px 12px;border:1px solid #dce7f2;border-radius:12px;background:#f8fbff}
+body[data-role="teacher"] .px-roster-head>div:first-child{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body[data-role="teacher"] .px-attendance-summary{font-size:12px;color:#6a7d93}
+body[data-role="teacher"] .px-bulk-actions{display:flex;gap:7px;flex-wrap:wrap}
+body[data-role="teacher"] .px-bulk-actions button{min-height:32px;padding:6px 10px;font-size:12px}
+body[data-role="teacher"] .px-children-compact{display:grid;gap:7px}
+body[data-role="teacher"] .px-child-compact{display:grid!important;grid-template-columns:minmax(150px,1.25fr) minmax(145px,.9fr) auto auto;gap:8px 10px;align-items:center;padding:9px 10px!important;border:1px solid #dce6f1!important;border-radius:11px!important;background:#fff!important}
+body[data-role="teacher"] .px-child-main{display:flex;align-items:center;gap:8px;min-width:0}
+body[data-role="teacher"] .px-child-main strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-role="teacher"] .px-child-no{display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:#eef6fc;color:#125a83;font-size:11px;font-weight:800}
+body[data-role="teacher"] .px-child-compact>.px-field{margin:0!important}
+body[data-role="teacher"] .px-child-compact>.px-field>span{display:none}
+body[data-role="teacher"] .px-child-compact select{margin:0;min-height:36px;padding:7px 30px 7px 9px;font-size:12px}
+body[data-role="teacher"] .px-note-toggle{min-height:34px;padding:6px 9px;font-size:11px;white-space:nowrap}
+body[data-role="teacher"] .px-visible-compact{margin:0!important;white-space:nowrap;font-size:11px;color:#35506d}
+body[data-role="teacher"] .px-child-note-field{grid-column:1/-1;margin-top:0!important}
+body[data-role="teacher"] .px-child-note-field input{min-height:36px}
+body[data-role="teacher"] .px-child-absent{opacity:.58;background:#f3f5f7!important}
+body[data-role="teacher"] .px-attendance-badge{font-size:10px;font-weight:800;padding:3px 6px;border-radius:999px;background:#eef1f4;color:#66717e}
+body[data-role="teacher"] .px-parent-share{margin:2px 0 0;padding:10px 11px;border:1px solid #dce7f2;border-radius:11px;background:#f8fbff}
+body[data-role="teacher"] .px-optional-block{margin:12px 0;border:1px solid #dce7f2;border-radius:12px;background:#fbfdff}
+body[data-role="teacher"] .px-optional-block>summary{cursor:pointer;padding:11px 13px;font-weight:800;color:#174d78}
+body[data-role="teacher"] .px-optional-body{padding:0 13px 13px}
+body[data-role="teacher"] .px-quick-form .px-actions{position:sticky;bottom:-34px;margin:16px -32px -34px;padding:12px 32px;background:rgba(255,255,255,.96);border-top:1px solid #e4ebf3;z-index:3}
+@media(max-width:760px){
+ body[data-role="teacher"] .px-conduct-compact{grid-template-columns:1fr}
+ body[data-role="teacher"] .px-conduct-compact>*{grid-column:1!important}
+ body[data-role="teacher"] .px-roster-head{align-items:flex-start;flex-direction:column}
+ body[data-role="teacher"] .px-child-compact{grid-template-columns:1fr minmax(130px,.9fr)}
+ body[data-role="teacher"] .px-note-toggle,body[data-role="teacher"] .px-visible-compact{justify-self:start}
+ body[data-role="teacher"] .px-child-note-field{grid-column:1/-1}
+}
