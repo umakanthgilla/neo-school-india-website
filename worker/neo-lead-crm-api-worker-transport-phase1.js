@@ -3594,8 +3594,64 @@ async function learningTimetable(request,env,url,actor){
 async function neoTickets(request,env,url,a){
  if(url.pathname!=='/api/learning/tickets')return null;
  const {admin,teacher,parent,school}=a,out=(b,status=200)=>json(b,status,request);
- const visible=t=>parent?t.student_id===parent.student_id:teacher?(!t.management_only&&teacher.classroom_ids.includes(t.classroom_id)&&(!t.assigned_teacher_id||t.assigned_teacher_id===teacher.account_id)):true;
- if(request.method==='GET')return out({tickets:(await portalRows(env,school,'parent_tickets')).filter(visible)});
+ const visible=t=>parent?t.student_id===parent.student_id:teacher?(!t.management_only&&t.teacher_visible!==false&&teacher.classroom_ids.includes(t.classroom_id)&&(!t.assigned_teacher_id||t.assigned_teacher_id===teacher.account_id)):true;
+ if(request.method==='GET'){
+  const tickets=(await portalRows(env,school,'parent_tickets')).filter(visible);
+  if(!parent)return out({tickets});
+  const child=await portalRecord(env,school,'students',parent.student_id);
+  if(!child)return out({tickets,context:{subjects:[],teachers:[],academic_records:[],attendance_records:[],fee_records:[],transport_records:[],supply_records:[]}});
+  const [teacherRows,attendance,invoices,payments,homework,stockMoves,orders,assignments,routes,vehicles,planRow,completionRows]=await Promise.all([
+   env.DB.prepare('SELECT account_id,name,classroom_ids FROM neo_teacher_accounts WHERE school_id=? AND active=1').bind(school).all(),
+   portalRows(env,school,'attendance'),
+   portalRows(env,school,'invoices'),
+   portalRows(env,school,'payments'),
+   portalRows(env,school,'homework'),
+   portalRows(env,school,'stock_moves'),
+   portalRows(env,school,'orders'),
+   portalRows(env,school,'transport_assignments'),
+   portalRows(env,school,'transport_routes'),
+   portalRows(env,school,'transport_vehicles'),
+   env.DB.prepare("SELECT data FROM neo_learning_plans WHERE school_id=? AND classroom_id=? AND status='Approved' ORDER BY created_at DESC LIMIT 1").bind(school,child.classroom_id||'').first(),
+   env.DB.prepare('SELECT lesson_id,data,completed_at FROM neo_learning_completed WHERE school_id=? AND classroom_id=? ORDER BY completed_at DESC LIMIT 80').bind(school,child.classroom_id||'').all()
+  ]);
+  const classroomTeachers=(teacherRows.results||[]).filter(t=>{try{return JSON.parse(t.classroom_ids||'[]').includes(child.classroom_id)}catch{return false}}).map(t=>({account_id:t.account_id,name:t.name}));
+  let plan={};try{plan=planRow?.data?JSON.parse(planRow.data):{}}catch{}
+  const completions=(completionRows.results||[]).map(r=>{let d={};try{d=JSON.parse(r.data||'{}')}catch{}return {...d,lesson_id:r.lesson_id,completed_at:r.completed_at}});
+  const childAttendance=attendance.filter(x=>x.student_id===child.id).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,80);
+  const childInvoices=invoices.filter(x=>x.student_id===child.id);
+  const childPayments=payments.filter(x=>x.student_id===child.id);
+  const childHomework=homework.filter(x=>x.classroom_id===child.classroom_id&&x.published);
+  const childStock=stockMoves.filter(x=>x.student_id===child.id);
+  const childOrders=orders.filter(x=>x.student_id===child.id);
+  const activeAssignments=assignments.filter(x=>x.student_id===child.id&&x.active);
+  const routeIds=new Set(activeAssignments.map(x=>x.route_id));
+  const childRoutes=routes.filter(x=>routeIds.has(x.id)&&x.active);
+  const vehicleIds=new Set(childRoutes.map(x=>x.vehicle_id));
+  const childVehicles=vehicles.filter(x=>vehicleIds.has(x.id));
+  const tripRows=routeIds.size?await env.DB.prepare("SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind='transport_trips' AND json_extract(data,'$.route_id') IN ("+[...routeIds].map(()=>'?').join(',')+") ORDER BY json_extract(data,'$.date') DESC,created_at DESC LIMIT 80").bind(school,...routeIds).all():{results:[]};
+  const childTrips=(tripRows.results||[]).map(r=>{let d={};try{d=JSON.parse(r.data||'{}')}catch{}return {...d,id:r.id,created_at:r.created_at}});
+  const teacherIdByName=new Map(classroomTeachers.map(t=>[String(t.name||'').trim().toLowerCase(),t.account_id]));
+  const academicRecords=[
+   ...completions.map(x=>({id:'learning:'+String(x.lesson_id||x.completed_at||crypto.randomUUID()),date:x.completed_date||String(x.completed_at||'').slice(0,10),label:[x.subject,x.concept||x.activity].filter(Boolean).join(' · ')||'Learning update',subject:x.subject||'',teacher_id:teacherIdByName.get(String(x.teacher_name||'').trim().toLowerCase())||'',kind:'Learning update'})),
+   ...childHomework.map(x=>({id:'homework:'+String(x.id),date:x.due_date||String(x.created_at||'').slice(0,10),label:[x.subject,x.title||x.topic].filter(Boolean).join(' · ')||'Homework',subject:x.subject||'',kind:'Homework'}))
+  ].filter(x=>x.label).slice(0,100);
+  const subjects=[...new Set([...(Array.isArray(plan.lessons)?plan.lessons.map(x=>x.subject):[]),...completions.map(x=>x.subject),...childHomework.map(x=>x.subject)].filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b));
+  const attendanceRecords=childAttendance.map(x=>({id:'attendance:'+String(x.id||x.date),date:x.date||'',label:(x.date||'')+' · '+(x.status||'Attendance'),kind:'Attendance'}));
+  const feeRecords=[
+   ...childInvoices.map(x=>({id:'fee:'+String(x.id),date:x.due_date||'',label:(x.title||x.description||x.fee_head||'Fee')+(x.due_date?' · Due '+x.due_date:''),kind:'Fee'})),
+   ...childPayments.map(x=>({id:'receipt:'+String(x.id),date:x.date||'',label:'Receipt '+String(x.receipt_no||x.reference||x.id)+(x.date?' · '+x.date:''),kind:'Receipt'}))
+  ].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,100);
+  const routeById=new Map(childRoutes.map(x=>[x.id,x])),vehicleById=new Map(childVehicles.map(x=>[x.id,x]));
+  const transportRecords=[
+   ...childRoutes.map(x=>({id:'route:'+x.id,date:'',label:x.name+' · '+(vehicleById.get(x.vehicle_id)?.registration_no||'Vehicle'),kind:'Assigned route'})),
+   ...childTrips.map(x=>{const route=routeById.get(x.route_id),vehicle=route&&vehicleById.get(route.vehicle_id);return {id:'trip:'+x.id,date:x.date||'',label:[x.date,route?.name,vehicle?.registration_no,x.direction,Number(x.run_no||1)>1?'Run '+x.run_no:''].filter(Boolean).join(' · '),kind:'Transport trip'}})
+  ].slice(0,100);
+  const supplyRecords=[
+   ...childStock.map(x=>({id:'stock:'+String(x.id),date:x.date||'',label:[x.item_name,x.type,x.size].filter(Boolean).join(' · ')||'Issued item',kind:'Issued item'})),
+   ...childOrders.map(x=>({id:'order:'+String(x.id),date:x.date||String(x.created_at||'').slice(0,10),label:[x.item,x.status].filter(Boolean).join(' · ')||'School order',kind:'Order'}))
+  ].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,100);
+  return out({tickets,context:{subjects,teachers:classroomTeachers,academic_records:academicRecords,attendance_records:attendanceRecords,fee_records:feeRecords,transport_records:transportRecords,supply_records:supplyRecords}});
+ }
  if(request.method!=='POST')return out({error:'Method not allowed.'},405);
  const raw=await request.text();if(raw.length>10000)return out({error:'Ticket update too large.'},413);
  let b;try{b=JSON.parse(raw)}catch{return out({error:'Invalid JSON.'},400)}
@@ -3604,18 +3660,31 @@ async function neoTickets(request,env,url,a){
  if(!b.id){
   if(!parent)return out({error:'New concerns are raised from the parent portal.'},403);
   if(typeof b.request_id!=='string'||!/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id))return out({error:'Invalid request ID.'},400);
-  if(typeof b.subject!=='string'||!b.subject.trim()||b.subject.length>160||!['Learning','Attendance','Fees','Transport','Books / uniform','Staff concern','Other'].includes(b.category))return out({error:'Select category and enter a subject.'},400);
+  const categories=['Learning','Attendance','Fees','Transport','Books / uniform','Staff concern','Other'],departmentNames={Learning:'Academics',Attendance:'Attendance',Fees:'Fees & receipts',Transport:'Transport','Books / uniform':'Books & uniforms','Staff concern':'Staff / school',Other:'Other'};
+  if(typeof b.subject!=='string'||!b.subject.trim()||b.subject.length>160||!categories.includes(b.category))return out({error:'Select department and enter a short title.'},400);
   const child=await portalRecord(env,school,'students',parent.student_id);if(!child)return out({error:'Child not found.'},404);
-  const data={student_id:child.id,child_name:child.name,classroom_id:child.classroom_id||'',subject:b.subject.trim(),category:b.category,management_only:b.category==='Staff concern',assigned_teacher_id:'',status:'Open',revision:1,updated_at:now,history:[{actor,date:now,status:'Open',message:b.message.trim()}]};
+  const optional=(key,max=200)=>typeof b[key]==='string'?b[key].trim().slice(0,max):'';
+  const referenceDate=optional('reference_date',10);if(referenceDate&&!/^\d{4}-\d{2}-\d{2}$/.test(referenceDate))return out({error:'Choose a valid concern date.'},400);
+  const subjectArea=optional('subject_area',160),referenceId=optional('reference_id',200),referenceKind=optional('reference_kind',80),referenceLabel=optional('reference_label',300);
+  let targetTeacherId='',targetTeacherName='';
+  const requestedTeacher=optional('target_teacher_id',100);
+  if(requestedTeacher&&!requestedTeacher.startsWith('name:')){
+   const ta=await env.DB.prepare('SELECT account_id,name,classroom_ids FROM neo_teacher_accounts WHERE school_id=? AND account_id=? AND active=1').bind(school,requestedTeacher).first();
+   let assigned=false;try{assigned=!!ta&&JSON.parse(ta.classroom_ids||'[]').includes(child.classroom_id)}catch{}
+   if(!assigned)return out({error:'Choose an available teacher for your child’s classroom.'},400);
+   targetTeacherId=ta.account_id;targetTeacherName=ta.name;
+  }
+  const teacherVisible=['Learning','Attendance'].includes(b.category),managementOnly=b.category==='Staff concern';
+  const data={student_id:child.id,child_name:child.name,classroom_id:child.classroom_id||'',subject:b.subject.trim(),category:b.category,department_label:departmentNames[b.category],reference_date:referenceDate,subject_area:subjectArea,target_teacher_id:targetTeacherId,target_teacher_name:targetTeacherName,reference_id:referenceId,reference_kind:referenceKind,reference_label:referenceLabel,teacher_visible:teacherVisible,management_only:managementOnly,assigned_teacher_id:b.category==='Learning'?targetTeacherId:'',status:'Open',revision:1,updated_at:now,history:[{actor,date:now,status:'Open',message:b.message.trim()}]};
   if(await portalRecord(env,school,'parent_tickets',b.request_id))return out({error:'Already submitted. Refresh your tickets.'},409);
-  const writes=[env.DB.prepare('INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'parent_tickets',b.request_id,JSON.stringify(data)),portalAudit(env,school,false,'parent-ticket-created',b.request_id)];
-  if(b.category==='Books / uniform'){writes.push(portalNotification(env,school,'school','Student kit issue reported',child.name+' reported a missing, damaged or wrong kit item.','parent_tickets',b.request_id,'Unread','tickets'));writes.push(portalNotification(env,school,'head-office','Center student kit issue',child.name+' at '+school+' reported a complete-kit material issue.','parent_tickets',b.request_id,'Unread','tickets'));}
+  const writes=[env.DB.prepare('INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)').bind(school,'parent_tickets',b.request_id,JSON.stringify(data)),portalAudit(env,school,false,'parent-ticket-created',b.request_id),portalNotification(env,school,'school','New '+departmentNames[b.category]+' concern',child.name+' raised a '+departmentNames[b.category]+' concern: '+b.subject.trim()+'.','parent_tickets',b.request_id,'Unread','tickets')];
+  if(b.category==='Books / uniform')writes.push(portalNotification(env,school,'head-office','Center student kit issue',child.name+' at '+school+' reported a complete-kit material issue.','parent_tickets',b.request_id,'Unread','tickets'));
   await env.DB.batch(writes);
   return out({success:true,id:b.request_id},201);
  }
  const old=await portalRecord(env,school,'parent_tickets',b.id);if(!old||!visible(old))return out({error:'Ticket not found.'},404);
  if(b.revision!==old.revision)return out({error:'Another person updated this ticket. Refresh before saving.'},409);
- const allowed=parent?['Reply',...(['Resolved','Closed'].includes(old.status)?['Reopen']:[]),...(old.status==='Resolved'?['Closed']:[])]:teacher?['Reply','In progress','Waiting for parent','Resolved']:['Reply','In progress','Waiting for parent','Resolved','Closed','Reopen','Assign'];
+ const allowed=parent?['Reply',...(['Resolved','Closed'].includes(old.status)?['Reopen']:[]),...(old.status==='Resolved'?['Closed']:[])]:teacher?['Reply','In progress','Waiting for parent','Resolved']:['Reply','In progress','Waiting for parent','Resolved','Closed','Reopen',...(!old.management_only&&old.teacher_visible!==false?['Assign']:[])];
  if(!allowed.includes(b.action))return out({error:'This ticket action is not available to your role.'},403);
  if(old.status==='Closed'&&b.action!=='Reopen')return out({error:'Reopen the ticket before adding updates.'},409);
  const next={...old,revision:old.revision+1,updated_at:now};delete next.id;delete next.created_at;
