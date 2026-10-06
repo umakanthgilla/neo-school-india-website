@@ -565,11 +565,15 @@ function renderAccess(area){
  if(parentLinkForm)parentLinkForm.onsubmit=async e=>{
    e.preventDefault();
    const body=Object.fromEntries(new FormData(parentLinkForm));
+   const existing=accounts.find(a=>a.active&&a.account_id!==body.account_id&&(a.student_ids||[a.student_id]).includes(body.student_id));
+   if(existing&&!confirm('This child currently has Parent ID '+existing.account_id+'. Move the child to '+body.account_id+'? The old Parent ID will be disabled automatically if it has no other children.'))return;
    e.submitter.disabled=true;
    try{
      const result=await call('parent_access','POST',{link_account_id:body.account_id},body.student_id);
      await loadRecords();
-     portalNotice('Child linked to Parent ID '+result.account_id+'. Parent can switch children after sign in.');
+     const moved=(result.moved_from||[]).length?' Previous Parent ID: '+result.moved_from.join(', ')+'.':'';
+     const disabled=(result.disabled_accounts||[]).length?' Old unused Parent ID disabled.':'';
+     portalNotice('Child linked to Parent ID '+result.account_id+'. Parent can switch children after sign in.'+moved+disabled);
    }catch(error){portalNotice(error.message);e.submitter.disabled=false}
  };
  area.querySelectorAll('[data-disable]').forEach(button=>button.onclick=async()=>{
