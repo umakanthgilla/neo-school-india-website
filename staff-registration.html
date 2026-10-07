@@ -5,32 +5,203 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Neo School India | Staff Self-Registration</title>
 <style>
-:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#071b52;background:#f4f8fc}
-*{box-sizing:border-box}body{margin:0}.top{height:5px;background:linear-gradient(90deg,#118be8,#4dbb42,#f4c400,#ff7a16,#ef3b78)}
-main{max-width:850px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid #dce6f2;border-radius:22px;padding:24px;box-shadow:0 18px 45px #071b5212}
-.logo{width:170px;max-width:55%;margin-bottom:8px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.14em;color:#118be8}
-h1{margin:8px 0 6px}h2{font-size:18px;margin:26px 0 8px}.note{background:#f3f8ff;border-left:4px solid #118be8;border-radius:12px;padding:13px 14px;line-height:1.5}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.full{grid-column:1/-1}
-label{display:grid;gap:7px;margin:13px 0;font-weight:700}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd7e6;border-radius:11px;background:#fff}
-input[type=file]{padding:10px}.file-note{font-size:12px;color:#64748b;font-weight:500}.required-dot{color:#c62828}
-button{width:100%;border:0;border-radius:12px;padding:14px 18px;background:#071b52;color:#fff;font-weight:850;cursor:pointer;margin-top:14px}button:disabled{opacity:.55;cursor:wait}
-small,p{color:#52617b;line-height:1.5}.ok{background:#effaf2;color:#17683a;border:1px solid #ccebd6;border-radius:12px;padding:14px}.err{background:#fff2f2;color:#9b1c1c;border:1px solid #f0cccc;border-radius:12px;padding:14px}
-.status-list{display:grid;gap:6px;margin-top:10px}.status-item{font-size:13px;padding:8px 10px;border-radius:9px;background:#f7f9fc}
-@media(max-width:680px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:18px}}
+:root{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:#071b52;
+  background:#edf6ff;
+  --navy:#0b2b63;
+  --navy-2:#123c7a;
+  --blue:#118be8;
+  --sky:#eaf6ff;
+  --line:#d7e5f4;
+  --text:#52617b;
+  --shadow:0 18px 48px rgba(11,43,99,.10);
+  --rainbow:linear-gradient(90deg,#118be8,#39b96b,#f4c400,#ff7a16,#ef3b78);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 8% 10%,rgba(17,139,232,.10),transparent 28%),
+    radial-gradient(circle at 92% 18%,rgba(57,185,107,.08),transparent 25%),
+    linear-gradient(180deg,#f7fbff 0%,#edf6ff 55%,#f7fbff 100%);
+}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.28;
+  background-image:linear-gradient(rgba(11,43,99,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(11,43,99,.035) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(to bottom,black,transparent 82%);
+}
+.top{height:5px;background:var(--rainbow);position:sticky;top:0;z-index:10}
+main{max-width:960px;margin:30px auto 44px;padding:0 18px}
+.card{
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,.97);
+  border:1px solid #d9e6f3;
+  border-radius:24px;
+  padding:28px;
+  box-shadow:var(--shadow);
+}
+.card:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--rainbow)}
+.hero{
+  display:flex;
+  gap:20px;
+  align-items:center;
+  padding:4px 2px 18px;
+  border-bottom:1px solid #e3edf7;
+  margin-bottom:18px;
+}
+.logo-wrap{
+  width:184px;
+  min-width:184px;
+  background:#fff;
+  border:1px solid #dce8f4;
+  border-radius:18px;
+  padding:12px 16px;
+  box-shadow:0 8px 22px rgba(7,27,82,.08);
+}
+.logo{width:100%;display:block}
+.hero-copy{flex:1;min-width:0}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:.16em;color:#118be8;margin-bottom:7px}
+h1{margin:0 0 6px;font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;color:#09275d}
+#school{margin:0;color:#52617b;font-weight:650}
+.note{
+  display:grid;
+  grid-template-columns:42px 1fr;
+  gap:12px;
+  align-items:start;
+  background:linear-gradient(135deg,#eef8ff,#f8fbff);
+  border:1px solid #d8e9f8;
+  border-left:4px solid #118be8;
+  border-radius:15px;
+  padding:14px 16px;
+  line-height:1.55;
+  margin-bottom:18px;
+}
+.note-icon,.section-icon{
+  width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#e8f6ff,#fff);
+  border:1px solid #d6e8f8;
+  box-shadow:0 5px 14px rgba(17,139,232,.08);
+  font-size:20px;
+}
+.form-section{
+  position:relative;
+  overflow:hidden;
+  border:1px solid #dce7f3;
+  border-radius:18px;
+  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+  padding:22px;
+  margin:18px 0;
+  box-shadow:0 10px 26px rgba(7,27,82,.05);
+}
+.form-section:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--rainbow)}
+.section-head{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-head h2{margin:0;font-size:20px;color:#09275d}
+.section-copy{margin:0 0 10px 50px;color:#66758c;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px}.full{grid-column:1/-1}
+label{display:grid;gap:7px;margin:11px 0;font-weight:760;color:#102f66}
+input,select,textarea,button{font:inherit}
+input,select,textarea{
+  width:100%;
+  padding:13px 14px;
+  border:1px solid #cbdbea;
+  border-radius:12px;
+  background:#fbfdff;
+  color:#10264d;
+  outline:none;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,transform .18s ease;
+}
+input:hover,select:hover,textarea:hover{border-color:#a9c8e6;background:#fff}
+input:focus,select:focus,textarea:focus{
+  border-color:#118be8;
+  background:#fff;
+  box-shadow:0 0 0 4px rgba(17,139,232,.10);
+}
+.upload-field{
+  position:relative;
+  padding:14px;
+  border:1px solid #d7e5f2;
+  border-radius:14px;
+  background:linear-gradient(145deg,#f9fcff,#fff);
+}
+.upload-title{display:flex;align-items:center;gap:9px}
+.upload-icon{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:#eef8ff;border:1px solid #d7eaf8;font-size:16px
+}
+input[type=file]{padding:10px;background:#fff;border-style:dashed}
+.file-note{font-size:12px;color:#64748b;font-weight:550}.required-dot{color:#d63131}
+.consent{
+  display:flex!important;
+  grid-template-columns:none!important;
+  align-items:flex-start!important;
+  gap:10px!important;
+  padding:14px 16px;
+  border-radius:14px;
+  background:#f7fbff;
+  border:1px solid #dce8f4;
+  font-weight:600!important;
+  color:#2c456b;
+}
+.consent input{width:auto;margin-top:4px;accent-color:#118be8}
+.submit-wrap{padding-top:2px}
+button{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:15px 18px;
+  background:linear-gradient(135deg,#0b2b63,#123f83);
+  color:#fff;
+  font-weight:850;
+  cursor:pointer;
+  margin-top:14px;
+  box-shadow:0 10px 24px rgba(11,43,99,.18);
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+button:hover{transform:translateY(-1px);box-shadow:0 13px 30px rgba(11,43,99,.24);filter:brightness(1.04)}
+button:active{transform:translateY(0)}
+button:disabled{opacity:.55;cursor:wait;transform:none}
+small,p{color:#52617b;line-height:1.5}
+.ok{background:#effaf2;color:#17683a;border:1px solid #ccebd6;border-radius:12px;padding:14px}
+.err{background:#fff2f2;color:#9b1c1c;border:1px solid #f0cccc;border-radius:12px;padding:14px}
+.status-list{display:grid;gap:6px;margin-top:10px}
+.status-item{font-size:13px;padding:9px 11px;border-radius:10px;background:#f1f7fd;border:1px solid #dce8f4}
+@media(max-width:720px){
+  main{margin:16px auto 30px;padding:0 12px}
+  .card{padding:18px;border-radius:20px}
+  .hero{align-items:flex-start;flex-direction:column;gap:12px}
+  .logo-wrap{width:160px;min-width:0}
+  .grid{grid-template-columns:1fr}.full{grid-column:auto}
+  .form-section{padding:17px}
+  .section-copy{margin-left:0}
+}
 </style>
 </head>
 <body>
 <div class="top"></div>
 <main>
 <section class="card">
-<img class="logo" src="/neo-top-logo.jpeg" alt="Neo School India">
-<div class="eyebrow">STAFF SELF-REGISTRATION</div>
-<h1>Enter your staff details</h1>
-<p id="school">Loading school…</p>
-<div class="note"><b>School verification is required.</b> Submitting this form does not create a Staff ID immediately. The school reviews your details and private documents first. A Staff ID is generated only after approval.</div>
+<div class="hero">
+  <div class="logo-wrap"><img class="logo" src="/neo-top-logo.jpeg" alt="Neo School India"></div>
+  <div class="hero-copy">
+    <div class="eyebrow">STAFF SELF-REGISTRATION</div>
+    <h1>Enter your staff details</h1>
+    <p id="school">Loading school…</p>
+  </div>
+</div>
+<div class="note"><span class="note-icon">✓</span><div><b>School verification is required.</b> Submitting this form does not create a Staff ID immediately. The school reviews your details and private documents first. A Staff ID is generated only after approval.</div></div>
 
 <form id="form">
-<h2>Personal & work details</h2>
+<section class="form-section">
+<div class="section-head"><span class="section-icon">👤</span><h2>Personal & work details</h2></div>
+<p class="section-copy">Enter the staff member’s verified personal, contact and employment details.</p>
 <div class="grid">
 <label>Name <span class="required-dot">*</span><input name="name" required maxlength="120" autocomplete="name"></label>
 <label>Staff category <span class="required-dot">*</span><select name="staff_type" required><option value="">Choose…</option><option>Teaching Staff</option><option>Administration</option><option>Non-Teaching Staff</option><option>Support Staff</option></select></label>
@@ -44,18 +215,21 @@ small,p{color:#52617b;line-height:1.5}.ok{background:#effaf2;color:#17683a;borde
 <label>Experience (years)<input name="experience_years" type="number" min="0" max="60" step="0.5" value="0"></label>
 <label class="full">Address <span class="required-dot">*</span><textarea name="address" required rows="3" maxlength="500"></textarea></label>
 </div>
+</section>
 
-<h2>Private document uploads</h2>
-<p>These files are shown only to authorised school/head-office reviewers.</p>
+<section class="form-section">
+<div class="section-head"><span class="section-icon">📁</span><h2>Private document uploads</h2></div>
+<p class="section-copy">Documents remain visible only to authorised school/head-office reviewers.</p>
 <div class="grid">
-<label>Photo / selfie <span class="required-dot">*</span><input name="photo" type="file" accept="image/jpeg,image/png" capture="user" required><span class="file-note">JPG/PNG, max 1.5 MB.</span></label>
-<label>ID proof <span class="required-dot">*</span><input name="id_proof" type="file" accept="image/jpeg,image/png,application/pdf" required><span class="file-note">JPG/PNG/PDF, max 1.5 MB.</span></label>
-<label>Qualification certificate<input name="qualification_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Required for Teaching Staff.</span></label>
-<label>Experience certificate<input name="experience_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Optional when applicable.</span></label>
+<label class="upload-field"><span class="upload-title"><span class="upload-icon">📷</span>Photo / selfie <span class="required-dot">*</span></span><input name="photo" type="file" accept="image/jpeg,image/png" capture="user" required><span class="file-note">JPG/PNG, max 1.5 MB.</span></label>
+<label class="upload-field"><span class="upload-title"><span class="upload-icon">🪪</span>ID proof <span class="required-dot">*</span></span><input name="id_proof" type="file" accept="image/jpeg,image/png,application/pdf" required><span class="file-note">JPG/PNG/PDF, max 1.5 MB.</span></label>
+<label class="upload-field"><span class="upload-title"><span class="upload-icon">🎓</span>Qualification certificate</span><input name="qualification_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Required for Teaching Staff.</span></label>
+<label class="upload-field"><span class="upload-title"><span class="upload-icon">📄</span>Experience certificate</span><input name="experience_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Optional when applicable.</span></label>
 </div>
+</section>
 
-<label style="display:flex;grid-template-columns:auto 1fr;align-items:start;font-weight:550"><input name="confirmed" type="checkbox" style="width:auto;margin-top:4px" required><span>I reviewed my details and confirm that the uploaded documents belong to me and may be used by the school for staff verification.</span></label>
-<button id="submitBtn">Submit for School Verification</button>
+<label class="consent"><input name="confirmed" type="checkbox" required><span>I reviewed my details and confirm that the uploaded documents belong to me and may be used by the school for staff verification.</span></label>
+<div class="submit-wrap"><button id="submitBtn">Submit for School Verification</button></div>
 </form>
 <div id="progress" class="status-list"></div>
 <p id="status" role="status"></p>
