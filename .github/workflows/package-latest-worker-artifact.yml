@@ -18,3 +18,4 @@ jobs:
           path: worker/neo-lead-crm-api-worker-transport-phase1.js
           if-no-files-found: error
           retention-days: 1
+# Trigger: 1
