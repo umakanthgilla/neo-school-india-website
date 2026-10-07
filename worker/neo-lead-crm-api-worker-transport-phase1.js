@@ -1273,7 +1273,11 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
       const assigned=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND json_extract(data,'$.teacher_staff_id')=? LIMIT 1").bind(school,id).first();
       if(assigned)return out({error:'Remove this teacher from the classroom assignment before changing the staff category.'},409);
     }
-    data={...previous,name:str('name',120),department,staff_type:department,role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:date('joining_date'),emergency_mobile:emergency,status:choice('status',['Active','Inactive'])};
+    const joiningDate=date('joining_date'),status=choice('status',['Active','Inactive']),leavingDate=str('leaving_date',10,false);
+    if(leavingDate&&(!/^\d{4}-\d{2}-\d{2}$/.test(leavingDate)||!Number.isFinite(Date.parse(leavingDate))||new Date(leavingDate).toISOString().slice(0,10)!==leavingDate))fail('Check last working date.');
+    if(leavingDate&&leavingDate<joiningDate)fail('Last working date cannot be before joining date.');
+    if(status==='Active'&&leavingDate)fail('Last working date is only for inactive/relieved staff.');
+    data={...previous,name:str('name',120),department,staff_type:department,role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:joiningDate,leaving_date:status==='Inactive'?leavingDate:'',emergency_mobile:emergency,status};
    }
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
    else if(kind==='classrooms'){const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');data={...previous,name:str('name',120),capacity:cap};}
