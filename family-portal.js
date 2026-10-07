@@ -98,6 +98,10 @@ const familyTabIcon={overview:'grid',calendar:'calendar',timetable:'clock',curri
   if(typeof window.renderNeoTeacherStudentCare!=='function'){area.innerHTML='<p class="portal-empty">Student care module is loading. Hard refresh and try again.</p>';return}
   window.renderNeoTeacherStudentCare(area,{data,api,status,refresh});return
  }
+ if(tab==='ptm_reports'&&role==='parent'){
+  const reports=data.ptm_reports||[];
+  area.innerHTML='<div class="learning-welcome"><div><span class="eyebrow">PARENT · PTM</span><h2>PTM reports</h2><p>Only the parent-safe summary and agreed next steps shared by the school are shown here.</p></div></div><div class="portal-grid">'+(reports.map(x=>card('PTM · '+esc(x.session_date||'—'),'<p><b>Teacher:</b> '+esc(x.teacher_name||'—')+'</p><p><b>Progress:</b> '+esc(x.progress_summary||'—')+'</p><p><b>Agreed actions:</b> '+esc(x.agreed_actions||'—')+'</p><p><b>Parent-safe report:</b> '+esc(x.parent_safe_report||'—')+'</p>')).join('')||'<p class="portal-empty">No PTM report has been shared yet.</p>')+'</div>';return
+ }
  if(tab==='employee_hub'&&role==='teacher'){
   area.innerHTML='<p class="portal-empty">Loading employee documents…</p>';
   api('hr').then(hr=>{
