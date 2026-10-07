@@ -73,6 +73,10 @@ async function load(){
   if(!r.ok){show(b.error||'Registration link is unavailable.','err');form.hidden=true;return}
   document.getElementById('school').textContent=(b.school?.name||'School')+' · '+(b.school?.city||'');
   const d=b.data||{};for(const k of ['name','staff_type','role','gender','dob','mobile','email','emergency_mobile','qualification','experience_years','address'])if(form.elements[k]&&d[k]!=null)form.elements[k].value=d[k];
+  const existingTypes=new Set((b.documents||[]).map(x=>x.doc_type));
+  if(existingTypes.has('photo'))form.elements.photo.required=false;
+  if(existingTypes.has('id_proof'))form.elements.id_proof.required=false;
+  if(existingTypes.has('qualification_certificate'))form.elements.qualification_certificate.required=false;
   if(b.correction_note)show('Correction requested by school: '+b.correction_note,'err');
   return;
  }
@@ -82,6 +86,7 @@ async function load(){
  document.getElementById('school').textContent=b.school.name+' · '+b.school.city;
 }
 const toBase64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(file)});
+const profilePayload=()=>{const b=Object.fromEntries(new FormData(form));delete b.photo;delete b.id_proof;delete b.qualification_certificate;delete b.experience_certificate;b.confirmed=form.elements.confirmed.checked;b.experience_years=Number(b.experience_years||0);return b};
 async function upload(appId,token,type,file){
  if(!file)return;
  if(file.size>1572864)throw Error(file.name+' is larger than 1.5 MB.');
@@ -96,7 +101,7 @@ form.onsubmit=async e=>{
   let appId=existingApp,token=existingToken;
   if(!appId){
    step('Saving staff details…');
-   const b=Object.fromEntries(new FormData(form));delete b.photo;delete b.id_proof;delete b.qualification_certificate;delete b.experience_certificate;b.confirmed=form.elements.confirmed.checked;b.experience_years=Number(b.experience_years||0);
+   const b=profilePayload();
    const r=await fetch(BASE+'/api/staff-registration/public/start/'+encodeURIComponent(schoolId),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}),x=await r.json();
    if(!r.ok)throw Error(x.error||'Unable to start staff registration.');appId=x.application_id;token=x.token;
   }
@@ -105,7 +110,7 @@ form.onsubmit=async e=>{
   await upload(appId,token,'qualification_certificate',form.elements.qualification_certificate.files[0]);
   await upload(appId,token,'experience_certificate',form.elements.experience_certificate.files[0]);
   step('Submitting for school verification…');
-  const r=await fetch(BASE+'/api/staff-registration/public/submit/'+encodeURIComponent(appId)+'?token='+encodeURIComponent(token),{method:'POST'}),x=await r.json();
+  const r=await fetch(BASE+'/api/staff-registration/public/submit/'+encodeURIComponent(appId)+'?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(profilePayload())}),x=await r.json();
   if(!r.ok)throw Error(x.error||'Unable to submit registration.');
   form.hidden=true;show('Submitted successfully. Reference: '+appId+'. The school will verify your details before creating the Staff ID.','ok');
  }catch(err){show(err.message,'err');button.disabled=false}
