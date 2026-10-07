@@ -20,25 +20,25 @@ function img(person,label){
  return '<div class="neo-id-photo neo-id-placeholder" aria-label="'+esc(label)+'"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="38" r="20" fill="#a9b9ca"/><path d="M18 91c4-23 17-34 32-34s28 11 32 34" fill="#a9b9ca"/></svg></div>';
 }
 function logo(){return '<img class="neo-id-logo" src="/neo-top-logo.jpeg" alt="Neo School India">'}
-function wave(){return '<svg class="neo-id-wave" viewBox="0 0 300 66" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="neoWaveBlue" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b63b5"/><stop offset=".55" stop-color="#0a91c4"/><stop offset="1" stop-color="#12a8b4"/></linearGradient><linearGradient id="neoWaveWarm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f6c800"/><stop offset=".5" stop-color="#ff8a12"/><stop offset="1" stop-color="#ef3f78"/></linearGradient></defs><path d="M0 44 C34 25 61 24 91 40 C116 53 139 54 164 42 C191 29 217 29 244 41 C266 51 284 52 300 45 L300 66 L0 66 Z" fill="url(#neoWaveBlue)"/><path d="M0 54 C31 40 61 39 92 51 C118 61 143 61 169 49 C196 37 222 37 248 50 C270 60 287 61 300 56 L300 66 L0 66 Z" fill="#0db5b0"/><path d="M31 66 C59 47 89 45 118 57 C139 66 161 66 182 56 C204 46 227 45 249 56 C267 64 284 66 300 62 L300 66 Z" fill="#53b847"/><path d="M111 66 C137 50 163 48 189 58 C207 65 225 66 244 60 C260 54 278 55 300 63 L300 66 Z" fill="#f4cc00"/><path d="M189 66 C211 51 235 50 257 58 C276 65 289 65 300 63 L300 66 Z" fill="url(#neoWaveWarm)"/><path d="M259 66 C273 58 286 57 300 62 L300 66 Z" fill="#ef3f78"/></svg>'}
+function wave(){return '<svg class="neo-id-wave" viewBox="0 0 300 86" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="neoBand1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b56b7"/><stop offset=".18" stop-color="#117fd1"/><stop offset=".38" stop-color="#06b6c8"/><stop offset=".58" stop-color="#43b34f"/><stop offset=".73" stop-color="#e7c800"/><stop offset=".87" stop-color="#ff8a12"/><stop offset="1" stop-color="#ef1474"/></linearGradient><linearGradient id="neoBand2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d72cf"/><stop offset=".28" stop-color="#0ebfd0"/><stop offset=".58" stop-color="#49b54a"/><stop offset=".76" stop-color="#f1c800"/><stop offset=".9" stop-color="#ff7a16"/><stop offset="1" stop-color="#f42c79"/></linearGradient><linearGradient id="neoBand3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a8bd7"/><stop offset=".3" stop-color="#20c8cf"/><stop offset=".62" stop-color="#66bb4a"/><stop offset=".8" stop-color="#f4cf19"/><stop offset="1" stop-color="#ff4b67"/></linearGradient></defs><path d="M0 28 C48 58 93 68 139 66 C177 64 193 48 225 49 C258 50 283 42 300 24 L300 86 L0 86 Z" fill="url(#neoBand1)"/><path d="M0 42 C48 66 97 74 143 71 C180 68 198 55 226 56 C258 57 282 50 300 35 L300 86 L0 86 Z" fill="url(#neoBand2)" opacity=".95"/><path d="M0 55 C49 73 98 79 146 76 C183 73 203 63 230 64 C258 65 282 59 300 48 L300 86 L0 86 Z" fill="url(#neoBand3)" opacity=".9"/><path d="M0 17 C44 54 87 65 132 66 C176 67 191 50 224 49 C258 48 282 38 300 18 L300 30 C282 49 258 59 225 60 C194 59 177 75 137 75 C88 74 45 62 0 30 Z" fill="#fff" opacity=".78"/><g transform="translate(265 54)" fill="#fff" opacity=".42"><path d="M12 0c2.2 7.7 5 10.5 12.7 12.7C17 15 14.2 17.8 12 25.5 9.7 17.8 7 15 0 12.7 7 10.5 9.7 7.7 12 0Z"/><path d="M28 7c1.2 4.2 2.7 5.8 7 7-4.3 1.2-5.8 2.7-7 7-1.2-4.3-2.8-5.8-7-7 4.2-1.2 5.8-2.8 7-7Z"/></g></svg>'}
 function pill(text,tone){return '<span class="neo-id-pill '+tone+'">'+esc(text)+'</span>'}
 function line(label,value){return '<div class="neo-id-line"><b>'+esc(label)+'</b><span>'+esc(value||'—')+'</span></div>'}
 function personQr(kind,id,school){return qr(location.origin+'/verify-card.html?type='+encodeURIComponent(kind)+'&id='+encodeURIComponent(id||'')+'&school='+encodeURIComponent(school?.school_id||''))}
 function studentCard(s,school){
  const cardId=pick(s,'admission_no','student_id','id'),cls=pick(s,'class_section','classroom_name','program','class_name'),roll=pick(s,'roll_no','roll_number'),contact=pick(s,'emergency_mobile','mobile','parent_mobile'),year=pick(s,'academic_year');
- return '<article class="neo-id-card neo-id-student" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STUDENT ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Student')+'</h2><div class="neo-id-accent">'+esc(cls||'Student')+'</div>'+line('Grade/Sec:',cls)+(roll?line('Roll No:',roll):'')+line('Admission No:',cardId)+(year?line('Academic Year:',year):'')+line('Emergency Contact:',contact)+pill('STUDENT','student')+'<div class="neo-id-footer"><img src="'+esc(personQr('student',cardId,school))+'" alt="Student QR">'+barcodeSvg(cardId)+'</div>'+wave()+'</article>';
+ return '<article class="neo-id-card neo-id-student" data-print-card><div class="neo-id-top-accent"></div><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STUDENT ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Student')+'</h2><div class="neo-id-accent">'+esc(cls||'Student')+'</div>'+line('Grade/Sec:',cls)+(roll?line('Roll No:',roll):'')+line('Admission No:',cardId)+(year?line('Academic Year:',year):'')+line('Emergency Contact:',contact)+pill('STUDENT','student')+'<div class="neo-id-footer"><img src="'+esc(personQr('student',cardId,school))+'" alt="Student QR">'+barcodeSvg(cardId)+'</div>'+wave()+'</article>';
 }
 function staffCard(s,school){
  const id=pick(s,'staff_id','employee_id','id'),role=pick(s,'designation','role','department'),blood=pick(s,'blood_group'),phone=pick(s,'mobile','phone'),dept=pick(s,'staff_type','staff_category','department');
- return '<article class="neo-id-card neo-id-staff" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STAFF ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Staff')+'</h2><div class="neo-id-accent">'+esc(role||'Staff')+'</div>'+line('Staff ID:',id)+(dept&&dept!==role?line('Department:',dept):'')+(blood?line('Blood Group:',blood):'')+line('Phone:',phone)+pill('STAFF','staff')+'<div class="neo-id-footer"><img src="'+esc(personQr('staff',id,school))+'" alt="Staff QR"><span class="neo-id-sign">Authorised Signature</span></div>'+wave()+'</article>';
+ return '<article class="neo-id-card neo-id-staff" data-print-card><div class="neo-id-top-accent"></div><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STAFF ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Staff')+'</h2><div class="neo-id-accent">'+esc(role||'Staff')+'</div>'+line('Staff ID:',id)+(dept&&dept!==role?line('Department:',dept):'')+(blood?line('Blood Group:',blood):'')+line('Phone:',phone)+pill('STAFF','staff')+'<div class="neo-id-footer"><img src="'+esc(personQr('staff',id,school))+'" alt="Staff QR"><span class="neo-id-sign">Authorised Signature</span></div>'+wave()+'</article>';
 }
 function visitorCard(v,school){
  const id=pick(v,'visitor_id','gate_pass','id'),date=pick(v,'date','created_at'),purpose=pick(v,'purpose'),name=pick(v,'name','visitor_name')||'VISITOR',valid=pick(v,'valid_for')||'Single Day Access';
- return '<article class="neo-id-card neo-id-visitor" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>VISITOR ID CARD</h4><div class="neo-id-visitor-icon">♙</div><h2>'+esc(name)+'</h2><div class="neo-id-big-id">ID: '+esc(id||'Visitor')+'</div>'+line('Date:',date?new Date(date).toLocaleDateString('en-GB',{timeZone:'Asia/Kolkata'}):new Date().toLocaleDateString('en-GB'))+line('Valid For:',valid)+line('Purpose:',purpose||'Official / Meeting')+pill('VISITOR','visitor')+'<div class="neo-id-footer"><img src="'+esc(personQr('visitor',id,school))+'" alt="Visitor QR"><small>Please return<br>at the reception</small></div>'+wave()+'</article>';
+ return '<article class="neo-id-card neo-id-visitor" data-print-card><div class="neo-id-top-accent"></div><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>VISITOR ID CARD</h4><div class="neo-id-visitor-icon">♙</div><h2>'+esc(name)+'</h2><div class="neo-id-big-id">ID: '+esc(id||'Visitor')+'</div>'+line('Date:',date?new Date(date).toLocaleDateString('en-GB',{timeZone:'Asia/Kolkata'}):new Date().toLocaleDateString('en-GB'))+line('Valid For:',valid)+line('Purpose:',purpose||'Official / Meeting')+pill('VISITOR','visitor')+'<div class="neo-id-footer"><img src="'+esc(personQr('visitor',id,school))+'" alt="Visitor QR"><small>Please return<br>at the reception</small></div>'+wave()+'</article>';
 }
 function escortCard(p,student,school){
  const id=pick(p,'escort_id','gate_pass','id'),name=pick(p,'pickup_name','escort_name','name')||'Escort',rel=pick(p,'relationship')||'Authorised Escort',phone=pick(p,'pickup_mobile','mobile','contact'),child=student||{},childName=pick(p,'student_name')||child.name||pick(p,'student_id')||'Student',cls=pick(child,'class_section','classroom_name','program','class_name');
- return '<article class="neo-id-card neo-id-escort" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>CHILD PICKUP ESCORT</h4><div class="neo-id-dual-photo">'+img(p,name)+img(child,childName)+'</div><h2>'+esc(name)+'</h2><div class="neo-id-accent">Relationship: '+esc(rel)+'</div>'+line('Authorized to Pick Up:',childName+(cls?' ('+cls+')':''))+line('Escort ID:',id)+line('Contact No:',phone)+pill('ESCORT','escort')+'<div class="neo-id-footer"><img src="'+esc(personQr('escort',id,school))+'" alt="Escort QR">'+barcodeSvg(id)+'</div>'+wave()+'</article>';
+ return '<article class="neo-id-card neo-id-escort" data-print-card><div class="neo-id-top-accent"></div><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>CHILD PICKUP ESCORT</h4><div class="neo-id-dual-photo">'+img(p,name)+img(child,childName)+'</div><h2>'+esc(name)+'</h2><div class="neo-id-accent">Relationship: '+esc(rel)+'</div>'+line('Authorized to Pick Up:',childName+(cls?' ('+cls+')':''))+line('Escort ID:',id)+line('Contact No:',phone)+pill('ESCORT','escort')+'<div class="neo-id-footer"><img src="'+esc(personQr('escort',id,school))+'" alt="Escort QR">'+barcodeSvg(id)+'</div>'+wave()+'</article>';
 }
 function injectStyles(){
  if(document.getElementById('neoIdCardStyles'))return;
@@ -162,24 +162,46 @@ function injectStyles(){
   right:0;
   bottom:0;
   width:100%;
-  height:58px
+  height:72px
+}
+.neo-id-top-accent{
+  position:absolute!important;
+  z-index:1!important;
+  left:0;
+  top:0;
+  width:46%;
+  height:9px;
+  border-radius:18px 0 10px 0;
+  background:linear-gradient(90deg,#ff6d10 0%,#ff9d00 38%,#f1ca00 60%,#68b84b 82%,#24a97e 100%)
+}
+.neo-id-top-accent:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:9px;
+  height:138px;
+  border-radius:18px 0 10px 0;
+  background:linear-gradient(180deg,#ff6d10 0%,#ff9d00 28%,#efc800 52%,#74b83d 78%,#4aa748 100%)
 }
 .neo-id-side{position:absolute!important;z-index:1!important}
 .neo-id-side.neo-left{
   left:0;
-  top:58px;
-  width:7px;
-  height:120px;
-  border-radius:0 8px 8px 0;
-  background:linear-gradient(180deg,#ef3f7a 0 18%,#ff7816 18% 38%,#f3c400 38% 56%,#4bb84a 56% 76%,#0f78b8 76% 100%)
+  top:178px;
+  width:25px;
+  height:106px;
+  border-radius:0 13px 13px 0;
+  background:linear-gradient(180deg,#138fdf 0%,#0c67ba 100%);
+  clip-path:polygon(0 0,100% 13%,100% 87%,0 100%)
 }
 .neo-id-side.neo-right{
-  right:-7px;
-  top:184px;
-  width:20px;
-  height:62px;
-  border-radius:12px 0 0 12px;
-  background:linear-gradient(180deg,#1268b3,#0ca7b4 48%,#49ae4f)
+  right:0;
+  top:178px;
+  width:25px;
+  height:106px;
+  border-radius:13px 0 0 13px;
+  background:linear-gradient(180deg,#0a4d9b 0%,#123c7d 100%);
+  clip-path:polygon(0 13%,100% 0,100% 100%,0 87%)
 }
 .neo-id-staff{--tone:#1378a9}
 .neo-id-student{--tone:#4aa948}
@@ -223,7 +245,7 @@ function injectStyles(){
 function openPrint(cardHtml,title){
  const w=open('','_blank');if(!w)return;
  const styles=document.getElementById('neoIdCardStyles')?.textContent||'';
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0;padding:4.1mm 3.8mm 3.2mm}.neo-id-logo{width:25mm;margin-bottom:1mm}.neo-id-card h4{font-size:3mm;margin:0 0 1.8mm}.neo-id-card h2{font-size:4mm;margin:1.4mm 0 .5mm}.neo-id-photo{width:18.5mm;height:18.5mm;border-width:.8mm;outline-width:.6mm}.neo-id-accent{font-size:2.5mm;margin-bottom:1.2mm}.neo-id-line{font-size:2.12mm;line-height:1.18;margin:.12mm 0}.neo-id-big-id{font-size:3mm}.neo-id-pill{font-size:1.95mm;padding:1.05mm 2.7mm .95mm}.neo-id-footer{height:8.8mm;margin-top:.8mm}.neo-id-footer>img{width:7.8mm;height:7.8mm}.neo-id-footer svg{width:15.5mm;height:5.5mm}.neo-id-wave{height:10.5mm}.neo-id-side.neo-left{top:10.5mm;width:1.4mm;height:22mm}.neo-id-side.neo-right{top:33.5mm;width:3.7mm;height:11.5mm}.neo-id-visitor-icon{width:17mm;height:17mm;font-size:8mm}.neo-id-dual-photo .neo-id-photo:first-child{width:17mm;height:17mm}.neo-id-dual-photo .neo-id-photo:last-child{width:10.5mm;height:10.5mm}</style></head><body>'+cardHtml+'<script>window.onload=()=>setTimeout(()=>print(),900)<\/script></body></html>');w.document.close();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0;padding:4.1mm 3.8mm 3.2mm}.neo-id-logo{width:25mm;margin-bottom:1mm}.neo-id-card h4{font-size:3mm;margin:0 0 1.8mm}.neo-id-card h2{font-size:4mm;margin:1.4mm 0 .5mm}.neo-id-photo{width:18.5mm;height:18.5mm;border-width:.8mm;outline-width:.6mm}.neo-id-accent{font-size:2.5mm;margin-bottom:1.2mm}.neo-id-line{font-size:2.12mm;line-height:1.18;margin:.12mm 0}.neo-id-big-id{font-size:3mm}.neo-id-pill{font-size:1.95mm;padding:1.05mm 2.7mm .95mm}.neo-id-footer{height:8.8mm;margin-top:.8mm}.neo-id-footer>img{width:7.8mm;height:7.8mm}.neo-id-footer svg{width:15.5mm;height:5.5mm}.neo-id-wave{height:13mm}.neo-id-top-accent{width:46%;height:1.5mm;border-radius:3mm 0 1.5mm 0}.neo-id-top-accent:before{width:1.5mm;height:25mm;border-radius:3mm 0 1.5mm 0}.neo-id-side.neo-left{top:31mm;width:4.5mm;height:20mm}.neo-id-side.neo-right{top:31mm;width:4.5mm;height:20mm}.neo-id-visitor-icon{width:17mm;height:17mm;font-size:8mm}.neo-id-dual-photo .neo-id-photo:first-child{width:17mm;height:17mm}.neo-id-dual-photo .neo-id-photo:last-child{width:10.5mm;height:10.5mm}</style></head><body>'+cardHtml+'<script>window.onload=()=>setTimeout(()=>print(),900)<\/script></body></html>');w.document.close();
 }
 async function visitorData(school){
  try{
