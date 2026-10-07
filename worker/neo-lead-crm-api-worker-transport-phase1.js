@@ -218,6 +218,8 @@ export default {
     }
 
     const url = new URL(request.url);
+    const staffRegistrationResponse = await staffRegistrationPortal(request, env, url);
+    if (staffRegistrationResponse) return staffRegistrationResponse;
     const admissionWorkflowResponse = await admissionWorkflowPortal(request, env, url);
     if (admissionWorkflowResponse) return admissionWorkflowResponse;
     const gatePhotoResponse = await gatePhotoPortal(request, env, url);
@@ -261,7 +263,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-04-v2exp12",
+          build: "2026-10-07-staffqr1",
         },
         200,
         request
@@ -4695,6 +4697,161 @@ async function gatePhotoPortal(request,env,url){
   }
   return out({error:'Not found.'},404);
  }catch(e){if(e instanceof TypeError)return out({error:e.message},400);console.error('Gate photo error',e);return out({error:'Gate photo service is temporarily unavailable.'},503)}
+}
+
+
+/* Staff self-registration QR workflow.
+   Public QR -> staff profile + private documents -> school verification -> Staff Master + Staff ID.
+*/
+const STAFF_REGISTRATION_SCHEMA=[
+ \`CREATE TABLE IF NOT EXISTS neo_staff_applications (
+   id TEXT PRIMARY KEY,
+   school_id TEXT NOT NULL,
+   token_hash TEXT NOT NULL,
+   token_expires TEXT NOT NULL,
+   status TEXT NOT NULL DEFAULT 'Draft',
+   data TEXT NOT NULL,
+   correction_note TEXT,
+   staff_id TEXT,
+   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+ )\`,
+ \`CREATE INDEX IF NOT EXISTS neo_staff_application_school_status ON neo_staff_applications(school_id,status,updated_at DESC)\`,
+ \`CREATE TABLE IF NOT EXISTS neo_staff_application_documents (
+   id TEXT PRIMARY KEY,
+   application_id TEXT NOT NULL,
+   school_id TEXT NOT NULL,
+   doc_type TEXT NOT NULL,
+   file_name TEXT NOT NULL,
+   mime_type TEXT NOT NULL,
+   body BLOB NOT NULL,
+   size_bytes INTEGER NOT NULL,
+   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   UNIQUE(application_id,doc_type)
+ )\`
+];
+const staffRegistrationSchemaReady=new WeakMap();
+async function ensureStaffRegistrationSchema(env){
+ if(!staffRegistrationSchemaReady.has(env.DB)){
+  const p=env.DB.batch(STAFF_REGISTRATION_SCHEMA.map(x=>env.DB.prepare(x))).catch(e=>{staffRegistrationSchemaReady.delete(env.DB);throw e});
+  staffRegistrationSchemaReady.set(env.DB,p);
+ }
+ await staffRegistrationSchemaReady.get(env.DB);
+}
+function staffRegistrationUrl(school){return 'https://neoschoolindia.com/staff-registration.html?school='+encodeURIComponent(school)}
+async function staffRegistrationApp(env,id,token=''){
+ const row=await env.DB.prepare('SELECT * FROM neo_staff_applications WHERE id=? LIMIT 1').bind(id).first();if(!row)return null;
+ if(token){const hash=await admissionHash(token);if(hash!==row.token_hash)return null;if(row.token_expires&&Date.parse(row.token_expires)<Date.now())return {expired:true};}
+ return {...row,data:JSON.parse(row.data||'{}')};
+}
+async function staffRegistrationDocs(env,appId){
+ const r=await env.DB.prepare('SELECT id,doc_type,file_name,mime_type,size_bytes,created_at FROM neo_staff_application_documents WHERE application_id=? ORDER BY created_at').bind(appId).all();return r.results||[];
+}
+function staffRegistrationShape(app,docs){return {application_id:app.id,school_id:app.school_id,status:app.status,correction_note:app.correction_note||'',staff_id:app.staff_id||'',data:app.data,documents:docs||[],created_at:app.created_at,updated_at:app.updated_at}}
+async function staffRegistrationPortal(request,env,url){
+ if(!url.pathname.startsWith('/api/staff-registration/'))return null;
+ const out=(b,status=200)=>json(b,status,request);
+ try{
+  await ensurePortalSchema(env);await ensureStaffRegistrationSchema(env);
+  const clean=(v,max=200)=>typeof v==='string'?v.trim().slice(0,max):'';
+  const validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''))&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+  const validMobile=v=>{const x=String(v||'').trim();return /^\+?[0-9 ()-]{8,20}$/.test(x)&&x.replace(/\D/g,'').length>=10&&x.replace(/\D/g,'').length<=15};
+  const publicSchool=url.pathname.match(/^\/api\/staff-registration\/public\/school\/([^/]+)$/);
+  if(publicSchool&&request.method==='GET'){
+   const schoolId=decodeURIComponent(publicSchool[1]),school=await env.DB.prepare('SELECT school_id,name,city FROM neo_schools WHERE school_id=? AND active=1').bind(schoolId).first();
+   if(!school)return out({error:'School is not available for staff registration.'},404);
+   return out({school,registration_url:staffRegistrationUrl(schoolId)});
+  }
+  const start=url.pathname.match(/^\/api\/staff-registration\/public\/start\/([^/]+)$/);
+  if(start&&request.method==='POST'){
+   const schoolId=decodeURIComponent(start[1]),school=await env.DB.prepare('SELECT school_id,name,city FROM neo_schools WHERE school_id=? AND active=1').bind(schoolId).first();if(!school)return out({error:'School is not available for staff registration.'},404);
+   const b=await request.json(),name=clean(b.name,120),category=normalizeStaffCategory(clean(b.staff_type||b.category,60),clean(b.role,120)),role=clean(b.role,120),gender=clean(b.gender,40),dob=clean(b.dob,10),mobile=clean(b.mobile,20),email=clean(b.email,160),address=clean(b.address,500),qualification=clean(b.qualification,300),experience=Number(b.experience_years||0),emergency=clean(b.emergency_mobile,20);
+   if(!name||!['Teaching Staff','Administration','Non-Teaching Staff','Support Staff'].includes(category)||!role||!['Male','Female','Prefer not to say'].includes(gender)||!validDate(dob)||dob>neoToday()||!validMobile(mobile)||!address)return out({error:'Complete name, staff category, role, gender, date of birth, mobile and address.'},400);
+   if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return out({error:'Check email address.'},400);
+   if(emergency&&!validMobile(emergency))return out({error:'Check emergency contact number.'},400);
+   if(!Number.isFinite(experience)||experience<0||experience>60)return out({error:'Check experience years.'},400);
+   if(b.confirmed!==true)return out({error:'Please confirm the entered staff details.'},400);
+   const duplicateStaff=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND replace(replace(replace(json_extract(data,'$.mobile'),' ',''),'-',''),'(', '') LIKE ? LIMIT 1").bind(schoolId,'%'+mobile.replace(/\D/g,'').slice(-10)).first();
+   if(duplicateStaff)return out({error:'A Staff Master record already exists with this mobile number.'},409);
+   const open=await env.DB.prepare("SELECT id FROM neo_staff_applications WHERE school_id=? AND status IN ('Draft','Submitted','Correction Required') AND replace(replace(replace(json_extract(data,'$.mobile'),' ',''),'-',''),'(', '') LIKE ? LIMIT 1").bind(schoolId,'%'+mobile.replace(/\D/g,'').slice(-10)).first();
+   if(open)return out({error:'A staff self-registration is already open for this mobile number. Ask the school to review the existing submission.'},409);
+   const id='STAFFAPP_'+crypto.randomUUID().replaceAll('-','').slice(0,24),token=admissionToken(),tokenHash=await admissionHash(token),expires=new Date(Date.now()+48*3600000).toISOString(),data={name,staff_type:category,department:category,role,gender,dob,mobile,email,address,qualification,experience_years:experience,emergency_mobile:emergency,source:'Staff Self-Registration QR'};
+   await env.DB.batch([
+    env.DB.prepare("INSERT INTO neo_staff_applications(id,school_id,token_hash,token_expires,status,data) VALUES (?,?,?,?,'Draft',?)").bind(id,schoolId,tokenHash,expires,JSON.stringify(data)),
+    portalAudit(env,schoolId,false,'STAFF_REGISTRATION:started',id)
+   ]);
+   return out({success:true,application_id:id,token,token_expires:expires},201);
+  }
+  const publicApp=url.pathname.match(/^\/api\/staff-registration\/public\/application\/([^/]+)$/);
+  if(publicApp&&request.method==='GET'){
+   const id=decodeURIComponent(publicApp[1]),token=url.searchParams.get('token')||'',app=await staffRegistrationApp(env,id,token);
+   if(!app)return out({error:'Staff registration link is invalid.'},404);if(app.expired)return out({error:'Staff registration link has expired. Ask the school for a fresh QR submission.'},410);
+   const school=await env.DB.prepare('SELECT name,city FROM neo_schools WHERE school_id=?').bind(app.school_id).first();
+   return out({...staffRegistrationShape(app,await staffRegistrationDocs(env,id)),school});
+  }
+  const publicDoc=url.pathname.match(/^\/api\/staff-registration\/public\/document\/([^/]+)\/([a-z_]+)$/);
+  if(publicDoc&&request.method==='POST'){
+   const appId=decodeURIComponent(publicDoc[1]),docType=publicDoc[2],token=url.searchParams.get('token')||'',app=await staffRegistrationApp(env,appId,token);
+   if(!app)return out({error:'Staff registration link is invalid.'},404);if(app.expired)return out({error:'Staff registration link has expired.'},410);if(!['Draft','Correction Required'].includes(app.status))return out({error:'Documents are locked while the registration is under review.'},409);
+   if(!['photo','id_proof','qualification_certificate','experience_certificate'].includes(docType))return out({error:'Unsupported document type.'},400);
+   const b=await request.json(),fileName=clean(b.file_name,160),mime=clean(b.mime_type,80),encoded=typeof b.data_base64==='string'?b.data_base64:'',allowed=docType==='photo'?['image/jpeg','image/png']:['image/jpeg','image/png','application/pdf'];
+   if(!fileName||!allowed.includes(mime)||!encoded)return out({error:docType==='photo'?'Upload a JPG or PNG photo/selfie.':'Upload a JPG, PNG or PDF document.'},400);
+   let bytes;try{const bin=atob(encoded);if(bin.length>1572864)return out({error:'Each upload must be 1.5 MB or smaller.'},413);bytes=Uint8Array.from(bin,c=>c.charCodeAt(0))}catch{return out({error:'File could not be read.'},400)}
+   const docId='SDOC_'+appId+'_'+docType;
+   await env.DB.prepare(\`INSERT INTO neo_staff_application_documents(id,application_id,school_id,doc_type,file_name,mime_type,body,size_bytes) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(application_id,doc_type) DO UPDATE SET id=excluded.id,file_name=excluded.file_name,mime_type=excluded.mime_type,body=excluded.body,size_bytes=excluded.size_bytes,created_at=CURRENT_TIMESTAMP\`).bind(docId,appId,app.school_id,docType,fileName,mime,bytes,bytes.byteLength).run();
+   return out({success:true,document:{id:docId,doc_type:docType,file_name:fileName,mime_type:mime,size_bytes:bytes.byteLength}});
+  }
+  const publicSubmit=url.pathname.match(/^\/api\/staff-registration\/public\/submit\/([^/]+)$/);
+  if(publicSubmit&&request.method==='POST'){
+   const appId=decodeURIComponent(publicSubmit[1]),token=url.searchParams.get('token')||'',app=await staffRegistrationApp(env,appId,token);
+   if(!app)return out({error:'Staff registration link is invalid.'},404);if(app.expired)return out({error:'Staff registration link has expired.'},410);if(!['Draft','Correction Required'].includes(app.status))return out({error:'This registration is already under review.'},409);
+   const docs=await staffRegistrationDocs(env,appId),types=new Set(docs.map(x=>x.doc_type));if(!types.has('photo'))return out({error:'Photo or selfie is required.'},400);if(!types.has('id_proof'))return out({error:'ID proof is required.'},400);if(app.data.staff_type==='Teaching Staff'&&!types.has('qualification_certificate'))return out({error:'Teaching Staff must upload a qualification certificate.'},400);
+   await env.DB.batch([env.DB.prepare("UPDATE neo_staff_applications SET status='Submitted',correction_note=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(appId),portalAudit(env,app.school_id,false,'STAFF_REGISTRATION:submitted',appId)]);
+   return out({success:true,status:'Submitted',application_id:appId,message:'Staff details were submitted for school verification.'});
+  }
+
+  const schoolList=url.pathname.match(/^\/api\/staff-registration\/school\/([^/]+)\/applications$/);
+  const schoolApp=url.pathname.match(/^\/api\/staff-registration\/school\/([^/]+)\/applications\/([^/]+)$/);
+  const schoolDoc=url.pathname.match(/^\/api\/staff-registration\/school\/([^/]+)\/applications\/([^/]+)\/documents\/([^/]+)$/);
+  if(schoolList||schoolApp||schoolDoc){
+   const schoolId=decodeURIComponent((schoolList||schoolApp||schoolDoc)[1]),admin=await requireAdmin(request,env),session=admin?null:await schoolSession(request,env);if(!admin&&(!session||session.school_id!==schoolId))return out({error:'School sign in required.'},401);
+   if(schoolList&&request.method==='GET'){
+    const rows=await env.DB.prepare('SELECT * FROM neo_staff_applications WHERE school_id=? ORDER BY updated_at DESC LIMIT 100').bind(schoolId).all(),apps=[];
+    for(const row of rows.results||[])apps.push(staffRegistrationShape({...row,data:JSON.parse(row.data||'{}')},await staffRegistrationDocs(env,row.id)));
+    return out({applications:apps,registration_url:staffRegistrationUrl(schoolId)});
+   }
+   if(schoolDoc&&request.method==='GET'){
+    const appId=decodeURIComponent(schoolDoc[2]),docId=decodeURIComponent(schoolDoc[3]),row=await env.DB.prepare('SELECT file_name,mime_type,body FROM neo_staff_application_documents WHERE school_id=? AND application_id=? AND id=?').bind(schoolId,appId,docId).first();if(!row)return out({error:'Staff document not found.'},404);
+    return new Response(row.body,{status:200,headers:{'Content-Type':row.mime_type,'Content-Disposition':'inline; filename="'+String(row.file_name||'document').replace(/["\r\n]/g,'')+'"','Cache-Control':'no-store',...cors(request)}});
+   }
+   if(schoolApp&&request.method==='PATCH'){
+    const appId=decodeURIComponent(schoolApp[2]),app=await staffRegistrationApp(env,appId);if(!app||app.school_id!==schoolId)return out({error:'Staff registration not found.'},404);const b=await request.json(),action=clean(b.action,40);
+    if(action==='correction'){
+     if(!['Submitted','Correction Required'].includes(app.status))return out({error:'Only a submitted registration can be returned for correction.'},409);const note=clean(b.correction_note,1000);if(!note)return out({error:'Enter the correction required.'},400);const token=admissionToken(),hash=await admissionHash(token),expires=new Date(Date.now()+48*3600000).toISOString();
+     await env.DB.batch([env.DB.prepare("UPDATE neo_staff_applications SET status='Correction Required',correction_note=?,token_hash=?,token_expires=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(note,hash,expires,appId),portalAudit(env,schoolId,admin,'STAFF_REGISTRATION:correction',appId)]);
+     return out({success:true,status:'Correction Required',correction_note:note,correction_url:'https://neoschoolindia.com/staff-registration.html?application='+encodeURIComponent(appId)+'&token='+encodeURIComponent(token),token_expires:expires});
+    }
+    if(action==='reject'){
+     if(app.status==='Approved')return out({error:'Approved staff registration cannot be rejected.'},409);await env.DB.batch([env.DB.prepare("UPDATE neo_staff_applications SET status='Rejected',token_hash='',token_expires='',updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(appId),portalAudit(env,schoolId,admin,'STAFF_REGISTRATION:rejected',appId)]);return out({success:true,status:'Rejected'});
+    }
+    if(action==='approve'){
+     if(app.status!=='Submitted')return out({error:'Staff registration must be Submitted before approval.'},409);if(app.staff_id)return out({error:'Staff ID already exists for this registration.'},409);
+     const d=app.data,category=normalizeStaffCategory(d.staff_type||d.department,d.role);if(!category)return out({error:'Choose a valid staff category.'},400);
+     const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='staff' AND json_extract(data,'$.mobile')=? LIMIT 1").bind(schoolId,d.mobile).first();if(duplicate)return out({error:'A Staff Master record already exists with this mobile number.'},409);
+     const staffId='NEO'+String(new Date().getFullYear()).slice(-2)+crypto.randomUUID().replaceAll('-','').slice(0,4).toUpperCase(),staffData={name:d.name,department:category,staff_type:category,role:d.role,gender:d.gender||'',dob:d.dob||'',mobile:d.mobile,email:d.email||'',joining_date:neoToday(),salary_paise:0,emergency_mobile:d.emergency_mobile||'',address:d.address||'',qualification:d.qualification||'',experience_years:Number(d.experience_years||0),staff_application_id:appId,photo_document_id:'SDOC_'+appId+'_photo',status:'Active'};
+     await env.DB.batch([
+      env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'staff',?,?)").bind(schoolId,staffId,JSON.stringify(staffData)),
+      env.DB.prepare("UPDATE neo_staff_applications SET status='Approved',staff_id=?,token_hash='',token_expires='',data=?,updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(staffId,JSON.stringify({...d,approved_at:new Date().toISOString(),joining_date:staffData.joining_date}),appId),
+      portalAudit(env,schoolId,admin,'STAFF_REGISTRATION:approved',appId),
+      portalAudit(env,schoolId,admin,'POST:staff',staffId)
+     ]);
+     return out({success:true,status:'Approved',staff_id:staffId,message:'Staff registration approved and Staff Master record created.'});
+    }
+    return out({error:'Choose approve, correction or reject.'},400);
+   }
+  }
+  return out({error:'Not found.'},404);
+ }catch(e){console.error('Staff registration error',e);if(e instanceof TypeError)return out({error:e.message},400);return out({error:'Staff registration is temporarily unavailable. Please retry.'},503)}
 }
 
 /* Neo School India admission workflow extension.
