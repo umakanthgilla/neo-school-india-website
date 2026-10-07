@@ -2130,7 +2130,8 @@ async function parentPortal(request,env,url){
   const arg=['homework','announcements'].includes(k)?(child.classroom_id||'UNASSIGNED'):a.student_id;
   const rows=await env.DB.prepare('SELECT id,data,created_at FROM neo_portal_records WHERE school_id=? AND kind=? AND '+sql+' ORDER BY created_at DESC,id').bind(a.school_id,k,arg).all();return [k,(rows.results||[]).map(r=>({...JSON.parse(r.data),id:r.id,created_at:r.created_at}))];
  }));
- return out({school,child:{id:child.id,name:child.name,program:child.program,academic_year:child.academic_year,admission_no:child.admission_no||''},children:linkedChildren,selected_student_id:child.id,transport_assigned:!!transportAssignment,...Object.fromEntries(pairs)});
+ const ptm_reports=(await portalRows(env,a.school_id,'ptm_sessions')).filter(x=>x.student_id===a.student_id&&x.parent_safe_report).map(x=>({id:x.id,session_date:x.session_date,teacher_name:x.teacher_name||'',progress_summary:x.progress_summary||'',agreed_actions:x.agreed_actions||'',parent_safe_report:x.parent_safe_report||''})).sort((x,y)=>String(y.session_date||'').localeCompare(String(x.session_date||''))).slice(0,50);
+ return out({school,child:{id:child.id,name:child.name,program:child.program,academic_year:child.academic_year,admission_no:child.admission_no||''},children:linkedChildren,selected_student_id:child.id,transport_assigned:!!transportAssignment,ptm_reports,...Object.fromEntries(pairs)});
  }catch(e){console.error('Parent portal error',e);return out({error:'Parent portal unavailable. Please contact your school.'},503)}
 }
 
@@ -2178,7 +2179,12 @@ async function teacherPortal(request,env,url){
   const tasks=(await portalRows(env,a.school_id,'teacher_tasks')).filter(t=>t.teacher_id===a.account_id);
   const studentIds=new Set(students.map(s=>s.id));
   const student_performance=(await portalRows(env,a.school_id,'student_performance')).filter(r=>studentIds.has(r.student_id)).sort((x,y)=>String(y.date||y.created_at||'').localeCompare(String(x.date||x.created_at||''))).slice(0,250);
-  return out({tasks,announcements,name:a.name,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance});
+  const adoption_assignments=(await portalRows(env,a.school_id,'adoption_assignments')).filter(x=>x.teacher_id===a.account_id&&x.status==='Active');
+  const adoptedIds=new Set(adoption_assignments.map(x=>x.student_id));
+  const adoption_calls=(await portalRows(env,a.school_id,'adoption_calls')).filter(x=>x.teacher_id===a.account_id&&adoptedIds.has(x.student_id)).sort((x,y)=>String(y.call_date||'').localeCompare(String(x.call_date||''))).slice(0,300);
+  const adoption_actions=(await portalRows(env,a.school_id,'adoption_actions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(x.due_date||'').localeCompare(String(y.due_date||''))).slice(0,300);
+  const ptm_sessions=(await portalRows(env,a.school_id,'ptm_sessions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(y.session_date||'').localeCompare(String(x.session_date||''))).slice(0,200);
+  return out({tasks,announcements,name:a.name,account_id:a.account_id,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance,adoption_assignments,adoption_calls,adoption_actions,ptm_sessions});
  }
  if(url.pathname==='/api/teacher/hr'&&request.method==='GET'){
   const link=await env.DB.prepare('SELECT staff_id FROM neo_teacher_staff_links WHERE school_id=? AND account_id=?').bind(a.school_id,a.account_id).first();if(!link)return out({error:'Teacher login is not linked to Staff Master. Contact HR.'},409);
@@ -2195,6 +2201,39 @@ async function teacherPortal(request,env,url){
   const b=await request.json();if(typeof b.current_password!=='string'||b.current_password.length>128||!strongPortalPassword(b.password))return out({error:'Enter current password and a new password of 8–128 characters with uppercase, lowercase, number and symbol.'},400);
   if(await schoolPassword(b.current_password,a.salt)!==a.password_hash)return out({error:'Current password is incorrect.'},403);
   const salt=crypto.randomUUID();await env.DB.batch([env.DB.prepare('UPDATE neo_teacher_accounts SET password_hash=?,salt=? WHERE account_id=?').bind(await schoolPassword(b.password,salt),salt,a.account_id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'password-change',a.account_id)]);return out({success:true});
+ }
+ if(url.pathname==='/api/teacher/adoption-call'&&request.method==='POST'){
+  const b=await request.json(),studentId=typeof b?.student_id==='string'?b.student_id.trim():'',assignment=(await portalRows(env,a.school_id,'adoption_assignments')).find(x=>x.student_id===studentId&&x.teacher_id===a.account_id&&x.status==='Active');
+  if(!assignment)return out({error:'This child is not assigned to you for adoption follow-up.'},403);
+  const student=students.find(s=>s.id===studentId);if(!student)return out({error:'Student is outside your assigned classrooms.'},403);
+  const validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+  if(!validDate(b.call_date)||b.call_date>neoToday())return out({error:'Choose today or an earlier call date.'},400);
+  if(!['Completed','Not reached','Missed'].includes(b.outcome))return out({error:'Choose a valid call outcome.'},400);
+  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID();
+  const data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:a.account_id,teacher_name:a.name,call_date:b.call_date,week_key:clean(b.week_key,20),outcome:b.outcome,parent_feedback:clean(b.parent_feedback,1600),learning_note:clean(b.learning_note,1000),participation_note:clean(b.participation_note,1000),home_practice_note:clean(b.home_practice_note,1000),parent_concern:clean(b.parent_concern,1200),recorded_at:new Date().toISOString()};
+  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'adoption_calls',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:adoption_call',id)]);
+  return out({success:true,id},201);
+ }
+ if(url.pathname==='/api/teacher/adoption-action'&&request.method==='POST'){
+  const b=await request.json(),studentId=typeof b?.student_id==='string'?b.student_id.trim():'',assignment=(await portalRows(env,a.school_id,'adoption_assignments')).find(x=>x.student_id===studentId&&x.teacher_id===a.account_id&&x.status==='Active');
+  if(!assignment)return out({error:'This child is not assigned to you for adoption follow-up.'},403);
+  const student=students.find(s=>s.id===studentId);if(!student)return out({error:'Student is outside your assigned classrooms.'},403);
+  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v)),title=clean(b.title,200),owner=clean(b.owner,120);
+  if(!title||!owner||!validDate(b.due_date)||!['Open','In progress','Resolved'].includes(b.status))return out({error:'Complete action, owner, due date and status.'},400);
+  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={student_id:student.id,student_name:student.name,source_call_id:clean(b.source_call_id,80),title,owner,due_date:b.due_date,status:b.status,notes:clean(b.notes,1200),created_at:new Date().toISOString(),created_by:'teacher:'+a.account_id};
+  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'adoption_actions',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:adoption_action',id)]);
+  return out({success:true,id},201);
+ }
+ if(url.pathname==='/api/teacher/ptm'&&request.method==='POST'){
+  const b=await request.json(),studentId=typeof b?.student_id==='string'?b.student_id.trim():'',assignment=(await portalRows(env,a.school_id,'adoption_assignments')).find(x=>x.student_id===studentId&&x.teacher_id===a.account_id&&x.status==='Active');
+  if(!assignment)return out({error:'This child is not assigned to you for PTM follow-up.'},403);
+  const student=students.find(s=>s.id===studentId);if(!student)return out({error:'Student is outside your assigned classrooms.'},403);
+  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',validDate=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;
+  if(!validDate(b.session_date)||b.session_date>neoToday())return out({error:'Choose today or an earlier PTM date.'},400);
+  const progress=clean(b.progress_summary,1600),discussion=clean(b.discussion_points,2000);if(!progress||!discussion)return out({error:'Progress summary and discussion points are required.'},400);
+  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:a.account_id,teacher_name:a.name,session_date:b.session_date,parent_attended:b.parent_attended===true,progress_summary:progress,discussion_points:discussion,agreed_actions:clean(b.agreed_actions,1600),parent_safe_report:clean(b.parent_safe_report,2000),recorded_at:new Date().toISOString()};
+  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'ptm_sessions',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:ptm_session',id)]);
+  return out({success:true,id},201);
  }
  if(url.pathname==='/api/teacher/tasks'&&request.method==='POST'){
   const b=await request.json();if(!b||!['Completed','Not completed'].includes(b.status)||typeof b.comment!=='string'||!b.comment.trim()||b.comment.length>1000)return out({error:'Choose an outcome and provide a completion note or reason.'},400);
