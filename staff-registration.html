@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neo School India | Staff Self-Registration</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#071b52;background:#f4f8fc}
+*{box-sizing:border-box}body{margin:0}.top{height:5px;background:linear-gradient(90deg,#118be8,#4dbb42,#f4c400,#ff7a16,#ef3b78)}
+main{max-width:850px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid #dce6f2;border-radius:22px;padding:24px;box-shadow:0 18px 45px #071b5212}
+.logo{width:170px;max-width:55%;margin-bottom:8px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.14em;color:#118be8}
+h1{margin:8px 0 6px}h2{font-size:18px;margin:26px 0 8px}.note{background:#f3f8ff;border-left:4px solid #118be8;border-radius:12px;padding:13px 14px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.full{grid-column:1/-1}
+label{display:grid;gap:7px;margin:13px 0;font-weight:700}input,select,textarea,button{font:inherit}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd7e6;border-radius:11px;background:#fff}
+input[type=file]{padding:10px}.file-note{font-size:12px;color:#64748b;font-weight:500}.required-dot{color:#c62828}
+button{width:100%;border:0;border-radius:12px;padding:14px 18px;background:#071b52;color:#fff;font-weight:850;cursor:pointer;margin-top:14px}button:disabled{opacity:.55;cursor:wait}
+small,p{color:#52617b;line-height:1.5}.ok{background:#effaf2;color:#17683a;border:1px solid #ccebd6;border-radius:12px;padding:14px}.err{background:#fff2f2;color:#9b1c1c;border:1px solid #f0cccc;border-radius:12px;padding:14px}
+.status-list{display:grid;gap:6px;margin-top:10px}.status-item{font-size:13px;padding:8px 10px;border-radius:9px;background:#f7f9fc}
+@media(max-width:680px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="top"></div>
+<main>
+<section class="card">
+<img class="logo" src="/neo-top-logo.jpeg" alt="Neo School India">
+<div class="eyebrow">STAFF SELF-REGISTRATION</div>
+<h1>Enter your staff details</h1>
+<p id="school">Loading school…</p>
+<div class="note"><b>School verification is required.</b> Submitting this form does not create a Staff ID immediately. The school reviews your details and private documents first. A Staff ID is generated only after approval.</div>
+
+<form id="form">
+<h2>Personal & work details</h2>
+<div class="grid">
+<label>Name <span class="required-dot">*</span><input name="name" required maxlength="120" autocomplete="name"></label>
+<label>Staff category <span class="required-dot">*</span><select name="staff_type" required><option value="">Choose…</option><option>Teaching Staff</option><option>Administration</option><option>Non-Teaching Staff</option><option>Support Staff</option></select></label>
+<label>Role / designation <span class="required-dot">*</span><input name="role" required maxlength="120" placeholder="Teacher, Principal, Driver, Ayah…"></label>
+<label>Gender <span class="required-dot">*</span><select name="gender" required><option value="">Choose…</option><option>Male</option><option>Female</option><option>Prefer not to say</option></select></label>
+<label>Date of birth <span class="required-dot">*</span><input name="dob" type="date" required></label>
+<label>Mobile <span class="required-dot">*</span><input name="mobile" required maxlength="20" inputmode="tel" autocomplete="tel"></label>
+<label>Email<input name="email" type="email" maxlength="160" autocomplete="email"></label>
+<label>Emergency contact<input name="emergency_mobile" maxlength="20" inputmode="tel"></label>
+<label>Highest qualification<input name="qualification" maxlength="300" placeholder="e.g. B.Ed, Degree, Intermediate"></label>
+<label>Experience (years)<input name="experience_years" type="number" min="0" max="60" step="0.5" value="0"></label>
+<label class="full">Address <span class="required-dot">*</span><textarea name="address" required rows="3" maxlength="500"></textarea></label>
+</div>
+
+<h2>Private document uploads</h2>
+<p>These files are shown only to authorised school/head-office reviewers.</p>
+<div class="grid">
+<label>Photo / selfie <span class="required-dot">*</span><input name="photo" type="file" accept="image/jpeg,image/png" capture="user" required><span class="file-note">JPG/PNG, max 1.5 MB.</span></label>
+<label>ID proof <span class="required-dot">*</span><input name="id_proof" type="file" accept="image/jpeg,image/png,application/pdf" required><span class="file-note">JPG/PNG/PDF, max 1.5 MB.</span></label>
+<label>Qualification certificate<input name="qualification_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Required for Teaching Staff.</span></label>
+<label>Experience certificate<input name="experience_certificate" type="file" accept="image/jpeg,image/png,application/pdf"><span class="file-note">Optional when applicable.</span></label>
+</div>
+
+<label style="display:flex;grid-template-columns:auto 1fr;align-items:start;font-weight:550"><input name="confirmed" type="checkbox" style="width:auto;margin-top:4px" required><span>I reviewed my details and confirm that the uploaded documents belong to me and may be used by the school for staff verification.</span></label>
+<button id="submitBtn">Submit for School Verification</button>
+</form>
+<div id="progress" class="status-list"></div>
+<p id="status" role="status"></p>
+</section>
+</main>
+<script>
+const BASE='https://neo-lead-crm-api.umakanthgilla.workers.dev';
+const params=new URLSearchParams(location.search),schoolId=params.get('school')||'',existingApp=params.get('application')||'',existingToken=params.get('token')||'';
+const form=document.getElementById('form'),status=document.getElementById('status'),progress=document.getElementById('progress'),button=document.getElementById('submitBtn');
+const show=(msg,kind='')=>{status.className=kind;status.textContent=msg};
+const step=msg=>{const d=document.createElement('div');d.className='status-item';d.textContent=msg;progress.appendChild(d)};
+async function load(){
+ if(existingApp&&existingToken){
+  const r=await fetch(BASE+'/api/staff-registration/public/application/'+encodeURIComponent(existingApp)+'?token='+encodeURIComponent(existingToken)),b=await r.json();
+  if(!r.ok){show(b.error||'Registration link is unavailable.','err');form.hidden=true;return}
+  document.getElementById('school').textContent=(b.school?.name||'School')+' · '+(b.school?.city||'');
+  const d=b.data||{};for(const k of ['name','staff_type','role','gender','dob','mobile','email','emergency_mobile','qualification','experience_years','address'])if(form.elements[k]&&d[k]!=null)form.elements[k].value=d[k];
+  if(b.correction_note)show('Correction requested by school: '+b.correction_note,'err');
+  return;
+ }
+ if(!schoolId){show('School registration link is missing.','err');form.hidden=true;return}
+ const r=await fetch(BASE+'/api/staff-registration/public/school/'+encodeURIComponent(schoolId)),b=await r.json();
+ if(!r.ok){show(b.error||'School is unavailable.','err');form.hidden=true;return}
+ document.getElementById('school').textContent=b.school.name+' · '+b.school.city;
+}
+const toBase64=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(file)});
+async function upload(appId,token,type,file){
+ if(!file)return;
+ if(file.size>1572864)throw Error(file.name+' is larger than 1.5 MB.');
+ step('Uploading '+type.replaceAll('_',' ')+'…');
+ const data_base64=await toBase64(file);
+ const r=await fetch(BASE+'/api/staff-registration/public/document/'+encodeURIComponent(appId)+'/'+type+'?token='+encodeURIComponent(token),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file_name:file.name,mime_type:file.type,data_base64})}),b=await r.json();
+ if(!r.ok)throw Error(b.error||'Upload failed.');
+}
+form.onsubmit=async e=>{
+ e.preventDefault();button.disabled=true;progress.replaceChildren();show('');
+ try{
+  let appId=existingApp,token=existingToken;
+  if(!appId){
+   step('Saving staff details…');
+   const b=Object.fromEntries(new FormData(form));delete b.photo;delete b.id_proof;delete b.qualification_certificate;delete b.experience_certificate;b.confirmed=form.elements.confirmed.checked;b.experience_years=Number(b.experience_years||0);
+   const r=await fetch(BASE+'/api/staff-registration/public/start/'+encodeURIComponent(schoolId),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}),x=await r.json();
+   if(!r.ok)throw Error(x.error||'Unable to start staff registration.');appId=x.application_id;token=x.token;
+  }
+  await upload(appId,token,'photo',form.elements.photo.files[0]);
+  await upload(appId,token,'id_proof',form.elements.id_proof.files[0]);
+  await upload(appId,token,'qualification_certificate',form.elements.qualification_certificate.files[0]);
+  await upload(appId,token,'experience_certificate',form.elements.experience_certificate.files[0]);
+  step('Submitting for school verification…');
+  const r=await fetch(BASE+'/api/staff-registration/public/submit/'+encodeURIComponent(appId)+'?token='+encodeURIComponent(token),{method:'POST'}),x=await r.json();
+  if(!r.ok)throw Error(x.error||'Unable to submit registration.');
+  form.hidden=true;show('Submitted successfully. Reference: '+appId+'. The school will verify your details before creating the Staff ID.','ok');
+ }catch(err){show(err.message,'err');button.disabled=false}
+};
+load();
+</script>
+</body>
+</html>
