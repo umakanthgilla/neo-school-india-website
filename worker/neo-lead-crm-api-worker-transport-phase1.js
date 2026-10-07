@@ -1136,7 +1136,7 @@ async function schoolPortal(request,env,url){
   }
   await ensurePortalSchema(env);
   const extra=await portalExtra(request,env,url,admin,session);if(extra)return extra;
-const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc)(?:\/([^/]+))?$/);
+const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates)(?:\/([^/]+))?$/);
   if(!match)return out({error:'Not found.'},404);
   const [,school,kind,id]=match;
   if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
@@ -1241,6 +1241,22 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    lifecycleStudentId=student.id;const feeSummary=await studentFeeSummary(student.id,student.academic_year);const nextStudent={...student,status:type==='Withdrawal'?'Withdrawn':'Active',classroom_id:toClass?.id||student.classroom_id||'',program:toClass?.program||student.program,academic_year:toClass?.academic_year||student.academic_year};delete nextStudent.id;delete nextStudent.created_at;lifecycleStudentUpdate=nextStudent;
    data={student_id:student.id,type,from_classroom_id:fromClass?.id||student.classroom_id||'',to_classroom_id:toClass?.id||'',from_program:student.program,to_program:toClass?.program||'',from_academic_year:student.academic_year,to_academic_year:toClass?.academic_year||'',effective_date:effectiveDate,reason,recorded_at:new Date().toISOString(),previous_due_paise:feeSummary.previous_due_paise,current_due_paise:feeSummary.current_due_paise,total_due_before_movement_paise:feeSummary.total_due_paise,due_lines:feeSummary.lines};
    if(type==='Promotion'&&toClass){const fees=(await portalRows(env,school,'fee_structures')).filter(f=>f.classroom_id===toClass.id);if(fees.length>80)fail('Too many fee structures for the destination classroom. Contact head office.');lifecycleNewFees=fees.map(f=>({id:'FS_'+f.id+'_'+student.id+'_'+toClass.id,student_id:student.id,title:f.title,due_date:f.due_date,amount_paise:f.amount_paise,fee_structure_id:f.id,student_movement_id:recordId,classroom_id:toClass.id,program:toClass.program,academic_year:toClass.academic_year,fee_period:'current',carried_forward_due_paise:feeSummary.previous_due_paise}));}
+  }else if(request.method==='POST'&&kind==='student_certificates'){
+   const student=await related('students','student_id'),certificateType=choice('certificate_type',['Bonafide','Study','Conduct','Fee','Date of Birth','Attendance','Medium of Instruction']);
+   const issuedOn=neoToday(),year=issuedOn.slice(0,4),prefixMap={Bonafide:'BON',Study:'STU',Conduct:'CON',Fee:'FEE','Date of Birth':'DOB',Attendance:'ATT','Medium of Instruction':'MOI'},prefix=prefixMap[certificateType]||'CERT';
+   const classroom=student.classroom_id?await portalRecord(env,school,'classrooms',student.classroom_id):null;
+   const purpose=str('purpose',240,false),conduct=str('conduct',40,false),medium=str('medium',40,false)||'English';
+   if(conduct&&!['Good','Very Good','Excellent'].includes(conduct))fail('Choose Good, Very Good or Excellent for conduct.');
+   const attendanceRows=(await portalRows(env,school,'attendance')).filter(x=>String(x.student_id)===String(student.id));
+   const presentDays=attendanceRows.filter(x=>String(x.status||'').toLowerCase()==='present').length;
+   const invoices=(await portalRows(env,school,'invoices')).filter(x=>String(x.student_id)===String(student.id));
+   const payments=await portalRows(env,school,'payments');
+   const paidByInvoice=new Map();for(const p of payments){const k=String(p.invoice_id||'');paidByInvoice.set(k,(paidByInvoice.get(k)||0)+Number(p.amount_paise||0))}
+   const feeLines=invoices.map(i=>({title:i.title||'Fee',academic_year:i.academic_year||student.academic_year||'',paid_paise:Math.max(0,Number(paidByInvoice.get(String(i.id))||0))})).filter(x=>x.paid_paise>0);
+   const movements=(await portalRows(env,school,'student_movements')).filter(x=>String(x.student_id)===String(student.id)).sort((a,b)=>String(a.effective_date||'').localeCompare(String(b.effective_date||'')));
+   const certNo=prefix+'/'+year+'/'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();
+   data={certificate_no:certNo,certificate_type:certificateType,issued_on:issuedOn,student_id:student.id,student_name:student.name,parent_name:student.parent||'',gender:student.gender||'',dob:student.dob||'',admission_no:student.admission_no||student.id,admission_date:student.admission_date||'',program:student.program||'',classroom_id:student.classroom_id||'',classroom_name:classroom?.name||'',academic_year:student.academic_year||'',purpose,conduct,medium,attendance_total:attendanceRows.length,attendance_present:presentDays,fee_lines:feeLines,movements,school_name:(await env.DB.prepare('SELECT name FROM neo_schools WHERE school_id=?').bind(school).first())?.name||school,issued_by:admin?'Head Office':'School Portal'};
+   recordId='CERT_'+crypto.randomUUID().replace(/-/g,'').slice(0,20).toUpperCase();
   }else if(request.method==='POST'&&kind==='student_tc'){
    const movementId=str('movement_id',80),movement=await portalRecord(env,school,'student_movements',movementId);if(!movement||movement.type!=='Withdrawal')fail('A saved withdrawal movement is required before issuing a Transfer Certificate.');
    const existingTc=(await portalRows(env,school,'student_tc')).find(x=>x.movement_id===movementId);if(existingTc)fail('A Transfer Certificate has already been issued for this withdrawal.');
