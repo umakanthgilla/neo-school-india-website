@@ -16,10 +16,11 @@ function barcodeSvg(value){
 }
 function img(person,label){
  const src=photo(person);
- return src?'<img class="neo-id-photo" src="'+esc(src)+'" alt="'+esc(label)+'">':'<div class="neo-id-photo neo-id-initials" aria-label="'+esc(label)+'">'+esc(initials(label))+'</div>';
+ if(src)return '<img class="neo-id-photo" src="'+esc(src)+'" alt="'+esc(label)+'">';
+ return '<div class="neo-id-photo neo-id-placeholder" aria-label="'+esc(label)+'"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="38" r="20" fill="#a9b9ca"/><path d="M18 91c4-23 17-34 32-34s28 11 32 34" fill="#a9b9ca"/></svg></div>';
 }
 function logo(){return '<img class="neo-id-logo" src="/neo-top-logo.jpeg" alt="Neo School India">'}
-function wave(){return '<div class="neo-id-wave"><i></i><i></i><i></i><i></i><i></i></div>'}
+function wave(){return '<svg class="neo-id-wave" viewBox="0 0 300 62" preserveAspectRatio="none" aria-hidden="true"><path d="M0 42 C32 21 59 19 91 37 C117 51 139 54 166 39 C194 23 218 22 245 36 C267 48 282 51 300 42 L300 62 L0 62 Z" fill="#0f6fb4"/><path d="M0 50 C37 35 66 33 96 45 C122 55 145 57 171 45 C198 32 222 31 249 43 C270 52 286 55 300 49 L300 62 L0 62 Z" fill="#10a7b3"/><path d="M42 62 C73 41 103 40 131 53 C154 63 181 62 205 51 C226 41 248 41 271 51 L300 62 Z" fill="#4bb84a"/><path d="M126 62 C151 47 176 45 201 55 C219 62 239 63 258 56 C273 50 288 51 300 56 L300 62 Z" fill="#f3c400"/><path d="M217 62 C240 48 261 47 279 55 C288 59 295 61 300 61 L300 62 Z" fill="#ff7816"/><path d="M272 62 C282 56 291 55 300 58 L300 62 Z" fill="#ef3f7a"/></svg>'}
 function pill(text,tone){return '<span class="neo-id-pill '+tone+'">'+esc(text)+'</span>'}
 function line(label,value){return '<div class="neo-id-line"><b>'+esc(label)+'</b><span>'+esc(value||'—')+'</span></div>'}
 function personQr(kind,id,school){return qr(location.origin+'/verify-card.html?type='+encodeURIComponent(kind)+'&id='+encodeURIComponent(id||'')+'&school='+encodeURIComponent(school?.school_id||''))}
@@ -42,15 +43,186 @@ function escortCard(p,student,school){
 function injectStyles(){
  if(document.getElementById('neoIdCardStyles'))return;
  const s=document.createElement('style');s.id='neoIdCardStyles';s.textContent=`
-.neo-id-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:14px 0 18px}.neo-id-toolbar label{min-width:220px;flex:1}.neo-id-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:24px;align-items:start}.neo-id-preview{display:grid;justify-items:center;gap:12px}.neo-id-preview>.actions{justify-content:center}.neo-id-card{--tone:#118be8;width:270px;height:430px;background:#fff;border:1px solid #dfe6ef;border-radius:22px;position:relative;overflow:hidden;padding:22px 22px 20px;color:#071b52;box-shadow:0 18px 42px rgba(7,27,82,.14);display:flex;flex-direction:column;align-items:center;text-align:center}.neo-id-card>*{position:relative;z-index:2}.neo-id-card:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#fff 0 82%,#fffdf8 100%);z-index:0}.neo-id-logo{width:132px;height:auto;object-fit:contain;margin:1px auto 7px}.neo-id-card h4{font-size:16px;line-height:1.05;margin:3px 0 10px;letter-spacing:.015em}.neo-id-card h2{font-size:20px;line-height:1.05;margin:8px 0 4px;letter-spacing:-.02em}.neo-id-photo{width:98px;height:98px;border-radius:50%;object-fit:cover;border:4px solid #fff;outline:3px solid var(--tone);background:#eef5fb}.neo-id-initials{display:grid;place-items:center;font-size:28px;font-weight:900}.neo-id-accent{font-size:13px;font-weight:850;color:var(--tone);margin:0 0 7px}.neo-id-line{font-size:11.5px;line-height:1.25;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:1px 0;color:#17294a}.neo-id-line b{font-weight:800}.neo-id-big-id{font-size:17px;font-weight:900;margin:2px 0 8px}.neo-id-pill{margin-top:auto;border-radius:999px;color:#fff;font-weight:900;font-size:11px;padding:5px 16px;letter-spacing:.07em}.neo-id-pill.student{background:linear-gradient(90deg,#187fae,#40af67)}.neo-id-pill.staff{background:#0f5f9f}.neo-id-pill.visitor{background:#1c2f67}.neo-id-pill.escort{background:linear-gradient(90deg,#1386ad,#67aa43)}.neo-id-footer{width:100%;height:48px;margin-top:5px;display:flex;justify-content:space-between;align-items:end;gap:10px}.neo-id-footer>img{width:44px;height:44px;object-fit:contain}.neo-id-footer svg{width:76px;height:30px;fill:#111}.neo-id-footer small{font-size:9px;line-height:1.15;text-align:right;color:#4e5870}.neo-id-sign{font-family:cursive;font-size:10px;color:#213258;border-top:1px solid #213258;padding-top:2px;margin-bottom:4px}.neo-id-wave{position:absolute!important;z-index:1!important;left:0;right:0;bottom:0;height:34px;overflow:hidden}.neo-id-wave i{position:absolute;left:-14%;width:42%;height:44px;border-radius:60% 60% 0 0;transform:rotate(14deg);bottom:-22px}.neo-id-wave i:nth-child(1){background:#126bb7;left:-10%}.neo-id-wave i:nth-child(2){background:#08a8b8;left:8%}.neo-id-wave i:nth-child(3){background:#54b84a;left:28%}.neo-id-wave i:nth-child(4){background:#f4c400;left:52%}.neo-id-wave i:nth-child(5){background:#ff7a16;left:74%}.neo-id-side{position:absolute!important;z-index:1!important;width:22px;height:58px;border-radius:10px;top:118px}.neo-id-side.neo-left{left:-12px;background:linear-gradient(#ef3b78,#f5c400,#39b96b,#118be8)}.neo-id-side.neo-right{right:-12px;top:184px;background:linear-gradient(#118be8,#39b96b)}.neo-id-staff{--tone:#1379ae}.neo-id-student{--tone:#49aa4a}.neo-id-visitor{--tone:#182f67}.neo-id-escort{--tone:#ed7a1a}.neo-id-visitor-icon{width:92px;height:92px;border-radius:50%;background:#172f68;color:#fff;display:grid;place-items:center;font-size:48px;font-weight:900}.neo-id-dual-photo{display:flex;align-items:end;justify-content:center;margin-top:1px}.neo-id-dual-photo .neo-id-photo:first-child{width:88px;height:88px}.neo-id-dual-photo .neo-id-photo:last-child{width:56px;height:56px;margin-left:-12px;outline-color:#fff;border-width:3px}.neo-id-empty{padding:28px;border:1px dashed #cbd8e8;border-radius:18px;background:#f9fcff;color:#52617b}.neo-id-help{font-size:13px;color:#64748b;margin:0}.neo-id-type-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.neo-id-type-tabs button[aria-pressed="true"]{background:#071b52;color:#fff}.neo-id-type-tabs button{min-height:40px}.neo-id-sheet{display:grid;grid-template-columns:repeat(2,54mm);gap:8mm;justify-content:center}
-@media(max-width:680px){.neo-id-card{width:min(270px,100%)}.neo-id-toolbar{display:grid}.neo-id-toolbar label{min-width:0}}
-@media print{body>*{display:none!important}#neoIdPrintHost{display:block!important;position:fixed;inset:0;background:#fff}.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;page-break-inside:avoid;transform:none}.neo-id-grid{display:grid;grid-template-columns:repeat(2,54mm);gap:7mm}}
-`;document.head.appendChild(s);
+.neo-id-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:16px 0 18px}
+.neo-id-toolbar label{min-width:240px;flex:1}
+.neo-id-grid{display:grid;grid-template-columns:1fr;justify-items:center;gap:24px;align-items:start;padding:4px 0 18px}
+.neo-id-preview{display:grid;justify-items:center;gap:12px;width:100%}
+.neo-id-preview>.actions{justify-content:center}
+.neo-id-card{
+  --tone:#118be8;
+  width:300px;
+  height:478px;
+  background:#fff;
+  border:1px solid #d7dee7;
+  border-radius:18px;
+  position:relative;
+  overflow:hidden;
+  padding:24px 22px 18px;
+  color:#0b2457;
+  box-shadow:0 14px 34px rgba(7,27,82,.13);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  font-family:Arial,Helvetica,sans-serif
+}
+.neo-id-card>*{position:relative;z-index:2}
+.neo-id-card:before{content:"";position:absolute;inset:0;background:#fff;z-index:0}
+.neo-id-logo{width:126px;height:auto;object-fit:contain;margin:0 auto 8px}
+.neo-id-card h4{
+  font-size:15px;
+  line-height:1.1;
+  margin:1px 0 12px;
+  letter-spacing:.01em;
+  font-weight:900;
+  color:#10285d
+}
+.neo-id-card h2{
+  font-size:20px;
+  line-height:1.08;
+  margin:9px 0 3px;
+  letter-spacing:-.025em;
+  font-weight:900;
+  color:#10285d
+}
+.neo-id-photo{
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  object-fit:cover;
+  border:4px solid #fff;
+  outline:3px solid var(--tone);
+  background:#f1f5f9;
+  box-shadow:0 0 0 1px rgba(7,27,82,.05)
+}
+.neo-id-placeholder{display:grid;place-items:center;overflow:hidden}
+.neo-id-placeholder svg{width:74px;height:74px}
+.neo-id-accent{
+  font-size:13px;
+  line-height:1.15;
+  font-weight:800;
+  color:var(--tone);
+  margin:0 0 8px
+}
+.neo-id-line{
+  width:100%;
+  font-size:11.4px;
+  line-height:1.24;
+  display:flex;
+  gap:4px;
+  justify-content:center;
+  align-items:baseline;
+  margin:1px 0;
+  color:#172742;
+  white-space:normal
+}
+.neo-id-line b{font-weight:800;color:#0f2047}
+.neo-id-big-id{font-size:16px;font-weight:900;margin:2px 0 8px;color:#10285d}
+.neo-id-pill{
+  margin-top:auto;
+  min-width:74px;
+  border-radius:999px;
+  color:#fff;
+  font-weight:900;
+  font-size:10px;
+  line-height:1;
+  padding:6px 15px 5px;
+  letter-spacing:.08em
+}
+.neo-id-pill.student{background:linear-gradient(90deg,#2578a7,#46a94a)}
+.neo-id-pill.staff{background:#123b73}
+.neo-id-pill.visitor{background:#182f67}
+.neo-id-pill.escort{background:linear-gradient(90deg,#1787aa,#73a93d)}
+.neo-id-footer{
+  width:100%;
+  height:48px;
+  margin-top:6px;
+  padding:0 4px 1px;
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:12px
+}
+.neo-id-footer>img{width:43px;height:43px;object-fit:contain;background:#fff}
+.neo-id-footer svg{width:78px;height:29px;fill:#111}
+.neo-id-footer small{font-size:8.5px;line-height:1.12;text-align:right;color:#4c5569}
+.neo-id-sign{
+  width:92px;
+  font-family:"Brush Script MT",cursive;
+  font-size:11px;
+  color:#1b2a47;
+  border-top:1px solid #1b2a47;
+  padding-top:3px;
+  margin-bottom:4px
+}
+.neo-id-wave{
+  position:absolute!important;
+  z-index:1!important;
+  left:0;
+  right:0;
+  bottom:0;
+  width:100%;
+  height:54px
+}
+.neo-id-side{position:absolute!important;z-index:1!important}
+.neo-id-side.neo-left{
+  left:0;
+  top:62px;
+  width:8px;
+  height:114px;
+  border-radius:0 8px 8px 0;
+  background:linear-gradient(180deg,#ef3f7a 0 18%,#ff7816 18% 38%,#f3c400 38% 56%,#4bb84a 56% 76%,#0f78b8 76% 100%)
+}
+.neo-id-side.neo-right{
+  right:-7px;
+  top:188px;
+  width:22px;
+  height:58px;
+  border-radius:12px 0 0 12px;
+  background:linear-gradient(180deg,#1268b3,#0ca7b4 48%,#49ae4f)
+}
+.neo-id-staff{--tone:#1378a9}
+.neo-id-student{--tone:#4aa948}
+.neo-id-visitor{--tone:#182f67}
+.neo-id-escort{--tone:#dc791c}
+.neo-id-visitor-icon{
+  width:88px;
+  height:88px;
+  border-radius:50%;
+  background:#172f68;
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:44px;
+  font-weight:900;
+  margin-top:2px
+}
+.neo-id-dual-photo{display:flex;align-items:end;justify-content:center;margin:0 0 1px}
+.neo-id-dual-photo .neo-id-photo:first-child{width:88px;height:88px}
+.neo-id-dual-photo .neo-id-photo:last-child{width:54px;height:54px;margin-left:-12px;outline:2px solid #fff;border:3px solid #fff}
+.neo-id-empty{padding:28px;border:1px dashed #cbd8e8;border-radius:18px;background:#f9fcff;color:#52617b}
+.neo-id-help{font-size:13px;color:#64748b;margin:0 0 6px}
+.neo-id-type-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.neo-id-type-tabs button[aria-pressed="true"]{background:#071b52;color:#fff}
+.neo-id-type-tabs button{min-height:40px}
+.neo-id-sheet{display:grid;grid-template-columns:repeat(2,54mm);gap:8mm;justify-content:center}
+@media(max-width:680px){
+  .neo-id-card{width:min(300px,100%);height:auto;aspect-ratio:54/86}
+  .neo-id-toolbar{display:grid}
+  .neo-id-toolbar label{min-width:0}
+}
+@media print{
+  body>*{display:none!important}
+  #neoIdPrintHost{display:block!important;position:fixed;inset:0;background:#fff}
+  .neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;page-break-inside:avoid;transform:none}
+  .neo-id-grid{display:grid;grid-template-columns:repeat(2,54mm);gap:7mm}
+}
+`
 }
 function openPrint(cardHtml,title){
  const w=open('','_blank');if(!w)return;
  const styles=document.getElementById('neoIdCardStyles')?.textContent||'';
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0}.neo-id-card h4{font-size:3.2mm}.neo-id-card h2{font-size:4.2mm}.neo-id-logo{width:27mm}.neo-id-photo{width:19mm;height:19mm}.neo-id-line{font-size:2.35mm}.neo-id-accent{font-size:2.6mm}.neo-id-big-id{font-size:3.4mm}.neo-id-footer{height:10mm}.neo-id-footer>img{width:9mm;height:9mm}.neo-id-footer svg{width:16mm;height:6mm}</style></head><body>'+cardHtml+'<script>setTimeout(()=>print(),700)<\/script></body></html>');w.document.close();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0;padding:4.5mm 4mm 3.5mm}.neo-id-logo{width:24mm;margin-bottom:1.4mm}.neo-id-card h4{font-size:3mm;margin-bottom:2mm}.neo-id-card h2{font-size:3.9mm;margin-top:1.7mm}.neo-id-photo{width:18mm;height:18mm;border-width:.8mm;outline-width:.6mm}.neo-id-accent{font-size:2.45mm;margin-bottom:1.2mm}.neo-id-line{font-size:2.18mm;line-height:1.2;margin:.15mm 0}.neo-id-big-id{font-size:3mm}.neo-id-pill{font-size:2mm;padding:1.1mm 2.8mm 1mm}.neo-id-footer{height:9mm;margin-top:1mm}.neo-id-footer>img{width:8mm;height:8mm}.neo-id-footer svg{width:15mm;height:5.5mm}.neo-id-wave{height:10mm}.neo-id-side.neo-left{top:11mm;width:1.5mm;height:21mm}.neo-id-side.neo-right{top:34mm;width:4mm;height:11mm}.neo-id-visitor-icon{width:17mm;height:17mm;font-size:8mm}.neo-id-dual-photo .neo-id-photo:first-child{width:17mm;height:17mm}.neo-id-dual-photo .neo-id-photo:last-child{width:10.5mm;height:10.5mm}</style></head><body>'+cardHtml+'<script>setTimeout(()=>print(),700)<\/script></body></html>');w.document.close();
 }
 async function visitorData(school){
  try{
