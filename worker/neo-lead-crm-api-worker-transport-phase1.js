@@ -1136,7 +1136,7 @@ async function schoolPortal(request,env,url){
   }
   await ensurePortalSchema(env);
   const extra=await portalExtra(request,env,url,admin,session);if(extra)return extra;
-const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates)(?:\/([^/]+))?$/);
+const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates|adoption_assignments|adoption_calls|adoption_actions|ptm_sessions)(?:\/([^/]+))?$/);
   if(!match)return out({error:'Not found.'},404);
   const [,school,kind,id]=match;
   if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
@@ -1265,7 +1265,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   }
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(recordId))fail('Invalid record ID.');
   if(request.method==='PATCH'){
-   const schoolPatch=['students','classrooms','staff','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders'];
+   const schoolPatch=['students','classrooms','staff','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders','adoption_assignments','adoption_actions'];
    const headOfficePatch=['orders','purchase_orders','ledger','support','staff_leave','salary_advances','payroll'];
    if(!id||(!admin&&!schoolPatch.includes(kind))||![...schoolPatch,...headOfficePatch].includes(kind))return out({error:'This update is not permitted for your role.'},403);
    const old=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();if(!old)return out({error:'Not found.'},404);const previous=JSON.parse(old.data);
@@ -1295,6 +1295,8 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(status==='Active'&&leavingDate)fail('Last working date is only for inactive/relieved staff.');
     data={...previous,name:str('name',120),department,staff_type:department,role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:joiningDate,leaving_date:status==='Inactive'?leavingDate:'',emergency_mobile:emergency,status};
    }
+   else if(kind==='adoption_assignments'){data={...previous,status:choice('status',['Active','Inactive']),notes:str('notes',500,false)};}
+   else if(kind==='adoption_actions'){data={...previous,status:choice('status',['Open','In progress','Resolved']),owner:str('owner',120),due_date:date('due_date'),notes:str('notes',1200,false),resolved_at:b.status==='Resolved'?new Date().toISOString():previous.resolved_at||''};}
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
    else if(kind==='classrooms'){const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');data={...previous,name:str('name',120),capacity:cap};}
    else data={...previous,status:choice('status',kind==='enquiries'?['New','Contacted','Visit planned','Converted','Lost']:kind==='orders'?['Submitted','Approved','Dispatched','Delivered','Cancelled']:kind==='purchase_orders'?['Submitted','Approved','Dispatched','Cancelled']:kind==='ledger'?['Pending verification','Verified','Rejected']:['Open','In progress','Resolved']),office_note:str('office_note',1000,false),...(kind==='purchase_orders'&&b.status==='Approved'?{approved_at:new Date().toISOString()}: {})};
@@ -1347,7 +1349,25 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(paymentDate>neoToday())fail('Payment date cannot be in the future.');
     data={payable_id:payable.id,purchase_order_id:payable.purchase_order_id,vendor_id:payable.vendor_id,vendor_name:payable.vendor_name,amount_paise:amount,date:paymentDate,payment_mode:choice('payment_mode',['Cash','UPI','Bank transfer','Cheque']),reference:str('reference',200),notes:str('notes',1000,false),status:'Paid'};
    }else if(['assets','vendor_payables'].includes(kind))fail('This record is created automatically from procurement.');
-   else if(kind==='classrooms'){
+   else if(kind==='adoption_assignments'){
+    const student=await related('students','student_id'),teacherId=str('teacher_id',80),teacher=await env.DB.prepare('SELECT account_id,name FROM neo_teacher_accounts WHERE school_id=? AND account_id=? AND active=1').bind(school,teacherId).first();
+    if(!teacher)fail('Choose an active teacher.');
+    const existing=(await portalRows(env,school,'adoption_assignments')).find(x=>x.student_id===student.id&&x.status==='Active');
+    if(existing)fail('This child already has an active adoption teacher.');
+    data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:teacher.account_id,teacher_name:teacher.name||'',assigned_on:date('assigned_on'),status:'Active',notes:str('notes',500,false)};
+   }else if(kind==='adoption_calls'){
+    const student=await related('students','student_id'),teacherId=str('teacher_id',80),teacher=await env.DB.prepare('SELECT account_id,name FROM neo_teacher_accounts WHERE school_id=? AND account_id=? AND active=1').bind(school,teacherId).first();
+    if(!teacher)fail('Choose an active teacher.');
+    const callDate=date('call_date');if(callDate>neoToday())fail('Call date cannot be in the future.');
+    const outcome=choice('outcome',['Completed','Missed','Not reached']);
+    data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:teacher.account_id,teacher_name:teacher.name||'',call_date:callDate,week_key:str('week_key',20),outcome,parent_feedback:str('parent_feedback',1600,false),learning_note:str('learning_note',1000,false),participation_note:str('participation_note',1000,false),home_practice_note:str('home_practice_note',1000,false),parent_concern:str('parent_concern',1200,false),recorded_at:new Date().toISOString()};
+   }else if(kind==='adoption_actions'){
+    const student=await related('students','student_id');
+    data={student_id:student.id,student_name:student.name,source_call_id:str('source_call_id',80,false),title:str('title',200),owner:str('owner',120),due_date:date('due_date'),status:choice('status',['Open','In progress','Resolved']),notes:str('notes',1200,false),created_at:new Date().toISOString()};
+   }else if(kind==='ptm_sessions'){
+    const student=await related('students','student_id'),sessionDate=date('session_date');if(sessionDate>neoToday())fail('PTM date cannot be in the future.');
+    data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',session_date:sessionDate,parent_attended:b.parent_attended===true,progress_summary:str('progress_summary',1600),discussion_points:str('discussion_points',2000),agreed_actions:str('agreed_actions',1600,false),parent_safe_report:str('parent_safe_report',2000,false),recorded_at:new Date().toISOString()};
+   }else if(kind==='classrooms'){
     if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1â€“200.');
     data={name:str('name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),academic_year:str('academic_year',4),teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
    }else if(kind==='fee_structures'){
