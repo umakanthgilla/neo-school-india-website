@@ -263,7 +263,7 @@ export default {
           service: "Neo Lead CRM API",
           database: "connected",
           admin: "enabled",
-          build: "2026-10-07-staffqr1",
+          build: "2026-10-07-staffqr2",
         },
         200,
         request
@@ -4704,7 +4704,7 @@ async function gatePhotoPortal(request,env,url){
    Public QR -> staff profile + private documents -> school verification -> Staff Master + Staff ID.
 */
 const STAFF_REGISTRATION_SCHEMA=[
- \`CREATE TABLE IF NOT EXISTS neo_staff_applications (
+ `CREATE TABLE IF NOT EXISTS neo_staff_applications (
    id TEXT PRIMARY KEY,
    school_id TEXT NOT NULL,
    token_hash TEXT NOT NULL,
@@ -4715,9 +4715,9 @@ const STAFF_REGISTRATION_SCHEMA=[
    staff_id TEXT,
    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
- )\`,
- \`CREATE INDEX IF NOT EXISTS neo_staff_application_school_status ON neo_staff_applications(school_id,status,updated_at DESC)\`,
- \`CREATE TABLE IF NOT EXISTS neo_staff_application_documents (
+ )`,
+ `CREATE INDEX IF NOT EXISTS neo_staff_application_school_status ON neo_staff_applications(school_id,status,updated_at DESC)`,
+ `CREATE TABLE IF NOT EXISTS neo_staff_application_documents (
    id TEXT PRIMARY KEY,
    application_id TEXT NOT NULL,
    school_id TEXT NOT NULL,
@@ -4728,7 +4728,7 @@ const STAFF_REGISTRATION_SCHEMA=[
    size_bytes INTEGER NOT NULL,
    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
    UNIQUE(application_id,doc_type)
- )\`
+ )`
 ];
 const staffRegistrationSchemaReady=new WeakMap();
 async function ensureStaffRegistrationSchema(env){
@@ -4798,7 +4798,7 @@ async function staffRegistrationPortal(request,env,url){
    if(!fileName||!allowed.includes(mime)||!encoded)return out({error:docType==='photo'?'Upload a JPG or PNG photo/selfie.':'Upload a JPG, PNG or PDF document.'},400);
    let bytes;try{const bin=atob(encoded);if(bin.length>1572864)return out({error:'Each upload must be 1.5 MB or smaller.'},413);bytes=Uint8Array.from(bin,c=>c.charCodeAt(0))}catch{return out({error:'File could not be read.'},400)}
    const docId='SDOC_'+appId+'_'+docType;
-   await env.DB.prepare(\`INSERT INTO neo_staff_application_documents(id,application_id,school_id,doc_type,file_name,mime_type,body,size_bytes) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(application_id,doc_type) DO UPDATE SET id=excluded.id,file_name=excluded.file_name,mime_type=excluded.mime_type,body=excluded.body,size_bytes=excluded.size_bytes,created_at=CURRENT_TIMESTAMP\`).bind(docId,appId,app.school_id,docType,fileName,mime,bytes,bytes.byteLength).run();
+   await env.DB.prepare(`INSERT INTO neo_staff_application_documents(id,application_id,school_id,doc_type,file_name,mime_type,body,size_bytes) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(application_id,doc_type) DO UPDATE SET id=excluded.id,file_name=excluded.file_name,mime_type=excluded.mime_type,body=excluded.body,size_bytes=excluded.size_bytes,created_at=CURRENT_TIMESTAMP`).bind(docId,appId,app.school_id,docType,fileName,mime,bytes,bytes.byteLength).run();
    return out({success:true,document:{id:docId,doc_type:docType,file_name:fileName,mime_type:mime,size_bytes:bytes.byteLength}});
   }
   const publicSubmit=url.pathname.match(/^\/api\/staff-registration\/public\/submit\/([^/]+)$/);
