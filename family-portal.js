@@ -94,6 +94,10 @@ const familyTabIcon={overview:'grid',calendar:'calendar',timetable:'clock',curri
  $('familyContent').prepend(preview);preview.scrollIntoView({behavior:'smooth'});$('closeReportPreview').onclick=()=>preview.remove();$('confirmReportDownload').onclick=async e=>{e.target.disabled=true;try{await window.neoExport(filename,rows);$('reportDownloadStatus').textContent=name+' download prepared. Check your Downloads folder.'}catch(err){$('reportDownloadStatus').textContent=err.message}finally{e.target.disabled=false}};
  }catch(e){status(e.message)}};
  const area=$('familyContent');
+ if(tab==='student_care'&&role==='teacher'){
+  if(typeof window.renderNeoTeacherStudentCare!=='function'){area.innerHTML='<p class="portal-empty">Student care module is loading. Hard refresh and try again.</p>';return}
+  window.renderNeoTeacherStudentCare(area,{data,api,status,refresh});return
+ }
  if(tab==='employee_hub'&&role==='teacher'){
   area.innerHTML='<p class="portal-empty">Loading employee documents…</p>';
   api('hr').then(hr=>{
