@@ -1,0 +1,47 @@
+name: Validate Staff Registration QR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/validate-staff-registration.yml'
+      - 'staff-registration.html'
+      - 'staff-self-registration.js'
+      - 'schools.html'
+      - 'worker/neo-lead-crm-api-worker-transport-phase1.js'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Worker syntax
+        run: node --check worker/neo-lead-crm-api-worker-transport-phase1.js
+      - name: Validate Staff registration JavaScript
+        run: |
+          node --check staff-self-registration.js
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for src,out in [
+            ('staff-registration.html','/tmp/staff-registration-inline.js'),
+            ('schools.html','/tmp/schools-inline-staff-check.js')
+          ]:
+              html=Path(src).read_text()
+              scripts=[m.group(1) for m in re.finditer(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,flags=re.S|re.I)]
+              if not scripts:
+                  raise SystemExit(f'No inline scripts found in {src}')
+              Path(out).write_text('\n'.join(scripts))
+          PY
+          node --check /tmp/staff-registration-inline.js
+          node --check /tmp/schools-inline-staff-check.js
+      - name: Verify Staff QR integration
+        run: |
+          grep -q 'staff-self-registration.js' schools.html
+          grep -q 'Staff Registration QR' staff-self-registration.js
+          grep -q 'STAFF SELF-REGISTRATION' staff-registration.html
+          grep -q 'staffRegistrationPortal' worker/neo-lead-crm-api-worker-transport-phase1.js
