@@ -29,7 +29,7 @@ function studentCard(s,school){
  return '<article class="neo-id-card neo-id-student" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STUDENT ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Student')+'</h2><div class="neo-id-accent">'+esc(cls||'Student')+'</div>'+line('Grade/Sec:',cls)+(roll?line('Roll No:',roll):'')+line('Admission No:',cardId)+(year?line('Academic Year:',year):'')+line('Emergency Contact:',contact)+pill('STUDENT','student')+'<div class="neo-id-footer"><img src="'+esc(personQr('student',cardId,school))+'" alt="Student QR">'+barcodeSvg(cardId)+'</div>'+wave()+'</article>';
 }
 function staffCard(s,school){
- const id=pick(s,'staff_id','employee_id','id'),role=pick(s,'role','designation','department'),blood=pick(s,'blood_group'),phone=pick(s,'mobile','phone'),dept=pick(s,'staff_type','staff_category','department');
+ const id=pick(s,'staff_id','employee_id','id'),role=pick(s,'designation','role','department'),blood=pick(s,'blood_group'),phone=pick(s,'mobile','phone'),dept=pick(s,'staff_type','staff_category','department');
  return '<article class="neo-id-card neo-id-staff" data-print-card><div class="neo-id-side neo-left"></div><div class="neo-id-side neo-right"></div>'+logo()+'<h4>STAFF ID CARD</h4>'+img(s,s.name)+'<h2>'+esc(s.name||'Staff')+'</h2><div class="neo-id-accent">'+esc(role||'Staff')+'</div>'+line('Staff ID:',id)+(dept&&dept!==role?line('Department:',dept):'')+(blood?line('Blood Group:',blood):'')+line('Phone:',phone)+pill('STAFF','staff')+'<div class="neo-id-footer"><img src="'+esc(personQr('staff',id,school))+'" alt="Staff QR"><span class="neo-id-sign">Authorised Signature</span></div>'+wave()+'</article>';
 }
 function visitorCard(v,school){
@@ -72,22 +72,22 @@ function injectStyles(){
 .neo-id-card h4{
   font-size:15px;
   line-height:1.1;
-  margin:1px 0 12px;
+  margin:2px 0 11px;
   letter-spacing:.01em;
   font-weight:900;
   color:#10285d
 }
 .neo-id-card h2{
-  font-size:20px;
+  font-size:21px;
   line-height:1.08;
-  margin:9px 0 3px;
+  margin:8px 0 3px;
   letter-spacing:-.025em;
   font-weight:900;
   color:#10285d
 }
 .neo-id-photo{
-  width:96px;
-  height:96px;
+  width:100px;
+  height:100px;
   border-radius:50%;
   object-fit:cover;
   border:4px solid #fff;
@@ -98,7 +98,7 @@ function injectStyles(){
 .neo-id-placeholder{display:grid;place-items:center;overflow:hidden}
 .neo-id-placeholder svg{width:74px;height:74px}
 .neo-id-accent{
-  font-size:13px;
+  font-size:13.5px;
   line-height:1.15;
   font-weight:800;
   color:var(--tone);
@@ -162,22 +162,22 @@ function injectStyles(){
   right:0;
   bottom:0;
   width:100%;
-  height:54px
+  height:58px
 }
 .neo-id-side{position:absolute!important;z-index:1!important}
 .neo-id-side.neo-left{
   left:0;
-  top:62px;
-  width:8px;
-  height:114px;
+  top:58px;
+  width:7px;
+  height:120px;
   border-radius:0 8px 8px 0;
   background:linear-gradient(180deg,#ef3f7a 0 18%,#ff7816 18% 38%,#f3c400 38% 56%,#4bb84a 56% 76%,#0f78b8 76% 100%)
 }
 .neo-id-side.neo-right{
   right:-7px;
-  top:188px;
-  width:22px;
-  height:58px;
+  top:184px;
+  width:20px;
+  height:62px;
   border-radius:12px 0 0 12px;
   background:linear-gradient(180deg,#1268b3,#0ca7b4 48%,#49ae4f)
 }
@@ -218,11 +218,12 @@ function injectStyles(){
   .neo-id-grid{display:grid;grid-template-columns:repeat(2,54mm);gap:7mm}
 }
 `
+ document.head.appendChild(s);
 }
 function openPrint(cardHtml,title){
  const w=open('','_blank');if(!w)return;
  const styles=document.getElementById('neoIdCardStyles')?.textContent||'';
- w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0;padding:4.5mm 4mm 3.5mm}.neo-id-logo{width:24mm;margin-bottom:1.4mm}.neo-id-card h4{font-size:3mm;margin-bottom:2mm}.neo-id-card h2{font-size:3.9mm;margin-top:1.7mm}.neo-id-photo{width:18mm;height:18mm;border-width:.8mm;outline-width:.6mm}.neo-id-accent{font-size:2.45mm;margin-bottom:1.2mm}.neo-id-line{font-size:2.18mm;line-height:1.2;margin:.15mm 0}.neo-id-big-id{font-size:3mm}.neo-id-pill{font-size:2mm;padding:1.1mm 2.8mm 1mm}.neo-id-footer{height:9mm;margin-top:1mm}.neo-id-footer>img{width:8mm;height:8mm}.neo-id-footer svg{width:15mm;height:5.5mm}.neo-id-wave{height:10mm}.neo-id-side.neo-left{top:11mm;width:1.5mm;height:21mm}.neo-id-side.neo-right{top:34mm;width:4mm;height:11mm}.neo-id-visitor-icon{width:17mm;height:17mm;font-size:8mm}.neo-id-dual-photo .neo-id-photo:first-child{width:17mm;height:17mm}.neo-id-dual-photo .neo-id-photo:last-child{width:10.5mm;height:10.5mm}</style></head><body>'+cardHtml+'<script>setTimeout(()=>print(),700)<\/script></body></html>');w.document.close();
+ w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>@page{size:54mm 86mm;margin:0}html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+styles+'.neo-id-card{width:54mm;height:86mm;border-radius:3mm;box-shadow:none;border:0;margin:0;padding:4.1mm 3.8mm 3.2mm}.neo-id-logo{width:25mm;margin-bottom:1mm}.neo-id-card h4{font-size:3mm;margin:0 0 1.8mm}.neo-id-card h2{font-size:4mm;margin:1.4mm 0 .5mm}.neo-id-photo{width:18.5mm;height:18.5mm;border-width:.8mm;outline-width:.6mm}.neo-id-accent{font-size:2.5mm;margin-bottom:1.2mm}.neo-id-line{font-size:2.12mm;line-height:1.18;margin:.12mm 0}.neo-id-big-id{font-size:3mm}.neo-id-pill{font-size:1.95mm;padding:1.05mm 2.7mm .95mm}.neo-id-footer{height:8.8mm;margin-top:.8mm}.neo-id-footer>img{width:7.8mm;height:7.8mm}.neo-id-footer svg{width:15.5mm;height:5.5mm}.neo-id-wave{height:10.5mm}.neo-id-side.neo-left{top:10.5mm;width:1.4mm;height:22mm}.neo-id-side.neo-right{top:33.5mm;width:3.7mm;height:11.5mm}.neo-id-visitor-icon{width:17mm;height:17mm;font-size:8mm}.neo-id-dual-photo .neo-id-photo:first-child{width:17mm;height:17mm}.neo-id-dual-photo .neo-id-photo:last-child{width:10.5mm;height:10.5mm}</style></head><body>'+cardHtml+'<script>window.onload=()=>setTimeout(()=>print(),900)<\/script></body></html>');w.document.close();
 }
 async function visitorData(school){
  try{
