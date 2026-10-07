@@ -1,0 +1,32 @@
+name: Package Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/neo-lead-crm-api-worker-transport-phase1.js"
+      - ".github/workflows/package-cloudflare-worker.yml"
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Prepare deploy package
+        run: |
+          mkdir -p deploy-package
+          cp worker/neo-lead-crm-api-worker-transport-phase1.js deploy-package/
+          printf '%s\n' \
+            'Neo School India - Cloudflare Worker Deploy Package' \
+            'File: neo-lead-crm-api-worker-transport-phase1.js' \
+            'Cloudflare Dashboard > Workers & Pages > neo-lead-crm-api > Edit code > replace current code > Deploy' \
+            > deploy-package/DEPLOY.txt
+      - name: Upload deploy package
+        uses: actions/upload-artifact@v4
+        with:
+          name: neo-school-cloudflare-worker
+          path: deploy-package/
+          if-no-files-found: error
+          retention-days: 30
