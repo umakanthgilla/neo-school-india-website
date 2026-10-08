@@ -1,0 +1,26 @@
+{
+  "name": "Neo School India - Curriculum Master",
+  "short_name": "Neo Curriculum",
+  "id": "/curriculum-master",
+  "start_url": "/curriculum-master",
+  "scope": "/curriculum-master",
+  "description": "Neo School India Head Office curriculum master workspace.",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#071b52",
+  "icons": [
+    {
+      "src": "/neo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/neo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
