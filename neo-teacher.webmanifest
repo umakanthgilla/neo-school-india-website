@@ -3,7 +3,7 @@
   "short_name": "Neo Teacher",
   "id": "/teachers",
   "start_url": "/teachers",
-  "scope": "/",
+  "scope": "/teachers",
   "description": "Neo School India teacher workspace for curriculum, attendance, homework, assessments and parent follow-up.",
   "display": "standalone",
   "orientation": "portrait-primary",
