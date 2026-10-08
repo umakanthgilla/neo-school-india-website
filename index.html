@@ -3511,6 +3511,24 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 </div>
 </div>
 </section>
+
+<style id="neo-faq-v1">
+.neo-faq{padding:72px 0;background:#f7faff}.neo-faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}.neo-faq details{background:#fff;border:1px solid #dfe8f3;border-radius:16px;padding:0 17px}.neo-faq summary{cursor:pointer;list-style:none;padding:16px 28px 16px 0;color:#071b52;font-weight:850;position:relative}.neo-faq summary:after{content:'+';position:absolute;right:0;font-size:21px;top:12px}.neo-faq details[open] summary:after{content:'–'}.neo-faq details p{margin:0;padding:0 0 16px;color:#64728d;font-size:13px;line-height:1.65}@media(max-width:760px){.neo-faq-grid{grid-template-columns:1fr}.neo-faq{padding:54px 0}}
+</style>
+<section class="neo-faq" id="faq"><div class="container">
+<div class="section-head"><div class="eyebrow">QUICK ANSWERS</div><h2>Clear information before you enquire.</h2><p>Choose the journey that applies to you. Detailed discussion happens only when needed.</p></div>
+<div class="neo-faq-grid">
+<div>
+<details><summary>Which programs does Neo offer?</summary><p>Neo currently supports Playgroup, Nursery, LKG, UKG and Daycare. Program details can be opened from the Programs section.</p></details>
+<details><summary>What happens after an admission enquiry?</summary><p>Your enquiry is recorded centrally and, when you choose a Neo branch, it is also available to that branch for immediate follow-up.</p></details>
+<details><summary>Do I need to submit full admission documents now?</summary><p>No. The first enquiry is intentionally short. Detailed admission information and documents are requested later only when you proceed.</p></details>
+</div>
+<div>
+<details><summary>What happens after a franchise enquiry?</summary><p>The enquiry stays with the Neo Head Office growth team. They review the location, discuss fit and guide the next steps.</p></details>
+<details><summary>Do I need a property before I enquire?</summary><p>No. You can enquire first. Property availability, location suitability, investment readiness and launch timing can be discussed during qualification.</p></details>
+<details><summary>Why does the form ask for PIN and area?</summary><p>Structured location data helps the team identify the correct district and postal area and reduces spelling or routing errors.</p></details>
+</div>
+</div></div></section>
 <section class="combined-enquiry-wrap" id="contact">
 <div aria-hidden="true" class="ultra-heavy-neo scene-wave">
 <video autoplay="" loop="" muted="" playsinline="" preload="metadata">
@@ -3687,16 +3705,24 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <h3>Tell us about your child.</h3>
 <p>Share the essential details. Your enquiry will be securely added to the Neo follow-up system.</p>
 <form class="neo-form" id="admissionForm">
-<input id="adParent" placeholder="Parent Name" required="" type="text"/>
+<fieldset><legend>Parent details</legend>
+<input id="adParent" placeholder="Parent / Guardian Name" required="" type="text"/>
 <input id="adPhone" placeholder="Phone Number" required="" type="tel"/>
+</fieldset>
+<fieldset><legend>Your location</legend><span class="neo-form-help">PIN helps us identify your area correctly and avoids spelling mistakes.</span>
+<input id="adPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit PIN Code" required="" type="text"/>
+<select id="adArea"><option value="">Area / Post Office will load from PIN</option></select>
 <input id="adCity" placeholder="City / Town" required="" type="text"/>
 <select id="adBranch" required=""><option value="">Select Preferred Neo Branch</option></select>
+</fieldset>
+<fieldset><legend>Child & program</legend>
 <input id="adChild" placeholder="Child Name" required="" type="text"/>
 <input id="adAge" placeholder="Child Age" required="" type="text"/>
 <select id="adProgram" required="">
 <option disabled="" selected="" value="">Select Program</option>
 <option>Playgroup</option><option>Nursery</option><option>LKG</option><option>UKG</option><option>Daycare</option>
 </select>
+</fieldset>
 <button class="btn btn-brand" type="submit">Submit Admission Enquiry</button>
 <div aria-live="polite" class="neo-form-status" id="admissionStatus" role="status"></div>
 </form>
@@ -3779,6 +3805,24 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
   loadAdmissionBranches();
 
 
+
+  async function lookupAdmissionPin(){
+    const pin=document.getElementById("adPin")?.value.trim()||"";
+    const area=document.getElementById("adArea"),city=document.getElementById("adCity");
+    if(!area)return;
+    if(!/^\d{6}$/.test(pin)){area.innerHTML='<option value="">Enter a valid 6-digit PIN</option>';return}
+    area.innerHTML='<option value="">Loading area…</option>';
+    try{
+      const r=await fetch('https://api.postalpincode.in/pincode/'+encodeURIComponent(pin));
+      const b=await r.json(),offices=Array.isArray(b)&&b[0]&&Array.isArray(b[0].PostOffice)?b[0].PostOffice:[];
+      if(!offices.length)throw new Error('PIN not found');
+      area.innerHTML=offices.map(x=>'<option value="'+String(x.Name||'').replace(/"/g,'&quot;')+'">'+[x.Name,x.Block,x.District].filter(Boolean).join(' · ')+'</option>').join('');
+      if(!city.value)city.value=offices[0]?.Block||offices[0]?.District||'';
+    }catch(_e){area.innerHTML='<option value="">Could not load area — check PIN</option>'}
+  }
+  let admissionPinTimer;
+  document.getElementById("adPin")?.addEventListener("input",()=>{clearTimeout(admissionPinTimer);admissionPinTimer=setTimeout(lookupAdmissionPin,350)});
+
   async function lookupFranchisePin(){
     const pin=document.getElementById("frPin").value.trim();
     const state=document.getElementById("frState"),district=document.getElementById("frDistrict"),area=document.getElementById("frArea"),city=document.getElementById("frCity");
@@ -3852,6 +3896,8 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       name:document.getElementById("adParent").value,
       mobile:document.getElementById("adPhone").value,
       city:document.getElementById("adCity").value,
+      pincode:document.getElementById("adPin").value,
+      area:document.getElementById("adArea").value,
       branch_id:document.getElementById("adBranch").value,
       child_name:document.getElementById("adChild").value,
       child_age:document.getElementById("adAge").value,
