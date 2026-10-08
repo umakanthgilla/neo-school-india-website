@@ -1,1 +1,26 @@
-{"name":"Neo School India Transport","short_name":"Neo Transport","start_url":"/transport","scope":"/","display":"standalone","background_color":"#0b2156","theme_color":"#0b2156","icons":[{"src":"/neo-favicon-v4.svg","sizes":"any","type":"image/svg+xml"}]}
+{
+  "name": "Neo School India - Transport Portal",
+  "short_name": "Neo Transport",
+  "id": "/transport",
+  "start_url": "/transport",
+  "scope": "/",
+  "description": "Neo School India transport workspace for drivers and vehicle attendants.",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b2156",
+  "theme_color": "#0b2156",
+  "icons": [
+    {
+      "src": "/neo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/neo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
