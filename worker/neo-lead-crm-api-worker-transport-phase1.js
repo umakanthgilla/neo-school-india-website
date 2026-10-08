@@ -1302,7 +1302,15 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    else if(kind==='adoption_assignments'){data={...previous,status:choice('status',['Active','Inactive']),notes:str('notes',500,false)};}
    else if(kind==='adoption_actions'){data={...previous,status:choice('status',['Open','In progress','Resolved']),owner:str('owner',120),due_date:date('due_date'),notes:str('notes',1200,false),resolved_at:b.status==='Resolved'?new Date().toISOString():previous.resolved_at||''};}
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
-   else if(kind==='classrooms'){const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');data={...previous,name:str('name',120),capacity:cap};}
+   else if(kind==='classrooms'){
+    const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');
+    const nextModel=b.teaching_model?choice('teaching_model',['Mother Teacher','Subject-wise Teachers']):(previous.teaching_model||'Mother Teacher');
+    if(nextModel!==String(previous.teaching_model||'Mother Teacher')){
+      const history=await env.DB.prepare("SELECT 1 FROM neo_portal_records WHERE school_id=? AND kind IN ('question_bank','online_tests','online_test_attempts') AND json_extract(data,'$.classroom_id')=? LIMIT 1").bind(school,id).first();
+      if(history)fail('Teaching model cannot be changed after question bank or online test history exists. Create a new classroom/section for the new model.');
+    }
+    data={...previous,name:str('name',120),capacity:cap,teaching_model:nextModel};
+   }
    else data={...previous,status:choice('status',kind==='enquiries'?['New','Contacted','Visit planned','Converted','Lost']:kind==='orders'?['Submitted','Approved','Dispatched','Delivered','Cancelled']:kind==='purchase_orders'?['Submitted','Approved','Dispatched','Cancelled']:kind==='ledger'?['Pending verification','Verified','Rejected']:['Open','In progress','Resolved']),office_note:str('office_note',1000,false),...(kind==='purchase_orders'&&b.status==='Approved'?{approved_at:new Date().toISOString()}: {})};
   }else{
    // Repeated submission IDs cannot create duplicate fees or orders.
@@ -1392,8 +1400,10 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     const student=await related('students','student_id'),sessionDate=date('session_date');if(sessionDate>neoToday())fail('PTM date cannot be in the future.');
     data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',session_date:sessionDate,parent_attended:b.parent_attended===true,progress_summary:str('progress_summary',1600),discussion_points:str('discussion_points',2000),agreed_actions:str('agreed_actions',1600,false),parent_safe_report:str('parent_safe_report',2000,false),recorded_at:new Date().toISOString()};
    }else if(kind==='classrooms'){
-    if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1â€“200.');
-    data={name:str('name'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),academic_year:str('academic_year',4),teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
+    if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1–200.');
+    const program=str('program',80),teachingModel=choice('teaching_model',['Mother Teacher','Subject-wise Teachers']);
+    if(!/^[A-Za-z0-9][A-Za-z0-9 .&()\/-]{0,79}$/.test(program))fail('Enter a valid class / programme name.');
+    data={name:str('name'),program,academic_year:str('academic_year',4),teaching_model:teachingModel,teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
    }else if(kind==='fee_structures'){
     const classroom=await related('classrooms','classroom_id');data={classroom_id:classroom.id,title:str('title'),amount_paise:money(),due_date:date('due_date')};
    }else if(kind==='homework'){
@@ -1402,8 +1412,9 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     const classroom=b.classroom_id?await related('classrooms','classroom_id'):null;data={classroom_id:classroom?.id||'',title:str('title'),category:str('category',80,false)||'General',audience:b.audience?choice('audience',['Parents and teachers','Teachers only']):'Parents and teachers',message:str('message',2000),published:b.published===true};
    }else if(kind==='students'){
     if(typeof b.classroom_id!=='string'||!b.classroom_id.trim())fail('Select an existing classroom before registering a student.');
-    data={gender:b.gender?choice('gender',['Male','Female','Prefer not to say']):'',email:str('email',200,false),name:str('name'),dob:date('dob'),program:choice('program',['Playgroup','Nursery','LKG','UKG','Daycare']),parent:str('parent'),mobile:mobile(),academic_year:str('academic_year',9),playgroup_status:b.playgroup_status?choice('playgroup_status',['Not applicable','Completed','Not attended / First school']):'Not applicable',nursery_status:b.nursery_status?choice('nursery_status',['Not applicable','Completed']):'Not applicable',nursery_school:str('nursery_school',200,false),nursery_city:str('nursery_city',120,false),nursery_year:str('nursery_year',4,false),lkg_status:b.lkg_status?choice('lkg_status',['Not applicable','Completed']):'Not applicable',lkg_school:str('lkg_school',200,false),lkg_city:str('lkg_city',120,false),lkg_year:str('lkg_year',4,false),previous_school:str('previous_school',200,false),previous_city:str('previous_city',120,false)};
-    const classroom=await related('classrooms','classroom_id');if(classroom.program!==data.program||classroom.academic_year!==data.academic_year)fail('Classroom must match student class and academic year.');data.classroom_id=classroom.id;
+    const classroom=await related('classrooms','classroom_id');
+    data={gender:b.gender?choice('gender',['Male','Female','Prefer not to say']):'',email:str('email',200,false),name:str('name'),dob:date('dob'),program:String(classroom.program||''),parent:str('parent'),mobile:mobile(),academic_year:String(classroom.academic_year||''),playgroup_status:b.playgroup_status?choice('playgroup_status',['Not applicable','Completed','Not attended / First school']):'Not applicable',nursery_status:b.nursery_status?choice('nursery_status',['Not applicable','Completed']):'Not applicable',nursery_school:str('nursery_school',200,false),nursery_city:str('nursery_city',120,false),nursery_year:str('nursery_year',4,false),lkg_status:b.lkg_status?choice('lkg_status',['Not applicable','Completed']):'Not applicable',lkg_school:str('lkg_school',200,false),lkg_city:str('lkg_city',120,false),lkg_year:str('lkg_year',4,false),previous_school:str('previous_school',200,false),previous_city:str('previous_city',120,false)};
+    if(!data.program||!data.academic_year)fail('Selected classroom is incomplete.');data.classroom_id=classroom.id;
     if(data.dob>new Date().toISOString().slice(0,10))fail('DOB cannot be in the future.');
     if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter the academic starting year.');
     data.admission_date=neoToday();data.admission_no=await createStudentAdmissionNo(env,school,data.admission_date);data.student_id_code=studentVisibleIdFromAdmissionNo(data.admission_no);
@@ -1411,6 +1422,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(data.program==='Nursery'){if(!['Completed','Not attended / First school'].includes(data.playgroup_status))fail("Choose whether Playgroup was completed or this is the child's first school stage.");data.nursery_status='Not applicable';data.lkg_status='Not applicable';data.nursery_school='';data.nursery_city='';data.nursery_year='';data.lkg_school='';data.lkg_city='';data.lkg_year='';data.previous_school='';data.previous_city='';}
     if(data.program==='LKG'){if(data.nursery_status!=='Completed')fail('Nursery must be completed before LKG.');if(!data.nursery_school||!data.nursery_city||!/^20\d{2}$/.test(data.nursery_year))fail('Enter Nursery completed school, city and completion year.');if(Number(data.nursery_year)>Number(data.academic_year))fail('Nursery completion year cannot be after the current academic year.');data.playgroup_status='Not applicable';data.lkg_status='Not applicable';data.lkg_school='';data.lkg_city='';data.lkg_year='';data.previous_school=data.nursery_school;data.previous_city=data.nursery_city;}
     if(data.program==='UKG'){if(data.nursery_status!=='Completed'||data.lkg_status!=='Completed')fail('Nursery and LKG must be completed before UKG.');if(!data.nursery_school||!data.nursery_city||!/^20\d{2}$/.test(data.nursery_year))fail('Enter Nursery school, city and completion year.');if(!data.lkg_school||!data.lkg_city||!/^20\d{2}$/.test(data.lkg_year))fail('Enter LKG school, city and completion year.');if(Number(data.nursery_year)>Number(data.lkg_year))fail('Nursery completion year must be before or equal to LKG completion year.');if(Number(data.lkg_year)>Number(data.academic_year))fail('LKG completion year cannot be after the current academic year.');data.playgroup_status='Not applicable';data.previous_school=data.lkg_school;data.previous_city=data.lkg_city;}
+    if(!['Playgroup','Daycare','Nursery','LKG','UKG'].includes(data.program)){data.playgroup_status='Not applicable';data.nursery_status='Not applicable';data.lkg_status='Not applicable';}
    }else if(kind==='staff'){
   const departments=[
     'Teaching Staff',
@@ -1854,6 +1866,9 @@ async function portalExtra(request,env,url,admin,session){
   if(!classroomId)return out({error:'Choose an existing classroom.'},400);
   const classroom=await portalRecord(env,school,'classrooms',classroomId);
   if(!classroom)return out({error:'Classroom not found in this school.'},404);
+  const teachingModel=String(classroom.teaching_model||'Mother Teacher');
+  if(subject&&teachingModel!=='Subject-wise Teachers')return out({error:'This classroom uses one Mother Teacher. Assign the classroom teacher without a subject.'},409);
+  if(!subject&&teachingModel==='Subject-wise Teachers'&&teacherAccountId)return out({error:'This classroom uses subject-wise teachers. Choose a subject for the assignment.'},409);
 
   const existingTeacherRows=await env.DB.prepare('SELECT account_id,classroom_ids FROM neo_teacher_accounts WHERE school_id=?').bind(school).all();
   const writes=[];
@@ -2337,8 +2352,8 @@ async function teacherPortal(request,env,url){
   if(request.method==='POST'&&!id){
    const b=await request.json(),clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',classroomId=clean(b.classroom_id,80),subject=clean(b.subject,120);
    if(!a.classroom_ids.includes(classroomId))return out({error:'Choose one of your assigned classrooms.'},403);
-   const assignedSubject=await env.DB.prepare('SELECT 1 FROM neo_teacher_subject_assignments WHERE school_id=? AND classroom_id=? AND teacher_account_id=? AND lower(subject)=lower(?) LIMIT 1').bind(a.school_id,classroomId,a.account_id,subject).first();
-   if(!assignedSubject)return out({error:'You are not assigned to this subject in the selected classroom.'},403);
+   const classroomForModel=await portalRecord(env,a.school_id,'classrooms',classroomId),model=String(classroomForModel?.teaching_model||'Mother Teacher');
+   if(model==='Subject-wise Teachers'){const assignedSubject=await env.DB.prepare('SELECT 1 FROM neo_teacher_subject_assignments WHERE school_id=? AND classroom_id=? AND teacher_account_id=? AND lower(subject)=lower(?) LIMIT 1').bind(a.school_id,classroomId,a.account_id,subject).first();if(!assignedSubject)return out({error:'You are not assigned to this subject in the selected classroom.'},403);}
    const completedRows=await env.DB.prepare('SELECT lesson_id,data FROM neo_learning_completed WHERE school_id=? AND classroom_id=? AND teacher_id=?').bind(a.school_id,classroomId,a.account_id).all();
    const ownCompleted=new Set((completedRows.results||[]).map(x=>String(x.lesson_id)));
    const sourceLesson=clean(b.source_lesson_id,120);
