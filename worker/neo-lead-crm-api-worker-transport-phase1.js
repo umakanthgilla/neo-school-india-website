@@ -361,6 +361,19 @@ export default {
             80
           );
 
+        const requestedBranchId =
+          clean(
+            body.branch_id ||
+              body.branchId ||
+              body.school_id ||
+              body.schoolId,
+            80
+          );
+
+        const utmSource = clean(body.utm_source || body.utmSource, 120);
+        const utmMedium = clean(body.utm_medium || body.utmMedium, 120);
+        const utmCampaign = clean(body.utm_campaign || body.utmCampaign, 160);
+
         if (!name) {
           return json(
             {
@@ -422,8 +435,23 @@ export default {
         }
 
         const id = leadId();
+        await ensureGrowthCrm(env);
 
-        await env.DB.prepare(`
+        let routedBranch = null;
+        if (enquiryType === "Preschool Admission" && requestedBranchId) {
+          routedBranch = await env.DB.prepare(
+            "SELECT school_id,name,city FROM neo_schools WHERE school_id=? AND active=1 LIMIT 1"
+          ).bind(requestedBranchId).first();
+          if (!routedBranch) {
+            return json(
+              { success:false, error:"Please choose a valid active Neo branch." },
+              400,
+              request
+            );
+          }
+        }
+
+        const leadInsert = env.DB.prepare(`
           INSERT INTO leads (
             lead_id,
             enquiry_type,
@@ -462,8 +490,41 @@ export default {
             proposedLocation || null,
             source,
             notes || null
-          )
-          .run();
+          );
+
+        const growthInsert = env.DB.prepare(`
+          INSERT INTO neo_growth_lead_meta(
+            lead_id,branch_id,branch_name,next_action,action_due,pipeline_stage,
+            qualification,lead_score,original_source,utm_source,utm_medium,utm_campaign
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        `).bind(
+          id,
+          routedBranch?.school_id || null,
+          routedBranch ? (routedBranch.name + " · " + routedBranch.city) : null,
+          enquiryType === "Preschool Admission" ? "First parent contact" : "First franchise contact",
+          null,
+          "New",
+          null,
+          0,
+          source,
+          utmSource || null,
+          utmMedium || null,
+          utmCampaign || null
+        );
+
+        await env.DB.batch([leadInsert, growthInsert]);
+        await growthActivity(
+          env,
+          id,
+          "Website",
+          routedBranch ? "Admission enquiry auto-routed" : "Enquiry received",
+          {
+            enquiry_type: enquiryType,
+            branch_id: routedBranch?.school_id || null,
+            branch_name: routedBranch ? (routedBranch.name + " · " + routedBranch.city) : null,
+            source
+          }
+        );
 
         return json(
           {
@@ -472,6 +533,8 @@ export default {
               "Thank you. Your enquiry has been received.",
             lead_id: id,
             status: "New",
+            branch_id: routedBranch?.school_id || null,
+            auto_routed: !!routedBranch
           },
           201,
           request
@@ -1080,6 +1143,13 @@ async function growthCrmPortal(request,env,url){
     await ensureGrowthCrm(env);
     const admin=await requireAdmin(request,env);
     const branch=admin?null:await schoolSession(request,env);
+
+    if(url.pathname==='/api/growth/public/branches'&&request.method==='GET'){
+      const result=await env.DB.prepare(
+        "SELECT school_id,name,city FROM neo_schools WHERE active=1 ORDER BY city,name"
+      ).all();
+      return out({success:true,branches:result.results||[]});
+    }
 
     if(url.pathname==='/api/growth/admin/leads'&&request.method==='GET'){
       if(!admin)return fail('Head-office access required.',403);
@@ -5496,9 +5566,17 @@ async function admissionWorkflowPortal(request,env,url){
    const b=await request.json(),name=admissionClean(b.parent_name||b.name,120),mobile=admissionClean(b.mobile,20),child=admissionClean(b.child_name,120),dob=admissionClean(b.dob,10),program=admissionClean(b.program,40),notes=admissionClean(b.notes,1000);
    if(!name||!admissionValidMobile(mobile)||!child||!admissionValidDate(dob)||dob>neoToday()||!['Playgroup','Nursery','LKG','UKG','Daycare'].includes(program))return out({error:'Check parent name, mobile, child name, date of birth and class of interest.'},400);
    if(b.confirmed!==true)return out({error:'Please confirm the enquiry details before submitting.'},400);
-   const id='ENQ_'+crypto.randomUUID().replaceAll('-','').slice(0,24),data={name,mobile,child_name:child,dob,program,follow_up:neoToday(),notes,status:'New',source:'Parent self-enquiry',admission_status:'Enquiry received'};
-   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'enquiries',?,?)").bind(schoolId,id,JSON.stringify(data)),portalAudit(env,schoolId,false,'PUBLIC:parent_enquiry',id)]);
-   return out({success:true,enquiry_id:id,message:'Your enquiry has been received. The school will contact you if it proceeds to admission.'},201);
+   await ensureGrowthCrm(env);
+   const id='ENQ_'+crypto.randomUUID().replaceAll('-','').slice(0,24),growthLeadId=leadId();
+   const data={name,mobile,child_name:child,dob,program,follow_up:neoToday(),notes,status:'New',source:'Parent self-enquiry',admission_status:'Enquiry received',growth_lead_id:growthLeadId};
+   await env.DB.batch([
+    env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'enquiries',?,?)").bind(schoolId,id,JSON.stringify(data)),
+    env.DB.prepare("INSERT INTO leads(lead_id,enquiry_type,name,mobile,city,child_name,program,source,status,priority,notes) VALUES (?,'Preschool Admission',?,?,?,?,?,'Branch parent enquiry','New','Warm',?)").bind(growthLeadId,name,mobile,s.city||null,child,program,notes||null),
+    env.DB.prepare("INSERT INTO neo_growth_lead_meta(lead_id,branch_id,branch_name,next_action,pipeline_stage,original_source) VALUES (?,?,?,?,?,?)").bind(growthLeadId,schoolId,s.name+' · '+s.city,'First parent contact','New','Branch parent enquiry'),
+    portalAudit(env,schoolId,false,'PUBLIC:parent_enquiry',id)
+   ]);
+   await growthActivity(env,growthLeadId,'Website','Admission enquiry auto-routed',{branch_id:schoolId,branch_name:s.name+' · '+s.city,enquiry_id:id});
+   return out({success:true,enquiry_id:id,growth_lead_id:growthLeadId,auto_routed:true,message:'Your enquiry has been received and sent to the selected Neo branch.'},201);
   }
   if(url.pathname==='/api/admission-workflow/public/application'&&request.method==='GET'){
    const token=url.searchParams.get('token')||'',app=await admissionPublicApp(env,token);if(!app)return out({error:'This admission link is invalid.'},404);if(app.expired)return out({error:'This admission link has expired. Please ask the school for a new link.'},410);
