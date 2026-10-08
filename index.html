@@ -3346,31 +3346,20 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 @media(max-width:430px){.neo-dual-actions{grid-template-columns:1fr}.audience-card{padding:22px}.audience-card h2{font-size:23px}}
 </style>
 <style id="neo-hero-character-size-lock">
-/* Approved hero Neo character — enlarged substantially while preserving the same animation/art. */
+/* Keep the approved compact hero layout; enlarge only the Neo character itself. */
 .hero-neo-animation{object-fit:contain}
 @media(min-width:701px){
   .hero-neo-animation{
-    width:clamp(720px,54vw,930px)!important;
-    height:clamp(720px,54vw,930px)!important;
-    transform:translateY(-24px) scale(1.08)!important;
-  }
-  .hero-art.ultra-hero-static.hero-neo-stage{
-    min-height:500px!important;
-  }
-  .hero-art.ultra-hero-static.hero-neo-stage::before{
-    width:300px!important;
-    bottom:38px!important;
+    width:clamp(570px,46vw,760px)!important;
+    height:clamp(570px,46vw,760px)!important;
+    transform:translateY(-14px) scale(1.08)!important;
   }
 }
 @media(max-width:700px){
   .hero-neo-animation{
-    width:360px!important;
-    height:360px!important;
-    transform:translateY(4px) scale(1.02)!important;
-  }
-  .hero-art.ultra-hero-static.hero-neo-stage{
-    min-height:310px!important;
-    height:310px!important;
+    width:320px!important;
+    height:320px!important;
+    transform:translateY(6px) scale(1.02)!important;
   }
 }
 </style>
