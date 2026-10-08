@@ -489,7 +489,7 @@ function renderAccess(area){
    area.innerHTML=`<span class="eyebrow word-colors"><i>SCHOOL</i> <i>SETUP</i> · <i>TEACHERS</i></span>
    <h3>Teacher access & classroom assignment</h3>
    <p><b>Do not create the teacher here.</b> Teacher identity is entered once in <b>HR → Staff Master</b>. This screen only links that existing Staff ID, assigns existing classrooms, and creates/resets the teacher login.</p>
-   <div class="portal-system-note"><strong>Correct process</strong><span>1. Create the employee in <b>Staff Master</b> with Department = Teaching → 2. Open <b>Teacher access & assignment</b> → 3. Select the existing Staff ID → 4. Select the classroom(s) → 5. Set the teacher login password → 6. Link & activate.</span></div>
+   <div class="portal-system-note"><strong>Correct process</strong><span>1. Create the employee in <b>Staff Master</b> with Department = Teaching → 2. Link the Teacher ID/login → 3. Assign <b>Class + Subject</b> (for example Nursery A · English) → 4. Repeat only for that teacher’s own subjects. Different subjects in the same class can have different teachers.</span></div>
    <div class="portal-grid">
     ${portalMetricCard('Teaching staff available',`<strong class="metric">${readyStaff.length}</strong><p>${readyStaff.length?'Ready to link':'Create the teacher in Staff Master first'}</p>`)}
     ${portalMetricCard('Teacher logins',`<strong class="metric">${accounts.length}</strong><p>${activeCount} enabled · ${accounts.length-activeCount} disabled</p>`)}
@@ -514,7 +514,7 @@ function renderAccess(area){
     </div><button>Link Staff & activate teacher login</button></form>
     <div id="accessResult" role="status"></div>
    </details>
-   <div class="portal-grid">${accounts.map(a=>`<article class="portal-card"><h3>${esc(a.name)}</h3><p>Staff ID: ${esc(a.staff_id||'Legacy / not linked')}</p><p>Teacher Account: ${esc(a.account_id)}</p><p>${a.active?'Access enabled':'Access disabled'}</p><p>Assigned: ${esc((a.classroom_ids||[]).map(classroomName).join(', ')||'No classroom yet')}</p><div class="actions"><button type="button" class="secondary" data-assign-classroom="${esc(a.account_id)}" ${!a.active?'disabled':''}>Assign / change classroom</button><button class="secondary" data-disable="${esc(a.account_id)}" ${!a.active?'disabled':''}>${a.active?'Disable access':'Access disabled'}</button></div><div data-assignment-editor></div></article>`).join('')}</div>`;
+   <div class="portal-grid">${accounts.map(a=>`<article class="portal-card"><h3>${esc(a.name)}</h3><p>Staff ID: ${esc(a.staff_id||'Legacy / not linked')}</p><p>Teacher Account: ${esc(a.account_id)}</p><p>${a.active?'Access enabled':'Access disabled'}</p><p><strong>Subject assignments:</strong> ${esc((a.subject_assignments||[]).map(x=>classroomName(x.classroom_id)+' · '+x.subject).join(', ')||'No subject assigned yet')}</p><div class="actions"><button type="button" class="secondary" data-assign-classroom="${esc(a.account_id)}" ${!a.active?'disabled':''}>Assign / change subject</button><button class="secondary" data-disable="${esc(a.account_id)}" ${!a.active?'disabled':''}>${a.active?'Disable access':'Access disabled'}</button></div><div data-assignment-editor></div></article>`).join('')}</div>`;
    const openStaff=area.querySelector('#openStaffMasterFromTeacher');
  const presetStaff=sessionStorage.getItem('neo_teacher_link_staff_id');const staffSelect=area.querySelector('select[name="staff_id"]');if(staffSelect&&presetStaff){staffSelect.value=presetStaff;sessionStorage.removeItem('neo_teacher_link_staff_id');}
    if(openStaff)openStaff.onclick=()=>openPortalTab('staff','teacher_access');
@@ -526,27 +526,32 @@ function renderAccess(area){
     const rooms=(records.classrooms||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
     if(!rooms.length){portalNotice('Create the classroom / section first.');return}
     host.dataset.open='1';button.textContent='Close assignment';
-    host.innerHTML=`<div class="portal-editor" style="margin-top:12px"><label>Class / section<select data-teacher-room><option value="">Choose classroom…</option>${rooms.map(c=>`<option value="${esc(c.id)}" ${(account.classroom_ids||[]).includes(c.id)?'selected':''}>${esc(c.program+' · '+c.name+' · '+c.academic_year)}</option>`).join('')}</select></label><div class="actions"><button type="button" data-save-teacher-room>Assign / change to this teacher</button><button type="button" class="secondary" data-remove-teacher-room>Remove teacher from selected class</button></div><p class="form-note">Assignment changes reuse the existing Staff ID. Removing a classroom assignment does not delete or disable the teacher.</p></div>`;
+    const allSubjects=(records.subjects||[]).filter(x=>String(x.status||'Active')!=='Inactive');
+    host.innerHTML=`<div class="portal-editor" style="margin-top:12px"><div class="fields"><label>Class / section<select data-teacher-room><option value="">Choose classroom…</option>${rooms.map(c=>`<option value="${esc(c.id)}">${esc(c.program+' · '+c.name+' · '+c.academic_year)}</option>`).join('')}</select></label><label>Subject<select data-teacher-subject><option value="">Choose class first…</option></select></label></div><div class="actions"><button type="button" data-save-teacher-room>Assign this subject</button><button type="button" class="secondary" data-remove-teacher-room>Remove this subject assignment</button></div><p class="form-note">One class can have different teachers for English, Maths, Science and other subjects. Each subject can be evaluated only by its assigned teacher.</p></div>`;
+    const roomSelect=host.querySelector('[data-teacher-room]'),subjectSelect=host.querySelector('[data-teacher-subject]');
+    const refreshSubjects=()=>{const room=rooms.find(x=>String(x.id)===String(roomSelect.value)),items=room?allSubjects.filter(s=>String(s.program||'')===String(room.program||'')):[];subjectSelect.innerHTML='<option value="">'+(room?'Choose subject…':'Choose class first…')+'</option>'+items.map(s=>'<option value="'+esc(s.name)+'">'+esc(s.name)+'</option>').join('')};
+    roomSelect.onchange=refreshSubjects;refreshSubjects();
     host.querySelector('[data-save-teacher-room]').onclick=async e=>{
-     const classroomId=host.querySelector('[data-teacher-room]').value;
+     const classroomId=roomSelect.value,subject=subjectSelect.value;
      if(!classroomId){portalNotice('Choose a classroom / section.');return}
+     if(!subject){portalNotice('Choose the subject assigned to this teacher.');return}
      e.target.disabled=true;
      try{
-      await call('teacher_assignment','POST',{classroom_id:classroomId,teacher_account_id:account.account_id});
+      await call('teacher_assignment','POST',{classroom_id:classroomId,subject,teacher_account_id:account.account_id});
       await loadRecords();
-      portalNotice('Teacher classroom assignment saved.');
+      portalNotice('Teacher subject assignment saved.');
       renderContent();
      }catch(error){portalNotice(error.message);e.target.disabled=false}
     };
     host.querySelector('[data-remove-teacher-room]').onclick=async e=>{
-     const classroomId=host.querySelector('[data-teacher-room]').value;
-     if(!classroomId){portalNotice('Choose the classroom whose teacher assignment should be removed.');return}
-     if(!confirm('Remove the teacher assignment from this classroom? The Staff ID and login will remain active.'))return;
+     const classroomId=roomSelect.value,subject=subjectSelect.value;
+     if(!classroomId||!subject){portalNotice('Choose the class and subject assignment to remove.');return}
+     if(!confirm('Remove '+subject+' from this teacher for the selected class? The Staff ID and login will remain active.'))return;
      e.target.disabled=true;
      try{
-      await call('teacher_assignment','POST',{classroom_id:classroomId,teacher_account_id:''});
+      await call('teacher_assignment','POST',{classroom_id:classroomId,subject,teacher_account_id:''});
       await loadRecords();
-      portalNotice('Teacher removed from classroom assignment. Staff master and login were preserved.');
+      portalNotice('Teacher subject assignment removed. Staff master and login were preserved.');
       renderContent();
      }catch(error){portalNotice(error.message);e.target.disabled=false}
     };
