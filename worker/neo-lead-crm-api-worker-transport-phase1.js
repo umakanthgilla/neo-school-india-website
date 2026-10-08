@@ -2231,7 +2231,10 @@ async function teacherPortal(request,env,url){
   const adoption_calls=(await portalRows(env,a.school_id,'adoption_calls')).filter(x=>x.teacher_id===a.account_id&&adoptedIds.has(x.student_id)).sort((x,y)=>String(y.call_date||'').localeCompare(String(x.call_date||''))).slice(0,300);
   const adoption_actions=(await portalRows(env,a.school_id,'adoption_actions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(x.due_date||'').localeCompare(String(y.due_date||''))).slice(0,300);
   const ptm_sessions=(await portalRows(env,a.school_id,'ptm_sessions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(y.session_date||'').localeCompare(String(x.session_date||''))).slice(0,200);
-  return out({tasks,announcements,name:a.name,account_id:a.account_id,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance,adoption_assignments,adoption_calls,adoption_actions,ptm_sessions});
+  const question_bank=(await portalRows(env,a.school_id,'question_bank')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,500);
+  const online_tests=(await portalRows(env,a.school_id,'online_tests')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,200);
+  const online_test_attempts=(await portalRows(env,a.school_id,'online_test_attempts')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,500);
+  return out({tasks,announcements,name:a.name,account_id:a.account_id,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance,adoption_assignments,adoption_calls,adoption_actions,ptm_sessions,question_bank,online_tests,online_test_attempts});
  }
  if(url.pathname==='/api/teacher/hr'&&request.method==='GET'){
   const link=await env.DB.prepare('SELECT staff_id FROM neo_teacher_staff_links WHERE school_id=? AND account_id=?').bind(a.school_id,a.account_id).first();if(!link)return out({error:'Teacher login is not linked to Staff Master. Contact HR.'},409);
@@ -2281,6 +2284,15 @@ async function teacherPortal(request,env,url){
   const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:a.account_id,teacher_name:a.name,session_date:b.session_date,parent_attended:b.parent_attended===true,progress_summary:progress,discussion_points:discussion,agreed_actions:clean(b.agreed_actions,1600),parent_safe_report:clean(b.parent_safe_report,2000),recorded_at:new Date().toISOString()};
   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'ptm_sessions',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:ptm_session',id)]);
   return out({success:true,id},201);
+ }
+ if(url.pathname==='/api/teacher/online-test-review'&&request.method==='POST'){
+  const b=await request.json(),attemptId=String(b.attempt_id||''),attempt=await portalRecord(env,a.school_id,'online_test_attempts',attemptId);
+  if(!attempt||!a.classroom_ids.includes(attempt.classroom_id))return out({error:'Test attempt not available to this teacher.'},403);
+  const bank=await portalRows(env,a.school_id,'question_bank'),grades=b&&typeof b.grades==='object'&&!Array.isArray(b.grades)?b.grades:{};
+  let reviewed=0,pending=0;const answers=(attempt.answers||[]).map(ans=>{const q=bank.find(x=>x.id===ans.question_id);if(!q||q.question_type!=='Short Answer')return ans;const max=Number(ans.max_marks||q.marks||1),raw=grades[ans.question_id];if(raw===undefined||raw===null||raw===''){pending+=max;return ans}const earned=Number(raw);if(!Number.isFinite(earned)||earned<0||earned>max)throw new TypeError('Short-answer marks must be between 0 and the question maximum.');reviewed+=earned;return {...ans,earned_marks:earned,status:'Teacher reviewed'}});
+  const finalScore=Number(attempt.auto_score||0)+reviewed,data={...attempt,answers,reviewed_score:reviewed,final_score:finalScore,pending_review_marks:pending,status:pending?'Pending review':'Evaluated',reviewed_by:a.name,reviewed_at:new Date().toISOString()};delete data.id;delete data.created_at;
+  await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='online_test_attempts' AND id=?").bind(JSON.stringify(data),a.school_id,attemptId),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:online_test_review',attemptId)]);
+  return out({success:true,final_score:finalScore,total_marks:attempt.total_marks,status:data.status});
  }
  if(url.pathname==='/api/teacher/tasks'&&request.method==='POST'){
   const b=await request.json();if(!b||!['Completed','Not completed'].includes(b.status)||typeof b.comment!=='string'||!b.comment.trim()||b.comment.length>1000)return out({error:'Choose an outcome and provide a completion note or reason.'},400);
