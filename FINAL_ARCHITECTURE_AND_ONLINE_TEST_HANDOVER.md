@@ -64,10 +64,10 @@ If the approved bank does not contain enough items at one level, the test builde
 ## Role separation
 
 ### School Portal
-Setup → Assign → Approve → Publish → Monitor
+Setup → Assign → Monitor academic delivery. Question Bank and Online Test creation are not school-portal tasks.
 
 ### Teacher Portal
-Teach → Confirm completion → Review tests → Evaluate short answers → Follow-up / PTM
+Teach → Confirm completion → Generate own Question Bank → Review / approve own questions → Create & publish own tests → Evaluate short answers → Follow-up / PTM
 
 ### Parent / Student Learning Portal
 Learn → Homework → Online Test → Submit → Result / Progress
@@ -75,3 +75,8 @@ Learn → Homework → Online Test → Submit → Result / Progress
 ## Handover rule
 
 Do not redesign completed finance, HR, student, transport, procurement, certificate or document workflows for V1. New client requirements after this lock should be treated as V1.1 / Phase 2 unless they are corrections to an agreed V1 function.
+
+
+## Final ownership correction — 2026-10-08
+
+Question Bank and Online Test creation are teacher-owned. Each teacher sees only the questions and tests they created, and question generation is limited to lessons that the same teacher personally marked complete. The School Portal keeps Teaching Progress for oversight but does not create or approve teacher question banks/tests.
