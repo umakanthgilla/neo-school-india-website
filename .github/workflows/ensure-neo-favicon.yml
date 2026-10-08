@@ -1,0 +1,50 @@
+name: Ensure Neo favicon
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.html"
+      - ".github/workflows/ensure-neo-favicon.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ensure:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add default Neo favicon when missing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          icon = '<link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">'
+          changed = []
+          for p in Path('.').rglob('*.html'):
+              text = p.read_text(encoding='utf-8')
+              low = text.lower()
+              if 'rel="icon"' in low or "rel='icon'" in low:
+                  continue
+              idx = low.find('<head>')
+              if idx == -1:
+                  continue
+              pos = idx + len('<head>')
+              text = text[:pos] + '\n' + icon + text[pos:]
+              p.write_text(text, encoding='utf-8')
+              changed.append(str(p))
+          print('Updated:', changed)
+          PY
+      - name: Commit favicon fixes
+        run: |
+          if git diff --quiet; then
+            echo "No favicon fixes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' '**/*.html' || true
+          git commit -m "Ensure Neo favicon on HTML pages"
+          git push
