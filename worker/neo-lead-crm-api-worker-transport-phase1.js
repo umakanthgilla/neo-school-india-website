@@ -2334,41 +2334,6 @@ async function teacherPortal(request,env,url){
   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'online_tests',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:online_test',id)]);
   return out({success:true,id,status:'Published'},201);
  }
- if(url.pathname==='/api/teacher/question-bank'&&request.method==='POST'){
-  const b=await request.json(),classroomId=String(b.classroom_id||''),classroom=await portalRecord(env,a.school_id,'classrooms',classroomId);
-  if(!classroom||!a.classroom_ids.includes(classroomId))return out({error:'Choose one of your assigned classrooms.'},403);
-  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',difficulty=clean(b.difficulty,20),qtype=clean(b.question_type,40);
-  if(!['Basic','Medium','Hard'].includes(difficulty))return out({error:'Choose Basic, Medium or Hard.'},400);
-  if(!['MCQ','True / False','Fill in the Blank','Short Answer'].includes(qtype))return out({error:'Choose a valid question type.'},400);
-  const question=clean(b.question_text,1200),subject=clean(b.subject,120),chapter=clean(b.chapter,180),topic=clean(b.topic,180),answer=clean(b.correct_answer,500),options=Array.isArray(b.options)?b.options.map(x=>clean(x,240)).filter(Boolean).slice(0,6):[];
-  const marks=Number(b.marks||1);if(!question||!subject||!chapter||!Number.isInteger(marks)||marks<1||marks>20)return out({error:'Check subject, chapter, question and marks.'},400);
-  if(qtype==='MCQ'&&(options.length<2||!options.includes(answer)))return out({error:'MCQ needs at least two options and the correct answer must match one option.'},400);
-  if(qtype==='True / False'&&!['True','False'].includes(answer))return out({error:'True / False answer must be True or False.'},400);
-  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={classroom_id:classroomId,program:classroom.program||'',academic_year:classroom.academic_year||'',teacher_id:a.account_id,teacher_name:a.name,subject,chapter,topic,difficulty,question_type:qtype,question_text:question,options,correct_answer:answer,marks,status:'Draft',source:clean(b.source,80)||'Teacher',source_lesson_id:clean(b.source_lesson_id,120),created_at:new Date().toISOString()};
-  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'question_bank',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:question_bank',id)]);
-  return out({success:true,id},201);
- }
- if(url.pathname==='/api/teacher/question-bank-update'&&request.method==='POST'){
-  const b=await request.json(),id=String(b.id||''),q=await portalRecord(env,a.school_id,'question_bank',id);
-  if(!q||q.teacher_id!==a.account_id)return out({error:'This question belongs to another teacher.'},403);
-  if(!['Draft','Approved'].includes(b.status))return out({error:'Invalid question status.'},400);
-  const data={...q,status:b.status,updated_at:new Date().toISOString()};delete data.id;delete data.created_at;
-  await env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='question_bank' AND id=?").bind(JSON.stringify(data),a.school_id,id).run();
-  return out({success:true,id,status:b.status});
- }
- if(url.pathname==='/api/teacher/online-test-create'&&request.method==='POST'){
-  const b=await request.json(),classroomId=String(b.classroom_id||''),classroom=await portalRecord(env,a.school_id,'classrooms',classroomId);
-  if(!classroom||!a.classroom_ids.includes(classroomId))return out({error:'Choose one of your assigned classrooms.'},403);
-  const ids=Array.isArray(b.question_ids)?[...new Set(b.question_ids.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,100):[],bank=await portalRows(env,a.school_id,'question_bank'),selected=ids.map(id=>bank.find(q=>q.id===id)).filter(Boolean);
-  if(!ids.length||selected.length!==ids.length||selected.some(q=>q.teacher_id!==a.account_id||q.status!=='Approved'||q.classroom_id!==classroomId))return out({error:'Use only your approved questions for this classroom.'},400);
-  const clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',duration=Number(b.duration_minutes||20),attempts=Number(b.attempts_allowed||1),start=clean(b.start_date,10),due=clean(b.due_date,10);
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(due)||due<start)return out({error:'Check test dates.'},400);
-  if(!Number.isInteger(duration)||duration<5||duration>180||!Number.isInteger(attempts)||attempts<1||attempts>5)return out({error:'Check duration and attempts.'},400);
-  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={title:clean(b.title,180),classroom_id:classroomId,program:classroom.program||'',academic_year:classroom.academic_year||'',teacher_id:a.account_id,teacher_name:a.name,subject:clean(b.subject,120),chapters:Array.isArray(b.chapters)?b.chapters.map(x=>clean(x,180)).filter(Boolean).slice(0,20):[],difficulty:clean(b.difficulty,20)||'Mixed',question_ids:ids,duration_minutes:duration,start_date:start,due_date:due,attempts_allowed:attempts,show_result:b.show_result!==false,status:'Published',created_at:new Date().toISOString()};
-  if(!data.title||!data.subject)return out({error:'Test title and subject are required.'},400);
-  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'online_tests',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:online_test',id)]);
-  return out({success:true,id,status:'Published'},201);
- }
  if(url.pathname==='/api/teacher/online-test-review'&&request.method==='POST'){
   const b=await request.json(),attemptId=String(b.attempt_id||''),attempt=await portalRecord(env,a.school_id,'online_test_attempts',attemptId);
   if(!attempt||!a.classroom_ids.includes(attempt.classroom_id))return out({error:'Test attempt not available to this teacher.'},403);
