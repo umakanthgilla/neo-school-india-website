@@ -1113,6 +1113,44 @@ async function growthCrmPortal(request,env,url){
       return out({success:true,leads:result.results||[]});
     }
 
+
+    const branchLeadMatch=url.pathname.match(/^\/api\/growth\/branch\/leads\/([^/]+)$/);
+    if(branchLeadMatch&&request.method==='PATCH'){
+      if(!branch)return fail('School login required.',401);
+      const leadId=decodeURIComponent(branchLeadMatch[1]);
+      const existing=await env.DB.prepare(`
+        SELECT l.*,m.branch_id,m.next_action,m.action_due,m.pipeline_stage
+        FROM leads l JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
+        WHERE l.lead_id=? AND m.branch_id=? AND l.enquiry_type='Preschool Admission'
+        LIMIT 1
+      `).bind(leadId,branch.school_id).first();
+      if(!existing)return fail('Lead not found for this branch.',404);
+      const b=await request.json();
+      const status=clean(b.status,80)||existing.status;
+      const priority=clean(b.priority,30)||existing.priority||'Warm';
+      if(!ALLOWED_STATUS.has(status))return fail('Invalid status.',400);
+      if(!ALLOWED_PRIORITY.has(priority))return fail('Invalid priority.',400);
+      const owner=clean(b.assigned_to,120)||existing.assigned_to||null;
+      const nextAction=clean(b.next_action,240)||null;
+      const actionDue=clean(b.action_due,50)||null;
+      const result=clean(b.follow_up_result,200)||null;
+      const notes=clean(b.notes,2000)||existing.notes||null;
+      const lostReason=clean(b.lost_reason,500)||null;
+      if(!['Converted','Lost'].includes(status)&&!nextAction)return fail('Every active lead needs a Next Action.',400);
+      if(status==='Lost'&&!lostReason)return fail('Lost reason is required.',400);
+      const stage=clean(b.pipeline_stage,100)||growthDefaultStage(existing.enquiry_type,status);
+      const convertedDate=status==='Converted'?(existing.converted_date||new Date().toISOString()):null;
+      const contactAt=b.record_contact===true?new Date().toISOString():existing.last_contact||null;
+      await env.DB.batch([
+        env.DB.prepare(`UPDATE leads SET status=?,priority=?,assigned_to=?,next_follow_up=?,follow_up_result=?,notes=?,converted_date=?,lost_reason=?,last_contact=?,updated_at=CURRENT_TIMESTAMP WHERE lead_id=?`)
+          .bind(status,priority,owner,actionDue,result,notes,convertedDate,lostReason,contactAt,leadId),
+        env.DB.prepare(`UPDATE neo_growth_lead_meta SET next_action=?,action_due=?,pipeline_stage=?,updated_at=CURRENT_TIMESTAMP WHERE lead_id=?`)
+          .bind(nextAction,actionDue,stage,leadId)
+      ]);
+      await growthActivity(env,leadId,'Branch · '+branch.name,'Branch follow-up updated',{status,priority,assigned_to:owner,next_action:nextAction,action_due:actionDue,pipeline_stage:stage,follow_up_result:result});
+      return out({success:true});
+    }
+
     const activityMatch=url.pathname.match(/^\/api\/growth\/leads\/([^/]+)\/activity$/);
     if(activityMatch&&request.method==='GET'){
       if(!admin&&!branch)return fail('Unauthorized.',401);
