@@ -3441,45 +3441,85 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 </style>
 
 
-<style id="neo-section-mascot-polish-v1">
+<style id="neo-section-mascot-polish-v2">
 .franchise-system,
 .franchise-confidence,
-.franchise-journey{position:relative!important}
+.franchise-journey{position:relative!important;overflow:visible!important}
+.franchise-system>.container,
+.franchise-confidence-grid,
+.franchise-journey>.container{position:relative!important}
+
 .neo-section-mascot{
   position:absolute;
-  right:34px;
-  bottom:18px;
-  width:92px;
-  height:110px;
+  width:150px;
+  height:180px;
   object-fit:contain;
   object-position:center bottom;
-  z-index:3;
+  z-index:5;
   pointer-events:none;
   background:transparent;
   border:0;
-  filter:drop-shadow(0 12px 22px rgba(7,27,82,.16));
+  filter:drop-shadow(0 16px 28px rgba(7,27,82,.18));
 }
+
+/* Outside the blue panel — sits in the gap, not inside the box */
+.confidence-mascot{
+  left:43%;
+  bottom:12px;
+  transform:translateX(-18%);
+  width:165px;
+  height:198px;
+}
+
+/* Larger character beside the six franchise-system cards */
+.system-mascot{
+  right:-18px;
+  bottom:8px;
+  width:150px;
+  height:182px;
+}
+
+/* Larger character beside the start-up journey cards */
+.journey-mascot{
+  right:-18px;
+  bottom:6px;
+  width:150px;
+  height:182px;
+}
+
+/* Restore normal blue-panel spacing now that mascot is outside */
 .franchise-blue-panel{
   position:relative!important;
   overflow:hidden!important;
-  padding-right:118px!important;
+  padding-right:32px!important;
 }
-.franchise-blue-panel .neo-section-mascot{
-  right:18px;
-  bottom:14px;
-  width:88px;
-  height:108px;
-  filter:drop-shadow(0 10px 20px rgba(0,0,0,.24));
+
+@media(max-width:1050px){
+  .confidence-mascot{
+    left:auto;
+    right:6px;
+    bottom:-10px;
+    width:125px;
+    height:152px;
+  }
+  .system-mascot,.journey-mascot{
+    right:4px;
+    width:120px;
+    height:145px;
+  }
 }
-@media(max-width:900px){
-  .neo-section-mascot{width:72px;height:88px;right:18px;bottom:12px}
-  .franchise-blue-panel{padding-right:92px!important}
-  .franchise-blue-panel .neo-section-mascot{width:70px;height:86px}
-}
-@media(max-width:560px){
-  .neo-section-mascot{width:58px;height:72px;right:10px;bottom:8px}
-  .franchise-blue-panel{padding-right:72px!important}
-  .franchise-blue-panel .neo-section-mascot{width:56px;height:70px}
+@media(max-width:700px){
+  .confidence-mascot,.system-mascot,.journey-mascot{
+    position:relative!important;
+    display:block;
+    left:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:none!important;
+    width:110px!important;
+    height:132px!important;
+    margin:10px auto -4px!important;
+  }
 }
 </style>
 
@@ -3535,15 +3575,18 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <article class="franchise-system-card"><div class="franchise-system-icon">◆</div><h3>Brand & Launch Toolkit</h3><p>Neo identity, communication templates, launch guidance and a consistent experience for families.</p></article>
 <article class="franchise-system-card"><div class="franchise-system-icon">◫</div><h3>Operations Support</h3><p>Processes for enquiries, admissions, parent communication, classroom delivery and centre review.</p></article>
 <article class="franchise-system-card"><div class="franchise-system-icon">●</div><h3>Head-Office Follow-up</h3><p>Franchise enquiry tracking, onboarding milestones and structured support from the Neo central team.</p></article>
-</div></div>
+</div>
+<video class="neo-section-mascot system-mascot" aria-hidden="true" autoplay muted loop playsinline preload="metadata"><source src="/neo-hi.webm" type="video/webm"></video>
+</div>
 </section>
 <section class="franchise-confidence">
 <div class="container franchise-confidence-grid">
-<div class="franchise-blue-panel"><h3>A School System, Not Just a Brand Name.</h3><video class="neo-section-mascot" aria-hidden="true" autoplay muted loop playsinline preload="metadata"><source src="/neo-hi.webm" type="video/webm"></video>
+<div class="franchise-blue-panel"><h3>A School System, Not Just a Brand Name.</h3>
 <div class="franchise-point"><i>1</i><span><b>Academic foundation</b>Curriculum, outcomes and classroom practice are connected.</span></div>
 <div class="franchise-point"><i>2</i><span><b>Operating discipline</b>Clear workflows help the centre run consistently.</span></div>
 <div class="franchise-point"><i>3</i><span><b>Local ownership</b>Partners build community trust with head-office support.</span></div>
 <div class="franchise-point"><i>4</i><span><b>Continuous improvement</b>Training, review and feedback strengthen delivery.</span></div></div>
+<video class="neo-section-mascot confidence-mascot" aria-hidden="true" autoplay muted loop playsinline preload="metadata"><source src="/neo-hi.webm" type="video/webm"></video>
 <div><div class="section-head"><div class="eyebrow">WHY PARTNER WITH NEO</div><h2>Designed for Serious Preschool Partners.</h2><p>The model supports first-time education entrepreneurs, existing school owners and educators who want a credible, child-centred preschool.</p></div>
 <div class="franchise-checks"><div class="franchise-check">Child-centred methodology</div><div class="franchise-check">Systematic phonics pathway</div><div class="franchise-check">Age-appropriate writing</div><div class="franchise-check">Embedded assessment</div><div class="franchise-check">Parent learning updates</div><div class="franchise-check">Original learning content</div></div>
 <button class="btn btn-brand" data-enquiry="franchise" type="button">Check Your Location</button></div>
@@ -3553,7 +3596,7 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 </div></div></section>
 <section class="franchise-journey" id="franchise-journey"><div class="container"><div class="section-head"><div class="eyebrow">YOUR START-UP JOURNEY</div><h2>A Clear Path from Enquiry to School Opening.</h2><p>Each stage moves the partnership forward with defined information, review and readiness.</p></div><div class="journey-grid">
 <article class="journey-card"><h3>Franchise Enquiry</h3><p>Share your city, background and proposed location.</p></article><article class="journey-card"><h3>Discussion & Fit</h3><p>Understand the model and evaluate mutual suitability.</p></article><article class="journey-card"><h3>Location Review</h3><p>Assess basic space, access and local opportunity.</p></article><article class="journey-card"><h3>Agreement & Setup</h3><p>Complete documentation, branding and operational setup.</p></article><article class="journey-card"><h3>Training & Launch</h3><p>Prepare the team, classrooms and parent outreach.</p></article>
-</div><video class="neo-section-mascot" aria-hidden="true" autoplay muted loop playsinline preload="metadata"><source src="/neo-hi.webm" type="video/webm"></video></div></section>
+</div><video class="neo-section-mascot journey-mascot" aria-hidden="true" autoplay muted loop playsinline preload="metadata"><source src="/neo-hi.webm" type="video/webm"></video></div></section>
 <section class="programs" id="programs">
 <div aria-hidden="true" class="ultra-heavy-neo scene-walk">
 <video autoplay="" loop="" muted="" playsinline="" preload="metadata">
