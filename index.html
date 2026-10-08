@@ -3336,16 +3336,25 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 @media(max-width:600px){#askNeoPanel{height:min(82dvh,690px)!important;max-height:calc(100dvh - 14px)}}
 </style>
 <link rel="icon" type="image/svg+xml" sizes="any" href="/neo-favicon-v4.svg">
+
+<style id="neo-market-polish-v1">
+.neo-dual-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.neo-dual-actions .btn{min-width:190px}
+.hero-proof{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.hero-proof span{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #dce6f2;border-radius:999px;background:rgba(255,255,255,.9);color:#33456a;font-size:12px;font-weight:800}.hero-proof span:before{content:'✓';color:#35ae63}
+.audience-gateway{padding:52px 0;background:#fff;border-bottom:1px solid #e6edf7}.audience-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.audience-card{position:relative;overflow:hidden;border:1px solid #dfe8f3;border-radius:26px;padding:26px;background:#fff;box-shadow:0 14px 36px rgba(7,27,82,.07)}.audience-card:before{content:"";position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,#118be8,#4dbb42,#f4c400,#ff7a16,#ef3b78)}.audience-card .eyebrow{margin-bottom:8px}.audience-card h2{margin:0 0 9px;color:#071b52;font-size:27px}.audience-card p{margin:0 0 18px;color:#64728d;line-height:1.6}.audience-points{display:grid;gap:8px;margin:0 0 20px}.audience-points span{font-size:13px;color:#314464;font-weight:750}.audience-points span:before{content:'✓';color:#35ae63;margin-right:8px}
+.neo-form fieldset{border:0;padding:0;margin:0 0 15px}.neo-form legend{font-weight:900;color:#071b52;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}.neo-form-help{display:block;color:#71809a;font-size:11px;line-height:1.45;margin:-2px 0 8px}
+@media(max-width:760px){.audience-grid{grid-template-columns:1fr}.neo-dual-actions{display:grid;grid-template-columns:1fr 1fr}.neo-dual-actions .btn{min-width:0;width:100%;padding-left:10px;padding-right:10px;font-size:13px}.hero-proof{gap:6px}.hero-proof span{font-size:10px}}
+@media(max-width:430px){.neo-dual-actions{grid-template-columns:1fr}.audience-card{padding:22px}.audience-card h2{font-size:23px}}
+</style>
 <body>
 <header>
 <div class="container nav">
 <a class="brand" href="#home"><img alt="Neo School India" src="neo-top-logo.jpeg"/></a>
 <nav class="links">
-<a href="#franchise-system">Franchise System</a>
-<a href="#imls">IMLS</a>
-<a href="#franchise-journey">Start-up Journey</a>
-<a aria-label="Open Franchise Enquiry" data-enquiry="franchise" href="#franchise-enquiry" role="button">Franchise</a>
-<a class="nav-cta" href="#contact">Contact</a>
+<a href="#programs">Programs</a>
+<a href="#why">Why Neo</a>
+<a href="#franchise-system">Franchise</a>
+<a href="#contact">Contact</a>
+<a class="nav-cta" aria-label="Open Admission Enquiry" data-enquiry="admission" href="#admission-enquiry" role="button">Admission Enquiry</a>
 </nav>
 </div>
 </header>
@@ -3353,13 +3362,14 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <section class="hero" id="home">
 <div class="container hero-grid">
 <div class="hero-copy">
-<div class="badge"><span class="badge-dot"></span> POWERED BY IMLS</div>
-<h1>Build a Preschool Families <span class="gradient-text">Trust and Children Love.</span></h1>
-<p>Neo School India gives educators and entrepreneurs a complete preschool system—from curriculum and teacher training to launch support, parent engagement and daily operations.</p>
-<div class="actions">
-<button class="btn btn-brand" data-enquiry="franchise" type="button">Start a Neo Preschool</button>
-<a class="btn btn-dark" href="#franchise-system">Explore the Franchise System</a>
+<div class="badge"><span class="badge-dot"></span> NEO SCHOOL INDIA · POWERED BY IMLS</div>
+<h1>A Better Beginning for Every Child. <span class="gradient-text">A Stronger System for Every Partner.</span></h1>
+<p>Purposeful early learning for families, and a structured preschool operating system for serious education entrepreneurs. One trusted Neo experience—from first enquiry to everyday school life.</p>
+<div class="neo-dual-actions">
+<button class="btn btn-brand" data-enquiry="admission" type="button">Admission Enquiry</button>
+<button class="btn btn-dark" data-enquiry="franchise" type="button">Franchise Enquiry</button>
 </div>
+<div class="hero-proof"><span>Playgroup to UKG</span><span>Parent-connected learning</span><span>Structured franchise support</span></div>
 </div>
 <div class="hero-art ultra-hero-static hero-neo-stage">
 <div aria-hidden="true" class="hero-neo-glow"></div>
@@ -3699,8 +3709,12 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <h3>Bring Neo to your city.</h3>
 <p>Share the basics. Your enquiry will be securely added to the Neo franchise follow-up system.</p>
 <form class="neo-form" id="franchiseForm">
+<fieldset><legend>Your details</legend>
 <input id="frName" placeholder="Your Name" required="" type="text"/>
 <input id="frPhone" placeholder="Phone Number" required="" type="tel"/>
+<input id="frEmail" placeholder="Email Address (optional)" type="email"/>
+</fieldset>
+<fieldset><legend>Preferred location</legend><span class="neo-form-help">PIN helps us identify the correct district and nearby postal area without spelling mistakes.</span>
 <select id="frState" required="">
 <option value="">Select State / UT</option>
 <option>Andaman and Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu and Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
@@ -3712,7 +3726,10 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <input id="frLocation" placeholder="Preferred Franchise Location / Landmark" required="" type="text"/>
 <button class="btn" id="frUseLocation" type="button">Use Current Map Location</button>
 <input id="frLat" type="hidden"/><input id="frLng" type="hidden"/>
-<textarea id="frMessage" placeholder="Anything you would like us to know?"></textarea>
+</fieldset>
+<fieldset><legend>Anything else?</legend>
+<textarea id="frMessage" placeholder="Current business / education background, property availability or anything you would like us to know (optional)"></textarea>
+</fieldset>
 <button class="btn btn-brand" type="submit">Submit Franchise Enquiry</button>
 <div aria-live="polite" class="neo-form-status" id="franchiseStatus" role="status"></div>
 </form>
@@ -3826,6 +3843,8 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
     setTimeout(()=>{ submitBtn.disabled=false; submitBtn.textContent=originalText; },2400);
   }
 
+  const neoCampaign=(()=>{const q=new URLSearchParams(location.search);return {utm_source:q.get('utm_source')||'',utm_medium:q.get('utm_medium')||'',utm_campaign:q.get('utm_campaign')||''}})();
+
   document.getElementById("admissionForm").addEventListener("submit",function(e){
     e.preventDefault();
     submitLead(this,"admission",{
@@ -3837,7 +3856,8 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       child_name:document.getElementById("adChild").value,
       child_age:document.getElementById("adAge").value,
       program:document.getElementById("adProgram").value,
-      source:"Website"
+      source:"Website",
+      ...neoCampaign
     },"admissionStatus");
   });
 
@@ -3847,6 +3867,7 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       enquiry_type:"Franchise Enquiry",
       name:document.getElementById("frName").value,
       mobile:document.getElementById("frPhone").value,
+      email:document.getElementById("frEmail").value,
       state:document.getElementById("frState").value,
       district:document.getElementById("frDistrict").value,
       pincode:document.getElementById("frPin").value,
@@ -3856,7 +3877,8 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       latitude:document.getElementById("frLat").value,
       longitude:document.getElementById("frLng").value,
       notes:document.getElementById("frMessage").value,
-      source:"Website"
+      source:"Website",
+      ...neoCampaign
     },"franchiseStatus");
   });
 })();
