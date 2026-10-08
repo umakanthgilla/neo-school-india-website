@@ -1,4 +1,4 @@
-const CACHE_NAME = "neo-school-india-v2";
+const CACHE_NAME = "neo-school-india-v3";
 
 const APP_SHELL = [
   "/",
