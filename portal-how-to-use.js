@@ -30,9 +30,17 @@
   m.querySelector('[data-autoplay]').onclick=()=>timer?stop():start();
   m.querySelector('[data-print-guide]').onclick=()=>window.print();
  }
- function inject(){if(document.querySelector('[data-neo-howto]'))return; const btn=document.createElement('button');btn.type='button';btn.dataset.neoHowto='1';btn.innerHTML='<span class="neo-howto-mini">?</span><span>How to Use</span>';btn.onclick=openModal;
-  const style=document.getElementById('neoHowBtnStyle')||document.createElement('style');style.id='neoHowBtnStyle';style.textContent=`[data-neo-howto]{display:flex!important;align-items:center;gap:10px;margin:8px 0;padding:11px 13px;border-radius:12px;border:1px solid #dce6f2;background:#fff;color:#071b52;font-weight:900;cursor:pointer}.neo-howto-mini{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#eaf6ff,#fff7ca);color:#071b52}.neo-department-nav [data-neo-howto],.side [data-neo-howto]{width:100%;background:#17356c;color:#fff;border-color:#2b4a80}.neo-department-nav [data-neo-howto] .neo-howto-mini,.side [data-neo-howto] .neo-howto-mini{background:#fff;color:#071b52}`;document.head.appendChild(style);
-  const nav=document.querySelector('.school-nav-scroll')||document.querySelector('.teacher-nav-scroll')||document.querySelector('.side')||document.querySelector('aside')||document.querySelector('nav'); if(nav){nav.appendChild(btn)} else {btn.style.position='fixed';btn.style.right='18px';btn.style.bottom='18px';btn.style.zIndex='9000';document.body.appendChild(btn)}
+ function inject(){
+  const existing=document.querySelector('[data-neo-howto]');
+  const schoolNav=document.querySelector('.neo-department-nav'),familyNav=document.querySelector('.family-tabs'),transportNav=document.querySelector('.transport-sidebar'),adminNav=document.querySelector('#appView .workspace-nav'),supplyNav=document.querySelector('#app .side');
+  const target=schoolNav||familyNav||transportNav||adminNav||supplyNav;
+  if(!target){if(existing)existing.remove();return}
+  const signout=target.querySelector('#navSignOut,#familySignOut,#transportSideSignout,.logout,.nav-signout');
+  if(existing&&existing.parentElement===target){if(signout&&existing.nextElementSibling!==signout)target.insertBefore(existing,signout);return}
+  if(existing)existing.remove();
+  const btn=document.createElement('button');btn.type='button';btn.dataset.neoHowto='1';btn.className='neo-howto-nav';btn.innerHTML='<span class="neo-howto-mini">?</span><span>How to Use</span>';btn.onclick=openModal;
+  const style=document.getElementById('neoHowBtnStyle')||document.createElement('style');style.id='neoHowBtnStyle';style.textContent=`[data-neo-howto]{display:flex!important;align-items:center;justify-content:flex-start;gap:9px;min-height:46px;width:100%;margin:7px 0;padding:9px 13px;border-radius:12px;border:1px solid #2b4a80;background:#17356c;color:#fff;font-weight:800;line-height:1.3;cursor:pointer;text-align:left}.neo-howto-mini{display:grid;place-items:center;width:29px;height:29px;flex:0 0 29px;border-radius:9px;background:#fff;color:#071b52;font-weight:900}.family-tabs>[data-neo-howto],.transport-sidebar>[data-neo-howto],#appView .workspace-nav>[data-neo-howto],#app .side>[data-neo-howto],.neo-department-nav>[data-neo-howto]{flex:none}.family-tabs>[data-neo-howto]{margin:7px 18px 10px;width:calc(100% - 36px)}@media(max-width:760px){[data-neo-howto]{min-height:44px}}`;document.head.appendChild(style);
+  if(signout)target.insertBefore(btn,signout);else target.appendChild(btn);
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{inject();setTimeout(inject,1500)});else{inject();setTimeout(inject,1500)}
  new MutationObserver(()=>inject()).observe(document.documentElement,{childList:true,subtree:true});
