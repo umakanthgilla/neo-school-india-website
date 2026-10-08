@@ -3701,8 +3701,17 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <form class="neo-form" id="franchiseForm">
 <input id="frName" placeholder="Your Name" required="" type="text"/>
 <input id="frPhone" placeholder="Phone Number" required="" type="tel"/>
-<input id="frCity" placeholder="Current City" required="" type="text"/>
-<input id="frLocation" placeholder="Preferred Franchise Location" required="" type="text"/>
+<select id="frState" required="">
+<option value="">Select State / UT</option>
+<option>Andaman and Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu and Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+</select>
+<input id="frPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit PIN Code" required="" type="text"/>
+<select id="frDistrict" required=""><option value="">District will load from PIN</option></select>
+<select id="frArea" required=""><option value="">Area / Post Office will load from PIN</option></select>
+<input id="frCity" placeholder="City / Town" required="" type="text"/>
+<input id="frLocation" placeholder="Preferred Franchise Location / Landmark" required="" type="text"/>
+<button class="btn" id="frUseLocation" type="button">Use Current Map Location</button>
+<input id="frLat" type="hidden"/><input id="frLng" type="hidden"/>
 <textarea id="frMessage" placeholder="Anything you would like us to know?"></textarea>
 <button class="btn btn-brand" type="submit">Submit Franchise Enquiry</button>
 <div aria-live="polite" class="neo-form-status" id="franchiseStatus" role="status"></div>
@@ -3751,6 +3760,40 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
     }
   }
   loadAdmissionBranches();
+
+
+  async function lookupFranchisePin(){
+    const pin=document.getElementById("frPin").value.trim();
+    const state=document.getElementById("frState"),district=document.getElementById("frDistrict"),area=document.getElementById("frArea"),city=document.getElementById("frCity");
+    if(!/^\d{6}$/.test(pin)){district.innerHTML='<option value="">Enter a valid 6-digit PIN</option>';area.innerHTML='<option value="">Area / Post Office</option>';return}
+    district.innerHTML='<option value="">Loading district…</option>';area.innerHTML='<option value="">Loading area…</option>';
+    try{
+      const r=await fetch('https://api.postalpincode.in/pincode/'+encodeURIComponent(pin));
+      const b=await r.json();
+      const offices=Array.isArray(b)&&b[0]&&Array.isArray(b[0].PostOffice)?b[0].PostOffice:[];
+      if(!offices.length)throw new Error('PIN not found');
+      const states=[...new Set(offices.map(x=>x.State).filter(Boolean))],districts=[...new Set(offices.map(x=>x.District).filter(Boolean))];
+      if(states[0])state.value=states[0];
+      district.innerHTML=districts.map(x=>'<option>'+x+'</option>').join('');
+      area.innerHTML=offices.map(x=>'<option value="'+String(x.Name||'').replace(/"/g,'&quot;')+'">'+[x.Name,x.Block].filter(Boolean).join(' · ')+'</option>').join('');
+      if(!city.value)city.value=offices[0]?.Block||offices[0]?.District||'';
+    }catch(_e){
+      district.innerHTML='<option value="">Could not load district — enter another PIN</option>';
+      area.innerHTML='<option value="">Could not load area</option>';
+    }
+  }
+  let pinTimer;
+  document.getElementById("frPin")?.addEventListener("input",()=>{clearTimeout(pinTimer);pinTimer=setTimeout(lookupFranchisePin,350)});
+  document.getElementById("frUseLocation")?.addEventListener("click",()=>{
+    const btn=document.getElementById("frUseLocation");
+    if(!navigator.geolocation){btn.textContent="Location not supported";return}
+    btn.disabled=true;btn.textContent="Getting location…";
+    navigator.geolocation.getCurrentPosition(
+      p=>{document.getElementById("frLat").value=p.coords.latitude.toFixed(6);document.getElementById("frLng").value=p.coords.longitude.toFixed(6);btn.textContent="Map location captured ✓";btn.disabled=false},
+      ()=>{btn.textContent="Allow location access and try again";btn.disabled=false},
+      {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+    );
+  });
 
   async function submitLead(form,type,payload,statusId){
     const statusEl=document.getElementById(statusId);
@@ -3804,8 +3847,14 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       enquiry_type:"Franchise Enquiry",
       name:document.getElementById("frName").value,
       mobile:document.getElementById("frPhone").value,
+      state:document.getElementById("frState").value,
+      district:document.getElementById("frDistrict").value,
+      pincode:document.getElementById("frPin").value,
+      area:document.getElementById("frArea").value,
       city:document.getElementById("frCity").value,
       proposed_location:document.getElementById("frLocation").value,
+      latitude:document.getElementById("frLat").value,
+      longitude:document.getElementById("frLng").value,
       notes:document.getElementById("frMessage").value,
       source:"Website"
     },"franchiseStatus");
