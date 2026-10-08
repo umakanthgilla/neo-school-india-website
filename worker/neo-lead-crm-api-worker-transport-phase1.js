@@ -373,6 +373,11 @@ export default {
         const utmSource = clean(body.utm_source || body.utmSource, 120);
         const utmMedium = clean(body.utm_medium || body.utmMedium, 120);
         const utmCampaign = clean(body.utm_campaign || body.utmCampaign, 160);
+        const locationDistrict = clean(body.district, 120);
+        const locationPincode = clean(body.pincode, 6);
+        const locationArea = clean(body.area || body.post_office, 180);
+        const locationLat = clean(body.latitude, 32);
+        const locationLng = clean(body.longitude, 32);
 
         if (!name) {
           return json(
@@ -415,6 +420,10 @@ export default {
             400,
             request
           );
+        }
+
+        if (locationPincode && !/^\d{6}$/.test(locationPincode)) {
+          return json({success:false,error:"Please enter a valid 6-digit PIN code."},400,request);
         }
 
         if (
@@ -495,8 +504,9 @@ export default {
         const growthInsert = env.DB.prepare(`
           INSERT INTO neo_growth_lead_meta(
             lead_id,branch_id,branch_name,next_action,action_due,pipeline_stage,
-            qualification,lead_score,original_source,utm_source,utm_medium,utm_campaign
-          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            qualification,lead_score,original_source,utm_source,utm_medium,utm_campaign,
+            location_district,location_pincode,location_area,location_lat,location_lng
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `).bind(
           id,
           routedBranch?.school_id || null,
@@ -509,7 +519,12 @@ export default {
           source,
           utmSource || null,
           utmMedium || null,
-          utmCampaign || null
+          utmCampaign || null,
+          locationDistrict || null,
+          locationPincode || null,
+          locationArea || null,
+          locationLat || null,
+          locationLng || null
         );
 
         await env.DB.batch([leadInsert, growthInsert]);
@@ -1104,6 +1119,11 @@ const GROWTH_CRM_SCHEMA = [
     utm_source TEXT,
     utm_medium TEXT,
     utm_campaign TEXT,
+    location_district TEXT,
+    location_pincode TEXT,
+    location_area TEXT,
+    location_lat TEXT,
+    location_lng TEXT,
     reopened_count INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -1122,6 +1142,18 @@ const GROWTH_CRM_SCHEMA = [
 
 async function ensureGrowthCrm(env){
   await env.DB.batch(GROWTH_CRM_SCHEMA.map(sql=>env.DB.prepare(sql)));
+  const cols=(await env.DB.prepare("PRAGMA table_info(neo_growth_lead_meta)").all()).results||[];
+  const have=new Set(cols.map(x=>x.name));
+  const additions=[
+    ['location_district','TEXT'],
+    ['location_pincode','TEXT'],
+    ['location_area','TEXT'],
+    ['location_lat','TEXT'],
+    ['location_lng','TEXT']
+  ].filter(([name])=>!have.has(name));
+  for(const [name,type] of additions){
+    await env.DB.prepare('ALTER TABLE neo_growth_lead_meta ADD COLUMN '+name+' '+type).run();
+  }
 }
 function growthDefaultStage(type,status){
   if(status==='Converted') return type==='Franchise Enquiry'?'Signed':'Admitted';
@@ -1157,7 +1189,8 @@ async function growthCrmPortal(request,env,url){
         SELECT l.*,
           m.branch_id,m.branch_name,m.next_action,m.action_due,m.pipeline_stage,
           m.qualification,m.lead_score,m.original_source,m.utm_source,m.utm_medium,
-          m.utm_campaign,m.reopened_count,m.updated_at AS growth_updated_at
+          m.utm_campaign,m.location_district,m.location_pincode,m.location_area,
+          m.location_lat,m.location_lng,m.reopened_count,m.updated_at AS growth_updated_at
         FROM leads l
         LEFT JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
         ORDER BY l.id DESC
