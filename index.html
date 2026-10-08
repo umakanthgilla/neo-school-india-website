@@ -3363,6 +3363,81 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
   }
 }
 </style>
+
+<style id="neo-visible-final-polish-v3">
+/* Compact hero: character grows visually without increasing page height */
+@media(min-width:701px){
+  .hero-grid{
+    min-height:440px!important;
+    padding:4px 0 12px!important;
+  }
+  .hero-copy{
+    transform:translateY(-8px)!important;
+  }
+  .hero-copy .badge{margin-bottom:7px!important}
+  .hero-copy h1{margin-bottom:9px!important}
+  .hero-copy p{margin-top:8px!important}
+  .neo-dual-actions{margin-top:14px!important}
+  .hero-proof{margin-top:9px!important}
+  .hero-art.ultra-hero-static.hero-neo-stage{
+    min-height:370px!important;
+    height:370px!important;
+  }
+  .hero-neo-animation{
+    width:590px!important;
+    height:590px!important;
+    transform:translateY(12px) scale(1.55)!important;
+    transform-origin:center bottom!important;
+  }
+}
+@media(max-width:700px){
+  .hero-neo-animation{
+    width:300px!important;
+    height:300px!important;
+    transform:translateY(6px) scale(1.22)!important;
+    transform-origin:center bottom!important;
+  }
+}
+
+/* Reduce excessive vertical gaps between key website sections */
+.franchise-system{padding:58px 0!important}
+.franchise-journey{padding:58px 0!important}
+.neo-faq{padding:54px 0!important}
+.audience-gateway{padding:48px 0!important}
+
+/* Neo rainbow identity on key cards */
+.franchise-system-card,
+.journey-card,
+.neo-faq details{
+  position:relative!important;
+  overflow:hidden!important;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+}
+.franchise-system-card:before,
+.journey-card:after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;right:0!important;top:0!important;
+  height:4px!important;
+  background:linear-gradient(90deg,#118be8,#35ae63,#f4c400,#ff7a16,#ef3b78)!important;
+}
+.franchise-system-card:nth-child(1) .franchise-system-icon{background:#eaf5ff!important;color:#118be8!important}
+.franchise-system-card:nth-child(2) .franchise-system-icon{background:#eafaf0!important;color:#159447!important}
+.franchise-system-card:nth-child(3) .franchise-system-icon{background:#fff7dc!important;color:#b88700!important}
+.franchise-system-card:nth-child(4) .franchise-system-icon{background:#fff0f7!important;color:#df3975!important}
+.franchise-system-card:nth-child(5) .franchise-system-icon{background:#f2edff!important;color:#6e49c8!important}
+.franchise-system-card:nth-child(6) .franchise-system-icon{background:#e9fbfb!important;color:#087f82!important}
+.journey-card:nth-child(1):before{background:#118be8!important}
+.journey-card:nth-child(2):before{background:#35ae63!important}
+.journey-card:nth-child(3):before{background:#d9a800!important}
+.journey-card:nth-child(4):before{background:#ff7a16!important}
+.journey-card:nth-child(5):before{background:#ef3b78!important}
+.franchise-system-card:hover,
+.journey-card:hover{transform:translateY(-4px)!important;box-shadow:0 16px 34px rgba(7,27,82,.11)!important}
+.neo-faq details:hover,
+.neo-faq details[open]{border-color:#a9cceb!important;box-shadow:0 10px 24px rgba(17,139,232,.08)!important}
+</style>
+
 <body>
 <header>
 <div class="container nav">
