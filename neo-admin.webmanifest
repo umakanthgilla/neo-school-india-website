@@ -3,7 +3,7 @@
   "short_name": "Neo Head Office",
   "id": "/admin",
   "start_url": "/admin",
-  "scope": "/",
+  "scope": "/admin",
   "description": "Neo School India Head Office and administration workspace.",
   "display": "standalone",
   "orientation": "portrait-primary",
