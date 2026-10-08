@@ -3,7 +3,7 @@
   "short_name": "Neo Supply",
   "id": "/supply-chain",
   "start_url": "/supply-chain",
-  "scope": "/",
+  "scope": "/supply-chain",
   "description": "Neo School India Head Office supply chain, procurement, warehouse and fulfillment workspace.",
   "display": "standalone",
   "orientation": "portrait-primary",
