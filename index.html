@@ -3441,84 +3441,100 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 </style>
 
 
-<style id="neo-section-mascot-polish-v2">
+<style id="neo-section-mascot-polish-v3">
+/* Keep hero mascot untouched; section mascots sit at outer edges without distortion. */
 .franchise-system,
 .franchise-confidence,
-.franchise-journey{position:relative!important;overflow:visible!important}
+.franchise-journey{
+  position:relative!important;
+  overflow:visible!important;
+}
 .franchise-system>.container,
 .franchise-confidence-grid,
-.franchise-journey>.container{position:relative!important}
+.franchise-journey>.container{
+  position:relative!important;
+  overflow:visible!important;
+}
 
 .neo-section-mascot{
   position:absolute;
-  width:150px;
-  height:180px;
-  object-fit:contain;
-  object-position:center bottom;
-  z-index:5;
+  width:170px!important;
+  height:auto!important;
+  max-width:none!important;
+  aspect-ratio:auto!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  z-index:6;
   pointer-events:none;
-  background:transparent;
-  border:0;
-  filter:drop-shadow(0 16px 28px rgba(7,27,82,.18));
+  background:transparent!important;
+  border:0!important;
+  filter:drop-shadow(0 14px 26px rgba(7,27,82,.18));
 }
 
-/* Outside the blue panel — sits in the gap, not inside the box */
+/* WHY PARTNER section: left edge, outside blue box and text columns */
 .confidence-mascot{
-  left:39%;
-  bottom:-8px;
-  transform:translateX(-18%);
-  width:495px;
-  height:594px;
+  left:-70px!important;
+  right:auto!important;
+  bottom:-6px!important;
+  transform:none!important;
+  width:175px!important;
 }
 
-/* Larger character beside the six franchise-system cards */
+/* Franchise system: right outer edge */
 .system-mascot{
-  right:-105px;
-  bottom:-26px;
-  width:450px;
-  height:546px;
+  right:-72px!important;
+  left:auto!important;
+  bottom:-8px!important;
+  transform:none!important;
+  width:175px!important;
 }
 
-/* Larger character beside the start-up journey cards */
+/* Start-up journey: right outer edge */
 .journey-mascot{
-  right:-105px;
-  bottom:-28px;
-  width:450px;
-  height:546px;
+  right:-72px!important;
+  left:auto!important;
+  bottom:-10px!important;
+  transform:none!important;
+  width:175px!important;
 }
 
-/* Restore normal blue-panel spacing now that mascot is outside */
+/* Restore panel spacing; mascot is no longer inside */
 .franchise-blue-panel{
   position:relative!important;
   overflow:hidden!important;
   padding-right:32px!important;
 }
 
-@media(max-width:1050px){
+@media(max-width:1180px){
+  .confidence-mascot{left:-28px!important;width:140px!important}
+  .system-mascot,.journey-mascot{right:-28px!important;width:140px!important}
+}
+@media(max-width:900px){
   .confidence-mascot{
-    left:auto;
-    right:-30px;
-    bottom:-18px;
-    width:300px;
-    height:360px;
+    left:auto!important;
+    right:6px!important;
+    bottom:-8px!important;
+    width:118px!important;
   }
   .system-mascot,.journey-mascot{
-    right:-40px;
-    width:280px;
-    height:340px;
+    right:6px!important;
+    bottom:-6px!important;
+    width:118px!important;
   }
 }
 @media(max-width:700px){
-  .confidence-mascot,.system-mascot,.journey-mascot{
+  .confidence-mascot,
+  .system-mascot,
+  .journey-mascot{
     position:relative!important;
-    display:block;
     left:auto!important;
     right:auto!important;
     bottom:auto!important;
     transform:none!important;
-    width:110px!important;
-    height:132px!important;
-    margin:10px auto -4px!important;
+    display:block!important;
+    width:92px!important;
+    height:auto!important;
+    margin:10px auto -2px!important;
   }
 }
 </style>
