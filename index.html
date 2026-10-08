@@ -3810,16 +3810,24 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 
 
   const PIN_API="https://api.pincodeapi.in/api/v1";
+  const DISTRICT_DATA="/data/india_states_districts.json";
+  let indiaDistrictData=null;
+
+  async function getDistrictData(){
+    if(indiaDistrictData)return indiaDistrictData;
+    const r=await fetch(DISTRICT_DATA,{cache:"force-cache"});
+    if(!r.ok)throw new Error("District data unavailable");
+    indiaDistrictData=await r.json();
+    return indiaDistrictData;
+  }
 
   async function populateDistricts(prefix){
     const state=document.getElementById(prefix+"State"),district=document.getElementById(prefix+"District"),town=document.getElementById(prefix+"Town"),pin=document.getElementById(prefix+"Pin");
     district.disabled=true;town.disabled=true;district.innerHTML='<option value="">Loading districts…</option>';town.innerHTML='<option value="">Select Town / Area</option>';pin.value="";
     try{
-      const r=await fetch(PIN_API+'/state/'+encodeURIComponent(state.value));
-      const b=await r.json();
-      if(!r.ok)throw new Error(b?.detail||b?.error||"State lookup failed");
-      const rows=postalRows(b);
-      const districts=[...new Set(rows.map(x=>x.district||x.District||"").filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+      const data=await getDistrictData();
+      const row=(data||[]).find(x=>String(x.name||"").trim()===state.value);
+      const districts=(row?.districts||[]).map(x=>String(x.name||"").trim()).filter(Boolean);
       district.innerHTML='<option value="">Select District</option>'+districts.map(x=>'<option>'+x+'</option>').join("");
       district.disabled=!districts.length;
       if(!districts.length)throw new Error("Districts unavailable");
