@@ -67,17 +67,27 @@ main{max-width:1320px;margin:auto;padding:24px 18px 60px}.hero{display:flex;alig
 </div></header>
 <main>
   <div class="hero"><div><h1>Conversion Command Center</h1><p>Central view for admission and franchise enquiries. Priority queue first, dashboards second.</p></div><div id="updated" style="color:var(--muted);font-size:12px"></div></div>
-  <section class="metrics">
-    <div class="metric"><b>Total Leads</b><strong id="mTotal">0</strong></div>
-    <div class="metric"><b>New</b><strong id="mNew">0</strong></div>
-    <div class="metric"><b>Admissions</b><strong id="mAdmissions">0</strong></div>
-    <div class="metric"><b>Franchise</b><strong id="mFranchise">0</strong></div>
-    <div class="metric"><b>Due Today</b><strong id="mToday">0</strong></div>
-    <div class="metric"><b>Overdue</b><strong id="mOverdue">0</strong></div>
-    <div class="metric"><b>Converted</b><strong id="mConverted">0</strong></div>
-    <div class="metric"><b>Lost</b><strong id="mLost">0</strong></div>
+  <section class="workspace-switch" aria-label="Growth CRM workspaces">
+    <button class="workspace-card admissions" data-workspace="Preschool Admission" type="button">
+      <div class="workspace-head"><span class="workspace-icon">A</span><div><h3>Admission Enquiries</h3><p>Parents · Branch routing · Visits · Admissions</p></div></div>
+      <div class="workspace-stats"><span id="waTotal">0 leads</span><span id="waNew">0 new</span><span id="waConverted">0 admitted</span></div>
+    </button>
+    <button class="workspace-card franchise" data-workspace="Franchise Enquiry" type="button">
+      <div class="workspace-head"><span class="workspace-icon">F</span><div><h3>Franchise Enquiries</h3><p>Head Office · Qualification · Meetings · Closures</p></div></div>
+      <div class="workspace-stats"><span id="wfTotal">0 leads</span><span id="wfNew">0 new</span><span id="wfConverted">0 signed</span></div>
+    </button>
   </section>
-  <div class="tabs"><button class="tab active" data-mode="all">All Growth</button><button class="tab" data-mode="Preschool Admission">Admissions</button><button class="tab" data-mode="Franchise Enquiry">Franchise</button></div>
+  <section class="metrics">
+    <div class="metric"><b>◎ Total Leads</b><strong id="mTotal">0</strong></div>
+    <div class="metric"><b>✦ New</b><strong id="mNew">0</strong></div>
+    <div class="metric"><b>▣ Admissions</b><strong id="mAdmissions">0</strong></div>
+    <div class="metric"><b>◇ Franchise</b><strong id="mFranchise">0</strong></div>
+    <div class="metric"><b>◷ Due Today</b><strong id="mToday">0</strong></div>
+    <div class="metric"><b>! Overdue</b><strong id="mOverdue">0</strong></div>
+    <div class="metric"><b>✓ Converted</b><strong id="mConverted">0</strong></div>
+    <div class="metric"><b>× Lost</b><strong id="mLost">0</strong></div>
+  </section>
+  <div class="tabs"><button class="tab active" data-mode="all">Overview</button><button class="tab" data-mode="Preschool Admission">Admission Enquiries</button><button class="tab" data-mode="Franchise Enquiry">Franchise Enquiries</button></div>
   <section class="grid">
     <div class="card"><h2 id="pipelineTitle">Growth Pipeline</h2><p>Live stage counts for the selected funnel.</p><div class="pipeline" id="pipeline"></div></div>
     <div class="card"><h2>Today’s Priority Queue</h2><p>Overdue, due today, new uncontacted and hot opportunities.</p><div class="queue" id="queue"></div></div>
@@ -94,7 +104,14 @@ main{max-width:1320px;margin:auto;padding:24px 18px 60px}.hero{display:flex;alig
 
 <div id="drawer" class="drawer"><div class="drawer-card">
   <div class="drawer-head"><div><h2 id="dTitle">Lead</h2><div id="dMeta" style="color:var(--muted);font-size:12px;margin-top:4px"></div></div><button class="btn small" id="closeDrawer">Close</button></div>
-  <div class="quick"><a id="callBtn" class="btn small" href="#">Call</a><a id="waBtn" class="btn small whatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a></div>
+  <div class="quick"><a id="callBtn" class="btn small" href="#">☎ Call</a><a id="waBtn" class="btn small whatsapp" href="#" target="_blank" rel="noopener">WhatsApp</a></div>
+  <div class="quick" id="quickOutcomes" style="margin-top:10px">
+    <button class="btn small" type="button" data-outcome="Interested">Interested</button>
+    <button class="btn small" type="button" data-outcome="No Answer">No Answer</button>
+    <button class="btn small" type="button" data-outcome="Call Back">Call Back</button>
+    <button class="btn small" type="button" data-outcome="Visit Planned">Visit / Meeting</button>
+    <button class="btn small" type="button" data-outcome="Not Interested">Not Interested</button>
+  </div>
   <div class="drawer-grid">
     <label>Status<select id="dStatus"><option>New</option><option>Contacted</option><option>Follow-up</option><option>Interested</option><option>Visit / Meeting</option><option>Decision Pending</option><option>Converted</option><option>Lost</option></select></label>
     <label>Priority<select id="dPriority"><option>Hot</option><option>Warm</option><option>Cold</option></select></label>
