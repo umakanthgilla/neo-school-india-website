@@ -6,5 +6,4 @@
  document.addEventListener('keydown',unlock,{capture:true,once:true});
  function play(){if(!armed||document.hidden||!audio)return;try{audio.resume().then(()=>{if(audio.state!=='running')return;const start=audio.currentTime;for(const [offset,frequency] of [[0,784],[.14,1047]]){const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.type='sine';oscillator.frequency.value=frequency;gain.gain.setValueAtTime(.0001,start+offset);gain.gain.exponentialRampToValueAtTime(.045,start+offset+.025);gain.gain.exponentialRampToValueAtTime(.0001,start+offset+.19);oscillator.connect(gain).connect(audio.destination);oscillator.start(start+offset);oscillator.stop(start+offset+.2)}}).catch(()=>{})}catch{}}
  window.NeoAlertSound={count(key,value){const number=Math.max(0,Number(value)||0),previous=counts.get(key);counts.set(key,number);if(previous!==undefined&&number>previous)play()}};
- if(!window.__neoHowToUseLoader){window.__neoHowToUseLoader=true;const s=document.createElement('script');s.src='/portal-how-to-use.js?v=20261008-howto1';s.defer=true;document.head.appendChild(s)}
 })();
