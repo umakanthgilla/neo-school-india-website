@@ -1136,7 +1136,7 @@ async function schoolPortal(request,env,url){
   }
   await ensurePortalSchema(env);
   const extra=await portalExtra(request,env,url,admin,session);if(extra)return extra;
-const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates|adoption_assignments|adoption_calls|adoption_actions|ptm_sessions)(?:\/([^/]+))?$/);
+const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates|adoption_assignments|adoption_calls|adoption_actions|ptm_sessions|question_bank|online_tests|online_test_attempts)(?:\/([^/]+))?$/);
   if(!match)return out({error:'Not found.'},404);
   const [,school,kind,id]=match;
   if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
@@ -1265,7 +1265,7 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
   }
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(recordId))fail('Invalid record ID.');
   if(request.method==='PATCH'){
-   const schoolPatch=['students','classrooms','staff','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders','adoption_assignments','adoption_actions'];
+   const schoolPatch=['students','classrooms','staff','homework','announcements','enquiries','staff_leave','salary_advances','notifications','orders','adoption_assignments','adoption_actions','question_bank','online_tests'];
    const headOfficePatch=['orders','purchase_orders','ledger','support','staff_leave','salary_advances','payroll'];
    if(!id||(!admin&&!schoolPatch.includes(kind))||![...schoolPatch,...headOfficePatch].includes(kind))return out({error:'This update is not permitted for your role.'},403);
    const old=await env.DB.prepare('SELECT data FROM neo_portal_records WHERE school_id=? AND kind=? AND id=?').bind(school,kind,id).first();if(!old)return out({error:'Not found.'},404);const previous=JSON.parse(old.data);
@@ -1295,6 +1295,8 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(status==='Active'&&leavingDate)fail('Last working date is only for inactive/relieved staff.');
     data={...previous,name:str('name',120),department,staff_type:department,role:str('role',120),gender:genders.includes(b.gender||'')?(b.gender||''):fail('Invalid gender'),dob,mobile:staffMobile,email:str('email',160,false),joining_date:joiningDate,leaving_date:status==='Inactive'?leavingDate:'',emergency_mobile:emergency,status};
    }
+   else if(kind==='question_bank'){const marks=Number(b.marks||previous.marks||1);if(!Number.isInteger(marks)||marks<1||marks>20)fail('Marks must be between 1 and 20.');data={...previous,status:choice('status',['Draft','Approved']),question_text:str('question_text',1200),correct_answer:str('correct_answer',500,previous.question_type!=='Short Answer'),marks};}
+   else if(kind==='online_tests'){data={...previous,status:choice('status',['Draft','Published','Closed']),title:str('title',180),start_date:date('start_date'),due_date:date('due_date'),show_result:b.show_result!==false};if(data.due_date<data.start_date)fail('Due date cannot be before start date.');}
    else if(kind==='adoption_assignments'){data={...previous,status:choice('status',['Active','Inactive']),notes:str('notes',500,false)};}
    else if(kind==='adoption_actions'){data={...previous,status:choice('status',['Open','In progress','Resolved']),owner:str('owner',120),due_date:date('due_date'),notes:str('notes',1200,false),resolved_at:b.status==='Resolved'?new Date().toISOString():previous.resolved_at||''};}
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
@@ -1349,7 +1351,27 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
     if(paymentDate>neoToday())fail('Payment date cannot be in the future.');
     data={payable_id:payable.id,purchase_order_id:payable.purchase_order_id,vendor_id:payable.vendor_id,vendor_name:payable.vendor_name,amount_paise:amount,date:paymentDate,payment_mode:choice('payment_mode',['Cash','UPI','Bank transfer','Cheque']),reference:str('reference',200),notes:str('notes',1000,false),status:'Paid'};
    }else if(['assets','vendor_payables'].includes(kind))fail('This record is created automatically from procurement.');
-   else if(kind==='adoption_assignments'){
+   else if(kind==='question_bank'){
+    const classroom=await related('classrooms','classroom_id'),difficulty=choice('difficulty',['Basic','Medium','Hard']),qtype=choice('question_type',['MCQ','True / False','Fill in the Blank','Short Answer']);
+    const options=Array.isArray(b.options)?b.options.map(x=>String(x||'').trim()).filter(Boolean).slice(0,6):[],answer=str('correct_answer',500,qtype!=='Short Answer');
+    if(qtype==='MCQ'&&options.length<2)fail('MCQ needs at least two answer options.');
+    if(qtype==='MCQ'&&!options.includes(answer))fail('Correct answer must match one MCQ option.');
+    if(qtype==='True / False'&&!['True','False'].includes(answer))fail('True / False answer must be True or False.');
+    const marks=Number(b.marks||1);if(!Number.isInteger(marks)||marks<1||marks>20)fail('Marks must be between 1 and 20.');
+    data={classroom_id:classroom.id,program:classroom.program||'',academic_year:classroom.academic_year||'',subject:str('subject',120),chapter:str('chapter',180),topic:str('topic',180,false),difficulty,question_type:qtype,question_text:str('question_text',1200),options,correct_answer:answer,marks,status:choice('status',['Draft','Approved']),source:str('source',80,false)||'Manual',source_lesson_id:str('source_lesson_id',120,false),created_at:new Date().toISOString()};
+   }else if(kind==='online_tests'){
+    const classroom=await related('classrooms','classroom_id'),questionIds=Array.isArray(b.question_ids)?[...new Set(b.question_ids.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,100):[];
+    if(!questionIds.length)fail('Select at least one approved question.');
+    const bank=await portalRows(env,school,'question_bank'),selected=questionIds.map(id=>bank.find(q=>q.id===id)).filter(Boolean);
+    if(selected.length!==questionIds.length||selected.some(q=>q.status!=='Approved'||q.classroom_id!==classroom.id))fail('Test questions must be approved and belong to the selected classroom.');
+    const duration=Number(b.duration_minutes||20),attempts=Number(b.attempts_allowed||1);
+    if(!Number.isInteger(duration)||duration<5||duration>180)fail('Duration must be 5 to 180 minutes.');
+    if(!Number.isInteger(attempts)||attempts<1||attempts>5)fail('Attempts must be 1 to 5.');
+    const startDate=date('start_date'),dueDate=date('due_date');if(dueDate<startDate)fail('Due date cannot be before start date.');
+    data={title:str('title',180),classroom_id:classroom.id,program:classroom.program||'',academic_year:classroom.academic_year||'',subject:str('subject',120),chapters:Array.isArray(b.chapters)?b.chapters.map(x=>String(x||'').trim()).filter(Boolean).slice(0,20):[],difficulty:choice('difficulty',['Basic','Medium','Hard','Mixed']),question_ids:questionIds,duration_minutes:duration,start_date:startDate,due_date:dueDate,attempts_allowed:attempts,show_result:b.show_result!==false,status:choice('status',['Draft','Published','Closed']),created_at:new Date().toISOString()};
+   }else if(kind==='online_test_attempts'){
+    fail('Student test attempts are created only from the Parent / Student learning portal.');
+   }else if(kind==='adoption_assignments'){
     const student=await related('students','student_id'),teacherId=str('teacher_id',80),teacher=await env.DB.prepare('SELECT account_id,name FROM neo_teacher_accounts WHERE school_id=? AND account_id=? AND active=1').bind(school,teacherId).first();
     if(!teacher)fail('Choose an active teacher.');
     const existing=(await portalRows(env,school,'adoption_assignments')).find(x=>x.student_id===student.id&&x.status==='Active');
@@ -2110,6 +2132,31 @@ async function parentPortal(request,env,url){
    :await env.DB.prepare('SELECT photo FROM neo_student_performance_photos WHERE performance_id=? AND school_id=? AND student_id=?').bind(id,a.school_id,a.student_id).first();
   if(!row?.photo)return out({error:'Photo not found.'},404);
   return new Response(new Uint8Array(row.photo),{headers:{'Content-Type':'image/jpeg','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff',...cors(request)}});
+ }
+ if(url.pathname==='/api/parent/online-tests'&&request.method==='GET'){
+  await ensurePortalSchema(env);
+  const child=await portalRecord(env,a.school_id,'students',a.student_id);if(!child)return out({error:'Student record not available.'},404);
+  const tests=(await portalRows(env,a.school_id,'online_tests')).filter(t=>t.classroom_id===child.classroom_id&&t.status==='Published'&&t.start_date<=neoToday()&&t.due_date>=neoToday());
+  const bank=await portalRows(env,a.school_id,'question_bank'),attempts=(await portalRows(env,a.school_id,'online_test_attempts')).filter(x=>x.student_id===child.id);
+  return out({today:neoToday(),tests:tests.map(t=>({...t,questions:(t.question_ids||[]).map(id=>bank.find(q=>q.id===id)).filter(Boolean).map(q=>({id:q.id,question_text:q.question_text,question_type:q.question_type,options:q.options||[],marks:q.marks,difficulty:q.difficulty,chapter:q.chapter,topic:q.topic}))})),attempts});
+ }
+ if(url.pathname==='/api/parent/online-test-submit'&&request.method==='POST'){
+  await ensurePortalSchema(env);const b=await request.json(),child=await portalRecord(env,a.school_id,'students',a.student_id);if(!child)return out({error:'Student record not available.'},404);
+  const test=await portalRecord(env,a.school_id,'online_tests',String(b.test_id||''));if(!test||test.classroom_id!==child.classroom_id||test.status!=='Published')return out({error:'This test is not available for the selected child.'},404);
+  if(test.start_date>neoToday()||test.due_date<neoToday())return out({error:'This test is outside its available date window.'},409);
+  const prior=(await portalRows(env,a.school_id,'online_test_attempts')).filter(x=>x.student_id===child.id&&x.test_id===test.id);
+  if(prior.length>=Number(test.attempts_allowed||1))return out({error:'Allowed attempts are already used.'},409);
+  const bank=await portalRows(env,a.school_id,'question_bank'),answers=b&&typeof b.answers==='object'&&!Array.isArray(b.answers)?b.answers:{};
+  let autoScore=0,total=0,pending=0;const result=[];
+  for(const qid of test.question_ids||[]){const q=bank.find(x=>x.id===qid);if(!q)continue;const marks=Number(q.marks||1);total+=marks;const response=String(answers[qid]??'').trim();let earned=0,state='Pending teacher review';
+    if(q.question_type==='MCQ'||q.question_type==='True / False'){state=response===String(q.correct_answer||'').trim()?'Correct':'Incorrect';earned=state==='Correct'?marks:0;}
+    else if(q.question_type==='Fill in the Blank'){state=response.toLowerCase()===String(q.correct_answer||'').trim().toLowerCase()?'Correct':'Incorrect';earned=state==='Correct'?marks:0;}
+    else pending+=marks;
+    autoScore+=earned;result.push({question_id:qid,response,earned_marks:earned,max_marks:marks,status:state});
+  }
+  const id='TESTATT_'+crypto.randomUUID().replace(/-/g,'').slice(0,20).toUpperCase(),data={test_id:test.id,test_title:test.title,student_id:child.id,student_name:child.name,classroom_id:child.classroom_id,attempt_no:prior.length+1,submitted_at:new Date().toISOString(),answers:result,auto_score:autoScore,total_marks:total,pending_review_marks:pending,status:pending?'Pending review':'Evaluated'};
+  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'online_test_attempts',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'parent:'+a.account_id,'POST:online_test_attempt',id)]);
+  return out({success:true,id,auto_score:autoScore,total_marks:total,pending_review_marks:pending,status:data.status},201);
  }
  if(url.pathname!=='/api/parent/me'||request.method!=='GET')return out({error:'Not found.'},404);
  await ensureStudentAdmissionNumbers(env,a.school_id);
