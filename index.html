@@ -3680,6 +3680,7 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <input id="adParent" placeholder="Parent Name" required="" type="text"/>
 <input id="adPhone" placeholder="Phone Number" required="" type="tel"/>
 <input id="adCity" placeholder="City / Town" required="" type="text"/>
+<select id="adBranch" required=""><option value="">Select Preferred Neo Branch</option></select>
 <input id="adChild" placeholder="Child Name" required="" type="text"/>
 <input id="adAge" placeholder="Child Age" required="" type="text"/>
 <select id="adProgram" required="">
@@ -3738,6 +3739,18 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
   document.querySelectorAll(".neo-modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m){m.classList.remove("open");document.body.style.overflow="";}}));
 
   const LEAD_API="https://neo-lead-crm-api.umakanthgilla.workers.dev/api/leads";
+  const BRANCH_API="https://neo-lead-crm-api.umakanthgilla.workers.dev/api/growth/public/branches";
+  async function loadAdmissionBranches(){
+    const select=document.getElementById("adBranch"); if(!select) return;
+    try{
+      const r=await fetch(BRANCH_API),b=await r.json();
+      if(!r.ok) throw new Error(b.error||"Unable to load branches");
+      select.innerHTML='<option value="">Select Preferred Neo Branch</option>'+(b.branches||[]).map(x=>'<option value="'+String(x.school_id).replace(/"/g,'&quot;')+'">'+[x.name,x.city].filter(Boolean).join(" · ")+'</option>').join('');
+    }catch(_e){
+      select.innerHTML='<option value="">Branch list unavailable — please try again</option>';
+    }
+  }
+  loadAdmissionBranches();
 
   async function submitLead(form,type,payload,statusId){
     const statusEl=document.getElementById(statusId);
@@ -3777,6 +3790,7 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       name:document.getElementById("adParent").value,
       mobile:document.getElementById("adPhone").value,
       city:document.getElementById("adCity").value,
+      branch_id:document.getElementById("adBranch").value,
       child_name:document.getElementById("adChild").value,
       child_age:document.getElementById("adAge").value,
       program:document.getElementById("adProgram").value,
