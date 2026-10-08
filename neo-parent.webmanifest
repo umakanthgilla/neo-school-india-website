@@ -1,0 +1,26 @@
+{
+  "name": "Neo School India - Parent Portal",
+  "short_name": "Neo Parent",
+  "id": "/parents",
+  "start_url": "/parents",
+  "scope": "/",
+  "description": "Neo School India parent portal for learning updates, attendance, homework, fees, transport and school communication.",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#071b52",
+  "icons": [
+    {
+      "src": "/neo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/neo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
