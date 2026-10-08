@@ -3345,6 +3345,10 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 @media(max-width:760px){.audience-grid{grid-template-columns:1fr}.neo-dual-actions{display:grid;grid-template-columns:1fr 1fr}.neo-dual-actions .btn{min-width:0;width:100%;padding-left:10px;padding-right:10px;font-size:13px}.hero-proof{gap:6px}.hero-proof span{font-size:10px}}
 @media(max-width:430px){.neo-dual-actions{grid-template-columns:1fr}.audience-card{padding:22px}.audience-card h2{font-size:23px}}
 </style>
+<style id="neo-hero-character-size-lock">
+/* LOCKED: preserve the currently approved compact Neo character appearance in the hero. */
+.hero-neo-animation{object-fit:contain}
+</style>
 <body>
 <header>
 <div class="container nav">
@@ -3805,38 +3809,22 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 
 
 
-  const STATE_DISTRICT_DATA="https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json";
-  let neoLocationData=null;
-
-  const stateAliases={
-    "Andaman and Nicobar Islands":"Andaman and Nicobar Islands (UT)",
-    "Chandigarh":"Chandigarh (UT)",
-    "Dadra and Nagar Haveli and Daman and Diu":"Dadra and Nagar Haveli (UT)",
-    "Delhi":"Delhi (NCT)",
-    "Lakshadweep":"Lakshadweep (UT)",
-    "Puducherry":"Puducherry (UT)"
-  };
-
-  async function getLocationData(){
-    if(neoLocationData)return neoLocationData;
-    const r=await fetch(STATE_DISTRICT_DATA,{cache:"force-cache"});
-    if(!r.ok)throw new Error("Location list unavailable");
-    neoLocationData=await r.json();
-    return neoLocationData;
-  }
+  const PIN_API="https://api.pincodeapi.in/api/v1";
 
   async function populateDistricts(prefix){
     const state=document.getElementById(prefix+"State"),district=document.getElementById(prefix+"District"),town=document.getElementById(prefix+"Town"),pin=document.getElementById(prefix+"Pin");
     district.disabled=true;town.disabled=true;district.innerHTML='<option value="">Loading districts…</option>';town.innerHTML='<option value="">Select Town / Area</option>';pin.value="";
     try{
-      const data=await getLocationData(),wanted=stateAliases[state.value]||state.value;
-      const row=(data.states||[]).find(x=>String(x.state||"").trim()===wanted);
-      const districts=(row?.districts||[]).map(x=>String(x).replace(/&amp;/g,"&").trim()).filter(Boolean);
+      const r=await fetch(PIN_API+'/state/'+encodeURIComponent(state.value));
+      const b=await r.json();
+      if(!r.ok)throw new Error(b?.detail||b?.error||"State lookup failed");
+      const rows=postalRows(b);
+      const districts=[...new Set(rows.map(x=>x.district||x.District||"").filter(Boolean))].sort((a,b)=>a.localeCompare(b));
       district.innerHTML='<option value="">Select District</option>'+districts.map(x=>'<option>'+x+'</option>').join("");
       district.disabled=!districts.length;
       if(!districts.length)throw new Error("Districts unavailable");
     }catch(_e){
-      district.innerHTML='<option value="">District list unavailable</option>';
+      district.innerHTML='<option value="">District list unavailable — try again</option>';
     }
   }
 
@@ -3853,12 +3841,12 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
     town.disabled=true;town.innerHTML='<option value="">Loading towns / areas…</option>';pin.value="";
     const name=district.value;if(!name){town.innerHTML='<option value="">Select Town / Area</option>';return}
     try{
-      const r=await fetch('https://api.pincodeapi.in/api/v1/district/'+encodeURIComponent(name));
+      const r=await fetch(PIN_API+'/district/'+encodeURIComponent(name));
       const b=await r.json();
       const rows=postalRows(b);
       const seen=new Set(),items=[];
       for(const x of rows){
-        const label=x.name||x.office_name||x.post_office||x.Name||x.officename||x.block||x.Block||"";
+        const label=x.office_name||x.name||x.post_office||x.Name||x.officename||x.block||x.Block||"";
         const p=String(x.pincode||x.pin_code||x.pin||x.Pincode||x.PINCode||"").trim();
         if(!label)continue;
         const key=label+"|"+p;if(seen.has(key))continue;seen.add(key);items.push({label,pin:p});
