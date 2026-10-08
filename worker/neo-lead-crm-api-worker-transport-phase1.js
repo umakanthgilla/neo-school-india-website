@@ -1314,16 +1314,26 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|cl
     if(!/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,19}$/.test(name))fail('Use a short section name such as A, B, C, D or E1.');
     const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections' AND lower(json_extract(data,'$.name'))=lower(?) AND id<>? LIMIT 1").bind(school,name,id).first();
     if(duplicate)fail('This section name already exists.');
+    if(String(previous.name||'').toLowerCase()!==name.toLowerCase()){
+      const clashes=await env.DB.prepare("SELECT id FROM neo_portal_records c WHERE c.school_id=? AND c.kind='classrooms' AND lower(json_extract(c.data,'$.name'))=lower(?) AND EXISTS (SELECT 1 FROM neo_portal_records old WHERE old.school_id=c.school_id AND old.kind='classrooms' AND lower(json_extract(old.data,'$.name'))=lower(?) AND lower(json_extract(old.data,'$.program'))=lower(json_extract(c.data,'$.program')) AND json_extract(old.data,'$.academic_year')=json_extract(c.data,'$.academic_year')) LIMIT 1").bind(school,name,previous.name||'').first();
+      if(clashes)fail('Rename would create a duplicate class/section. Resolve the classroom conflict first.');
+      await env.DB.prepare("UPDATE neo_portal_records SET data=json_set(data,'$.name',?) WHERE school_id=? AND kind='classrooms' AND lower(json_extract(data,'$.name'))=lower(?)").bind(name,school,previous.name||'').run();
+    }
     data={...previous,name,status};
    }
    else if(kind==='classrooms'){
     const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');
+    const nextSection=str('name',20);
+    const sectionRow=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections' AND lower(json_extract(data,'$.name'))=lower(?) AND COALESCE(json_extract(data,'$.status'),'Active')='Active' LIMIT 1").bind(school,nextSection).first();
+    if(!sectionRow)fail('Choose an active section from Section Master.');
+    const duplicateClass=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND id<>? AND lower(json_extract(data,'$.program'))=lower(?) AND lower(json_extract(data,'$.name'))=lower(?) AND json_extract(data,'$.academic_year')=? LIMIT 1").bind(school,id,previous.program,nextSection,previous.academic_year).first();
+    if(duplicateClass)fail('This class, section and academic year already exists.');
     const nextModel=b.teaching_model?choice('teaching_model',['Mother Teacher','Subject-wise Teachers']):(previous.teaching_model||'Mother Teacher');
     if(nextModel!==String(previous.teaching_model||'Mother Teacher')){
       const history=await env.DB.prepare("SELECT 1 FROM neo_portal_records WHERE school_id=? AND kind IN ('question_bank','online_tests','online_test_attempts') AND json_extract(data,'$.classroom_id')=? LIMIT 1").bind(school,id).first();
       if(history)fail('Teaching model cannot be changed after question bank or online test history exists. Create a new classroom/section for the new model.');
     }
-    data={...previous,name:str('name',120),capacity:cap,teaching_model:nextModel};
+    data={...previous,name:nextSection,capacity:cap,teaching_model:nextModel};
    }
    else data={...previous,status:choice('status',kind==='enquiries'?['New','Contacted','Visit planned','Converted','Lost']:kind==='orders'?['Submitted','Approved','Dispatched','Delivered','Cancelled']:kind==='purchase_orders'?['Submitted','Approved','Dispatched','Cancelled']:kind==='ledger'?['Pending verification','Verified','Rejected']:['Open','In progress','Resolved']),office_note:str('office_note',1000,false),...(kind==='purchase_orders'&&b.status==='Approved'?{approved_at:new Date().toISOString()}: {})};
   }else{
@@ -1421,9 +1431,16 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|cl
     data={name,status:'Active',system_default:false};
    }else if(kind==='classrooms'){
     if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1–200.');
-    const program=str('program',80),teachingModel=choice('teaching_model',['Mother Teacher','Subject-wise Teachers']);
+    const program=str('program',80),section=str('name',20),academicYear=str('academic_year',4),teachingModel=choice('teaching_model',['Mother Teacher','Subject-wise Teachers']);
     if(!/^[A-Za-z0-9][A-Za-z0-9 .&()\/-]{0,79}$/.test(program))fail('Enter a valid class / programme name.');
-    data={name:str('name'),program,academic_year:str('academic_year',4),teaching_model:teachingModel,teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};if(!/^20[0-9]{2}$/.test(data.academic_year))fail('Enter a valid academic starting year.');
+    const sectionCount=await env.DB.prepare("SELECT COUNT(*) AS n FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections'").bind(school).first();
+    if(!Number(sectionCount?.n||0)){await env.DB.batch(['A','B','C','D'].map(name=>env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'classroom_sections',?,?)").bind(school,'SECTION_'+name,JSON.stringify({name,status:'Active',system_default:true}))));}
+    const sectionRow=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections' AND lower(json_extract(data,'$.name'))=lower(?) AND COALESCE(json_extract(data,'$.status'),'Active')='Active' LIMIT 1").bind(school,section).first();
+    if(!sectionRow)fail('Choose an active section from Section Master.');
+    if(!/^20[0-9]{2}$/.test(academicYear))fail('Enter a valid academic starting year.');
+    const duplicateClass=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classrooms' AND lower(json_extract(data,'$.program'))=lower(?) AND lower(json_extract(data,'$.name'))=lower(?) AND json_extract(data,'$.academic_year')=? LIMIT 1").bind(school,program,section,academicYear).first();
+    if(duplicateClass)fail('This class, section and academic year already exists.');
+    data={name:section,program,academic_year:academicYear,teaching_model:teachingModel,teacher:'',teacher_account_id:'',teacher_staff_id:'',capacity:b.capacity};
    }else if(kind==='fee_structures'){
     const classroom=await related('classrooms','classroom_id');data={classroom_id:classroom.id,title:str('title'),amount_paise:money(),due_date:date('due_date')};
    }else if(kind==='homework'){
