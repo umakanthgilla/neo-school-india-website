@@ -2231,9 +2231,10 @@ async function teacherPortal(request,env,url){
   const adoption_calls=(await portalRows(env,a.school_id,'adoption_calls')).filter(x=>x.teacher_id===a.account_id&&adoptedIds.has(x.student_id)).sort((x,y)=>String(y.call_date||'').localeCompare(String(x.call_date||''))).slice(0,300);
   const adoption_actions=(await portalRows(env,a.school_id,'adoption_actions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(x.due_date||'').localeCompare(String(y.due_date||''))).slice(0,300);
   const ptm_sessions=(await portalRows(env,a.school_id,'ptm_sessions')).filter(x=>adoptedIds.has(x.student_id)).sort((x,y)=>String(y.session_date||'').localeCompare(String(x.session_date||''))).slice(0,200);
-  const question_bank=(await portalRows(env,a.school_id,'question_bank')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,500);
-  const online_tests=(await portalRows(env,a.school_id,'online_tests')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,200);
-  const online_test_attempts=(await portalRows(env,a.school_id,'online_test_attempts')).filter(x=>a.classroom_ids.includes(x.classroom_id)).slice(0,500);
+  const question_bank=(await portalRows(env,a.school_id,'question_bank')).filter(x=>x.creator_teacher_id===a.account_id).slice(0,500);
+  const online_tests=(await portalRows(env,a.school_id,'online_tests')).filter(x=>x.creator_teacher_id===a.account_id).slice(0,200);
+  const ownTestIds=new Set(online_tests.map(x=>x.id));
+  const online_test_attempts=(await portalRows(env,a.school_id,'online_test_attempts')).filter(x=>ownTestIds.has(x.test_id)).slice(0,500);
   return out({tasks,announcements,name:a.name,account_id:a.account_id,school,classrooms,students:students.map(s=>({id:s.id,name:s.name,dob:s.dob,program:s.program,classroom_id:s.classroom_id})),attendance,homework,student_performance,adoption_assignments,adoption_calls,adoption_actions,ptm_sessions,question_bank,online_tests,online_test_attempts});
  }
  if(url.pathname==='/api/teacher/hr'&&request.method==='GET'){
@@ -2284,6 +2285,54 @@ async function teacherPortal(request,env,url){
   const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',teacher_id:a.account_id,teacher_name:a.name,session_date:b.session_date,parent_attended:b.parent_attended===true,progress_summary:progress,discussion_points:discussion,agreed_actions:clean(b.agreed_actions,1600),parent_safe_report:clean(b.parent_safe_report,2000),recorded_at:new Date().toISOString()};
   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'ptm_sessions',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:ptm_session',id)]);
   return out({success:true,id},201);
+ }
+ const teacherQuestionMatch=url.pathname.match(/^\/api\/teacher\/question-bank(?:\/([^/]+))?$/);
+ if(teacherQuestionMatch){
+  const id=teacherQuestionMatch[1]?decodeURIComponent(teacherQuestionMatch[1]):'';
+  if(request.method==='POST'&&!id){
+   const b=await request.json(),clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',classroomId=clean(b.classroom_id,80);
+   if(!a.classroom_ids.includes(classroomId))return out({error:'Choose one of your assigned classrooms.'},403);
+   const completedRows=await env.DB.prepare('SELECT lesson_id,data FROM neo_learning_completed WHERE school_id=? AND classroom_id=? AND teacher_id=?').bind(a.school_id,classroomId,a.account_id).all();
+   const ownCompleted=new Set((completedRows.results||[]).map(x=>String(x.lesson_id)));
+   const sourceLesson=clean(b.source_lesson_id,120);
+   if(sourceLesson&&!ownCompleted.has(sourceLesson))return out({error:'Questions can only be created from lessons you completed.'},403);
+   const difficulty=clean(b.difficulty,20),qtype=clean(b.question_type,40),allowedDifficulty=['Basic','Medium','Hard'],allowedType=['MCQ','True / False','Fill in the Blank','Short Answer'];
+   if(!allowedDifficulty.includes(difficulty)||!allowedType.includes(qtype))return out({error:'Check difficulty and question type.'},400);
+   const question=clean(b.question_text,1200),answer=clean(b.correct_answer,500),options=Array.isArray(b.options)?b.options.map(x=>clean(x,300)).filter(Boolean).slice(0,6):[],marks=Number(b.marks||1);
+   if(!question||!Number.isInteger(marks)||marks<1||marks>20)return out({error:'Question text and valid marks are required.'},400);
+   if(qtype==='MCQ'&&(options.length<2||!options.includes(answer)))return out({error:'MCQ needs at least two options and a matching correct answer.'},400);
+   if(qtype==='True / False'&&!['True','False'].includes(answer))return out({error:'True / False answer must be True or False.'},400);
+   if(qtype==='Fill in the Blank'&&!answer)return out({error:'Fill in the Blank needs a correct answer.'},400);
+   const recordId=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID();
+   const classroom=await portalRecord(env,a.school_id,'classrooms',classroomId);if(!classroom)return out({error:'Classroom not found.'},404);
+   const data={classroom_id:classroomId,program:classroom.program||'',academic_year:classroom.academic_year||'',subject:clean(b.subject,120),chapter:clean(b.chapter,180),topic:clean(b.topic,180),difficulty,question_type:qtype,question_text:question,options,correct_answer:answer,marks,status:'Draft',source:clean(b.source,80)||'Teacher',source_lesson_id:sourceLesson,creator_teacher_id:a.account_id,creator_teacher_name:a.name,created_at:new Date().toISOString()};
+   if(!data.subject||!data.chapter)return out({error:'Subject and chapter are required.'},400);
+   await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'question_bank',?,?)").bind(a.school_id,recordId,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:question_bank',recordId)]);
+   return out({success:true,id:recordId,status:'Draft'},201);
+  }
+  if(request.method==='PATCH'&&id){
+   const old=await portalRecord(env,a.school_id,'question_bank',id);if(!old||old.creator_teacher_id!==a.account_id)return out({error:'This question is not yours to edit.'},403);
+   const b=await request.json(),statusValue=String(b.status||old.status);if(!['Draft','Approved'].includes(statusValue))return out({error:'Invalid question status.'},400);
+   const data={...old,status:statusValue,question_text:typeof b.question_text==='string'?b.question_text.trim().slice(0,1200):old.question_text,correct_answer:typeof b.correct_answer==='string'?b.correct_answer.trim().slice(0,500):old.correct_answer,marks:Number.isInteger(Number(b.marks))?Number(b.marks):old.marks,updated_at:new Date().toISOString()};delete data.id;delete data.created_at;
+   await env.DB.batch([env.DB.prepare("UPDATE neo_portal_records SET data=? WHERE school_id=? AND kind='question_bank' AND id=?").bind(JSON.stringify(data),a.school_id,id),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'PATCH:question_bank',id)]);
+   return out({success:true,id,status:data.status});
+  }
+  return out({error:'Method not allowed.'},405);
+ }
+ if(url.pathname==='/api/teacher/online-tests'&&request.method==='POST'){
+  const b=await request.json(),clean=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'',classroomId=clean(b.classroom_id,80);
+  if(!a.classroom_ids.includes(classroomId))return out({error:'Choose one of your assigned classrooms.'},403);
+  const ids=Array.isArray(b.question_ids)?[...new Set(b.question_ids.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,100):[];
+  const bank=(await portalRows(env,a.school_id,'question_bank')).filter(x=>x.creator_teacher_id===a.account_id),chosen=ids.map(id=>bank.find(q=>q.id===id)).filter(Boolean);
+  if(!ids.length||chosen.length!==ids.length||chosen.some(q=>q.status!=='Approved'||q.classroom_id!==classroomId))return out({error:'Use only your approved questions for this classroom.'},400);
+  const start=clean(b.start_date,10),due=clean(b.due_date,10),validDate=v=>/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v));
+  if(!validDate(start)||!validDate(due)||due<start)return out({error:'Check test start and due dates.'},400);
+  const duration=Number(b.duration_minutes||20),attempts=Number(b.attempts_allowed||1);if(!Number.isInteger(duration)||duration<5||duration>180||!Number.isInteger(attempts)||attempts<1||attempts>5)return out({error:'Check duration and attempts.'},400);
+  const id=typeof b.request_id==='string'&&/^[A-Za-z0-9_-]{8,80}$/.test(b.request_id)?b.request_id:crypto.randomUUID(),classroom=await portalRecord(env,a.school_id,'classrooms',classroomId);
+  const data={title:clean(b.title,180),classroom_id:classroomId,program:classroom?.program||'',academic_year:classroom?.academic_year||'',subject:clean(b.subject,120),chapters:Array.isArray(b.chapters)?b.chapters.map(x=>clean(x,180)).filter(Boolean).slice(0,20):[],difficulty:['Basic','Medium','Hard','Mixed'].includes(b.difficulty)?b.difficulty:'Mixed',question_ids:ids,duration_minutes:duration,start_date:start,due_date:due,attempts_allowed:attempts,show_result:b.show_result!==false,status:'Published',creator_teacher_id:a.account_id,creator_teacher_name:a.name,created_at:new Date().toISOString()};
+  if(!data.title||!data.subject)return out({error:'Test title and subject are required.'},400);
+  await env.DB.batch([env.DB.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'online_tests',?,?)").bind(a.school_id,id,JSON.stringify(data)),env.DB.prepare('INSERT INTO neo_portal_audit(id,school_id,actor,action,record_id) VALUES (?,?,?,?,?)').bind(crypto.randomUUID(),a.school_id,'teacher:'+a.account_id,'POST:online_test',id)]);
+  return out({success:true,id,status:'Published'},201);
  }
  if(url.pathname==='/api/teacher/online-test-review'&&request.method==='POST'){
   const b=await request.json(),attemptId=String(b.attempt_id||''),attempt=await portalRecord(env,a.school_id,'online_test_attempts',attemptId);
@@ -2778,7 +2827,7 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
  if(!await env.DB.prepare('SELECT school_id FROM neo_schools WHERE school_id=?').bind(school).first())return out({error:'School not found.'},404);
  const deferred=await portalRows(env,school,'lesson_deferred');
  const plans=async()=>{const rows=await env.DB.prepare('SELECT * FROM neo_learning_plans WHERE school_id=? ORDER BY created_at DESC').bind(school).all();return rows.results.map(r=>({...JSON.parse(r.data),id:r.id,classroom_id:r.classroom_id,academic_year:r.academic_year,status:r.status}))};
- const completions=async()=>{const rows=await env.DB.prepare('SELECT data,plan_id,lesson_id,classroom_id,completed_at FROM neo_learning_completed WHERE school_id=? ORDER BY completed_at DESC').bind(school).all();return rows.results.map(r=>({...JSON.parse(r.data),plan_id:r.plan_id,lesson_id:r.lesson_id,classroom_id:r.classroom_id,completed_at:r.completed_at}))};
+ const completions=async()=>{const rows=await env.DB.prepare('SELECT data,plan_id,lesson_id,classroom_id,teacher_id,completed_at FROM neo_learning_completed WHERE school_id=? ORDER BY completed_at DESC').bind(school).all();return rows.results.map(r=>({...JSON.parse(r.data),plan_id:r.plan_id,lesson_id:r.lesson_id,classroom_id:r.classroom_id,teacher_id:r.teacher_id,completed_at:r.completed_at}))};
  const calendarResponse=await neoCalendar(request,env,url,{admin,teacher,parent,school});if(calendarResponse)return calendarResponse;
  const academicCalendarResponse=await neoAcademicCalendar(request,env,url,{admin,teacher,parent,school});if(academicCalendarResponse)return academicCalendarResponse;
  const ticketResponse=await neoTickets(request,env,url,{admin,schoolSessionValue,teacher,parent,school});if(ticketResponse)return ticketResponse;
@@ -2800,7 +2849,7 @@ const timetableResponse=await learningTimetable(request,env,url,{admin,schoolSes
    // A completed class concept is not a claim that every individual child attended or mastered it.
    const attendance=await portalRows(env,school,'attendance');completed=completed.map(r=>({...r,child_attendance:attendance.find(a=>a.student_id===parent.student_id&&a.date===r.completed_date)?.status||'Not recorded'}));
   }else{
-   if(teacher)completed=completed.filter(r=>teacher.classroom_ids.includes(r.classroom_id));
+   if(teacher)completed=completed.filter(r=>r.teacher_id===teacher.account_id);
    const children=await portalRows(env,school,'students');
    const rows=(await env.DB.prepare('SELECT id,student_id,data FROM neo_learning_notes WHERE school_id=? ORDER BY created_at DESC').bind(school).all()).results||[];
    notes=rows.filter(n=>!teacher||children.some(c=>c.id===n.student_id&&teacher.classroom_ids.includes(c.classroom_id))).map(n=>({...JSON.parse(n.data),id:n.id,student_id:n.student_id,child_name:children.find(c=>c.id===n.student_id)?.name||n.student_id}));
