@@ -3709,10 +3709,12 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <input id="adParent" placeholder="Parent / Guardian Name" required="" type="text"/>
 <input id="adPhone" placeholder="Phone Number" required="" type="tel"/>
 </fieldset>
-<fieldset><legend>Your location</legend><span class="neo-form-help">PIN helps us identify your area correctly and avoids spelling mistakes.</span>
-<input id="adPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit PIN Code" required="" type="text"/>
-<select id="adArea"><option value="">Area / Post Office will load from PIN</option></select>
-<input id="adCity" placeholder="City / Town" required="" type="text"/>
+<fieldset><legend>Your location</legend><span class="neo-form-help">Select State → District → Town / Area. PIN will fill automatically where postal data is available.</span>
+<select id="adState" required=""><option value="">Select State / UT</option>
+<option>Andaman and Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu and Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option></select>
+<select id="adDistrict" required="" disabled><option value="">Select District</option></select>
+<select id="adTown" required="" disabled><option value="">Select Town / Area</option></select>
+<input id="adPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="PIN Code" required="" type="text" readonly/>
 <select id="adBranch" required=""><option value="">Select Preferred Neo Branch</option></select>
 </fieldset>
 <fieldset><legend>Child & program</legend>
@@ -3740,15 +3742,12 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 <input id="frPhone" placeholder="Phone Number" required="" type="tel"/>
 <input id="frEmail" placeholder="Email Address (optional)" type="email"/>
 </fieldset>
-<fieldset><legend>Preferred location</legend><span class="neo-form-help">PIN helps us identify the correct district and nearby postal area without spelling mistakes.</span>
-<select id="frState" required="">
-<option value="">Select State / UT</option>
-<option>Andaman and Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu and Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
-</select>
-<input id="frPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit PIN Code" required="" type="text"/>
-<select id="frDistrict" required=""><option value="">District will load from PIN</option></select>
-<select id="frArea" required=""><option value="">Area / Post Office will load from PIN</option></select>
-<input id="frCity" placeholder="City / Town" required="" type="text"/>
+<fieldset><legend>Preferred location</legend><span class="neo-form-help">Select State → District → Town / Area. This keeps the location clean and avoids spelling errors.</span>
+<select id="frState" required=""><option value="">Select State / UT</option>
+<option>Andaman and Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Dadra and Nagar Haveli and Daman and Diu</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu and Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option></select>
+<select id="frDistrict" required="" disabled><option value="">Select District</option></select>
+<select id="frTown" required="" disabled><option value="">Select Town / Area</option></select>
+<input id="frPin" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="PIN Code" required="" type="text" readonly/>
 <input id="frLocation" placeholder="Preferred Franchise Location / Landmark" required="" type="text"/>
 <button class="btn" id="frUseLocation" type="button">Use Current Map Location</button>
 <input id="frLat" type="hidden"/><input id="frLng" type="hidden"/>
@@ -3806,45 +3805,85 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
 
 
 
-  async function lookupAdmissionPin(){
-    const pin=document.getElementById("adPin")?.value.trim()||"";
-    const area=document.getElementById("adArea"),city=document.getElementById("adCity");
-    if(!area)return;
-    if(!/^\d{6}$/.test(pin)){area.innerHTML='<option value="">Enter a valid 6-digit PIN</option>';return}
-    area.innerHTML='<option value="">Loading area…</option>';
-    try{
-      const r=await fetch('https://api.postalpincode.in/pincode/'+encodeURIComponent(pin));
-      const b=await r.json(),offices=Array.isArray(b)&&b[0]&&Array.isArray(b[0].PostOffice)?b[0].PostOffice:[];
-      if(!offices.length)throw new Error('PIN not found');
-      area.innerHTML=offices.map(x=>'<option value="'+String(x.Name||'').replace(/"/g,'&quot;')+'">'+[x.Name,x.Block,x.District].filter(Boolean).join(' · ')+'</option>').join('');
-      if(!city.value)city.value=offices[0]?.Block||offices[0]?.District||'';
-    }catch(_e){area.innerHTML='<option value="">Could not load area — check PIN</option>'}
-  }
-  let admissionPinTimer;
-  document.getElementById("adPin")?.addEventListener("input",()=>{clearTimeout(admissionPinTimer);admissionPinTimer=setTimeout(lookupAdmissionPin,350)});
+  const STATE_DISTRICT_DATA="https://raw.githubusercontent.com/sab99r/Indian-States-And-Districts/master/states-and-districts.json";
+  let neoLocationData=null;
 
-  async function lookupFranchisePin(){
-    const pin=document.getElementById("frPin").value.trim();
-    const state=document.getElementById("frState"),district=document.getElementById("frDistrict"),area=document.getElementById("frArea"),city=document.getElementById("frCity");
-    if(!/^\d{6}$/.test(pin)){district.innerHTML='<option value="">Enter a valid 6-digit PIN</option>';area.innerHTML='<option value="">Area / Post Office</option>';return}
-    district.innerHTML='<option value="">Loading district…</option>';area.innerHTML='<option value="">Loading area…</option>';
+  const stateAliases={
+    "Andaman and Nicobar Islands":"Andaman and Nicobar Islands (UT)",
+    "Chandigarh":"Chandigarh (UT)",
+    "Dadra and Nagar Haveli and Daman and Diu":"Dadra and Nagar Haveli (UT)",
+    "Delhi":"Delhi (NCT)",
+    "Lakshadweep":"Lakshadweep (UT)",
+    "Puducherry":"Puducherry (UT)"
+  };
+
+  async function getLocationData(){
+    if(neoLocationData)return neoLocationData;
+    const r=await fetch(STATE_DISTRICT_DATA,{cache:"force-cache"});
+    if(!r.ok)throw new Error("Location list unavailable");
+    neoLocationData=await r.json();
+    return neoLocationData;
+  }
+
+  async function populateDistricts(prefix){
+    const state=document.getElementById(prefix+"State"),district=document.getElementById(prefix+"District"),town=document.getElementById(prefix+"Town"),pin=document.getElementById(prefix+"Pin");
+    district.disabled=true;town.disabled=true;district.innerHTML='<option value="">Loading districts…</option>';town.innerHTML='<option value="">Select Town / Area</option>';pin.value="";
     try{
-      const r=await fetch('https://api.postalpincode.in/pincode/'+encodeURIComponent(pin));
-      const b=await r.json();
-      const offices=Array.isArray(b)&&b[0]&&Array.isArray(b[0].PostOffice)?b[0].PostOffice:[];
-      if(!offices.length)throw new Error('PIN not found');
-      const states=[...new Set(offices.map(x=>x.State).filter(Boolean))],districts=[...new Set(offices.map(x=>x.District).filter(Boolean))];
-      if(states[0])state.value=states[0];
-      district.innerHTML=districts.map(x=>'<option>'+x+'</option>').join('');
-      area.innerHTML=offices.map(x=>'<option value="'+String(x.Name||'').replace(/"/g,'&quot;')+'">'+[x.Name,x.Block].filter(Boolean).join(' · ')+'</option>').join('');
-      if(!city.value)city.value=offices[0]?.Block||offices[0]?.District||'';
+      const data=await getLocationData(),wanted=stateAliases[state.value]||state.value;
+      const row=(data.states||[]).find(x=>String(x.state||"").trim()===wanted);
+      const districts=(row?.districts||[]).map(x=>String(x).replace(/&amp;/g,"&").trim()).filter(Boolean);
+      district.innerHTML='<option value="">Select District</option>'+districts.map(x=>'<option>'+x+'</option>').join("");
+      district.disabled=!districts.length;
+      if(!districts.length)throw new Error("Districts unavailable");
     }catch(_e){
-      district.innerHTML='<option value="">Could not load district — enter another PIN</option>';
-      area.innerHTML='<option value="">Could not load area</option>';
+      district.innerHTML='<option value="">District list unavailable</option>';
     }
   }
-  let pinTimer;
-  document.getElementById("frPin")?.addEventListener("input",()=>{clearTimeout(pinTimer);pinTimer=setTimeout(lookupFranchisePin,350)});
+
+  function postalRows(payload){
+    if(Array.isArray(payload?.data?.post_offices))return payload.data.post_offices;
+    if(Array.isArray(payload?.post_offices))return payload.post_offices;
+    if(Array.isArray(payload?.results))return payload.results;
+    if(Array.isArray(payload?.data))return payload.data;
+    return [];
+  }
+
+  async function populateTowns(prefix){
+    const district=document.getElementById(prefix+"District"),town=document.getElementById(prefix+"Town"),pin=document.getElementById(prefix+"Pin");
+    town.disabled=true;town.innerHTML='<option value="">Loading towns / areas…</option>';pin.value="";
+    const name=district.value;if(!name){town.innerHTML='<option value="">Select Town / Area</option>';return}
+    try{
+      const r=await fetch('https://api.pincodeapi.in/api/v1/district/'+encodeURIComponent(name));
+      const b=await r.json();
+      const rows=postalRows(b);
+      const seen=new Set(),items=[];
+      for(const x of rows){
+        const label=x.name||x.office_name||x.post_office||x.Name||x.officename||x.block||x.Block||"";
+        const p=String(x.pincode||x.pin_code||x.pin||x.Pincode||x.PINCode||"").trim();
+        if(!label)continue;
+        const key=label+"|"+p;if(seen.has(key))continue;seen.add(key);items.push({label,pin:p});
+      }
+      items.sort((a,b)=>a.label.localeCompare(b.label));
+      town.innerHTML='<option value="">Select Town / Area</option>'+items.map(x=>'<option value="'+String(x.label).replace(/"/g,'&quot;')+'" data-pin="'+String(x.pin).replace(/"/g,'&quot;')+'">'+x.label+(x.pin?' · '+x.pin:'')+'</option>').join("");
+      town.disabled=!items.length;
+      if(!items.length)throw new Error("No towns");
+    }catch(_e){
+      town.innerHTML='<option value="">Town list unavailable — choose another district</option>';
+    }
+  }
+
+  function syncTownPin(prefix){
+    const town=document.getElementById(prefix+"Town"),pin=document.getElementById(prefix+"Pin");
+    const opt=town.options[town.selectedIndex];
+    pin.value=opt?.dataset?.pin||"";
+  }
+
+  ["ad","fr"].forEach(prefix=>{
+    document.getElementById(prefix+"State")?.addEventListener("change",()=>populateDistricts(prefix));
+    document.getElementById(prefix+"District")?.addEventListener("change",()=>populateTowns(prefix));
+    document.getElementById(prefix+"Town")?.addEventListener("change",()=>syncTownPin(prefix));
+  });
+
   document.getElementById("frUseLocation")?.addEventListener("click",()=>{
     const btn=document.getElementById("frUseLocation");
     if(!navigator.geolocation){btn.textContent="Location not supported";return}
@@ -3895,9 +3934,11 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       enquiry_type:"Preschool Admission",
       name:document.getElementById("adParent").value,
       mobile:document.getElementById("adPhone").value,
-      city:document.getElementById("adCity").value,
+      state:document.getElementById("adState").value,
+      district:document.getElementById("adDistrict").value,
+      city:document.getElementById("adTown").value,
       pincode:document.getElementById("adPin").value,
-      area:document.getElementById("adArea").value,
+      area:document.getElementById("adTown").value,
       branch_id:document.getElementById("adBranch").value,
       child_name:document.getElementById("adChild").value,
       child_age:document.getElementById("adAge").value,
@@ -3917,8 +3958,8 @@ html.neo-chat-open,html.neo-chat-open body{overflow:hidden!important;overscroll-
       state:document.getElementById("frState").value,
       district:document.getElementById("frDistrict").value,
       pincode:document.getElementById("frPin").value,
-      area:document.getElementById("frArea").value,
-      city:document.getElementById("frCity").value,
+      area:document.getElementById("frTown").value,
+      city:document.getElementById("frTown").value,
       proposed_location:document.getElementById("frLocation").value,
       latitude:document.getElementById("frLat").value,
       longitude:document.getElementById("frLng").value,
