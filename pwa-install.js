@@ -4,6 +4,7 @@
   const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
   const role=(()=>{
     const p=location.pathname.toLowerCase();
+    if(p.includes('crm'))return ['Neo Growth CRM','Growth CRM'];
     if(p.includes('teacher'))return ['Neo Teacher','Teacher Portal'];
     if(p.includes('parent'))return ['Neo Parent','Parent Portal'];
     if(p.includes('transport'))return ['Neo Transport','Transport Portal'];
