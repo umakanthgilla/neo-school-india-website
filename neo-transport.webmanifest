@@ -3,7 +3,7 @@
   "short_name": "Neo Transport",
   "id": "/transport",
   "start_url": "/transport",
-  "scope": "/",
+  "scope": "/transport",
   "description": "Neo School India transport workspace for drivers and vehicle attendants.",
   "display": "standalone",
   "orientation": "portrait-primary",
