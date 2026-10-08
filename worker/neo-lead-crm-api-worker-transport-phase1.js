@@ -1138,12 +1138,19 @@ async function schoolPortal(request,env,url){
   }
   await ensurePortalSchema(env);
   const extra=await portalExtra(request,env,url,admin,session);if(extra)return extra;
-const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates|adoption_assignments|adoption_calls|adoption_actions|ptm_sessions|question_bank|online_tests|online_test_attempts)(?:\/([^/]+))?$/);
+const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|classroom_sections|fee_structures|homework|announcements|enquiries|attendance|invoices|payments|orders|ledger|support|stock_items|stock_moves|vendors|purchase_orders|goods_receipts|assets|vendor_payables|vendor_payments|teacher_tasks|staff|staff_attendance|payroll|staff_leave|salary_advances|salary_setup|hr_rules|daily_accounts|notifications|vouchers|supply_catalog|student_movements|student_tc|student_certificates|adoption_assignments|adoption_calls|adoption_actions|ptm_sessions|question_bank|online_tests|online_test_attempts)(?:\/([^/]+))?$/);
   if(!match)return out({error:'Not found.'},404);
   const [,school,kind,id]=match;
   if(!admin&&session.school_id!==school)return out({error:'Access denied.'},403);
   if(!await env.DB.prepare('SELECT school_id FROM neo_schools WHERE school_id=?').bind(school).first())return out({error:'School not found.'},404);
   if(request.method==='GET'){
+   if(kind==='classroom_sections'){
+    const count=await env.DB.prepare("SELECT COUNT(*) AS n FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections'").bind(school).first();
+    if(!Number(count?.n||0)){
+      const defaults=['A','B','C','D'].map(name=>env.DB.prepare("INSERT OR IGNORE INTO neo_portal_records(school_id,kind,id,data) VALUES (?,'classroom_sections',?,?)").bind(school,'SECTION_'+name,JSON.stringify({name,status:'Active',system_default:true})));
+      await env.DB.batch(defaults);
+    }
+   }
    if(kind==='supply_catalog'){await ensureSupplySchema(env);const products=(await supplyRows(env,'products')).filter(x=>x.status==='Active'&&x.available_to_centers!==false&&Number(x.center_price_paise)>0);return out({records:products})}
    if(kind==='daily_accounts')await reconcileHeadOfficePayments(env,school);
    if(kind==='stock_items'||kind==='stock_moves')await reconcileCenterSupplyReceipts(env,school);
@@ -1302,6 +1309,13 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    else if(kind==='adoption_assignments'){data={...previous,status:choice('status',['Active','Inactive']),notes:str('notes',500,false)};}
    else if(kind==='adoption_actions'){data={...previous,status:choice('status',['Open','In progress','Resolved']),owner:str('owner',120),due_date:date('due_date'),notes:str('notes',1200,false),resolved_at:b.status==='Resolved'?new Date().toISOString():previous.resolved_at||''};}
    else if(['homework','announcements'].includes(kind)){data={...previous,published:b.published===true};}
+   else if(kind==='classroom_sections'){
+    const name=str('name',20),status=choice('status',['Active','Inactive']);
+    if(!/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,19}$/.test(name))fail('Use a short section name such as A, B, C, D or E1.');
+    const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections' AND lower(json_extract(data,'$.name'))=lower(?) AND id<>? LIMIT 1").bind(school,name,id).first();
+    if(duplicate)fail('This section name already exists.');
+    data={...previous,name,status};
+   }
    else if(kind==='classrooms'){
     const cap=Number(b.capacity);if(!Number.isInteger(cap)||cap<1||cap>200)fail('Capacity must be 1–200.');
     const nextModel=b.teaching_model?choice('teaching_model',['Mother Teacher','Subject-wise Teachers']):(previous.teaching_model||'Mother Teacher');
@@ -1399,6 +1413,12 @@ const match=url.pathname.match(/^\/api\/portal\/([^/]+)\/(students|classrooms|fe
    }else if(kind==='ptm_sessions'){
     const student=await related('students','student_id'),sessionDate=date('session_date');if(sessionDate>neoToday())fail('PTM date cannot be in the future.');
     data={student_id:student.id,student_name:student.name,classroom_id:student.classroom_id||'',session_date:sessionDate,parent_attended:b.parent_attended===true,progress_summary:str('progress_summary',1600),discussion_points:str('discussion_points',2000),agreed_actions:str('agreed_actions',1600,false),parent_safe_report:str('parent_safe_report',2000,false),recorded_at:new Date().toISOString()};
+   }else if(kind==='classroom_sections'){
+    const name=str('name',20);
+    if(!/^[A-Za-z0-9][A-Za-z0-9 ._-]{0,19}$/.test(name))fail('Use a short section name such as A, B, C, D or E1.');
+    const duplicate=await env.DB.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='classroom_sections' AND lower(json_extract(data,'$.name'))=lower(?) LIMIT 1").bind(school,name).first();
+    if(duplicate)fail('This section name already exists.');
+    data={name,status:'Active',system_default:false};
    }else if(kind==='classrooms'){
     if(!Number.isInteger(b.capacity)||b.capacity<1||b.capacity>200)fail('Capacity must be 1–200.');
     const program=str('program',80),teachingModel=choice('teaching_model',['Mother Teacher','Subject-wise Teachers']);
