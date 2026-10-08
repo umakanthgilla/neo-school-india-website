@@ -3,7 +3,7 @@
   "short_name": "Neo School",
   "id": "/schools",
   "start_url": "/schools",
-  "scope": "/",
+  "scope": "/schools",
   "description": "Neo School India school administration and daily operations portal.",
   "display": "standalone",
   "orientation": "portrait-primary",
