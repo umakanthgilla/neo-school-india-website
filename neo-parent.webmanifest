@@ -3,7 +3,7 @@
   "short_name": "Neo Parent",
   "id": "/parents",
   "start_url": "/parents",
-  "scope": "/",
+  "scope": "/parents",
   "description": "Neo School India parent portal for learning updates, attendance, homework, fees, transport and school communication.",
   "display": "standalone",
   "orientation": "portrait-primary",
