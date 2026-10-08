@@ -248,6 +248,8 @@ export default {
     if (intakeResponse) return intakeResponse;
     const franchiseResponse = await franchiseRoute(request, env, url);
     if (franchiseResponse) return franchiseResponse;
+    const growthCrmResponse = await growthCrmPortal(request, env, url);
+    if (growthCrmResponse) return growthCrmResponse;
 
     /* --------------------------
        HEALTH CHECK
@@ -1020,6 +1022,170 @@ async function franchiseRoute(request,env,url){
  }
  return error('Not found.',404);
  }catch(e){console.error('Franchise service error',e);return error('Franchise service unavailable. Head office must complete database setup before first use.',503);}
+}
+
+
+/* Neo Growth CRM: additive conversion layer over the existing leads table.
+   No lead duplication: one lead_id is shared by Head Office and its assigned branch. */
+const GROWTH_CRM_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS neo_growth_lead_meta (
+    lead_id TEXT PRIMARY KEY,
+    branch_id TEXT,
+    branch_name TEXT,
+    next_action TEXT,
+    action_due TEXT,
+    pipeline_stage TEXT,
+    qualification TEXT,
+    lead_score INTEGER NOT NULL DEFAULT 0,
+    original_source TEXT,
+    utm_source TEXT,
+    utm_medium TEXT,
+    utm_campaign TEXT,
+    reopened_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS neo_growth_activity (
+    id TEXT PRIMARY KEY,
+    lead_id TEXT NOT NULL,
+    actor TEXT NOT NULL,
+    action TEXT NOT NULL,
+    detail TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE INDEX IF NOT EXISTS neo_growth_activity_lead ON neo_growth_activity(lead_id,created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS neo_growth_meta_branch ON neo_growth_lead_meta(branch_id)`,
+  `CREATE INDEX IF NOT EXISTS neo_growth_meta_due ON neo_growth_lead_meta(action_due)`
+];
+
+async function ensureGrowthCrm(env){
+  await env.DB.batch(GROWTH_CRM_SCHEMA.map(sql=>env.DB.prepare(sql)));
+}
+function growthDefaultStage(type,status){
+  if(status==='Converted') return type==='Franchise Enquiry'?'Signed':'Admitted';
+  if(status==='Lost') return 'Lost';
+  if(type==='Franchise Enquiry'){
+    return ({New:'New','Contacted':'First Contact','Follow-up':'Follow-up','Interested':'Qualified','Visit / Meeting':'Discovery / Meeting','Decision Pending':'Negotiation'})[status]||status||'New';
+  }
+  return ({New:'New','Contacted':'Contacted','Follow-up':'Follow-up','Interested':'Admission Interested','Visit / Meeting':'School Visit','Decision Pending':'Admission Processing'})[status]||status||'New';
+}
+async function growthActivity(env,leadId,actor,action,detail){
+  await env.DB.prepare('INSERT INTO neo_growth_activity(id,lead_id,actor,action,detail) VALUES (?,?,?,?,?)')
+    .bind(crypto.randomUUID(),leadId,actor,action,detail?JSON.stringify(detail):null).run();
+}
+async function growthCrmPortal(request,env,url){
+  if(!url.pathname.startsWith('/api/growth/'))return null;
+  const out=(data,status=200)=>json(data,status,request);
+  const fail=(message,status=400)=>out({success:false,error:message},status);
+  try{
+    await ensureGrowthCrm(env);
+    const admin=await requireAdmin(request,env);
+    const branch=admin?null:await schoolSession(request,env);
+
+    if(url.pathname==='/api/growth/admin/leads'&&request.method==='GET'){
+      if(!admin)return fail('Head-office access required.',403);
+      const result=await env.DB.prepare(`
+        SELECT l.*,
+          m.branch_id,m.branch_name,m.next_action,m.action_due,m.pipeline_stage,
+          m.qualification,m.lead_score,m.original_source,m.utm_source,m.utm_medium,
+          m.utm_campaign,m.reopened_count,m.updated_at AS growth_updated_at
+        FROM leads l
+        LEFT JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
+        ORDER BY l.id DESC
+        LIMIT 1000
+      `).all();
+      const leads=(result.results||[]).map(x=>({...x,pipeline_stage:x.pipeline_stage||growthDefaultStage(x.enquiry_type,x.status),next_action:x.next_action||x.follow_up_result||'',action_due:x.action_due||x.next_follow_up||'',original_source:x.original_source||x.source||''}));
+      return out({success:true,leads});
+    }
+
+    if(url.pathname==='/api/growth/branch/leads'&&request.method==='GET'){
+      if(!branch)return fail('School login required.',401);
+      const result=await env.DB.prepare(`
+        SELECT l.*,
+          m.branch_id,m.branch_name,m.next_action,m.action_due,m.pipeline_stage,
+          m.qualification,m.lead_score,m.original_source,m.utm_source,m.utm_medium,
+          m.utm_campaign,m.reopened_count,m.updated_at AS growth_updated_at
+        FROM leads l
+        JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
+        WHERE m.branch_id=? AND l.enquiry_type='Preschool Admission'
+        ORDER BY l.id DESC
+        LIMIT 500
+      `).bind(branch.school_id).all();
+      return out({success:true,leads:result.results||[]});
+    }
+
+    const activityMatch=url.pathname.match(/^\/api\/growth\/leads\/([^/]+)\/activity$/);
+    if(activityMatch&&request.method==='GET'){
+      if(!admin&&!branch)return fail('Unauthorized.',401);
+      const leadId=decodeURIComponent(activityMatch[1]);
+      if(branch){
+        const allowed=await env.DB.prepare('SELECT 1 FROM neo_growth_lead_meta WHERE lead_id=? AND branch_id=?').bind(leadId,branch.school_id).first();
+        if(!allowed)return fail('Access denied.',403);
+      }
+      const result=await env.DB.prepare('SELECT id,lead_id,actor,action,detail,created_at FROM neo_growth_activity WHERE lead_id=? ORDER BY created_at DESC LIMIT 200').bind(leadId).all();
+      return out({success:true,activity:result.results||[]});
+    }
+
+    const leadMatch=url.pathname.match(/^\/api\/growth\/admin\/leads\/([^/]+)$/);
+    if(leadMatch&&request.method==='PATCH'){
+      if(!admin)return fail('Head-office access required.',403);
+      const leadId=decodeURIComponent(leadMatch[1]);
+      const existing=await env.DB.prepare('SELECT * FROM leads WHERE lead_id=? LIMIT 1').bind(leadId).first();
+      if(!existing)return fail('Lead not found.',404);
+      const b=await request.json();
+      const stage=clean(b.pipeline_stage,100)||growthDefaultStage(existing.enquiry_type,b.status||existing.status);
+      const branchId=clean(b.branch_id,80)||null,branchName=clean(b.branch_name,160)||null;
+      const nextAction=clean(b.next_action,240)||null,actionDue=clean(b.action_due,50)||null;
+      const qualification=clean(b.qualification,80)||null;
+      let score=Number(b.lead_score);if(!Number.isFinite(score))score=0;score=Math.max(0,Math.min(100,Math.round(score)));
+      const utmSource=clean(b.utm_source,120)||null,utmMedium=clean(b.utm_medium,120)||null,utmCampaign=clean(b.utm_campaign,160)||null;
+      const originalSource=clean(b.original_source,120)||existing.source||null;
+      await env.DB.prepare(`
+        INSERT INTO neo_growth_lead_meta(
+          lead_id,branch_id,branch_name,next_action,action_due,pipeline_stage,qualification,lead_score,
+          original_source,utm_source,utm_medium,utm_campaign,updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+        ON CONFLICT(lead_id) DO UPDATE SET
+          branch_id=excluded.branch_id,branch_name=excluded.branch_name,next_action=excluded.next_action,
+          action_due=excluded.action_due,pipeline_stage=excluded.pipeline_stage,qualification=excluded.qualification,
+          lead_score=excluded.lead_score,original_source=excluded.original_source,utm_source=excluded.utm_source,
+          utm_medium=excluded.utm_medium,utm_campaign=excluded.utm_campaign,updated_at=CURRENT_TIMESTAMP
+      `).bind(leadId,branchId,branchName,nextAction,actionDue,stage,qualification,score,originalSource,utmSource,utmMedium,utmCampaign).run();
+      await growthActivity(env,leadId,'Head Office','Growth CRM updated',{
+        branch_id:branchId,branch_name:branchName,pipeline_stage:stage,next_action:nextAction,action_due:actionDue,
+        qualification,lead_score:score
+      });
+      const meta=await env.DB.prepare('SELECT * FROM neo_growth_lead_meta WHERE lead_id=?').bind(leadId).first();
+      return out({success:true,meta});
+    }
+
+    if(url.pathname==='/api/growth/admin/reports'&&request.method==='GET'){
+      if(!admin)return fail('Head-office access required.',403);
+      const branchRows=await env.DB.prepare(`
+        SELECT COALESCE(m.branch_name,'Unassigned') branch,
+          COUNT(*) leads,
+          SUM(CASE WHEN l.status='Converted' THEN 1 ELSE 0 END) converted,
+          SUM(CASE WHEN l.status='Lost' THEN 1 ELSE 0 END) lost
+        FROM leads l LEFT JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
+        WHERE l.enquiry_type='Preschool Admission'
+        GROUP BY COALESCE(m.branch_name,'Unassigned')
+        ORDER BY leads DESC
+      `).all();
+      const sourceRows=await env.DB.prepare(`
+        SELECT COALESCE(m.original_source,l.source,'Unknown') source,
+          COUNT(*) leads,
+          SUM(CASE WHEN l.status='Converted' THEN 1 ELSE 0 END) converted
+        FROM leads l LEFT JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
+        GROUP BY COALESCE(m.original_source,l.source,'Unknown')
+        ORDER BY leads DESC
+      `).all();
+      return out({success:true,branches:branchRows.results||[],sources:sourceRows.results||[]});
+    }
+
+    return fail('Not found.',404);
+  }catch(e){
+    console.error('Growth CRM error',e);
+    return fail('Growth CRM service unavailable.',503);
+  }
 }
 
 // Admission intake: server-owned age policy and prior-school validation.
