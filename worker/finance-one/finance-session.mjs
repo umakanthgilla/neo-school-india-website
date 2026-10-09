@@ -10,7 +10,9 @@ const encode=(bytes)=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').rep
 function decode(part){
  if(typeof part!=='string'||!/^[A-Za-z0-9_-]+$/.test(part)||part.length>4096)throw Error('Invalid token');
  let s=part.replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);
- return Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+ const bytes=Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+ if(encode(bytes)!==part)throw Error('Non-canonical token encoding');
+ return bytes;
 }
 async function key(secret){
  if(typeof secret!=='string'||secret.length<32)throw Error('Finance signing key unavailable');
