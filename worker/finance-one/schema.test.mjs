@@ -45,3 +45,23 @@ test('orphan organizations and duplicate settlement references blocked',()=>{
   assert.throws(()=>db.prepare(insertSettlement).run('A','S2','PAY1',1000,'verified','REF1','2026-10-09T12:00:00Z'),/UNIQUE/);
   db.close();
 });
+
+const accounting=readFileSync(new URL('../../migrations/finance_payroll_one_accounting_journals.sql',import.meta.url),'utf8');
+test('double entry posting rejects unbalanced journals and cross-business accounts',()=>{
+ const db=setup();db.exec(accounting);
+ const a="INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES (?,?,?,?,?)";
+ db.prepare(a).run('A','BANK','100','Bank','asset');
+ db.prepare(a).run('A','FEES','400','Fees','income');
+ db.prepare(a).run('B','EXP','600','Expenses','expense');
+ db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A','J1','fee_receipt','R1')");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J1',1,'BANK',1000)");
+ assert.throws(()=>db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'"),/balance/);
+ assert.throws(()=>db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'EXP',1000)"),/FOREIGN KEY/);
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'FEES',1000)");
+ db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'");
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_posted_journal_lines WHERE organization_id='A'").get().n,2);
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_posted_journal_lines WHERE organization_id='B'").get().n,0);
+ assert.throws(()=>db.exec("DELETE FROM neo_fin_journal_lines WHERE journal_id='J1'"),/immutable/);
+ assert.throws(()=>db.exec("DELETE FROM neo_fin_journals WHERE id='J1'"),/immutable/);
+ db.close();
+});
