@@ -6,7 +6,8 @@ const REQUIRED_TABLES=Object.freeze([
  'neo_fin_organizations','neo_fin_school_ownership','neo_fin_memberships',
  'neo_fin_auth_accounts','neo_fin_documents','neo_fin_payment_settlements',
  'neo_fin_accounts','neo_fin_journals','neo_fin_journal_lines','neo_fin_cash_events',
- 'neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews','neo_fin_statutory_remittances'
+ 'neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews','neo_fin_statutory_remittances',
+ 'neo_fin_session_revocations'
 ]);
 const REQUIRED_VIEWS=Object.freeze(['neo_fin_daily_ledger','neo_fin_posted_journal_lines']);
 const REQUIRED_TRIGGERS=Object.freeze(['neo_fin_cash_events_no_update','neo_fin_cash_events_no_delete',
@@ -18,7 +19,7 @@ const REQUIRED_TRIGGERS=Object.freeze(['neo_fin_cash_events_no_update','neo_fin_
  'neo_fin_statutory_remittance_no_update','neo_fin_statutory_remittance_no_delete',
  'neo_fin_stat_remit_verify_insert','neo_fin_stat_remit_verify_update',
  'neo_fin_stat_remit_verified_no_update','neo_fin_stat_remit_verified_no_delete',
- 'neo_fin_stat_remit_no_overclear']);
+ 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update']);
 export async function financeOneStagingPreflight({db,env,phase='active'}) {
  if(phase!=='prepare' && phase!=='active')throw new Error('Unknown finance staging preflight phase');
  const blockers=[];
