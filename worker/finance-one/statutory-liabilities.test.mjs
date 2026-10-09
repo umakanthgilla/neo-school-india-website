@@ -21,8 +21,8 @@ function fixture(){
  function journal(org,id,entries){
   sql.prepare("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES (?,?,?,?)").run(org,id,'document',id);
   // Include a balancing debit/credit account to simulate approved payroll accrual / statutory remittance.
-  sql.prepare('INSERT OR IGNORE INTO neo_fin_accounts VALUES (?,?,?,?,1)').run(org,'CASH','1000','Cash','asset');
-  sql.prepare('INSERT OR IGNORE INTO neo_fin_accounts VALUES (?,?,?,?,1)').run(org,'EXPENSE','5100','Salary Expense','expense');
+  sql.prepare('INSERT OR IGNORE INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES (?,?,?,?,?)').run(org,'CASH','1000','Cash','asset');
+  sql.prepare('INSERT OR IGNORE INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES (?,?,?,?,?)').run(org,'EXPENSE','5100','Salary Expense','expense');
   let net=0,line=1;
   for(const [code,debit,credit] of entries){
    sql.prepare('INSERT INTO neo_fin_journal_lines VALUES (?,?,?,?,?,?)').run(org,id,line++,code,debit,credit);
