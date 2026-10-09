@@ -5,6 +5,7 @@ on:
       - feature/finance-payroll-one-foundation
     paths:
       - 'worker/finance-one/**'
+      - 'migrations/finance_payroll_one_*.sql'
       - '.github/workflows/finance-one-tests.yml'
   pull_request:
     paths:
@@ -21,4 +22,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test organization access
-        run: node --test worker/finance-one/*.test.mjs
+        run: node --experimental-sqlite --test worker/finance-one/*.test.mjs
