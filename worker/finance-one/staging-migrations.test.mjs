@@ -13,7 +13,8 @@ const orderedMigrations=[
  'finance_payroll_one_legacy_payout_integrity.sql',
  'finance_payroll_one_statutory_review.sql',
  'finance_payroll_one_statutory_remittance.sql',
- 'finance_payroll_one_session_revocations.sql'
+ 'finance_payroll_one_session_revocations.sql',
+ 'finance_payroll_one_issued_document_immutability.sql'
 ];
 const env={
  FINANCE_ONE_ENVIRONMENT:'staging',
@@ -32,7 +33,7 @@ function database(stopAfter=orderedMigrations.length){
   db:{prepare(query){const stmt=sql.prepare(query);return{all:async()=>({results:stmt.all()})}}}
  };
 }
-test('all nine SQL migrations apply in release order and pass real staging preflight',async()=>{
+test('all ten SQL migrations apply in release order and pass real staging preflight',async()=>{
  const {sql,db}=database();
  const status=await financeOneStagingPreflight({db,env});
  assert.equal(status.ready,true,JSON.stringify(status.blockers));
