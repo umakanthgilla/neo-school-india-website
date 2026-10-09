@@ -6,6 +6,7 @@
 import {resolveFinanceOrganization} from './organization-access.mjs';
 import {STANDARD_CHART} from './accounting-chart.mjs';
 import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
+import {auditFinanceAccrualJournals} from './accrual-journal-audit.mjs';
 
 export async function financeOneBusinessPreflight({db,authenticatedAccountId,organizationId}){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','read');
@@ -42,8 +43,17 @@ export async function financeOneBusinessPreflight({db,authenticatedAccountId,org
  }catch{
   blockers.push('Cash/Bank journal reconciliation unavailable');
  }
+ let accrualAudit=null;
+ try{
+  accrualAudit=await auditFinanceAccrualJournals({db,authenticatedAccountId,organizationId});
+  if(!accrualAudit.ready)
+   blockers.push('Accrual document/journal reconciliation issues: '+accrualAudit.issueCount);
+ }catch{
+  blockers.push('Accrual document/journal reconciliation unavailable');
+ }
  return Object.freeze({organizationId,ready:blockers.length===0,
   requiredAccounts:required.size,configuredAccounts,
   unreconciledCashEvents:unsynced?.total??null,
-  cashJournalAuditIssues:cashJournalAudit?.issueCount??null,blockers});
+  cashJournalAuditIssues:cashJournalAudit?.issueCount??null,
+  accrualJournalAuditIssues:accrualAudit?.issueCount??null,blockers});
 }
