@@ -31,6 +31,10 @@ export async function financeOneStagingPreflight({db,env,phase='active'}) {
    blockers.push('Finance API must remain disabled during preparation');
  if(typeof env?.FINANCE_ONE_SESSION_SECRET!=='string'||env.FINANCE_ONE_SESSION_SECRET.length<32)
    blockers.push('Dedicated Finance session secret missing');
+ if(typeof env?.FINANCE_ONE_LOGIN_CLIENT_LIMIT?.limit!=='function')
+   blockers.push('Native Finance login client rate limiter missing');
+ if(typeof env?.FINANCE_ONE_LOGIN_ACCOUNT_LIMIT?.limit!=='function')
+   blockers.push('Native Finance login account rate limiter missing');
  if(!db?.prepare)return Object.freeze({ready:false,blockers:[...blockers,'D1 database unavailable'],schema:{tables:0,views:0,triggers:0}});
  let rows;
  try {
