@@ -165,3 +165,21 @@ test('missing revocation schema blocks Finance access instead of silently accept
   assert.equal(denied.status,503);
  }finally{f.sqlite.close();}
 });
+
+
+test('cash reconciliation API detects missing journals for own Center and hides other Center data',async()=>{
+ const f=await fixture();try{
+  const token=await f.token();
+  const own=await stagingWorker.fetch(f.http('cash-reconciliation',token),f.env);
+  assert.equal(own.status,200);
+  const report=await own.json();
+  assert.equal(report.organizationId,'CENTER_A');
+  assert.equal(report.ready,false);
+  assert.equal(report.cashEventCount,1);
+  assert.equal(report.counts.missing_journal,1);
+  assert.ok(report.findings.every(x=>x.eventId!=='PAY_B'));
+  assert.equal((await stagingWorker.fetch(f.http('cash-reconciliation',token,'CENTER_B'),f.env)).status,403);
+  const post=await stagingWorker.fetch(f.http('cash-reconciliation',token,'CENTER_A',portal,'POST'),f.env);
+  assert.equal(post.status,405);
+ }finally{f.sqlite.close();}
+});
