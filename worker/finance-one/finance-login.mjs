@@ -14,7 +14,7 @@ async function smallJson(request){
 export async function handleFinanceLogin({request,env}){
  if(new URL(request.url).pathname!==route)return null;
  if(request.method!=='POST')return json({error:'Method not allowed'},405,{Allow:'POST'});
- if(env?.FINANCE_ONE_READ_API_ENABLED!=='true')return json({error:'Not found'},404);
+ if(env?.FINANCE_ONE_ENVIRONMENT!=='staging' || env?.FINANCE_ONE_READ_API_ENABLED!=='true')return json({error:'Not found'},404);
  if(!env.DB||typeof env.FINANCE_ONE_SESSION_SECRET!=='string'||env.FINANCE_ONE_SESSION_SECRET.length<32)return json({error:'Finance login unavailable'},503);
  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))return json({error:'Expected JSON'},415);
  let input;try{input=await smallJson(request);}catch{return json({error:'Invalid request'},400);}
