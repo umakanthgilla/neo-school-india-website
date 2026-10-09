@@ -102,3 +102,13 @@ test('no preflight phase can greenlight a production environment',async()=>{
  }
  sql.close();
 });
+
+
+test('omitting per-session revocation migration must prevent staging activation',async()=>{
+ const {sql,db}=database(8);
+ const result=await financeOneStagingPreflight({db,env});
+ assert.equal(result.ready,false);
+ assert.ok(result.blockers.includes('Missing table neo_fin_session_revocations'));
+ assert.ok(result.blockers.includes('Missing trigger neo_fin_session_revocations_no_update'));
+ sql.close();
+});
