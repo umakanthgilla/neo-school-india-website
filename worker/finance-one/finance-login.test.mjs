@@ -13,6 +13,7 @@ function fixture(){
  sql.exec(`CREATE TABLE neo_fin_auth_accounts(account_id TEXT PRIMARY KEY,salt TEXT,password_hash TEXT,iterations INTEGER,active INTEGER,failed_attempts INTEGER DEFAULT 0,locked_until INTEGER,credential_version INTEGER);
  CREATE TABLE neo_fin_organizations(id TEXT PRIMARY KEY,status TEXT);
  CREATE TABLE neo_fin_memberships(organization_id TEXT,account_id TEXT,role TEXT,active INTEGER);
+ CREATE TABLE neo_fin_session_revocations(account_id TEXT,token_id TEXT,expires_at INTEGER,revoked_at TEXT DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(account_id,token_id));
  CREATE TABLE neo_fin_documents(organization_id TEXT,id TEXT,document_type TEXT,party_id TEXT,status TEXT,currency TEXT,gross_paise INTEGER,created_at TEXT);
  INSERT INTO neo_fin_organizations VALUES ('CENTER_A','active'),('CENTER_B','active'),('HO','active');
  INSERT INTO neo_fin_memberships VALUES ('CENTER_A','fin:alice','owner',1),('CENTER_B','fin:bob','owner',1),('HO','fin:ho','owner',1);
