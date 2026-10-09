@@ -154,3 +154,14 @@ test('expired lockout still admits correct Finance password and clears failed at
  assert.equal(row.failed_attempts,0);assert.equal(row.locked_until,null);
  db.sql.close();
 });
+
+
+test('direct Finance login handler fails closed in production even with feature flag enabled',async()=>{
+ const db=fixture();await seed(db);
+ const result=await handleFinanceLogin({request:login(),env:{...env(db),FINANCE_ONE_ENVIRONMENT:'production'}});
+ assert.equal(result.status,404);
+ const missing=await handleFinanceLogin({request:login(),env:{...env(db),FINANCE_ONE_ENVIRONMENT:undefined}});
+ assert.equal(missing.status,404);
+ assert.equal(db.sql.prepare("SELECT failed_attempts FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get().failed_attempts,0);
+ db.sql.close();
+});
