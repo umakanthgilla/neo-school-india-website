@@ -34,6 +34,7 @@ export async function postJournalForCashEvent(db,organizationId,eventId,{postedA
   if(!event) throw new Error('Verified cash event not found');
   if(event.source_kind==='payroll_payment' && typeof event.source_id==='string' &&
      event.source_id.includes('|'))throw new Error('Legacy payroll requires verified advance-recovery settlement journal');
+  if(event.source_kind==='statutory_remittance_paid')throw Error('Statutory voucher requires liability-specific settlement journal');
   const plan=journalPlanForEvent(event);
   if(plan.organizationId!==organizationId) throw new Error('Cross-business event rejected');
   const accounts=await db.prepare('SELECT id,account_code,active FROM neo_fin_accounts WHERE organization_id=? AND account_code IN (?,?)').bind(organizationId,plan.debitCode,plan.creditCode).all();
