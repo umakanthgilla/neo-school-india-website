@@ -27,6 +27,7 @@ for staging verification. Do not invent a Cloudflare binding, database ID or URL
 2. `migrations/finance_payroll_one_cash_projection.sql`
 3. `migrations/finance_payroll_one_accounting_journals.sql`
 4. `migrations/finance_payroll_one_auth_accounts.sql`
+5. `migrations/finance_payroll_one_receipt_evidence.sql`
 
 Migrations are never applied to production as part of this procedure.
 Do not copy confidential historical center/HO finance data into shared test fixtures.
@@ -63,3 +64,10 @@ Do not mark the project complete or request live money testing while any release
 - The HTML at `finance-one/portal.html` still requires a separately hosted secure staging origin; it is not currently published by creating the source file.
 - All new entrypoint and CORS behavior has automated `worker/finance-one/staging-entry.test.mjs` coverage.
 - Never use production D1 IDs or credential secrets in GitHub repository files.
+
+## Verified legacy fee receipt mirroring (new staging milestone)
+- `legacy-fee-receipt-verifier.mjs` reads the pre-existing `neo_portal_records` fee receipt and its linked `daily_accounts` entry. It rejects missing/duplicate ledger sources, mismatched receipt number/amount, incompatible cash-count vs bank proof, wrong legal owner, or an invoice without a posted receivable-accrual journal.
+- `neo_fin_receipt_verifications` is an immutable finance evidence table: a trusted independent banking/cash reconciliation process must first attest the settlement reference, effective settlement timestamp, verifier, payment record and company. A legacy record marked "Recorded by school" does **not** qualify as independently verified.
+- `sync-legacy-fee-receipt.mjs` is restricted to active authenticated Finance **write** membership. Verified receipt becomes one `neo_fin_cash_events` mirror and one balanced journal, without writing again to the existing school Daily Ledger. Repeated sync is idempotent; failed accounting postings can be retried without duplicating cash.
+- SQL + full-migration integration tests exist in `sync-legacy-fee-receipt.test.mjs` (10 scenarios: genuine receipt, repeat, missing proof, HO isolation, missing accrual, mismatches, duplicate legacy posting, immutable evidence, and accounting recovery). This is **not** a live bank integration; no public receipt-verification endpoint or untrusted client toggle is enabled.
+- Before staging enablement, verify exact ownership/effective dates and introduce an audited bank/cash evidence creation workflow. Do not backfill existing school receipts simply because they have `status: "Recorded by school"`.
