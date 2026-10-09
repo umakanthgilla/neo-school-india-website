@@ -98,3 +98,59 @@ test('oversized login body is rejected safely',async()=>{
  const db=fixture();const r=new Request('https://test.local/api/finance-one/v1/session',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({accountId:'fin:alice',password:'x'.repeat(5000),organizationId:'CENTER_A'})});
  assert.equal((await handleFinanceLogin({request:r,env:env(db)})).status,400);db.sql.close();
 });
+
+
+test('concurrent failed attempts cannot let a stale valid password bypass newly locked account',async()=>{
+ const db=fixture();await seed(db);
+ // Simulate a read of an unlocked credential racing with five bad attempts.
+ const racingDb={prepare(sql){
+  const p=db.prepare(sql);
+  return{bind(...params){
+   const statement=p.bind(...params);
+   return {...statement,first:async()=>{
+    const snapshot=await statement.first();
+    if(sql.startsWith('SELECT account_id,salt,password_hash')){
+     db.sql.prepare('UPDATE neo_fin_auth_accounts SET failed_attempts=5,locked_until=? WHERE account_id=?')
+       .run(Date.now()+15*60*1000,'fin:alice');
+    }
+    return snapshot;
+   }};
+  }};
+ }};
+ const result=await verifyFinancePassword({db:racingDb,accountId:'fin:alice',password});
+ assert.equal(result,null,'The last update must fail closed after a concurrent lock');
+ const row=db.sql.prepare("SELECT failed_attempts,locked_until FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get();
+ assert.equal(row.failed_attempts,5);assert.ok(row.locked_until>Date.now());
+ db.sql.close();
+});
+test('inflight wrong password cannot extend a lock set after reading unlocked state',async()=>{
+ const db=fixture();await seed(db);
+ const until=Date.now()+15*60*1000;
+ const racingDb={prepare(sql){
+  const p=db.prepare(sql);
+  return{bind(...params){
+   const statement=p.bind(...params);
+   return {...statement,first:async()=>{
+    const row=await statement.first();
+    if(sql.startsWith('SELECT account_id,salt,password_hash')){
+     db.sql.prepare('UPDATE neo_fin_auth_accounts SET failed_attempts=5,locked_until=? WHERE account_id=?')
+       .run(until,'fin:alice');
+    }
+    return row;
+   }};
+  }};
+ }};
+ assert.equal(await verifyFinancePassword({db:racingDb,accountId:'fin:alice',password:'incorrect'}),null);
+ const row=db.sql.prepare("SELECT failed_attempts,locked_until FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get();
+ assert.equal(row.failed_attempts,5);assert.equal(row.locked_until,until);
+ db.sql.close();
+});
+test('expired lockout still admits correct Finance password and clears failed attempts',async()=>{
+ const db=fixture();await seed(db);
+ db.sql.exec('UPDATE neo_fin_auth_accounts SET failed_attempts=5,locked_until=1');
+ const identity=await verifyFinancePassword({db,accountId:'fin:alice',password});
+ assert.equal(identity?.accountId,'fin:alice');
+ const row=db.sql.prepare("SELECT failed_attempts,locked_until FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get();
+ assert.equal(row.failed_attempts,0);assert.equal(row.locked_until,null);
+ db.sql.close();
+});
