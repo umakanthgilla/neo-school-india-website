@@ -13,7 +13,7 @@ const safe = n => Number.isSafeInteger(n) && n >= 0;
 const sourceId = (schoolId,payrollId) => schoolId.length+':'+schoolId+'|'+payrollId.length+':'+payrollId;
 const valid = s => typeof s==='string' && /^[A-Za-z0-9_-]{1,100}$/.test(s);
 
-function planForPayroll(p,payrollId) {
+function planForPayroll(p,payrollId,stat) {
  if(!p || !['Approved','Paid'].includes(p.status) || p.attendance_complete!==true ||
    typeof p.staff_id!=='string' || !valid(p.staff_id) ||
    typeof p.month!=='string' || !/^20\d{2}-(0[1-9]|1[0-2])$/.test(p.month) ||
@@ -23,12 +23,7 @@ function planForPayroll(p,payrollId) {
  const keys=['gross_paise','late_deduction_paise','attendance_deduction_paise',
   'advance_recovery_paise','deductions_paise','net_paise'];
  if(keys.some(k=>!safe(p[k]))||p.gross_paise===0)throw Error('Invalid payroll paise breakdown');
- // Current legacy HR payroll supports attendance, late and advance recovery.
- // Statutory deductions require separate employee/employer liability accounts.
- for(const k of ['employee_pf_paise','employee_esi_paise','tds_paise','professional_tax_paise']){
-  if(p[k]!==undefined && p[k]!==0)throw Error('Unmapped statutory withholding requires reviewed payroll accounting');
- }
- const componentDeductions=p.late_deduction_paise+p.attendance_deduction_paise+p.advance_recovery_paise;
+ const componentDeductions=p.late_deduction_paise+p.attendance_deduction_paise+p.advance_recovery_paise+stat.employeeTotalPaise;
  if(!Number.isSafeInteger(componentDeductions) || componentDeductions!==p.deductions_paise ||
     p.deductions_paise>p.gross_paise || p.gross_paise-p.deductions_paise!==p.net_paise)
   throw Error('Payroll deduction or net mismatch; reconcile before accrual');
@@ -52,7 +47,8 @@ export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organi
  if(!stored?.data)throw Error('Original payroll source unavailable');
  let payroll;
  try{payroll=JSON.parse(stored.data)}catch{throw Error('Original payroll malformed')}
- const plan=planForPayroll(payroll,payrollRecordId);
+ const stat=await requireReviewedStatutoryPayroll(db,organizationId,schoolId,payrollRecordId,payroll);
+ const plan=planForPayroll(payroll,payrollRecordId,stat);
  const owner=await row.bind(schoolId,organizationId,payroll.month).first();
  if(!owner)throw Error('Original payroll outside independent business ownership');
  const originalSourceRef=sourceId(schoolId,payrollRecordId);
@@ -60,7 +56,7 @@ export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organi
  // even if earned salary expense is coincidentally unchanged.
  const breakdown=['gross_paise','late_deduction_paise','attendance_deduction_paise',
   'advance_recovery_paise','deductions_paise','net_paise'].map(k=>payroll[k]).join(':');
- const sourceRef=originalSourceRef+'|'+breakdown;
+ const sourceRef=originalSourceRef+'|'+breakdown+(stat.fingerprint?'|ST:'+stat.fingerprint:'');
  const documentId='PAY_ACCR|'+originalSourceRef;
  const document=()=>db.prepare('SELECT id,document_type,status,gross_paise,source_kind,source_id FROM neo_fin_documents WHERE organization_id=? AND id=?').bind(organizationId,documentId).first();
  const checkDocument=async()=>{
