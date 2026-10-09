@@ -16,6 +16,13 @@ test('Finance portal JavaScript parses and never persists Finance bearer tokens 
  assert.doesNotThrow(()=>new vm.Script(script));
  assert.doesNotMatch(script,/localStorage|sessionStorage|document\.cookie|innerHTML/);
 });
+test('portal displays independent bank verification without write actions',()=>{
+ assert.match(page,/id="settlement-rows"/);
+ assert.match(page,/id="settlement-empty"/);
+ assert.match(page,/call\(path\+'\/settlements\?limit=50'\)/);
+ assert.match(page,/Awaiting bank verification/);
+ assert.match(page,/Amount mismatch/);
+});
 test('Finance portal displays source data as text, not executable markup',()=>{
  assert.match(page,/node\.textContent=/);
  assert.match(page,/replaceChildren\(/);
