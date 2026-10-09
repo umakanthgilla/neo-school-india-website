@@ -19,7 +19,8 @@ const REQUIRED_TRIGGERS=Object.freeze(['neo_fin_cash_events_no_update','neo_fin_
  'neo_fin_statutory_remittance_no_update','neo_fin_statutory_remittance_no_delete',
  'neo_fin_stat_remit_verify_insert','neo_fin_stat_remit_verify_update',
  'neo_fin_stat_remit_verified_no_update','neo_fin_stat_remit_verified_no_delete',
- 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update']);
+ 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update',
+ 'neo_fin_document_locked_no_update','neo_fin_document_locked_no_delete']);
 export async function financeOneStagingPreflight({db,env,phase='active'}) {
  if(phase!=='prepare' && phase!=='active')throw new Error('Unknown finance staging preflight phase');
  const blockers=[];
