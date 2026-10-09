@@ -65,6 +65,37 @@ export async function verifyLegacyPayout(db,request) {
  if(ledger.direction!=='OUT'||ledger.status!=='Posted'||
    ledger.source_kind!=='voucher'||ledger.source_id!==voucherId||
    ledger.amount_paise!==payment[spec.amountKey]||ledger.reference!==voucher.voucher_no)return null;
+ // A Paid payroll row and its voucher must not debit Salary Payable unless
+ // the matching approved payroll has ALREADY recognized net payable and
+ // advance recovery in a balanced posted accrual journal.
+ if(sourceKind==='payroll_payment'){
+  const parts=['gross_paise','late_deduction_paise','attendance_deduction_paise',
+   'advance_recovery_paise','deductions_paise','net_paise'];
+  if(parts.some(k=>!Number.isSafeInteger(payment[k])||payment[k]<0))return null;
+  const deductions=payment.late_deduction_paise+payment.attendance_deduction_paise+payment.advance_recovery_paise;
+  const earned=payment.gross_paise-payment.late_deduction_paise-payment.attendance_deduction_paise;
+  if(!Number.isSafeInteger(deductions)||deductions!==payment.deductions_paise||
+    !Number.isSafeInteger(earned)||earned<=0||payment.net_paise+payment.advance_recovery_paise!==earned)return null;
+  const accrualRef=schoolId.length+':'+schoolId+'|'+recordId.length+':'+recordId;
+  const accrual=await db.prepare(`SELECT d.gross_paise AS earned_paise,
+   COUNT(l.line_no) AS line_count,
+   SUM(l.debit_paise-l.credit_paise) AS balanced_paise,
+   SUM(CASE WHEN a.account_code='5100' THEN l.debit_paise-l.credit_paise ELSE 0 END) AS expense_paise,
+   SUM(CASE WHEN a.account_code='2100' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS salary_payable_paise,
+   SUM(CASE WHEN a.account_code='1200' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS advance_recovery_paise
+   FROM neo_fin_documents d JOIN neo_fin_journals j ON
+    j.organization_id=d.organization_id AND j.source_kind='document' AND j.source_id=d.id AND j.status='posted'
+   JOIN neo_fin_journal_lines l ON l.organization_id=j.organization_id AND l.journal_id=j.id
+   JOIN neo_fin_accounts a ON a.organization_id=l.organization_id AND a.id=l.account_id
+   WHERE d.organization_id=? AND d.source_kind='legacy_payroll' AND d.source_id=?
+    AND d.document_type='payroll_liability' AND d.status='approved'
+   GROUP BY d.id,d.gross_paise`).bind(organizationId,accrualRef).first();
+  if(!accrual||accrual.earned_paise!==earned||accrual.expense_paise!==earned||
+    accrual.salary_payable_paise!==payment.net_paise||
+    accrual.advance_recovery_paise!==payment.advance_recovery_paise||
+    accrual.balanced_paise!==0||accrual.line_count!==
+     (payment.net_paise>0 && payment.advance_recovery_paise>0 ? 3:2))return null;
+ }
  // One *full* independently verified settlement for each legacy payout.
  // The schema's separate trigger rejects a second verified settlement for
  // these school-qualified documents even during concurrent requests.
