@@ -7,6 +7,7 @@
  * verify real bank settlements or prove that journal source evidence was valid.
  */
 import {resolveFinanceOrganization} from './organization-access.mjs';
+import {cashJournalContract} from './cash-journal-contract.mjs';
 const safe=n=>Number.isSafeInteger(n)&&n>=0;
 const MAX_FINDINGS=50;
 function countFinding(report,code,identity){
@@ -17,7 +18,7 @@ function countFinding(report,code,identity){
 }
 export async function auditFinanceCashJournals({db,authenticatedAccountId,organizationId}){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','read');
- const cash=await db.prepare(`SELECT c.event_id,c.source_kind,c.direction,c.amount_paise,
+ const cash=await db.prepare(`SELECT c.event_id,c.source_id,c.source_kind,c.direction,c.amount_paise,
  j.id AS journal_id,j.status AS journal_status,
  COUNT(l.line_no) AS line_count,
  COALESCE(SUM(l.debit_paise),0) AS debit_paise,
@@ -30,16 +31,31 @@ export async function auditFinanceCashJournals({db,authenticatedAccountId,organi
  LEFT JOIN neo_fin_journal_lines l ON l.organization_id=j.organization_id AND l.journal_id=j.id
  LEFT JOIN neo_fin_accounts a ON a.organization_id=l.organization_id AND a.id=l.account_id
  WHERE c.organization_id=?
- GROUP BY c.event_id,c.source_kind,c.direction,c.amount_paise,j.id,j.status
+ GROUP BY c.event_id,c.source_id,c.source_kind,c.direction,c.amount_paise,j.id,j.status
  ORDER BY c.event_id`).bind(organizationId).all();
+ // Fetch the actual posting lines as well: a balanced Bank Dr/Cr could
+ // otherwise hide the wrong Fee AR, Vendor AP, Salary or tax contra-account.
+ const accountLines=await db.prepare(`SELECT c.event_id,l.line_no,a.account_code,a.account_type,a.active,
+ l.debit_paise,l.credit_paise
+ FROM neo_fin_cash_events c
+ JOIN neo_fin_journals j ON j.organization_id=c.organization_id
+   AND j.source_kind='cash_event' AND j.source_id=c.event_id AND j.status='posted'
+ JOIN neo_fin_journal_lines l ON l.organization_id=j.organization_id AND l.journal_id=j.id
+ JOIN neo_fin_accounts a ON a.organization_id=l.organization_id AND a.id=l.account_id
+ WHERE c.organization_id=? ORDER BY c.event_id,l.line_no`).bind(organizationId).all();
  const orphan=await db.prepare(`SELECT j.id AS journal_id,j.source_id AS event_id
  FROM neo_fin_journals j
  LEFT JOIN neo_fin_cash_events c ON c.organization_id=j.organization_id
    AND c.event_id=j.source_id
  WHERE j.organization_id=? AND j.source_kind='cash_event' AND c.event_id IS NULL
  ORDER BY j.id`).bind(organizationId).all();
- if(!Array.isArray(cash?.results)||!Array.isArray(orphan?.results))
+ if(!Array.isArray(cash?.results)||!Array.isArray(orphan?.results)||!Array.isArray(accountLines?.results))
   throw Error('Finance cash journal audit query failed');
+ const linesByEvent=new Map();
+ for(const line of accountLines.results){
+  if(!linesByEvent.has(line.event_id))linesByEvent.set(line.event_id,[]);
+  linesByEvent.get(line.event_id).push(line);
+ }
  const report={organizationId,cashEventCount:cash.results.length,
   orphanJournalCount:orphan.results.length,issueCount:0,counts:{},findings:[]};
  for(const row of cash.results){
@@ -58,6 +74,21 @@ export async function auditFinanceCashJournals({db,authenticatedAccountId,organi
   if((row.direction!=='money_in'&&row.direction!=='money_out')||
      row.bank_debit_paise!==expectedDr||row.bank_credit_paise!==expectedCr)
    countFinding(report,'bank_amount_mismatch',identity);
+  let statutoryAccountCode=null;
+  if(row.source_kind==='statutory_remittance_paid'){
+   // The liability must come from the approved, same-business remittance
+   // voucher. Never guess PF/ESI/PT/TDS from the journal's own line.
+   try{
+    const voucher=await db.prepare(`SELECT account_code
+      FROM neo_fin_statutory_remittances
+      WHERE organization_id=? AND id=? AND status='approved'`)
+       .bind(organizationId,row.source_id).first();
+    statutoryAccountCode=voucher?.account_code||null;
+   }catch{statutoryAccountCode=null;}
+  }
+  if(!cashJournalContract({...row,organization_id:organizationId},
+    linesByEvent.get(row.event_id)||[],{statutoryAccountCode}))
+   countFinding(report,'contra_account_mismatch',identity);
  }
  for(const row of orphan.results)
   countFinding(report,'orphan_cash_journal',{eventId:row.event_id,journalId:row.journal_id});
