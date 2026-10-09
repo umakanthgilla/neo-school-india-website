@@ -1,3 +1,4 @@
+import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -68,6 +69,8 @@ test('verified statutory voucher posts one payable Dr / Bank Cr and one Money Ou
   [['PF',10000,0],['BANK',0,10000]]);
  const balance=await readStatutoryLiabilities({db:f.db,authenticatedAccountId:'fin:alice',organizationId:'A'});
  assert.equal(balance.items[0].balancePaise,5000);
+ const audit=await auditFinanceCashJournals({db:f.db,authenticatedAccountId:'fin:alice',organizationId:'A'});
+ assert.equal(audit.ready,true,JSON.stringify(audit.findings));
  assert.equal((await syncVerifiedStatutoryRemittance(f.params())).cashCreated,false);
  assert.equal(count(f.sql,'neo_fin_cash_events'),1);
  f.sql.close();
