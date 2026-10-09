@@ -5,6 +5,7 @@
  */
 import {resolveFinanceOrganization} from './organization-access.mjs';
 import {STANDARD_CHART} from './accounting-chart.mjs';
+import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
 
 export async function financeOneBusinessPreflight({db,authenticatedAccountId,organizationId}){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','read');
@@ -33,7 +34,16 @@ export async function financeOneBusinessPreflight({db,authenticatedAccountId,org
  if(!Number.isSafeInteger(unsynced?.total)||unsynced.total<0)
   blockers.push('Cash/accounting reconciliation unavailable');
  else if(unsynced.total>0)blockers.push('Unreconciled verified cash events: '+unsynced.total);
+ let cashJournalAudit=null;
+ try{
+  cashJournalAudit=await auditFinanceCashJournals({db,authenticatedAccountId,organizationId});
+  if(!cashJournalAudit.ready)
+   blockers.push('Cash/Bank journal reconciliation issues: '+cashJournalAudit.issueCount);
+ }catch{
+  blockers.push('Cash/Bank journal reconciliation unavailable');
+ }
  return Object.freeze({organizationId,ready:blockers.length===0,
   requiredAccounts:required.size,configuredAccounts,
-  unreconciledCashEvents:unsynced?.total??null,blockers});
+  unreconciledCashEvents:unsynced?.total??null,
+  cashJournalAuditIssues:cashJournalAudit?.issueCount??null,blockers});
 }
