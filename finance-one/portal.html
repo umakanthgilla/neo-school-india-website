@@ -43,14 +43,15 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
 <section id="dashboard-panel" hidden>
  <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
  <p role="alert" class="alert" id="dash-error" aria-live="polite"></p>
+ <p role="alert" class="alert" id="trial-warning" hidden>Accounting trial balance does not balance. Finance review required before relying on these figures.</p>
  <section class="stats" aria-label="Financial summary">
-  <div class="stat"><div class="label">Money In</div><div id="money-in" class="value in">—</div></div>
-  <div class="stat"><div class="label">Money Out</div><div id="money-out" class="value out">—</div></div>
+  <div class="stat"><div class="label">Money In (all-time verified)</div><div id="money-in" class="value in">—</div></div>
+  <div class="stat"><div class="label">Money Out (all-time verified)</div><div id="money-out" class="value out">—</div></div>
   <div class="stat"><div class="label">Net Cash Movement</div><div id="net" class="value">—</div></div>
   <div class="stat"><div class="label">Accounting Profit</div><div id="profit" class="value">—</div></div>
  </section>
  <div class="grid">
-  <article class="card accent section"><h2>Daily Cash Ledger</h2><p class="caption">Automatically synced source payments — view only</p>
+  <article class="card accent section"><h2>Daily Cash Ledger</h2><p class="caption">Latest 50 verified cash events — view only. Summary amounts include all-time transactions.</p>
    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Transaction</th><th>Direction</th><th class="amount">Amount</th></tr></thead><tbody id="ledger-rows"></tbody></table></div><p id="ledger-empty" class="empty" hidden>No transactions available.</p>
   </article>
   <article class="card accent section"><h2>Accounting Documents</h2><p class="caption">Business invoices, bills, receipts and payment records</p>
@@ -78,23 +79,36 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
 (()=>{'use strict';
  const base=(typeof window.FINANCE_ONE_API_BASE==='string'?window.FINANCE_ONE_API_BASE:location.origin).replace(/\/$/,'');
  const $=id=>document.getElementById(id);
- const state={token:null,org:null};
+ const state={token:null,org:null,sessionVersion:0,requestVersion:0};
  const money=paise=>typeof paise==='number'&&Number.isFinite(paise)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(paise/100):'—';
  const text=(parent,value)=>{const node=document.createElement('td');node.textContent=String(value??'');parent.appendChild(node);return node;};
- function logout(){state.token=null;state.org=null;$('password').value='';$('dashboard-panel').hidden=true;$('login-panel').hidden=false;}
+ function logout(){
+  state.sessionVersion++;state.requestVersion++;state.token=null;state.org=null;
+  $('password').value='';$('dashboard-panel').hidden=true;$('login-panel').hidden=false;
+  $('org-label').textContent='';$('dash-error').textContent='';$('trial-warning').hidden=true;
+  for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
+  for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
+  $('statutory-review').hidden=true;
+ }
  async function call(path,options={}){
-  const response=await fetch(base+path,{...options,cache:'no-store',headers:{'Content-Type':'application/json',...(state.token?{Authorization:'Bearer '+state.token}:{}),...(options.headers||{})}});
-  if(response.status===401&&state.token){logout();throw Error('Finance session expired. Please sign in again.');}
+  const requestToken=state.token;
+  const response=await fetch(base+path,{...options,cache:'no-store',headers:{'Content-Type':'application/json',...(requestToken?{Authorization:'Bearer '+requestToken}:{}),...(options.headers||{})}});
+  if(response.status===401&&requestToken&&requestToken===state.token){logout();throw Error('Finance session expired. Please sign in again.');}
   if(!response.ok)throw Error(response.status===403?'This Business has not granted you Finance access.':'Finance service returned HTTP '+response.status);
   return response.json();
  }
  async function load(){
-  $('dash-error').textContent='';const org=encodeURIComponent(state.org);const path='/api/finance-one/v1/organizations/'+org;
+  const token=state.token,organization=state.org,sessionVersion=state.sessionVersion;
+  if(!token||!organization)return;
+  const requestVersion=++state.requestVersion;
+  $('dash-error').textContent='';const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
   try{
    const [summary,ledger,documents,settlements,statutory]=await Promise.all([
     call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities')
    ]);
-   if(!state.token)return;
+   if(sessionVersion!==state.sessionVersion||requestVersion!==state.requestVersion||
+      token!==state.token||organization!==state.org)return;
+   $('trial-warning').hidden=summary.balanced!==false;
    $('money-in').textContent=money(summary.moneyInPaise);$('money-out').textContent=money(summary.moneyOutPaise);
    $('net').textContent=money(summary.netCashMovementPaise);$('profit').textContent=money(summary.profitPaise);
    const led=$('ledger-rows');led.replaceChildren();
@@ -131,7 +145,10 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
     statutoryRows.appendChild(r);
    }
    $('statutory-review').hidden=!statutory.requiresReview;
-  }catch(e){$('dash-error').textContent=e.message||'Unable to load Finance records.';}
+  }catch(e){
+   if(sessionVersion===state.sessionVersion&&requestVersion===state.requestVersion&&token===state.token&&organization===state.org)
+    $('dash-error').textContent=e.message||'Unable to load Finance records.';
+  }
  }
  $('login-form').addEventListener('submit',async event=>{
   event.preventDefault();$('login-error').textContent='';const btn=$('sign-in');btn.disabled=true;
@@ -139,7 +156,8 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   try{
    const result=await call('/api/finance-one/v1/session',{method:'POST',body:JSON.stringify({organizationId:org,accountId:account,password})});
    if(typeof result.token!=='string'||!result.token)throw Error('Finance login failed.');
-   state.token=result.token;state.org=result.organizationId;$('password').value='';$('org-label').textContent=state.org;
+   if(typeof result.organizationId!=='string'||result.organizationId!==org)throw Error('Finance organization mismatch.');
+   state.sessionVersion++;state.requestVersion++;state.token=result.token;state.org=result.organizationId;$('password').value='';$('org-label').textContent=state.org;
    $('login-panel').hidden=true;$('dashboard-panel').hidden=false;await load();
   }catch(e){$('login-error').textContent=e.message||'Invalid Finance login.';}finally{btn.disabled=false;}
  });
