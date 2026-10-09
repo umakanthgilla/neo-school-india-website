@@ -1,7 +1,7 @@
 // Read-only reconciliation utilities. No posting, payout, or data sharing.
 import {cashLedgerTotals} from './cash-projection.mjs';
 function amount(value) {
-  if(!Number.isSafeInteger(value)||value<0) throw new Error('Invalid amount');
+  if(!Number.isSafeInteger(value)) throw new Error('Invalid amount');
   return value;
 }
 export function reconcileBusinessCash({organizationId,openingBalancePaise=0,events=[],closingBalancePaise}) {
