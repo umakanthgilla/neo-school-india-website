@@ -29,9 +29,9 @@ export async function readStatutoryLiabilities({db,authenticatedAccountId,organi
   if(balancePaise<0)needsReview=true;
   netTotal+=balancePaise;
   if(!Number.isSafeInteger(netTotal))throw new Error('Statutory balance overflow');
-  items.push(Object.freeze({code,label,creditedPaise:r.credited_paise,remittedPaise:r.debited_paise,
+  items.push(Object.freeze({code,label,creditedPaise:r.credited_paise,debitedPaise:r.debited_paise,
     balancePaise,requiresReview:balancePaise<0}));
  }
  return Object.freeze({organizationId,items,netLiabilityPaise:netTotal,requiresReview:needsReview,
-  note:'Posted-journal balances only; not proof of government filing, challan or statutory compliance'});
+  note:'Posted-journal balances only; debits may include adjustments rather than remittances; not proof of government filing, challan or statutory compliance'});
 }
