@@ -14,7 +14,8 @@ const objects={
  'neo_fin_statutory_remittance_no_update','neo_fin_statutory_remittance_no_delete',
  'neo_fin_stat_remit_verify_insert','neo_fin_stat_remit_verify_update',
  'neo_fin_stat_remit_verified_no_update','neo_fin_stat_remit_verified_no_delete',
- 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update']};
+ 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update',
+ 'neo_fin_document_locked_no_update','neo_fin_document_locked_no_delete']};
 const rows=Object.entries(objects).flatMap(([type,names])=>names.map(name=>({type,name})));
 const fakeDb=records=>({prepare(query){assert.match(query,/sqlite_master/);return{all:async()=>({results:records})}}});
 test('complete staging schema and secure configuration pass without database writes',async()=>{
