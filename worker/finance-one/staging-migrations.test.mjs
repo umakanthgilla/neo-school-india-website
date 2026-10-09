@@ -113,3 +113,21 @@ test('omitting per-session revocation migration must prevent staging activation'
  assert.ok(result.blockers.includes('Missing trigger neo_fin_session_revocations_no_update'));
  sql.close();
 });
+
+
+test('staging activation rejects deployment missing issued-document immutability migration 10',async()=>{
+ const {sql,db}=database(9);
+ const status=await financeOneStagingPreflight({db,env,phase:'active'});
+ assert.equal(status.ready,false);
+ assert.ok(status.blockers.includes('Missing trigger neo_fin_document_locked_no_update'));
+ assert.ok(status.blockers.includes('Missing trigger neo_fin_document_locked_no_delete'));
+ sql.close();
+});
+test('staging only approves 10-migration schema when issued-document locks are installed',async()=>{
+ const {sql,db}=database();
+ const status=await financeOneStagingPreflight({db,env,phase:'active'});
+ assert.equal(status.ready,true,JSON.stringify(status.blockers));
+ const names=sql.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'neo_fin_document_locked_%'").all().map(x=>x.name);
+ assert.deepEqual(names.sort(),['neo_fin_document_locked_no_delete','neo_fin_document_locked_no_update']);
+ sql.close();
+});
