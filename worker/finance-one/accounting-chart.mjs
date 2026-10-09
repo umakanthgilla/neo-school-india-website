@@ -6,7 +6,12 @@ export const STANDARD_CHART = Object.freeze([
  ['2100','Salary Payable','liability'],['2200','Customer Refunds Payable','liability'],
  ['3100','Owners Equity','equity'],['4000','Fee Revenue','income'],
  ['5000','Operating Expenses','expense'],['5100','Payroll Expense','expense'],
- ['5200','Cost of Goods Sold','expense']
+ ['5200','Cost of Goods Sold','expense'],
+ ['5300','Employer Statutory Contributions','expense'],
+ ['2111','Provident Fund Payable','liability'],
+ ['2112','ESI Payable','liability'],
+ ['2113','Professional Tax Payable','liability'],
+ ['2114','Payroll TDS Payable','liability']
 ]);
 export async function ensureBusinessChart(db,authenticatedAccountId,organizationId){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','write');
