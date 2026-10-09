@@ -67,3 +67,11 @@ Do not merge this branch into main or apply migrations to production without ful
 - `provisioning.test.mjs` and `staging-preflight.test.mjs` add 11 local tests (11/11 passed using Node 22 and focused SQLite/mocked D1 fixtures). This is **not** evidence of full GitHub CI success or production readiness.
 - Exact staging requirements, migration order, regression gates and release blockers: `docs/finance-one-staging-operations.md`.
 - Operator authorization, onboarding/invitations, abuse prevention/WAF, staging Cloudflare deployment and independent accountant acceptance are still necessary. **Do not copy school credentials or issue public Finance accounts**.
+
+
+## 2026-10-09 legacy payout and reconciliation UI milestone
+- Original `payroll`, `vendor_payments`, `salary_advances` -> source voucher and one existing school Daily Ledger row -> `sync-legacy-payout-document.mjs` produces a unique Finance-approved **payment document only** (no cash).
+- After separate verified bank settlement, `legacy-payout-verifier.mjs` checks source state, exact money amount, original voucher, unique school ledger source, ownership and verified bank reference. `sync-legacy-payout.mjs` mirrors exactly one Finance cash event and balanced journal, never another school Daily Ledger entry.
+- New schema `finance_payroll_one_legacy_payout_integrity.sql` prevents a second or partial verified settlement for legacy full payouts and protects verified evidence from editing/deletion. Real reversal/chargeback compensating events still require independent design before live banking.
+- New read-only `/api/finance-one/v1/organizations/{businessId}/settlements` route returns pending/partially-verified/verified/over-verified statuses, scoped to the authenticated business; dashboard `finance-one/portal.html` renders this in a mobile-friendly Payment Verification table.
+- GitHub Actions run **37889431250**: **177 tests passed, 0 failed** (Node 22; mocked and SQLite staging fixtures). Draft PR #26 is **not merged**. Full staging D1 deployment, verified real-bank ingestion, accountant-approved liability reconciliation, Indian statutory payroll, and user acceptance remain required. The new settlement statuses describe internal verification records; they do not independently certify a connection to a live bank.
