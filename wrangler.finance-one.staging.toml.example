@@ -1,0 +1,45 @@
+# EXAMPLE ONLY — copy to a private staging Wrangler config and fill in real values.
+# Do not point this binding to a production D1 database.
+# Do not deploy without first running all staging D1 migrations and tests.
+name = "neo-finance-one-staging"
+main = "worker/finance-one/staging-entry.mjs"
+compatibility_date = "2026-10-09"
+workers_dev = true
+
+[vars]
+FINANCE_ONE_ENVIRONMENT = "staging"
+# Keep OFF until migrations + independent credentials + rate limits + review are complete.
+FINANCE_ONE_READ_API_ENABLED = "false"
+# Optional alternate HTTPS portal origin. The same-origin portal is served at /portal.html.
+# Replace this illustrative value with an approved HTTPS hostname before enabling Finance.
+FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "neo-finance-one-staging"
+database_id = "REPLACE_WITH_SEPARATE_STAGING_D1_UUID"
+
+# FINANCE_ONE_SESSION_SECRET MUST be set with Wrangler secret management;
+# never put it in [vars], source code, or version control.
+
+# Cloudflare assets must run the Worker FIRST for every request; otherwise
+# portal.html could bypass FINANCE_ONE_READ_API_ENABLED=false and security headers.
+[assets]
+directory = "./finance-one"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "none"
+
+
+# REQUIRED before enabling Finance login. Choose namespace IDs that are unique
+# within YOUR Cloudflare account. IDs below are examples, not assigned resources.
+# These native counters are per Cloudflare location, not a global WAF.
+[[ratelimits]]
+name = "FINANCE_ONE_LOGIN_CLIENT_LIMIT"
+namespace_id = "9122001"
+simple = { limit = 20, period = 60 }
+
+[[ratelimits]]
+name = "FINANCE_ONE_LOGIN_ACCOUNT_LIMIT"
+namespace_id = "9122002"
+simple = { limit = 8, period = 60 }

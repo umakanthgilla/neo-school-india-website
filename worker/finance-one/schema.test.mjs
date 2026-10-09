@@ -1,0 +1,80 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+
+const foundation=readFileSync(new URL('../../migrations/finance_payroll_one_foundation.sql',import.meta.url),'utf8');
+const projection=readFileSync(new URL('../../migrations/finance_payroll_one_cash_projection.sql',import.meta.url),'utf8');
+function setup(){
+  const db=new DatabaseSync(':memory:');
+  db.exec('PRAGMA foreign_keys=ON');
+  db.exec(foundation);
+  db.exec(projection);
+  db.prepare("INSERT INTO neo_fin_organizations(id,legal_name,organization_type) VALUES (?,?,?)").run('HO','Head Office','head_office');
+  db.prepare("INSERT INTO neo_fin_organizations(id,legal_name,organization_type) VALUES (?,?,?)").run('A','Center A','independent_center');
+  db.prepare("INSERT INTO neo_fin_organizations(id,legal_name,organization_type) VALUES (?,?,?)").run('B','Center B','independent_center');
+  return db;
+}
+const insertCash = "INSERT INTO neo_fin_cash_events(organization_id,event_id,source_kind,source_id,source_event_id,direction,amount_paise,effective_at,verification_reference) VALUES (?,?,?,?,?,?,?,?,?)";
+test('migrations apply and projection isolates independent businesses',()=>{
+  const db=setup();
+  db.prepare(insertCash).run('A','E1','fee_receipt','R1','P1','money_in',1200,'2026-10-09','BANK1');
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_daily_ledger WHERE organization_id='A'").get().n,1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_daily_ledger WHERE organization_id='B'").get().n,0);
+  db.close();
+});
+test('duplicate original transaction rejected by unique index',()=>{
+  const db=setup();
+  db.prepare(insertCash).run('A','E1','fee_receipt','R1','P1','money_in',1200,'2026-10-09','BANK1');
+  assert.throws(()=>db.prepare(insertCash).run('A','E2','fee_receipt','R1','P1','money_in',1300,'2026-10-09','BANK2'),/UNIQUE/);
+  db.close();
+});
+test('cash projection cannot be manually edited or deleted',()=>{
+  const db=setup();
+  db.prepare(insertCash).run('A','E1','fee_receipt','R1','P1','money_in',1200,'2026-10-09','BANK1');
+  assert.throws(()=>db.exec("UPDATE neo_fin_cash_events SET amount_paise=1 WHERE event_id='E1'"),/immutable/);
+  assert.throws(()=>db.exec("DELETE FROM neo_fin_cash_events WHERE event_id='E1'"),/immutable/);
+  db.close();
+});
+test('orphan organizations and duplicate settlement references blocked',()=>{
+  const db=setup();
+  assert.throws(()=>db.prepare(insertCash).run('NONE','E1','fee_receipt','R1','P1','money_in',100,'2026-10-09','BANK'),/FOREIGN KEY/);
+  db.exec("INSERT INTO neo_fin_documents(organization_id,id,document_type,status,gross_paise,source_kind,source_id) VALUES ('A','PAY1','payment','approved',3000,'payroll_payment','RUN1')");
+  const insertSettlement="INSERT INTO neo_fin_payment_settlements(organization_id,id,document_id,amount_paise,status,bank_reference,verified_at) VALUES (?,?,?,?,?,?,?)";
+  db.prepare(insertSettlement).run('A','S1','PAY1',1000,'verified','REF1','2026-10-09T11:00:00Z');
+  assert.throws(()=>db.prepare(insertSettlement).run('A','S2','PAY1',1000,'verified','REF1','2026-10-09T12:00:00Z'),/UNIQUE/);
+  db.close();
+});
+
+const accounting=readFileSync(new URL('../../migrations/finance_payroll_one_accounting_journals.sql',import.meta.url),'utf8');
+test('double entry posting rejects unbalanced journals and cross-business accounts',()=>{
+ const db=setup();db.exec(accounting);
+ const a="INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES (?,?,?,?,?)";
+ db.prepare(a).run('A','BANK','100','Bank','asset');
+ db.prepare(a).run('A','FEES','400','Fees','income');
+ db.prepare(a).run('B','EXP','600','Expenses','expense');
+ db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A','J1','fee_receipt','R1')");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J1',1,'BANK',1000)");
+ assert.throws(()=>db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'"),/balance/);
+ assert.throws(()=>db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'EXP',1000)"),/FOREIGN KEY/);
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'FEES',1000)");
+ db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'");
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_posted_journal_lines WHERE organization_id='A'").get().n,2);
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM neo_fin_posted_journal_lines WHERE organization_id='B'").get().n,0);
+ assert.throws(()=>db.exec("DELETE FROM neo_fin_journal_lines WHERE journal_id='J1'"),/immutable/);
+ assert.throws(()=>db.exec("DELETE FROM neo_fin_journals WHERE id='J1'"),/immutable/);
+ db.close();
+});
+
+test('cannot insert posted journals or move lines into posted journals',()=>{
+ const db=setup();db.exec(accounting);
+ assert.throws(()=>db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id,status,posted_at) VALUES('A','J0','invoice','I0','posted','2026-10-09')"),/start as draft/);
+ db.exec("INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES('A','A1','11','A1','asset'),('A','A2','12','A2','income')");
+ db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A','J1','invoice','I1'),('A','J2','invoice','I2')");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J1',1,'A1',100)");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'A2',100)");
+ db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J2',3,'A1',100)");
+ assert.throws(()=>db.exec("UPDATE neo_fin_journal_lines SET journal_id='J1' WHERE journal_id='J2'"),/immutable/);
+ db.close();
+});

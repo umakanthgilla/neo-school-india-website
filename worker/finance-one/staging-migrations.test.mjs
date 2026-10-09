@@ -1,0 +1,133 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+import {financeOneStagingPreflight} from './staging-preflight.mjs';
+
+const orderedMigrations=[
+ 'finance_payroll_one_foundation.sql',
+ 'finance_payroll_one_cash_projection.sql',
+ 'finance_payroll_one_accounting_journals.sql',
+ 'finance_payroll_one_auth_accounts.sql',
+ 'finance_payroll_one_receipt_evidence.sql',
+ 'finance_payroll_one_legacy_payout_integrity.sql',
+ 'finance_payroll_one_statutory_review.sql',
+ 'finance_payroll_one_statutory_remittance.sql',
+ 'finance_payroll_one_session_revocations.sql',
+ 'finance_payroll_one_issued_document_immutability.sql'
+];
+const env={
+ FINANCE_ONE_ENVIRONMENT:'staging',
+ FINANCE_ONE_READ_API_ENABLED:'true',
+ FINANCE_ONE_SESSION_SECRET:'temporary-test-secret-32-characters-minimum',
+ FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},
+ FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})}
+};
+function database(stopAfter=orderedMigrations.length){
+ const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
+ for(const path of orderedMigrations.slice(0,stopAfter)){
+  sql.exec(readFileSync(new URL('../../migrations/'+path,import.meta.url),'utf8'));
+ }
+ return {
+  sql,
+  db:{prepare(query){const stmt=sql.prepare(query);return{all:async()=>({results:stmt.all()})}}}
+ };
+}
+test('all ten SQL migrations apply in release order and pass real staging preflight',async()=>{
+ const {sql,db}=database();
+ const status=await financeOneStagingPreflight({db,env});
+ assert.equal(status.ready,true,JSON.stringify(status.blockers));
+ assert.equal(status.schema.tables>=14,true);
+ assert.equal(status.schema.views>=2,true);
+ assert.equal(status.schema.triggers>=19,true);
+ assert.deepEqual(status.blockers,[]);
+ sql.close();
+});
+test('leaving out statutory remittance migration blocks release',async()=>{
+ const {sql,db}=database(7);
+ const result=await financeOneStagingPreflight({db,env});
+ assert.equal(result.ready,false);
+ assert.ok(result.blockers.includes('Missing table neo_fin_statutory_remittances'));
+ assert.ok(result.blockers.includes('Missing trigger neo_fin_stat_remit_no_overclear'));
+ sql.close();
+});
+test('preflight never approves a production environment even with complete schema',async()=>{
+ const {sql,db}=database();
+ const status=await financeOneStagingPreflight({db,env:{...env,FINANCE_ONE_ENVIRONMENT:'production'}});
+ assert.equal(status.ready,false);
+ assert.ok(status.blockers.includes('Not explicitly marked staging'));
+ sql.close();
+});
+test('staging auth, posted-journal and verified statutory evidence are enforced together',()=>{
+ const {sql}=database();
+ sql.exec(`INSERT INTO neo_fin_organizations(id,legal_name,organization_type)
+ VALUES('A','Independent Center','independent_center');
+ INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type)
+ VALUES('A','PF','2111','PF Payable','liability'),('A','BANK','1000','Bank','asset');`);
+ sql.exec(`INSERT INTO neo_fin_auth_accounts(account_id,salt,password_hash,iterations)
+ VALUES('fin:a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+ 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',210000)`);
+ assert.throws(()=>sql.exec("UPDATE neo_fin_auth_accounts SET active=0 WHERE account_id='fin:a'"),/Credential change requires new version/);
+ assert.throws(()=>sql.exec(`INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id,status,posted_at)
+ VALUES('A','J1','document','D1','posted','2026-10-09')`),/Journal must start as draft/);
+ sql.close();
+});
+
+
+test('staging pre-activation is safe with Finance routes switched OFF',async()=>{
+ const {sql,db}=database();
+ const closed={...env,FINANCE_ONE_READ_API_ENABLED:'false'};
+ const before=await financeOneStagingPreflight({db,env:closed,phase:'prepare'});
+ assert.equal(before.ready,true,JSON.stringify(before.blockers));
+ const exposed=await financeOneStagingPreflight({db,env,phase:'prepare'});
+ assert.equal(exposed.ready,false);
+ assert.ok(exposed.blockers.includes('Finance API must remain disabled during preparation'));
+ const active=await financeOneStagingPreflight({db,env:closed,phase:'active'});
+ assert.equal(active.ready,false);
+ assert.ok(active.blockers.includes('Finance API feature flag not enabled for staging'));
+ sql.close();
+});
+test('staging preparation refuses incomplete schema even with disabled endpoint',async()=>{
+ const {sql,db}=database(7);
+ const result=await financeOneStagingPreflight({db,env:{...env,FINANCE_ONE_READ_API_ENABLED:'false'},phase:'prepare'});
+ assert.equal(result.ready,false);
+ assert.ok(result.blockers.includes('Missing table neo_fin_statutory_remittances'));
+ sql.close();
+});
+test('no preflight phase can greenlight a production environment',async()=>{
+ const {sql,db}=database();
+ for(const phase of ['prepare','active']){
+  const result=await financeOneStagingPreflight({db,env:{...env,FINANCE_ONE_ENVIRONMENT:'production',FINANCE_ONE_READ_API_ENABLED:phase==='prepare'?'false':'true'},phase});
+  assert.equal(result.ready,false);
+  assert.ok(result.blockers.includes('Not explicitly marked staging'));
+ }
+ sql.close();
+});
+
+
+test('omitting per-session revocation migration must prevent staging activation',async()=>{
+ const {sql,db}=database(8);
+ const result=await financeOneStagingPreflight({db,env});
+ assert.equal(result.ready,false);
+ assert.ok(result.blockers.includes('Missing table neo_fin_session_revocations'));
+ assert.ok(result.blockers.includes('Missing trigger neo_fin_session_revocations_no_update'));
+ sql.close();
+});
+
+
+test('staging activation rejects deployment missing issued-document immutability migration 10',async()=>{
+ const {sql,db}=database(9);
+ const status=await financeOneStagingPreflight({db,env,phase:'active'});
+ assert.equal(status.ready,false);
+ assert.ok(status.blockers.includes('Missing trigger neo_fin_document_locked_no_update'));
+ assert.ok(status.blockers.includes('Missing trigger neo_fin_document_locked_no_delete'));
+ sql.close();
+});
+test('staging only approves 10-migration schema when issued-document locks are installed',async()=>{
+ const {sql,db}=database();
+ const status=await financeOneStagingPreflight({db,env,phase:'active'});
+ assert.equal(status.ready,true,JSON.stringify(status.blockers));
+ const names=sql.prepare("SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'neo_fin_document_locked_%'").all().map(x=>x.name);
+ assert.deepEqual(names.sort(),['neo_fin_document_locked_no_delete','neo_fin_document_locked_no_update']);
+ sql.close();
+});
