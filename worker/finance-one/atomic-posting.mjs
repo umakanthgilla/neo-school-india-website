@@ -19,7 +19,20 @@ export async function postVerifiedSourceEvent({db,organizationId,source,verifySo
    (organization_id,event_id,source_kind,source_id,source_event_id,direction,amount_paise,effective_at,verification_reference)
    VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(organization_id,source_kind,source_id,source_event_id) DO NOTHING`
  ).bind(event.organizationId,eventId,event.sourceKind,event.sourceId,event.sourceEventId,event.direction,event.amountPaise,event.effectiveAt,event.verificationReference).run();
- if(result?.success===false) throw new Error('Database posting failed');
- return Object.freeze({eventId,created:Number(result?.meta?.changes||0)===1});
+ if(result?.success!==true || !Number.isInteger(result?.meta?.changes)) throw new Error('Database posting not confirmed');
+ const created=result.meta.changes===1;
+ if(!created){
+  // A repeated event must match the original exactly: never silently ignore
+  // a changed amount/direction/reference disguised as an idempotent retry.
+  const existing=await db.prepare(
+   'SELECT direction,amount_paise,effective_at,verification_reference FROM neo_fin_cash_events WHERE organization_id=? AND source_kind=? AND source_id=? AND source_event_id=?'
+  ).bind(event.organizationId,event.sourceKind,event.sourceId,event.sourceEventId).first();
+  if(!existing || existing.direction!==event.direction ||
+    existing.amount_paise!==event.amountPaise ||
+    existing.effective_at!==event.effectiveAt ||
+    existing.verification_reference!==event.verificationReference)
+    throw new Error('Conflicting source event; reconciliation required');
+ }
+ return Object.freeze({eventId,created});
 }
 // Idempotent write protects repeated source delivery. Real verifier + DB migration still required.
