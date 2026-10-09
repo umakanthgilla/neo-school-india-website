@@ -41,3 +41,12 @@ Until a real staging URL and test execution are verified, the work remains imple
 - GitHub Actions workflow now includes the SQL schema tests. Its remote pass/fail result has not been verified.
 - Critical open issue: legacy production payroll Paid transition is not yet settlement-gated, and HO admin privileges currently differ from the required private independent-business model. Do not automatically migrate legacy access rules.
 - This foundation does not yet implement accounting source adapters, integrated receipt verifiers, full payroll, bank reconciliation, user-facing portal, staging URL, or production deployment.
+
+
+## 2026-10-09 read-only legacy integration audit
+- Inspected existing production source: `payments` -> `FIN_FEE_...`, `vouchers` -> `FIN_VCH_...`, `salary_advances` -> `FIN_ADV_...`, `payroll` -> `FIN_PAY_...`, all reflected in legacy `daily_accounts`.
+- Added `worker/finance-one/legacy-ledger-audit.mjs`: no writes, detects missing/duplicate/orphan/mismatched Daily Ledger entries, matching source vouchers, and warns that legacy Payroll Paid is not verified bank settlement evidence.
+- Added `authorized-legacy-audit.mjs`: maps school to its owning organization, then checks authenticated finance membership before reading school-scoped records. This code is not attached to a live route.
+- Local focused audit tests passed 12/12 using Node 22, with SQLite fixtures for Center A, Center B and HO denial. Existing GitHub test workflow covers new `*.test.mjs` files, but remote CI result remains unverified.
+- Current snapshot is intentionally bounded; production-scale audit needs pagination / consistent snapshots and permission-aware setup. Do not run it as a global HO audit or copy private center finances.
+- This audit is NOT the final automatic posting migration and is NOT a user-facing staging portal.
