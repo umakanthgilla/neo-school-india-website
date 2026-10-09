@@ -49,6 +49,7 @@ BEGIN SELECT RAISE(ABORT,'Posted journal immutable'); END;
 CREATE TRIGGER IF NOT EXISTS neo_fin_journal_lines_no_update_posted
 BEFORE UPDATE ON neo_fin_journal_lines
 WHEN (SELECT status FROM neo_fin_journals WHERE organization_id=OLD.organization_id AND id=OLD.journal_id)='posted'
+ OR (SELECT status FROM neo_fin_journals WHERE organization_id=NEW.organization_id AND id=NEW.journal_id)='posted'
 BEGIN SELECT RAISE(ABORT,'Posted journal immutable'); END;
 CREATE TRIGGER IF NOT EXISTS neo_fin_journal_lines_no_delete_posted
 BEFORE DELETE ON neo_fin_journal_lines
@@ -59,3 +60,8 @@ SELECT j.organization_id,j.id AS journal_id,j.source_kind,j.source_id,j.posted_a
 l.line_no,l.account_id,l.debit_paise,l.credit_paise
 FROM neo_fin_journals j JOIN neo_fin_journal_lines l
 ON l.organization_id=j.organization_id AND l.journal_id=j.id WHERE j.status='posted';
+
+-- Prevent bypassing the balancing trigger by inserting an already-posted header.
+CREATE TRIGGER IF NOT EXISTS neo_fin_journal_must_start_draft
+BEFORE INSERT ON neo_fin_journals WHEN NEW.status<>'draft'
+BEGIN SELECT RAISE(ABORT,'Journal must start as draft'); END;
