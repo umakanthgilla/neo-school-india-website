@@ -75,3 +75,14 @@ test('a posted and balanced journal with WRONG Bank amount blocks Business stagi
  assert.ok(result.blockers.some(b=>b.startsWith('Cash/Bank journal reconciliation issues: ')));
  f.sql.close();
 });
+
+test('a Center with approved Sales Invoice but no accrual journal is NOT finance-staging ready',async()=>{
+ const f=fixture();
+ f.sql.exec("INSERT INTO neo_fin_documents(organization_id,id,document_type,status,gross_paise) VALUES('A','INV1','sales_invoice','approved',10000)");
+ const result=await financeOneBusinessPreflight(f.params);
+ assert.equal(result.ready,false);
+ assert.equal(result.cashJournalAuditIssues,0);
+ assert.equal(result.accrualJournalAuditIssues,1);
+ assert.ok(result.blockers.includes('Accrual document/journal reconciliation issues: 1'));
+ f.sql.close();
+});
