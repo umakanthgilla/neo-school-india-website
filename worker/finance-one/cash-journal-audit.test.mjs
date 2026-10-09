@@ -60,7 +60,8 @@ test('balanced but wrong-direction bank journal is detected; balanced is not eno
  const f=setup();f.event('A','E1','money_in',10000);
  f.journal('A','WRONG','E1',[['AR_A',10000,0],['BANK_A',0,10000]]);
  const r=await auditFinanceCashJournals(f.params);
- assert.equal(r.issueCount,1);assert.equal(r.counts.bank_amount_mismatch,1);
+ assert.equal(r.issueCount,2);assert.equal(r.counts.bank_amount_mismatch,1);
+ assert.equal(r.counts.contra_account_mismatch,1);
  f.sql.close();
 });
 test('posted journal with wrong bank amount detects mismatch even when internally balanced',async()=>{
