@@ -10,7 +10,9 @@ const db={prepare(sql){return{bind(...values){return{first:async()=>{if(sql.incl
  if(sql.includes('neo_fin_daily_ledger'))return{results:[{event_id:'C1',amount_paise:500}]};
  throw Error('SQL');
 }}}}}};
-const enabled={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret};
+const enabled={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret,
+ FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},
+ FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})}};
 test('unrelated routes pass through',async()=>{
  const r=await financeOneWorkerGate({request:makeRequest('/api/portal/foo'),env:enabled});assert.equal(r,null);
 });
