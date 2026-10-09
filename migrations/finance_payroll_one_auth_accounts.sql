@@ -14,3 +14,9 @@ CREATE TABLE IF NOT EXISTS neo_fin_auth_accounts (
 CREATE INDEX IF NOT EXISTS neo_fin_auth_active ON neo_fin_auth_accounts(active);
 -- Password resets and account suspensions must increment credential_version.
 -- Every Finance request rechecks credential_version and active in the database.
+
+-- Never allow a password change or account suspension to leave old tokens valid.
+CREATE TRIGGER IF NOT EXISTS neo_fin_auth_rotate_credentials
+BEFORE UPDATE OF password_hash,salt,active ON neo_fin_auth_accounts
+WHEN NEW.credential_version<=OLD.credential_version
+BEGIN SELECT RAISE(ABORT,'Credential change requires new version'); END;
