@@ -167,3 +167,34 @@ test('direct Finance login handler fails closed in production even with feature 
  assert.equal(db.sql.prepare("SELECT failed_attempts FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get().failed_attempts,0);
  db.sql.close();
 });
+
+
+test('client native throttle returns 429 before Finance password is checked',async()=>{
+ const db=fixture();await seed(db);
+ const limitEnv={...env(db),FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:false})}};
+ const response=await handleFinanceLogin({request:login(),env:limitEnv});
+ assert.equal(response.status,429);
+ assert.equal(response.headers.get('Retry-After'),'60');
+ assert.equal(db.sql.prepare('SELECT failed_attempts FROM neo_fin_auth_accounts').get().failed_attempts,0);
+ db.sql.close();
+});
+test('account native throttle applies before both valid and invalid passwords',async()=>{
+ const db=fixture();await seed(db);
+ const calls=[];
+ const limitEnv={...env(db),FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async x=>{calls.push(x.key);return{success:false}}}};
+ for(const pwd of [password,'wrong']){
+  const response=await handleFinanceLogin({request:login('fin:alice',pwd),env:limitEnv});
+  assert.equal(response.status,429);
+ }
+ assert.equal(calls.length,2);assert.equal(calls[0],calls[1]);
+ assert.equal(db.sql.prepare('SELECT failed_attempts FROM neo_fin_auth_accounts').get().failed_attempts,0);
+ db.sql.close();
+});
+test('missing Cloudflare login bindings fail closed without issuing tokens',async()=>{
+ const db=fixture();await seed(db);
+ const noClient=await handleFinanceLogin({request:login(),env:{...env(db),FINANCE_ONE_LOGIN_CLIENT_LIMIT:undefined}});
+ assert.equal(noClient.status,503);
+ const noAccount=await handleFinanceLogin({request:login(),env:{...env(db),FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:undefined}});
+ assert.equal(noAccount.status,503);
+ db.sql.close();
+});
