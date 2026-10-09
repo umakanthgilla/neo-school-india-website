@@ -74,7 +74,7 @@ for(const kind of Object.keys(CASES)){
   assert.equal(created.cashCreated,true);assert.equal(created.journalCreated,true);
   const event=f.sql.prepare('SELECT direction,amount_paise FROM neo_fin_cash_events').get();
   assert.equal(event.direction,'money_out');assert.equal(event.amount_paise,f.c.amount);
-  const lines=f.sql.prepare('SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines WHERE journal_id LIKE 'JNL|%' ORDER BY line_no').all();
+  const lines=f.sql.prepare("SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines WHERE journal_id LIKE 'JNL|%' ORDER BY line_no").all();
   assert.deepEqual(lines.map(l=>l.account_id),[f.c.account==='2100'?'SAL':f.c.account==='2000'?'AP':'ADV','BANK']);
   assert.equal(lines[0].debit_paise,f.c.amount);assert.equal(lines[1].credit_paise,f.c.amount);
   assert.equal(count(f.sql,'neo_fin_cash_events'),1);
