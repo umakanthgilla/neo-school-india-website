@@ -12,6 +12,7 @@ on:
     paths:
       - 'worker/finance-one/**'
       - 'finance-one/**'
+      - 'migrations/finance_payroll_one_*.sql'
       - '.github/workflows/finance-one-tests.yml'
 permissions:
   contents: read
