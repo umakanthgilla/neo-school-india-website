@@ -21,6 +21,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
 .caption{font-size:12px;color:var(--muted);margin:0 0 16px}.table-wrap{overflow:auto;max-height:450px}table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}th{color:#48648c;background:#f3f8ff;font-size:12px;font-weight:750;position:sticky;top:0}td,th{padding:11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}td:nth-child(2){max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}.in{color:#14755d}.out{color:#a03b47}.empty{color:var(--muted);font-size:13px;padding:15px 4px}.foot{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}@media(max-width:480px){main{padding:20px 12px}.top{padding:15px}.top-side{display:none}.login{margin:30px auto;padding:20px}.stat{padding:14px}.stat .value{font-size:19px}.dash-head{align-items:flex-start;flex-direction:column}.actions{width:100%}.small-btn{flex:1}.section{padding:15px}}
+.below-grid{margin-top:16px}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -56,14 +57,14 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    <div class="table-wrap"><table><thead><tr><th>Document</th><th>Type</th><th>Status</th><th class="amount">Amount</th></tr></thead><tbody id="document-rows"></tbody></table></div><p id="documents-empty" class="empty" hidden>No documents available.</p>
   </article>
  </div>
- <article class="card accent section" style="margin-top:16px">
+ <article class="card accent section below-grid">
   <h2>Payment Verification & Reconciliation</h2>
   <p class="caption">Verified bank settlements versus payments awaiting independent confirmation — read only</p>
   <div class="table-wrap"><table><thead><tr><th>Payment Document</th><th>Source</th><th>Bank Verification</th><th class="amount">Verified / Total</th></tr></thead>
    <tbody id="settlement-rows"></tbody></table></div>
   <p id="settlement-empty" class="empty" hidden>No payment documents available.</p>
  </article>
- <article class="card accent section" style="margin-top:16px">
+ <article class="card accent section below-grid">
   <h2>Statutory Payables — PF / ESI / PT / TDS</h2>
   <p class="caption">Unpaid accounting balances from posted journals. This is not a government filing or payment confirmation.</p>
   <div class="table-wrap"><table><thead><tr><th>Liability</th><th class="amount">Credited</th><th class="amount">Debited</th><th class="amount">Balance</th></tr></thead>
