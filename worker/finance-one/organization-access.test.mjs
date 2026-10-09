@@ -80,3 +80,11 @@ test('pagination is bounded within organization',async()=>{
   await listOwnDocuments(db,ctx,100);
   assert.deepEqual(db.observed.at(-1).values,['CENTER_B',100]);
 });
+
+test('payroll-only access must not grant finance document reads',async()=>{
+  const db=mockDb();
+  const payrollContext=await resolveFinanceOrganization(db,'ho_owner','HO','payroll','read');
+  await assert.rejects(listOwnDocuments(db,payrollContext),FinanceAccessError);
+  const finContext=await resolveFinanceOrganization(db,'ho_owner','HO','finance','read');
+  assert.equal((await listOwnDocuments(db,finContext)).length,1);
+});
