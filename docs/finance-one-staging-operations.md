@@ -133,3 +133,17 @@ Do not mark the project complete or request live money testing while any release
 - It is read-only: it neither posts new cash movements nor attempts to repair incomplete accounting. Resolve its blockers using separately audited finance recovery and onboarding steps, then re-run.
 - These checks complement the full **eight migration** `staging-migrations.test.mjs` suite.
 - Latest GitHub Actions run `37892615347`: **225/225 tests passed, zero failures** on the development branch. This is not proof that a real Cloudflare D1 staging service, live banking, tax filing, or user acceptance environment has been deployed.
+
+
+## Safe two-phase staging activation — 2026-10-09
+1. Deploy a separate **private staging-only** Worker and D1 binding, initially with `FINANCE_ONE_READ_API_ENABLED=false` and `FINANCE_ONE_ENVIRONMENT=staging`. The existing Neo School India production Worker must remain untouched.
+2. Apply all eight SQL migrations to the independent staging D1. Never use production D1 or production financial records as unreviewed sample fixtures.
+3. Run `financeOneStagingPreflight({db:env.DB, env, phase:'prepare'})` from an authorized internal diagnostic while the Finance API feature is **OFF**. Any missing security trigger, migration, or signing secret blocks activation.
+4. Provision separate Finance credentials and Chart of Accounts through an audited internal operator flow. Run `financeOneBusinessPreflight` individually for HO and each participating legal business; all required active accounts and posted cash journals must pass. An inactive chart account does **not** count as configured.
+5. Add per-IP/per-account login throttling, access logs and secrets management; validate the accountant-approved accounting policy and bank evidence creation workflow. Do not expose the login publicly before those protections are configured.
+6. Only then deliberately enable the Finance API on isolated staging. Run `financeOneStagingPreflight({db:env.DB,env,phase:'active'})`, full GitHub CI, login/logout/token revoke, cross-business denial and verified settlement reconciliation.
+7. If any gate fails, disable `FINANCE_ONE_READ_API_ENABLED`, investigate the staging-only records, and retry. Never merge this PR or deploy the new Worker to production as an automatic result of successful unit tests.
+
+The development Worker gate now refuses Finance routes outright if `FINANCE_ONE_ENVIRONMENT` is not exactly `staging`, including when the Finance feature flag is accidentally set to true. The isolated Worker entrypoint enforces the same boundary.
+
+**Verification:** 230/230 GitHub automated tests passed in run `37892827857` immediately after the activation safety changes. Later account-readiness counting tests must be checked against their own CI result. These checks do not constitute a deployed Cloudflare staging URL or production certification.
