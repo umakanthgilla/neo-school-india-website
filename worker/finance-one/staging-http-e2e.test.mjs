@@ -127,3 +127,41 @@ test('HTTP read-only enforcement refuses attempts to edit Finance Daily Ledger',
   assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS n FROM neo_fin_cash_events").get().n,before);
  }finally{f.sqlite.close();}
 });
+
+
+test('server sign-out immediately revokes only current Finance token, not another device',async()=>{
+ const f=await fixture();try{
+  const first=await f.token();
+  const second=await f.token();
+  assert.notEqual(first,second,'Every Finance login must issue an independent random token');
+  assert.equal((await stagingWorker.fetch(f.http('documents',first),f.env)).status,200);
+  const signOut=new Request(api+'/session/logout',{method:'POST',
+   headers:{Origin:portal,Authorization:'Bearer '+first}});
+  const done=await stagingWorker.fetch(signOut,f.env);
+  assert.equal(done.status,204);
+  assert.equal(done.headers.get('Cache-Control'),'no-store');
+  assert.equal((await stagingWorker.fetch(f.http('documents',first),f.env)).status,401);
+  assert.equal((await stagingWorker.fetch(f.http('documents',second),f.env)).status,200);
+  assert.equal(f.sqlite.prepare('SELECT COUNT(*) n FROM neo_fin_session_revocations').get().n,1);
+  const account=f.sqlite.prepare("SELECT credential_version FROM neo_fin_auth_accounts WHERE account_id='fin:alice'").get();
+  assert.equal(account.credential_version,1,'Other Finance devices must not be revoked');
+ }finally{f.sqlite.close();}
+});
+test('Finance session logout endpoint is POST-only, requires a valid token',async()=>{
+ const f=await fixture();try{
+  const token=await f.token();
+  const get=new Request(api+'/session/logout',{headers:{Origin:portal,Authorization:'Bearer '+token}});
+  assert.equal((await stagingWorker.fetch(get,f.env)).status,405);
+  const unauth=new Request(api+'/session/logout',{method:'POST',headers:{Origin:portal}});
+  assert.equal((await stagingWorker.fetch(unauth,f.env)).status,401);
+  assert.equal(f.sqlite.prepare('SELECT COUNT(*) n FROM neo_fin_session_revocations').get().n,0);
+ }finally{f.sqlite.close();}
+});
+test('missing revocation schema blocks Finance access instead of silently accepting bearer',async()=>{
+ const f=await fixture();try{
+  const token=await f.token();
+  f.sqlite.exec('DROP TABLE neo_fin_session_revocations');
+  const denied=await stagingWorker.fetch(f.http('documents',token),f.env);
+  assert.equal(denied.status,503);
+ }finally{f.sqlite.close();}
+});
