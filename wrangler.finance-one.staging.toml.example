@@ -10,7 +10,8 @@ workers_dev = true
 FINANCE_ONE_ENVIRONMENT = "staging"
 # Keep OFF until migrations + independent credentials + rate limits + review are complete.
 FINANCE_ONE_READ_API_ENABLED = "false"
-# Replace with the HTTPS origin serving finance-one/portal.html (no path or trailing slash).
+# Optional alternate HTTPS portal origin. The same-origin portal is served at /portal.html.
+# Replace this illustrative value with an approved HTTPS hostname before enabling Finance.
 FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
 
 [[d1_databases]]
@@ -20,3 +21,11 @@ database_id = "REPLACE_WITH_SEPARATE_STAGING_D1_UUID"
 
 # FINANCE_ONE_SESSION_SECRET MUST be set with Wrangler secret management;
 # never put it in [vars], source code, or version control.
+
+# Cloudflare assets must run the Worker FIRST for every request; otherwise
+# portal.html could bypass FINANCE_ONE_READ_API_ENABLED=false and security headers.
+[assets]
+directory = "./finance-one"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "none"
