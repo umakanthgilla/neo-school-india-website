@@ -21,4 +21,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test organization access
-        run: node --test worker/finance-one/organization-access.test.mjs
+        run: node --test worker/finance-one/*.test.mjs
