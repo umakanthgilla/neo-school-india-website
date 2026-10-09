@@ -44,12 +44,13 @@ export async function resolveFinanceOrganization(db, accountId, organizationId, 
     try { return assertFinanceCapability(m,domain,operation); } catch { return false; }
   });
   if (!granted) throw new FinanceAccessError();
-  const ctx = Object.freeze({organizationId:granted.organization_id, accountId, role:granted.role});
+  const ctx = Object.freeze({organizationId:granted.organization_id, accountId, role:granted.role, domain, operation});
   validatedContexts.add(ctx);
   return ctx;
 }
 export async function listOwnDocuments(db, context, limit=50) {
-  if (!context || !validatedContexts.has(context)) throw new FinanceAccessError();
+  if (!context || !validatedContexts.has(context) || context.domain !== 'finance') throw new FinanceAccessError();
+  assertFinanceCapability({role:context.role,active:1},'finance','read');
   const bounded = Math.max(1,Math.min(100,Number.isInteger(limit)?limit:50));
   return (await db.prepare(
     'SELECT id,document_type,party_id,status,currency,gross_paise,created_at FROM neo_fin_documents WHERE organization_id=? ORDER BY created_at DESC,id DESC LIMIT ?'
