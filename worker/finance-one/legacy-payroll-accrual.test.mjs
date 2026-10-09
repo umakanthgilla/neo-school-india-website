@@ -6,6 +6,8 @@ import {postLegacyPayrollAccrual} from './legacy-payroll-accrual.mjs';
 import {postAccrualJournalForDocument} from './accrual-journal.mjs';
 import {syncLegacyPayoutDocument} from './sync-legacy-payout-document.mjs';
 import {syncVerifiedLegacyPayout} from './sync-legacy-payout.mjs';
+import {recoverMissingCashJournals} from './journal-recovery.mjs';
+import {postJournalForCashEvent} from './source-journal.mjs';
 
 const migrations=[
  'finance_payroll_one_foundation.sql','finance_payroll_one_cash_projection.sql',
@@ -177,4 +179,25 @@ test('bank settlement cannot debit Salary Payable before source payroll accrual 
  const posted=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
  assert.equal(posted.cashCreated,true);
  f.sql.close();
+});
+
+test('failed advance-recovery accounting repairs from verified cash without reposting cash ledger',async()=>{
+ const f=fixture({status:'Paid'});const originalId=seedLegacyPaidPayrollVoucher(f);
+ await postLegacyPayrollAccrual(f.params);
+ const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
+ const doc=await syncLegacyPayoutDocument(payoutParams);
+ f.sql.prepare(`INSERT INTO neo_fin_payment_settlements
+   (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
+   VALUES('A','BANKPAY1',?,65000,'verified','BANK-2026-77','2026-10-09T11:00:00Z')`).run(doc.documentId);
+ f.sql.exec("UPDATE neo_fin_accounts SET active=0 WHERE organization_id='A' AND account_code='1200'");
+ await assert.rejects(syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'}),/accounts unavailable/);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,1);
+ f.sql.exec("UPDATE neo_fin_accounts SET active=1 WHERE organization_id='A' AND account_code='1200'");
+ const recovery=await recoverMissingCashJournals({db:f.db,organizationId:'A'});
+ assert.equal(recovery.failed.length,0);assert.equal(recovery.posted.length,1);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,1);
+ const pay=f.sql.prepare("SELECT event_id FROM neo_fin_cash_events WHERE organization_id='A'").get();
+ await assert.rejects(postJournalForCashEvent(f.db,'A',pay.event_id),/Legacy payroll requires/);
+ const again=await recoverMissingCashJournals({db:f.db,organizationId:'A'});
+ assert.equal(again.checked,0);f.sql.close();
 });
