@@ -29,9 +29,9 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
  VALUES('A','fin:alice','owner'),('HO','fin:ho','owner');
  INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type)
  VALUES ('A','BANK','1000','Bank','asset'),('A','SAL','2100','Salary payable','liability'),
- ('A','AP','2000','Accounts payable','liability'),('A','ADV','1200','Employee advance','asset');`);
+ ('A','AP','2000','Accounts payable','liability'),('A','ADV','1200','Employee advance','asset'),('A','SAL_EXP','5100','Salary expense','expense');`);
  const insert=sql.prepare('INSERT INTO neo_portal_records VALUES (?,?,?,?)');
- const source={status:c.status,[c.amountKey]:c.amount};
+ const source=sourceKind==='payroll_payment' ? {status:'Paid',net_paise:c.amount,gross_paise:c.amount+5000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:5000,deductions_paise:5000}: {status:c.status,[c.amountKey]:c.amount};
  insert.run('SCHOOL_A',c.kind,'RUN1',JSON.stringify(source));
  const voucher={status:'Paid',source_kind:c.vKind,source_id:'RUN1',amount_paise:c.amount,voucher_no:'PV-2026-1',payment_mode:'Bank transfer'};
  insert.run('SCHOOL_A','vouchers',c.vId,JSON.stringify(voucher));
@@ -40,6 +40,19 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
  sql.prepare(`INSERT INTO neo_fin_documents
  (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
  VALUES ('A','DOC1','payment','approved',?,?,?)`).run(c.amount,sourceKind,'SCHOOL_A|RUN1');
+ if(sourceKind==='payroll_payment'){
+  const accrualRef='8:SCHOOL_A|4:RUN1',accrualId='PAY_ACCR|'+accrualRef;
+  sql.prepare(`INSERT INTO neo_fin_documents
+  (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
+  VALUES('A',?,'payroll_liability','approved',30000,'legacy_payroll',?)`).run(accrualId,accrualRef);
+  sql.prepare("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A',?,'document',?)").run('JNL-DOC|'+accrualId,accrualId);
+  const statement=sql.prepare(`INSERT INTO neo_fin_journal_lines
+  (organization_id,journal_id,line_no,account_id,debit_paise,credit_paise) VALUES('A',?,?,?,?,?)`);
+  statement.run('JNL-DOC|'+accrualId,1,'SAL_EXP',30000,0);
+  statement.run('JNL-DOC|'+accrualId,2,'SAL',0,25000);
+  statement.run('JNL-DOC|'+accrualId,3,'ADV',0,5000);
+  sql.prepare("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-08T10:00:00Z' WHERE organization_id='A' AND id=?").run('JNL-DOC|'+accrualId);
+ }
  sql.prepare(`INSERT INTO neo_fin_payment_settlements
  (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
  VALUES ('A','SET1','DOC1',?,?,?,?)`).run(c.amount,verified?'verified':'pending','BANK1','2026-10-09T10:00:00Z');
@@ -61,7 +74,7 @@ for(const kind of Object.keys(CASES)){
   assert.equal(created.cashCreated,true);assert.equal(created.journalCreated,true);
   const event=f.sql.prepare('SELECT direction,amount_paise FROM neo_fin_cash_events').get();
   assert.equal(event.direction,'money_out');assert.equal(event.amount_paise,f.c.amount);
-  const lines=f.sql.prepare('SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines ORDER BY line_no').all();
+  const lines=f.sql.prepare('SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines WHERE journal_id LIKE 'JNL|%' ORDER BY line_no').all();
   assert.deepEqual(lines.map(l=>l.account_id),[f.c.account==='2100'?'SAL':f.c.account==='2000'?'AP':'ADV','BANK']);
   assert.equal(lines[0].debit_paise,f.c.amount);assert.equal(lines[1].credit_paise,f.c.amount);
   assert.equal(count(f.sql,'neo_fin_cash_events'),1);
