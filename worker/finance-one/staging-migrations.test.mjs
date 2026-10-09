@@ -12,7 +12,8 @@ const orderedMigrations=[
  'finance_payroll_one_receipt_evidence.sql',
  'finance_payroll_one_legacy_payout_integrity.sql',
  'finance_payroll_one_statutory_review.sql',
- 'finance_payroll_one_statutory_remittance.sql'
+ 'finance_payroll_one_statutory_remittance.sql',
+ 'finance_payroll_one_session_revocations.sql'
 ];
 const env={
  FINANCE_ONE_ENVIRONMENT:'staging',
@@ -31,17 +32,17 @@ function database(stopAfter=orderedMigrations.length){
   db:{prepare(query){const stmt=sql.prepare(query);return{all:async()=>({results:stmt.all()})}}}
  };
 }
-test('all eight SQL migrations apply in release order and pass real staging preflight',async()=>{
+test('all nine SQL migrations apply in release order and pass real staging preflight',async()=>{
  const {sql,db}=database();
  const status=await financeOneStagingPreflight({db,env});
  assert.equal(status.ready,true,JSON.stringify(status.blockers));
- assert.equal(status.schema.tables>=13,true);
+ assert.equal(status.schema.tables>=14,true);
  assert.equal(status.schema.views>=2,true);
  assert.equal(status.schema.triggers>=19,true);
  assert.deepEqual(status.blockers,[]);
  sql.close();
 });
-test('leaving out last statutory remittance migration blocks release',async()=>{
+test('leaving out statutory remittance migration blocks release',async()=>{
  const {sql,db}=database(7);
  const result=await financeOneStagingPreflight({db,env});
  assert.equal(result.ready,false);
