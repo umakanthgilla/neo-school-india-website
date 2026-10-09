@@ -40,11 +40,20 @@ export async function verifyFinancePassword({db,accountId,password,now=Date.now(
   await db.prepare(`UPDATE neo_fin_auth_accounts SET
     failed_attempts=CASE WHEN locked_until IS NOT NULL AND locked_until<=? THEN 1 ELSE failed_attempts+1 END,
     locked_until=CASE WHEN (CASE WHEN locked_until IS NOT NULL AND locked_until<=? THEN 1 ELSE failed_attempts+1 END)>=5 THEN ? ELSE NULL END
-    WHERE account_id=? AND credential_version=? AND active=1`).bind(now,now,now+15*60*1000,accountId,row.credential_version).run();
+    WHERE account_id=? AND credential_version=? AND active=1
+      AND (locked_until IS NULL OR locked_until<=?)
+      AND (failed_attempts<5 OR (locked_until IS NOT NULL AND locked_until<=?))`)
+      .bind(now,now,now+15*60*1000,accountId,row.credential_version,now,now).run();
   return null;
  }
  if(!Number.isSafeInteger(row.credential_version)||row.credential_version<1)return null;
- const result=await db.prepare('UPDATE neo_fin_auth_accounts SET failed_attempts=0,locked_until=NULL WHERE account_id=? AND credential_version=? AND active=1').bind(accountId,row.credential_version).run();
+ // A password may have been correct when read, but 5 other attempts can
+ // lock the account while PBKDF2 runs. Recheck lockout atomically at success.
+ const result=await db.prepare(`UPDATE neo_fin_auth_accounts SET failed_attempts=0,locked_until=NULL
+  WHERE account_id=? AND credential_version=? AND active=1
+   AND (locked_until IS NULL OR locked_until<=?)
+   AND (failed_attempts<5 OR (locked_until IS NOT NULL AND locked_until<=?))`)
+  .bind(accountId,row.credential_version,now,now).run();
  if(result?.success!==true||result?.meta?.changes!==1)return null;
  return Object.freeze({accountId,credentialVersion:row.credential_version});
 }
