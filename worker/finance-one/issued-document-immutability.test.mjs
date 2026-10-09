@@ -117,7 +117,7 @@ test('rejected source and amount edits never change originally issued Finance ev
   "UPDATE neo_fin_documents SET gross_paise=300000 WHERE id='INV1'",
   "UPDATE neo_fin_documents SET source_id='SCHOOL_B|INV2' WHERE id='INV1'"
  ])assert.throws(()=>sql.exec(statement),issued);
- assert.deepEqual(sql.prepare("SELECT gross_paise,source_id,status FROM neo_fin_documents WHERE id='INV1'").get(),
+ assert.deepEqual({...sql.prepare("SELECT gross_paise,source_id,status FROM neo_fin_documents WHERE id='INV1'").get()},
   {gross_paise:12500,source_id:'SCHOOL_A|INV1',status:'approved'});
  sql.close();
 });
