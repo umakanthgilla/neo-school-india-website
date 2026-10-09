@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Finance ONE · Neo School India</title>
+<style>
+:root{color-scheme:light;--navy:#132a58;--navy2:#213d76;--blue:#2679c8;--gold:#d6a945;--ink:#14284d;--muted:#58719a;--white:#fff;--line:#dce8f6;--bg:#eff6fd}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#edf6ff 0%,#f8fbff 56%,#edf2ff 100%);min-height:100vh}
+button,input{font:inherit}button{cursor:pointer}.top{background:linear-gradient(115deg,var(--navy),var(--navy2));color:white;padding:18px max(22px,calc((100vw - 1200px)/2));display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:3px solid var(--gold)}
+.brand{font-weight:800;letter-spacing:.5px}.brand small{display:block;font-size:11px;color:#c9ddfc;font-weight:600;letter-spacing:1.5px;margin-top:3px}.top-side{font-size:12px;color:#d8e9ff}
+main{max-width:1200px;margin:auto;padding:28px 20px 50px}.card{background:white;border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 34px rgba(20,48,100,.07);overflow:hidden}.accent:before{content:"";height:4px;display:block;background:linear-gradient(90deg,var(--gold),#5fb7e7,#9ba9ed)}
+.login{max-width:460px;margin:65px auto;padding:28px}.login h1,.section h2{margin:12px 0 5px;font-size:23px}.sub{color:var(--muted);margin:0 0 24px;font-size:14px;line-height:1.55}
+label{display:block;font-size:13px;font-weight:700;margin:15px 0 6px}input{display:block;width:100%;padding:12px 14px;border:1px solid #c7d8ed;border-radius:10px;outline:none;background:#fff;color:var(--ink)}
+input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{background:linear-gradient(115deg,var(--navy),#2f69b8);border:0;color:#fff;padding:12px 19px;border-radius:10px;font-weight:700}
+.primary:hover{filter:brightness(1.09)}.primary:disabled{opacity:.65;cursor:wait}.login .primary{width:100%;margin-top:23px}.small-btn{background:#f2f7ff;border:1px solid #cbdcf1;color:var(--navy);padding:10px 15px;border-radius:10px;font-weight:700}
+.alert{font-size:13px;color:#9d2626;margin-top:12px;min-height:20px}.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:22px}.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.dash-head h1{margin:0 0 4px;font-size:26px}
+.meta{font-size:12px;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.stat{padding:19px;border-radius:15px;background:white;border:1px solid var(--line);border-top:4px solid #5ba6dc;box-shadow:0 8px 20px rgba(20,48,100,.05)}
+.stat:nth-child(2){border-top-color:var(--gold)}.stat:nth-child(3){border-top-color:#4db8a6}.stat:nth-child(4){border-top-color:#7f9ded}.stat .label{color:var(--muted);font-size:12px;font-weight:700}.stat .value{font-size:24px;font-weight:800;margin-top:8px;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:16px}.section{padding:20px;min-width:0}.section h2{font-size:18px;margin:0 0 3px}
+.caption{font-size:12px;color:var(--muted);margin:0 0 16px}.table-wrap{overflow:auto;max-height:450px}table{width:100%;border-collapse:collapse;font-size:13px;text-align:left}th{color:#48648c;background:#f3f8ff;font-size:12px;font-weight:750;position:sticky;top:0}td,th{padding:11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}td:nth-child(2){max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}.in{color:#14755d}.out{color:#a03b47}.empty{color:var(--muted);font-size:13px;padding:15px 4px}.foot{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}@media(max-width:480px){main{padding:20px 12px}.top{padding:15px}.top-side{display:none}.login{margin:30px auto;padding:20px}.stat{padding:14px}.stat .value{font-size:19px}.dash-head{align-items:flex-start;flex-direction:column}.actions{width:100%}.small-btn{flex:1}.section{padding:15px}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">NEO SCHOOL INDIA <small>FINANCE &amp; PAYROLL ONE</small></div><div class="top-side">Independent Business Finance · Secure access</div></header>
+<main>
+<section id="login-panel" class="card accent login" aria-labelledby="login-title">
+ <h1 id="login-title">Finance ONE Login</h1>
+ <p class="sub">Sign in with your separate Finance account. Your school's regular portal login is not a Finance login.</p>
+ <form id="login-form">
+  <label for="org">Business / Organization ID</label><input id="org" name="organizationId" autocomplete="organization" required maxlength="80" placeholder="Your business ID">
+  <label for="account">Finance Account ID</label><input id="account" name="accountId" autocomplete="username" required maxlength="128" placeholder="fin:your-account">
+  <label for="password">Finance Password</label><input id="password" name="password" type="password" required autocomplete="current-password" minlength="12" maxlength="256" placeholder="Your Finance password">
+  <button id="sign-in" class="primary" type="submit">Sign in securely</button>
+  <p role="alert" id="login-error" class="alert" aria-live="polite"></p>
+ </form>
+ <p class="note">Finance data stays separate for every Head Office and Center. No direct Daily Ledger editing is available. This page requires an enabled staging or production Finance API and separately provisioned credentials.</p>
+</section>
+<section id="dashboard-panel" hidden>
+ <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
+ <p role="alert" class="alert" id="dash-error" aria-live="polite"></p>
+ <section class="stats" aria-label="Financial summary">
+  <div class="stat"><div class="label">Money In</div><div id="money-in" class="value in">—</div></div>
+  <div class="stat"><div class="label">Money Out</div><div id="money-out" class="value out">—</div></div>
+  <div class="stat"><div class="label">Net Cash Movement</div><div id="net" class="value">—</div></div>
+  <div class="stat"><div class="label">Accounting Profit</div><div id="profit" class="value">—</div></div>
+ </section>
+ <div class="grid">
+  <article class="card accent section"><h2>Daily Cash Ledger</h2><p class="caption">Automatically synced source payments — view only</p>
+   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Transaction</th><th>Direction</th><th class="amount">Amount</th></tr></thead><tbody id="ledger-rows"></tbody></table></div><p id="ledger-empty" class="empty" hidden>No transactions available.</p>
+  </article>
+  <article class="card accent section"><h2>Accounting Documents</h2><p class="caption">Business invoices, bills, receipts and payment records</p>
+   <div class="table-wrap"><table><thead><tr><th>Document</th><th>Type</th><th>Status</th><th class="amount">Amount</th></tr></thead><tbody id="document-rows"></tbody></table></div><p id="documents-empty" class="empty" hidden>No documents available.</p>
+  </article>
+ </div>
+ <p class="foot">Finance ONE · Read-only preview · Actual financial transactions are entered in their original modules.</p>
+</section>
+</main>
+<script>
+(()=>{'use strict';
+ const base=(typeof window.FINANCE_ONE_API_BASE==='string'?window.FINANCE_ONE_API_BASE:location.origin).replace(/\/$/,'');
+ const $=id=>document.getElementById(id);
+ const state={token:null,org:null};
+ const money=paise=>typeof paise==='number'&&Number.isFinite(paise)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(paise/100):'—';
+ const text=(parent,value)=>{const node=document.createElement('td');node.textContent=String(value??'');parent.appendChild(node);return node;};
+ function logout(){state.token=null;state.org=null;$('password').value='';$('dashboard-panel').hidden=true;$('login-panel').hidden=false;}
+ async function call(path,options={}){
+  const response=await fetch(base+path,{...options,cache:'no-store',headers:{'Content-Type':'application/json',...(state.token?{Authorization:'Bearer '+state.token}:{}),...(options.headers||{})}});
+  if(response.status===401&&state.token){logout();throw Error('Finance session expired. Please sign in again.');}
+  if(!response.ok)throw Error(response.status===403?'This Business has not granted you Finance access.':'Finance service returned HTTP '+response.status);
+  return response.json();
+ }
+ async function load(){
+  $('dash-error').textContent='';const org=encodeURIComponent(state.org);const path='/api/finance-one/v1/organizations/'+org;
+  try{
+   const [summary,ledger,documents]=await Promise.all([call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50')]);
+   if(!state.token)return;
+   $('money-in').textContent=money(summary.moneyInPaise);$('money-out').textContent=money(summary.moneyOutPaise);
+   $('net').textContent=money(summary.netCashMovementPaise);$('profit').textContent=money(summary.profitPaise);
+   const led=$('ledger-rows');led.replaceChildren();
+   for(const item of ledger.entries||[]){const r=document.createElement('tr');
+    text(r,String(item.effective_at||'').slice(0,10));text(r,item.source_kind||item.source_id||'');
+    const direction=item.direction==='money_in'?'↓ Money In':'↑ Money Out';const directionCell=text(r,direction);directionCell.className=item.direction==='money_in'?'in':'out';
+    const amt=text(r,money(item.amount_paise));amt.className='amount';led.appendChild(r);
+   }
+   $('ledger-empty').hidden=led.children.length>0;
+   const docs=$('document-rows');docs.replaceChildren();
+   for(const item of documents.documents||[]){const r=document.createElement('tr');
+    text(r,item.id);text(r,item.document_type);text(r,item.status);
+    const amt=text(r,money(item.gross_paise));amt.className='amount';docs.appendChild(r);
+   }
+   $('documents-empty').hidden=docs.children.length>0;
+  }catch(e){$('dash-error').textContent=e.message||'Unable to load Finance records.';}
+ }
+ $('login-form').addEventListener('submit',async event=>{
+  event.preventDefault();$('login-error').textContent='';const btn=$('sign-in');btn.disabled=true;
+  const org=$('org').value.trim(),account=$('account').value.trim(),password=$('password').value;
+  try{
+   const result=await call('/api/finance-one/v1/session',{method:'POST',body:JSON.stringify({organizationId:org,accountId:account,password})});
+   if(typeof result.token!=='string'||!result.token)throw Error('Finance login failed.');
+   state.token=result.token;state.org=result.organizationId;$('password').value='';$('org-label').textContent=state.org;
+   $('login-panel').hidden=true;$('dashboard-panel').hidden=false;await load();
+  }catch(e){$('login-error').textContent=e.message||'Invalid Finance login.';}finally{btn.disabled=false;}
+ });
+ $('refresh').addEventListener('click',load);$('sign-out').addEventListener('click',logout);
+})();
+</script>
+</body>
+</html>
