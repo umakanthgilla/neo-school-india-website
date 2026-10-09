@@ -125,3 +125,11 @@ Do not mark the project complete or request live money testing while any release
 - `finance_payroll_one_statutory_remittance.sql` forbids multiple verified bank settlements against the same remittance document, freezes approved vouchers and bank evidence, and **prevents a concurrent overpayment at journal-post time**.
 - Security: HO membership does not allow access to an independently owned Center. Staging preflight now requires the remittance table and its protective SQL triggers before enabling a staging rollout.
 - Government payroll remittance endpoints, official challan verification, statutory rate calculation, annual TDS filings and actual Cloudflare D1 staging deployment are NOT connected. Approval and verification must come from separately authorized finance/bank operations, never a browser-provided verification boolean.
+
+
+## Release gate extension: organization-specific readiness — 2026-10-09
+- Run `financeOneBusinessPreflight({db,authenticatedAccountId,organizationId})` in a trusted staging diagnostic for **each** independent legal business, not only once for the database.
+- It requires authenticated per-business Finance membership, active independent Finance credentials, complete and active per-business Chart of Accounts, and no verified cash events missing a posted accounting journal. Never expose this diagnostic to unrelated businesses or as a general public endpoint.
+- It is read-only: it neither posts new cash movements nor attempts to repair incomplete accounting. Resolve its blockers using separately audited finance recovery and onboarding steps, then re-run.
+- These checks complement the full **eight migration** `staging-migrations.test.mjs` suite.
+- Latest GitHub Actions run `37892615347`: **225/225 tests passed, zero failures** on the development branch. This is not proof that a real Cloudflare D1 staging service, live banking, tax filing, or user acceptance environment has been deployed.
