@@ -10,6 +10,12 @@ export const STANDARD_CHART = Object.freeze([
 ]);
 export async function ensureBusinessChart(db,authenticatedAccountId,organizationId){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','write');
+ const existing=await db.prepare('SELECT account_code,account_type,active FROM neo_fin_accounts WHERE organization_id=?').bind(organizationId).all();
+ const current=new Map((existing.results||[]).map(r=>[r.account_code,r]));
+ for(const [code,,type] of STANDARD_CHART){
+  const row=current.get(code);
+  if(row && (row.account_type!==type || row.active!==1))throw new Error('Chart account conflict: '+code);
+ }
  const statements=STANDARD_CHART.map(([code,name,type])=>db.prepare(
    'INSERT OR IGNORE INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES (?,?,?,?,?)'
  ).bind(organizationId,'SYS_'+code,code,name,type));
