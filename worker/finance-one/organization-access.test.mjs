@@ -64,3 +64,19 @@ test('roles segregate payroll and finance writes',()=>{
   assert.throws(()=>assertFinanceCapability({active:1,role:'payroll_admin'},'finance','write'),FinanceAccessError);
   assert.equal(assertFinanceCapability({active:1,role:'payroll_admin'},'payroll','write'),true);
 });
+
+test('rejects forged organization contexts and mutable clones',async()=>{
+  const db=mockDb();
+  await assert.rejects(listOwnDocuments(db,{organizationId:'CENTER_B',role:'owner'}),FinanceAccessError);
+  const valid=await resolveFinanceOrganization(db,'alice','CENTER_A');
+  await assert.rejects(listOwnDocuments(db,{...valid,organizationId:'CENTER_B'}),FinanceAccessError);
+  assert.equal((await listOwnDocuments(db,valid)).length,1);
+});
+test('pagination is bounded within organization',async()=>{
+  const db=mockDb();
+  const ctx=await resolveFinanceOrganization(db,'bob','CENTER_B');
+  await listOwnDocuments(db,ctx,100000);
+  assert.deepEqual(db.observed.at(-1).values,['CENTER_B',50]);
+  await listOwnDocuments(db,ctx,100);
+  assert.deepEqual(db.observed.at(-1).values,['CENTER_B',100]);
+});
