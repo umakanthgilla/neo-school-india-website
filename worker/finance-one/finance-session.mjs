@@ -22,7 +22,11 @@ export async function issueFinanceOneToken({accountId,credentialVersion,secret,t
  if(typeof accountId!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9:_-]{0,127}$/.test(accountId))throw Error('Invalid finance account');
  if(!Number.isSafeInteger(credentialVersion)||credentialVersion<1)throw Error('Credential version required');
  if(!Number.isInteger(ttlMs)||ttlMs<60000||ttlMs>60*60*1000)throw Error('Invalid token lifetime');
- const payload={iss:ISSUER,aud:AUDIENCE,sub:accountId,scope:'finance',ver:credentialVersion,exp:Date.now()+ttlMs};
+ // Every login needs a unique random ID for single-session sign-out.
+ const random=new Uint8Array(24);crypto.getRandomValues(random);
+ const tokenId=Array.from(random,v=>v.toString(16).padStart(2,'0')).join('');
+ const payload={iss:ISSUER,aud:AUDIENCE,sub:accountId,scope:'finance',
+  ver:credentialVersion,jti:tokenId,exp:Date.now()+ttlMs};
  const encoded=encode(encoder.encode(JSON.stringify(payload)));
  const signature=new Uint8Array(await crypto.subtle.sign('HMAC',await key(secret),encoder.encode(encoded)));
  return encoded+'.'+encode(signature);
@@ -41,7 +45,8 @@ export async function readFinanceOneSession(request,env){
   const p=JSON.parse(decoder.decode(decode(parts[0])));
   if(p.iss!==ISSUER||p.aud!==AUDIENCE||p.scope!=='finance'||
    !Number.isSafeInteger(p.exp)||p.exp<=Date.now()||p.exp>Date.now()+60*60*1000||
-   !Number.isSafeInteger(p.ver)||p.ver<1||typeof p.sub!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9:_-]{0,127}$/.test(p.sub))return null;
-  return Object.freeze({accountId:p.sub,credentialVersion:p.ver});
+   !Number.isSafeInteger(p.ver)||p.ver<1||typeof p.jti!=='string'||!/^[0-9a-f]{48}$/.test(p.jti)||
+   typeof p.sub!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9:_-]{0,127}$/.test(p.sub))return null;
+  return Object.freeze({accountId:p.sub,credentialVersion:p.ver,tokenId:p.jti,expiresAt:p.exp});
  }catch{return null;}
 }
