@@ -72,7 +72,7 @@ function setup(responseType='success'){
 test('signing out immediately clears financial figures, documents and prevents delayed previous session render',async()=>{
  const app=setup();const pending=app.login('CENTER_A');
  await flush();
- assert.equal(app.firstPending.length,5);
+ assert.equal(app.firstPending.length,6);
  app.signOut();
  assert.equal(app.$('dashboard-panel').hidden,true);
  assert.equal(app.$('org-label').textContent,'');
@@ -92,7 +92,7 @@ test('signing out immediately clears financial figures, documents and prevents d
 test('a delayed 401 response for an old session never signs out a newer Center session',async()=>{
  const app=setup();const old=app.login('CENTER_A');
  await flush();
- assert.equal(app.firstPending.length,5);
+ assert.equal(app.firstPending.length,6);
  app.signOut();
  await app.login('CENTER_B','fin:bob');
  app.flushA(401);
