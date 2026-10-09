@@ -50,12 +50,13 @@ export async function verifyLegacyFeeReceipt(db,request){
    cash.source_kind!=='fee_payment'||cash.source_id!==sourceId||
    cash.reference!==fee.receipt_no||cash.status!=='Posted')return null;
  // Never credit A/R unless this particular invoice has already recognized revenue.
+ const invoiceRef=evidence.school_id.length+':'+evidence.school_id+'|'+fee.invoice_id.length+':'+fee.invoice_id;
  const invoice=await db.prepare(`SELECT d.id FROM neo_fin_documents d
    JOIN neo_fin_journals j ON j.organization_id=d.organization_id AND
      j.source_kind='document' AND j.source_id=d.id AND j.status='posted'
    WHERE d.organization_id=? AND d.document_type='sales_invoice'
      AND d.source_kind='legacy_invoice' AND d.source_id=? AND d.status='approved'
-   LIMIT 1`).bind(organizationId,fee.invoice_id).first();
+   LIMIT 1`).bind(organizationId,invoiceRef).first();
  if(!invoice)return null;
  return Object.freeze({
    organizationId,sourceKind:'fee_receipt',sourceId,sourceEventId,
