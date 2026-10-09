@@ -4,10 +4,12 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {postLegacyPayrollAccrual} from './legacy-payroll-accrual.mjs';
 import {postAccrualJournalForDocument} from './accrual-journal.mjs';
+import {syncLegacyPayoutDocument} from './sync-legacy-payout-document.mjs';
+import {syncVerifiedLegacyPayout} from './sync-legacy-payout.mjs';
 
 const migrations=[
  'finance_payroll_one_foundation.sql','finance_payroll_one_cash_projection.sql',
- 'finance_payroll_one_accounting_journals.sql'
+ 'finance_payroll_one_accounting_journals.sql','finance_payroll_one_legacy_payout_integrity.sql'
 ].map(n=>readFileSync(new URL('../../migrations/'+n,import.meta.url),'utf8'));
 
 function fixture(overrides={}){
@@ -121,5 +123,55 @@ test('journal DB batch failure can be retried safely without creating duplicate 
  f.sql.exec('DROP TRIGGER fail_post');
  const retry=await postLegacyPayrollAccrual(f.params);
  assert.equal(retry.documentCreated,false);assert.equal(retry.journalCreated,true);
+ f.sql.close();
+});
+
+function seedLegacyPaidPayrollVoucher(f){
+ const originalId='STAFF1_2026-09',voucherId='PAY_'+originalId;
+ const voucher={voucher_no:'PV-2026-77',date:'2026-10-09',category:'Salary payment',paid_to:'Staff 1',
+   amount_paise:65000,source_kind:'payroll',source_id:originalId,status:'Paid',payment_mode:'Other'};
+ const ledger={direction:'OUT',category:'Salary payment',amount_paise:65000,
+   source_kind:'voucher',source_id:voucherId,reference:voucher.voucher_no,status:'Posted'};
+ const insert=f.sql.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES('SCHOOL_A',?,?,?)");
+ insert.run('vouchers',voucherId,JSON.stringify(voucher));
+ insert.run('daily_accounts','FIN_PAY_'+originalId,JSON.stringify(ledger));
+ return originalId;
+}
+test('real payroll source -> deduction-aware accrual -> Finance payout doc -> verified bank -> zero net salary payable',async()=>{
+ const f=fixture({status:'Paid'});
+ const originalId=seedLegacyPaidPayrollVoucher(f);
+ const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
+ const source=await postLegacyPayrollAccrual(f.params);
+ assert.equal(source.journalCreated,true);
+ const paymentDoc=await syncLegacyPayoutDocument(payoutParams);
+ assert.equal(paymentDoc.created,true);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
+ f.sql.prepare(`INSERT INTO neo_fin_payment_settlements
+   (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
+   VALUES('A','BANKPAY1',?,65000,'verified','BANK-2026-77','2026-10-09T11:00:00Z')`).run(paymentDoc.documentId);
+ const posted=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
+ assert.equal(posted.cashCreated,true);assert.equal(posted.journalCreated,true);
+ const account=f.sql.prepare(`SELECT SUM(l.credit_paise-l.debit_paise) AS balance
+ FROM neo_fin_journal_lines l WHERE l.organization_id='A' AND l.account_id='SAL_LIAB'`).get();
+ assert.equal(account.balance,0);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,1);
+ assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
+ const retry=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
+ assert.equal(retry.cashCreated,false);assert.equal(retry.journalCreated,false);
+ f.sql.close();
+});
+test('bank settlement cannot debit Salary Payable before source payroll accrual has posted',async()=>{
+ const f=fixture({status:'Paid'});
+ const originalId=seedLegacyPaidPayrollVoucher(f);
+ const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
+ const paymentDoc=await syncLegacyPayoutDocument(payoutParams);
+ f.sql.prepare(`INSERT INTO neo_fin_payment_settlements
+   (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
+   VALUES('A','BANKPAY1',?,65000,'verified','BANK-2026-77','2026-10-09T11:00:00Z')`).run(paymentDoc.documentId);
+ await assert.rejects(syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'}),/Source verification failed/);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
+ await postLegacyPayrollAccrual(f.params);
+ const posted=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
+ assert.equal(posted.cashCreated,true);
  f.sql.close();
 });
