@@ -45,6 +45,7 @@ const bodyFor=(url,organization)=>{
   case 'settlements':return {organizationId:organization,entries:[]};
   case 'statutory-liabilities':return {organizationId:organization,items:[],requiresReview:false};
   case 'cash-reconciliation':return {organizationId:organization,ready:true,issueCount:0,findings:[]};
+  case 'accrual-reconciliation':return {organizationId:organization,ready:true,issueCount:0,findings:[]};
   default:throw Error('Unrecognized Finance request '+url);
  }
 };
@@ -72,7 +73,7 @@ function setup(responseType='success'){
 test('signing out immediately clears financial figures, documents and prevents delayed previous session render',async()=>{
  const app=setup();const pending=app.login('CENTER_A');
  await flush();
- assert.equal(app.firstPending.length,6);
+ assert.equal(app.firstPending.length,7);
  app.signOut();
  assert.equal(app.$('dashboard-panel').hidden,true);
  assert.equal(app.$('org-label').textContent,'');
@@ -92,7 +93,7 @@ test('signing out immediately clears financial figures, documents and prevents d
 test('a delayed 401 response for an old session never signs out a newer Center session',async()=>{
  const app=setup();const old=app.login('CENTER_A');
  await flush();
- assert.equal(app.firstPending.length,6);
+ assert.equal(app.firstPending.length,7);
  app.signOut();
  await app.login('CENTER_B','fin:bob');
  app.flushA(401);
@@ -129,4 +130,17 @@ test('cash/journal reconciliation issue is shown and clears on sign-out',async()
  assert.equal(app.$('cash-reconciliation-warning').hidden,false);
  app.signOut();
  assert.equal(app.$('cash-reconciliation-warning').hidden,true);
+});
+
+test('approved document/journal reconciliation warning is cleared on sign out',async()=>{
+ const app=mount(async(url,options)=>{
+  if(new URL(url).pathname.endsWith('/session'))return json({token:'T',organizationId:'CENTER_A'});
+  const result=bodyFor(url,'CENTER_A');
+  if(new URL(url).pathname.endsWith('/accrual-reconciliation'))result.ready=false;
+  return json(result);
+ });
+ await app.login('CENTER_A');
+ assert.equal(app.$('accrual-reconciliation-warning').hidden,false);
+ app.signOut();
+ assert.equal(app.$('accrual-reconciliation-warning').hidden,true);
 });
