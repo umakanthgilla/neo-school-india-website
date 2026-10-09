@@ -4,7 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {postAccrualJournalForDocument} from './accrual-journal.mjs';
 function init(){
  const db=new DatabaseSync(':memory:');
- db.exec(`CREATE TABLE neo_fin_documents(organization_id TEXT,id TEXT,document_type TEXT,status TEXT,gross_paise INTEGER,PRIMARY KEY(organization_id,id));
+ db.exec(`CREATE TABLE neo_fin_documents(organization_id TEXT,id TEXT,document_type TEXT,status TEXT,gross_paise INTEGER,source_kind TEXT,PRIMARY KEY(organization_id,id));
  CREATE TABLE neo_fin_accounts(organization_id TEXT,id TEXT,account_code TEXT,active INTEGER,PRIMARY KEY(organization_id,id));
  CREATE TABLE neo_fin_journals(organization_id TEXT,id TEXT,source_kind TEXT,source_id TEXT,status TEXT DEFAULT 'draft',posted_at TEXT,PRIMARY KEY(organization_id,id),UNIQUE(organization_id,source_kind,source_id));
  CREATE TABLE neo_fin_journal_lines(organization_id TEXT,journal_id TEXT,line_no INTEGER,account_id TEXT,debit_paise INTEGER,credit_paise INTEGER,PRIMARY KEY(organization_id,journal_id,line_no));
@@ -17,7 +17,7 @@ function init(){
  const bind=(sql,params)=>{const stmt=db.prepare(sql);return{first:async()=>stmt.get(...params),all:async()=>({results:stmt.all(...params)}),run:async()=>{let result=stmt.run(...params);return{success:true,meta:{changes:result.changes}}}}};
  return{sqlite:db,prepare(sql){return{bind(...params){return bind(sql,params)}}},async batch(statements){db.exec('BEGIN');try{let results=[];for(const statement of statements)results.push(await statement.run());db.exec('COMMIT');return results;}catch(err){db.exec('ROLLBACK');throw err}}};
 }
-const seed=(db,type='sales_invoice',status='approved',org='A')=>db.sqlite.prepare('INSERT INTO neo_fin_documents VALUES (?,?,?,?,?)').run(org,'DOC1',type,status,10000);
+const seed=(db,type='sales_invoice',status='approved',org='A')=>db.sqlite.prepare('INSERT INTO neo_fin_documents VALUES (?,?,?,?,?,?)').run(org,'DOC1',type,status,10000,null);
 test('sales invoice posts AR debit and revenue credit without cash movement',async()=>{
  const db=init();seed(db);let r=await postAccrualJournalForDocument(db,'A','DOC1');assert.equal(r.created,true);
  assert.equal(db.sqlite.prepare('SELECT count(*) AS n FROM neo_fin_cash_events').get().n,0);
