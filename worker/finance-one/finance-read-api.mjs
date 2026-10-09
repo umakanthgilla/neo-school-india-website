@@ -5,8 +5,9 @@
  */
 import {FinanceAccessError, resolveFinanceOrganization, listOwnDocuments} from './organization-access.mjs';
 import {getFinanceSnapshot} from './finance-reports.mjs';
+import {listPayoutSettlementStatus} from './settlement-status.mjs';
 
-const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger)\/?$/;
+const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger|settlements)\/?$/;
 function json(body,status=200) {
   return new Response(JSON.stringify(body), {status, headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 }
@@ -31,6 +32,7 @@ export async function handleFinanceReadApi({request,db,authenticatedAccountId}){
     if(resource==='summary')return json(await getFinanceSnapshot({db,accountId:authenticatedAccountId,organizationId}));
     const limit=limitParam(url);
     if(resource==='documents')return json({organizationId,documents:await listOwnDocuments(db,context,limit)});
+    if(resource==='settlements')return json(await listPayoutSettlementStatus({db,authenticatedAccountId,organizationId,limit}));
     const result=await db.prepare(
       'SELECT event_id,source_kind,source_id,direction,amount_paise,effective_at,verification_reference FROM neo_fin_daily_ledger WHERE organization_id=? ORDER BY effective_at DESC,event_id DESC LIMIT ?'
     ).bind(organizationId,limit).all();
