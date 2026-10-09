@@ -161,7 +161,21 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    $('login-panel').hidden=true;$('dashboard-panel').hidden=false;await load();
   }catch(e){$('login-error').textContent=e.message||'Invalid Finance login.';}finally{btn.disabled=false;}
  });
- $('refresh').addEventListener('click',load);$('sign-out').addEventListener('click',logout);
+ async function signOut(){
+  const token=state.token,version=state.sessionVersion;
+  logout(); // Clear confidential on-screen data immediately.
+  if(!token)return;
+  try{
+   const response=await fetch(base+'/api/finance-one/v1/session/logout',{
+    method:'POST',cache:'no-store',headers:{Authorization:'Bearer '+token}});
+   if(response.status!==204 && state.sessionVersion===version+1 && !state.token)
+    $('login-error').textContent='Server sign-out could not be verified. Your old session may remain valid until expiry.';
+  }catch{
+   if(state.sessionVersion===version+1&&!state.token)
+    $('login-error').textContent='Server sign-out could not be verified. Your old session may remain valid until expiry.';
+  }
+ }
+ $('refresh').addEventListener('click',load);$('sign-out').addEventListener('click',signOut);
 })();
 </script>
 </body>
