@@ -27,3 +27,11 @@ test('Finance portal displays source data as text, not executable markup',()=>{
  assert.match(page,/node\.textContent=/);
  assert.match(page,/replaceChildren\(/);
 });
+
+
+test('Finance Portal includes PF ESI PT TDS balances and explicit no-filing caution',()=>{
+ assert.match(page,/id="statutory-rows"/);
+ assert.match(page,/statutory-liabilities/);
+ assert.match(page,/not a government filing or payment confirmation/);
+ assert.match(page,/statutory-review/);
+});
