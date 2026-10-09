@@ -87,7 +87,7 @@ export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organi
    .bind(organizationId).all();
  const accountIds=new Map((accountRows.results||[]).filter(x=>x.active===1).map(x=>[x.account_code,x.id]));
  const lines=plan.entries.map(e=>({...e,accountId:accountIds.get(e.code)}));
- if(lines.some(l=>!l.accountId) || new Set(lines.map(l=>l.accountId)).size!==lines.length)throw Error('Independent payroll chart accounts unavailable');
+ if(lines.some(l=>!l.accountId))throw Error('Independent payroll chart accounts unavailable');
  const journalId='JNL-DOC|'+documentId;
  const existingJournal=async()=>{
   const j=await db.prepare("SELECT id,status FROM neo_fin_journals WHERE organization_id=? AND source_kind='document' AND source_id=?")
