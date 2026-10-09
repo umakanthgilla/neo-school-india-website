@@ -13,11 +13,13 @@ export async function financeOneBusinessPreflight({db,authenticatedAccountId,org
   FROM neo_fin_accounts WHERE organization_id=?`).bind(organizationId).all();
  const available=new Map((rows.results||[]).map(r=>[r.account_code,r]));
  const blockers=[];
+ let configuredAccounts=0;
  for(const [code,type] of required){
   const account=available.get(code);
   if(!account)blockers.push('Missing chart account: '+code);
   else if(account.account_type!==type)blockers.push('Wrong account type: '+code);
   else if(account.active!==1)blockers.push('Inactive chart account: '+code);
+  else configuredAccounts++;
  }
  const auth=await db.prepare(`SELECT active,credential_version FROM neo_fin_auth_accounts
   WHERE account_id=? LIMIT 1`).bind(authenticatedAccountId).first();
@@ -32,6 +34,6 @@ export async function financeOneBusinessPreflight({db,authenticatedAccountId,org
   blockers.push('Cash/accounting reconciliation unavailable');
  else if(unsynced.total>0)blockers.push('Unreconciled verified cash events: '+unsynced.total);
  return Object.freeze({organizationId,ready:blockers.length===0,
-  requiredAccounts:required.size,configuredAccounts:required.size-blockers.filter(x=>/chart account|account type/.test(x)).length,
+  requiredAccounts:required.size,configuredAccounts,
   unreconciledCashEvents:unsynced?.total??null,blockers});
 }
