@@ -11,10 +11,15 @@ test('Finance endpoint is invisible without explicit staging feature flag',async
  assert.equal((await response.json()).error,'Not found');
 });
 test('Finance endpoint fails closed without D1 database when opt-in enabled',async()=>{
- const response=await worker.fetch(new Request(financePath),{FINANCE_ONE_READ_API_ENABLED:'true'});
+ const response=await worker.fetch(new Request(financePath),{FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true'});
  assert.equal(response.status,503);
 });
 test('Finance endpoint requires independent finance bearer session',async()=>{
- const response=await worker.fetch(new Request(financePath),{FINANCE_ONE_READ_API_ENABLED:'true',DB:{}});
+ const response=await worker.fetch(new Request(financePath),{FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',DB:{}});
  assert.equal(response.status,401);
+});
+
+test('legacy Worker production mode remains closed even with Finance feature flag ON',async()=>{
+ const response=await worker.fetch(new Request(financePath),{FINANCE_ONE_ENVIRONMENT:'production',FINANCE_ONE_READ_API_ENABLED:'true',DB:{}});
+ assert.equal(response.status,404);
 });
