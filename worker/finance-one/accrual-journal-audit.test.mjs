@@ -94,7 +94,7 @@ test('generic payroll liability journal uses earned payroll expense and payable'
  assert.equal((await auditFinanceAccrualJournals(f.params)).ready,true);f.sql.close();
 });
 
-const payrollRef='8:SCHOOL_A|18:STAFF1_2026-09';
+const payrollRef='8:SCHOOL_A|14:STAFF1_2026-09';
 const payrollDoc='PAY_ACCR|'+payrollRef;
 const plainSnapshot=payrollRef+'|100000:5000:10000:20000:35000:65000';
 const statutorySnapshot=payrollRef+'|100000:5000:10000:20000:42000:58000|ST:'+'a'.repeat(64);
