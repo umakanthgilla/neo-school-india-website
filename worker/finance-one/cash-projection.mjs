@@ -7,7 +7,8 @@ const sources = Object.freeze({
   vendor_payment:'money_out',
   payroll_payment:'money_out',
   salary_advance_release:'money_out',
-  expense_voucher:'money_out'
+  expense_voucher:'money_out',
+  statutory_remittance_paid:'money_out'
 });
 export function cashEventFromVerifiedSource(input) {
   if (!input || !Object.hasOwn(sources,input.sourceKind)) throw new Error('Unsupported cash source');
