@@ -183,3 +183,19 @@ test('cash reconciliation API detects missing journals for own Center and hides 
   assert.equal(post.status,405);
  }finally{f.sqlite.close();}
 });
+
+test('isolated Finance accrual audit flags missing approved Center journal, not foreign Center data',async()=>{
+ const f=await fixture();try{
+  const token=await f.token();
+  const response=await stagingWorker.fetch(f.http('accrual-reconciliation',token),f.env);
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.organizationId,'CENTER_A');
+  assert.equal(result.ready,false);
+  assert.equal(result.counts.missing_accrual_journal,1);
+  assert.ok(result.findings.some(x=>x.documentId==='DOC_A'));
+  assert.ok(!result.findings.some(x=>x.documentId==='DOC_B'));
+  assert.equal((await stagingWorker.fetch(f.http('accrual-reconciliation',token,'CENTER_B'),f.env)).status,403);
+  assert.equal((await stagingWorker.fetch(f.http('accrual-reconciliation',token,'CENTER_A',portal,'POST'),f.env)).status,405);
+ }finally{f.sqlite.close();}
+});
