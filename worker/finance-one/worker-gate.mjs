@@ -7,6 +7,7 @@ import {handleFinanceReadApi} from './finance-read-api.mjs';
 import {readFinanceOneSession} from './finance-session.mjs';
 import {activeFinanceCredential} from './finance-password.mjs';
 import {handleFinanceLogin} from './finance-login.mjs';
+import {isFinanceSessionRevoked,revokeFinanceSession} from './finance-session-revocation.mjs';
 function errorResponse(message,status,headers={}) {
  return new Response(JSON.stringify({error:message}),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store',...headers}});
 }
@@ -19,7 +20,18 @@ export async function financeOneWorkerGate({request,env,corsHeaders}){
  const login=await handleFinanceLogin({request,env});
  if(login){const responseHeaders=new Headers(login.headers);for(const [key,value] of Object.entries(headers))responseHeaders.set(key,value);return new Response(login.body,{status:login.status,headers:responseHeaders});}
  const session=await readFinanceOneSession(request,env);
- if(!session || !await activeFinanceCredential(env.DB,session.accountId,session.credentialVersion))return errorResponse('Finance login required',401,headers);
+ if(!session || !await activeFinanceCredential(env.DB,session.accountId,session.credentialVersion))
+  return errorResponse('Finance login required',401,headers);
+ try{
+  if(await isFinanceSessionRevoked(env.DB,session))return errorResponse('Finance login required',401,headers);
+ }catch{return errorResponse('Finance session checks unavailable',503,headers);}
+ if(pathname==='/api/finance-one/v1/session/logout'){
+  if(request.method!=='POST')return errorResponse('Method not allowed',405,headers);
+  try{
+   await revokeFinanceSession(env.DB,session);
+   return new Response(null,{status:204,headers:{'Cache-Control':'no-store',...headers}});
+  }catch{return errorResponse('Finance logout unavailable',503,headers);}
+ }
  // Dedicated personal finance identity; legacy school and HO admin tokens
  // cannot grant access. Active memberships are checked for every request.
  const accountId=session.accountId;
