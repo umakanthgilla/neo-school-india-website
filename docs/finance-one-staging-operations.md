@@ -54,3 +54,12 @@ provisioning process, bank/payment providers, statutory India payroll, source-wo
 accounting-rule review, security review and complete end-to-end validation remain outstanding.
 
 Do not mark the project complete or request live money testing while any release gate fails.
+
+
+## Independent Finance-only staging entrypoint
+- Use `worker/finance-one/staging-entry.mjs` rather than the full School Portal Worker for initial Finance-only staging tests.
+- Start from `wrangler.finance-one.staging.toml.example`; replace all illustrative origins and staging-only D1 placeholders locally. Keep the feature flag **false** until private readiness checks pass.
+- This staging entry rejects non-staging environments, unrelated School API paths and browser origins outside `FINANCE_ONE_PORTAL_ORIGIN`. It delegates Finance routes to the dedicated credential + membership gate.
+- The HTML at `finance-one/portal.html` still requires a separately hosted secure staging origin; it is not currently published by creating the source file.
+- All new entrypoint and CORS behavior has automated `worker/finance-one/staging-entry.test.mjs` coverage.
+- Never use production D1 IDs or credential secrets in GitHub repository files.
