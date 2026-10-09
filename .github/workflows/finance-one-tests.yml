@@ -1,0 +1,24 @@
+name: Finance ONE tenant authorization tests
+on:
+  push:
+    branches:
+      - feature/finance-payroll-one-foundation
+    paths:
+      - 'worker/finance-one/**'
+      - '.github/workflows/finance-one-tests.yml'
+  pull_request:
+    paths:
+      - 'worker/finance-one/**'
+      - '.github/workflows/finance-one-tests.yml'
+permissions:
+  contents: read
+jobs:
+  authorization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test organization access
+        run: node --test worker/finance-one/organization-access.test.mjs
