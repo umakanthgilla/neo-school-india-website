@@ -91,10 +91,9 @@ export async function verifyLegacyPayout(db,request) {
     AND d.document_type='payroll_liability' AND d.status='approved'
    GROUP BY d.id,d.gross_paise`).bind(organizationId,accrualRef).first();
   if(!accrual||accrual.earned_paise!==earned||accrual.expense_paise!==earned||
-    accrual.salary_payable_paise!==payment.net_paise||
-    accrual.advance_recovery_paise!==payment.advance_recovery_paise||
-    accrual.balanced_paise!==0||accrual.line_count!==
-     (payment.net_paise>0 && payment.advance_recovery_paise>0 ? 3:2))return null;
+    accrual.salary_payable_paise!==earned||
+    accrual.advance_recovery_paise!==0||
+    accrual.balanced_paise!==0||accrual.line_count!==2)return null;
  }
  // One *full* independently verified settlement for each legacy payout.
  // The schema's separate trigger rejects a second verified settlement for
