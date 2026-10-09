@@ -6,8 +6,9 @@
 import {FinanceAccessError, resolveFinanceOrganization, listOwnDocuments} from './organization-access.mjs';
 import {getFinanceSnapshot} from './finance-reports.mjs';
 import {listPayoutSettlementStatus} from './settlement-status.mjs';
+import {readStatutoryLiabilities} from './statutory-liabilities.mjs';
 
-const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger|settlements)\/?$/;
+const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger|settlements|statutory-liabilities)\/?$/;
 function json(body,status=200) {
   return new Response(JSON.stringify(body), {status, headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 }
@@ -30,6 +31,7 @@ export async function handleFinanceReadApi({request,db,authenticatedAccountId}){
   try {
     const context=await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','read');
     if(resource==='summary')return json(await getFinanceSnapshot({db,accountId:authenticatedAccountId,organizationId}));
+    if(resource==='statutory-liabilities')return json(await readStatutoryLiabilities({db,authenticatedAccountId,organizationId}));
     const limit=limitParam(url);
     if(resource==='documents')return json({organizationId,documents:await listOwnDocuments(db,context,limit)});
     if(resource==='settlements')return json(await listPayoutSettlementStatus({db,authenticatedAccountId,organizationId,limit}));
