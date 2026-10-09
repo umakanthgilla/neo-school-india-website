@@ -63,6 +63,13 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    <tbody id="settlement-rows"></tbody></table></div>
   <p id="settlement-empty" class="empty" hidden>No payment documents available.</p>
  </article>
+ <article class="card accent section" style="margin-top:16px">
+  <h2>Statutory Payables — PF / ESI / PT / TDS</h2>
+  <p class="caption">Unpaid accounting balances from posted journals. This is not a government filing or payment confirmation.</p>
+  <div class="table-wrap"><table><thead><tr><th>Liability</th><th class="amount">Credited</th><th class="amount">Debited</th><th class="amount">Balance</th></tr></thead>
+  <tbody id="statutory-rows"></tbody></table></div>
+  <p id="statutory-review" role="status" class="alert" hidden>One or more statutory balances are negative. Finance review is required.</p>
+ </article>
  <p class="foot">Finance ONE · Read-only preview · Actual financial transactions are entered in their original modules.</p>
 </section>
 </main>
@@ -83,8 +90,8 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  async function load(){
   $('dash-error').textContent='';const org=encodeURIComponent(state.org);const path='/api/finance-one/v1/organizations/'+org;
   try{
-   const [summary,ledger,documents,settlements]=await Promise.all([
-    call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50')
+   const [summary,ledger,documents,settlements,statutory]=await Promise.all([
+    call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities')
    ]);
    if(!state.token)return;
    $('money-in').textContent=money(summary.moneyInPaise);$('money-out').textContent=money(summary.moneyOutPaise);
@@ -114,6 +121,15 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
     payouts.appendChild(r);
    }
    $('settlement-empty').hidden=payouts.children.length>0;
+   const statutoryRows=$('statutory-rows');statutoryRows.replaceChildren();
+   for(const item of statutory.items||[]){
+    const r=document.createElement('tr');text(r,item.label);
+    for(const amount of [item.creditedPaise,item.remittedPaise,item.balancePaise]){
+     const cell=text(r,money(amount));cell.className='amount'+(amount<0?' out':'');
+    }
+    statutoryRows.appendChild(r);
+   }
+   $('statutory-review').hidden=!statutory.requiresReview;
   }catch(e){$('dash-error').textContent=e.message||'Unable to load Finance records.';}
  }
  $('login-form').addEventListener('submit',async event=>{
