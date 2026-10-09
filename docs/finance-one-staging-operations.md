@@ -147,3 +147,11 @@ Do not mark the project complete or request live money testing while any release
 The development Worker gate now refuses Finance routes outright if `FINANCE_ONE_ENVIRONMENT` is not exactly `staging`, including when the Finance feature flag is accidentally set to true. The isolated Worker entrypoint enforces the same boundary.
 
 **Verification:** 230/230 GitHub automated tests passed in run `37892827857` immediately after the activation safety changes. Later account-readiness counting tests must be checked against their own CI result. These checks do not constitute a deployed Cloudflare staging URL or production certification.
+
+
+## Finance login race and HTTP end-to-end validation — 2026-10-09
+- The dedicated Finance password verifier now performs its final successful-login mutation using an **atomic conditional SQL UPDATE**: even if concurrent failed attempts lock the account while PBKDF2 is running, that stale valid-password request cannot bypass the new lock. Late wrong-password attempts cannot extend an active lock. Expired lockouts continue to permit recovery with valid credentials.
+- A direct call to `handleFinanceLogin` also requires `FINANCE_ONE_ENVIRONMENT=staging`. This defense-in-depth check complements the independently guarded Worker entrypoint and Finance route gate; production must remain locked even when a feature flag is mistakenly enabled.
+- `staging-http-e2e.test.mjs` tests real Worker `fetch()` HTTP requests against an in-memory SQLite database initialized by **all eight Finance migrations**. It covers standalone Finance login, own-business documents/Daily Ledger, HO/Center isolation, browser-origin rejection, token revocation, staging flag-off and read-only ledger enforcement.
+- GitHub Actions run `37893261467`: **240/240 passing, 0 failures**. This is a full Node/SQLite integration **simulation**, not a real Cloudflare D1 staging deployment.
+- Still block public staging availability until independently provisioned Cloudflare staging secrets/D1, per-IP abuse throttling, audited financial source ingestion, verified real bank/challan evidence, statutory compliance review and end-user validation are complete. Do not merge this Draft PR into production.
