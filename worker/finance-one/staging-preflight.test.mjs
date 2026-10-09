@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {financeOneStagingPreflight} from './staging-preflight.mjs';
-const env={FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:'safe-but-demo-only-finance-signing-secret'};
+const env={FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:'safe-but-demo-only-finance-signing-secret',
+ FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},
+ FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})}};
 const objects={
  table:['neo_fin_organizations','neo_fin_school_ownership','neo_fin_memberships','neo_fin_auth_accounts','neo_fin_documents','neo_fin_payment_settlements','neo_fin_accounts','neo_fin_journals','neo_fin_journal_lines','neo_fin_cash_events','neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews','neo_fin_statutory_remittances'],
  view:['neo_fin_daily_ledger','neo_fin_posted_journal_lines'],
