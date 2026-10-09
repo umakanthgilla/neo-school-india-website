@@ -29,6 +29,7 @@ for staging verification. Do not invent a Cloudflare binding, database ID or URL
 4. `migrations/finance_payroll_one_auth_accounts.sql`
 5. `migrations/finance_payroll_one_receipt_evidence.sql`
 6. `migrations/finance_payroll_one_legacy_payout_integrity.sql`
+7. `migrations/finance_payroll_one_statutory_review.sql`
 
 Migrations are never applied to production as part of this procedure.
 Do not copy confidential historical center/HO finance data into shared test fixtures.
@@ -104,3 +105,13 @@ Do not mark the project complete or request live money testing while any release
 - There is NO statutory deduction engine for PF, ESI, professional tax, TDS, employer contributions or state-specific compliance in this milestone. Unknown statutory fields are blocked rather than silently dropped. A registered payroll specialist must validate applicable effective-date rules.
 
 - 2026-10-09 follow-up CI: GitHub Actions run `37890331714` completed **190/190 passing** after the advance recovery timing correction. A subsequent focused rollback/recovery regression test was added; check its newest run separately.
+
+## Reviewed PF/ESI/PT/TDS source accounting milestone (2026-10-09)
+- Added per-independent-business account codes 2111 PF payable, 2112 ESI payable, 2113 Professional Tax payable, 2114 TDS payable, 5300 Employer statutory contributions expense.
+- `reviewed-statutory-payroll.mjs` validates original payroll employee PF/ESI/PT/TDS and employer PF/ESI amounts against an immutable, independent, approved policy review with the exact payroll fingerprint. No amount can be trusted solely because a browser submits it.
+- `legacy-payroll-accrual.mjs` now posts earned salary expense, employee statutory withholding liabilities, net salary payable including unpaid advance setoff, and the additional employer-contribution expense/liabilities as a balanced journal. This stage creates NO cash movement and NO duplicate legacy Daily Ledger row.
+- `legacy-payout-verifier.mjs` independently verifies all resulting posted liability journal totals and the same immutable original breakdown before allowing a verified net salary bank payout.
+- Employee advance recovery continues to occur only on independently verified bank settlement. PF/ESI/PT/TDS remain payable until separate statutory payment remittance workflows are built and reconciled.
+- **This milestone does not calculate statutory rates or perform filing**. The existing live HR payroll does not yet generate legally reviewed amounts automatically. State applicability, thresholds, wage bases, TDS declarations, effective dates, employer exemptions, monthly remittance and government filing require current payroll-rule implementation and professional signoff.
+- No operator-facing endpoint exists to insert these approvals. Onboarding, dual-control reviewer authorization, audit evidence and rate changes must be secured before staging user acceptance.
+- GitHub Actions run 37890954349: **199/199 tests passed** with real SQLite migration fixtures and isolation/security regression cases. Production main and published sites unchanged.
