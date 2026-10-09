@@ -2,7 +2,8 @@
  * STAGING ONLY — legacy employee payroll accrual to independent Finance journals.
  * Source: existing Neo School payroll after APPROVAL (not cash payment).
  * Gross -> late/attendance loss of pay + advance recovery + actual net salary.
- * Dr earned salary expense; Cr salary payable (net); Cr employee advances (recovery).
+ * Dr earned salary expense; Cr earned salary payable. Advance recovery offsets
+ * salary payable only upon independently verified payroll settlement.
  * No statutory deduction is invented, no cash event, no old Daily Ledger mutation.
  */
 import {resolveFinanceOrganization} from './organization-access.mjs';
@@ -33,10 +34,9 @@ function planForPayroll(p,payrollId) {
  const earned=p.gross_paise-p.late_deduction_paise-p.attendance_deduction_paise;
  if(!safe(earned)||earned===0||p.net_paise+p.advance_recovery_paise!==earned)
   throw Error('Payroll expense, advance recovery and net do not balance');
- const entries=[{code:'5100',debit:earned,credit:0}];
- if(p.net_paise>0)entries.push({code:'2100',debit:0,credit:p.net_paise});
- if(p.advance_recovery_paise>0)entries.push({code:'1200',debit:0,credit:p.advance_recovery_paise});
- if(entries.length<2)throw Error('Payroll journal must contain balanced entries');
+ // Legacy HR changes the employee advance balance when Payroll becomes Paid.
+ // Do not recognize recovery at Approved; wait for independently verified payout.
+ const entries=[{code:'5100',debit:earned,credit:0},{code:'2100',debit:0,credit:earned}];
  return Object.freeze({earnedPaise:earned,entries,approvedAt:new Date(p.approved_at).toISOString()});
 }
 
