@@ -91,3 +91,14 @@ Do not mark the project complete or request live money testing while any release
 - `finance_payroll_one_legacy_payout_integrity.sql` prevents partial or duplicate verified settlements for these **legacy single-payment** records and freezes their verified evidence. Actual bank reversals/chargebacks need new compensating journal and cash reversal workflow before production.
 - Original invoice/payroll/vendor accrual accounting source linkage and detailed statutory salary deductions are **not** automatically resolved by this payout bridge. The generic A/P and salary-payable debit mappings must be reconciled with accountant-approved liabilities, not treated as proof of a fully working financial closing workflow.
 - Tested against real staging schema migrations in automated SQLite tests. No live bank provider, production Worker or public finance write endpoints are connected.
+
+
+## Deduction-aware legacy payroll accounting — 2026-10-09
+- The live payroll data model contains `gross_paise`, `late_deduction_paise`, `attendance_deduction_paise`, `advance_recovery_paise`, `deductions_paise` and `net_paise`. Existing approved calculation must remain locked.
+- `legacy-payroll-accrual.mjs` accepts only approved/paid, attendance-complete payroll owned by the current independent business, and rejects numeric mismatch or missing source approvals. Its staging entry separates salary expense after attendance deductions from net salary payable and employee advance recovery; it posts **no Cash Money Out**.
+- The generic `accrual-journal.mjs` cannot process `source_kind='legacy_payroll'` to avoid incorrectly recognizing gross salary payable without deductions.
+- `legacy-payout-verifier.mjs` now requires the matching posted, balanced, deduction-aware source payroll accrual with exact salary-payable, expense and advance-recovery amounts before verified bank payroll can reduce liability.
+- Full source-to-payout integration checks ensure salary payable is zero after exact verified net bank transfer, the existing Daily Ledger is not duplicated, HO isolation is enforced and retries do not repost.
+- GitHub Actions run `37890030186`: **190 passing, 0 failed**.
+- **Accounting-policy review required before launch:** The staging treatment credits employee advance receivables at approved payroll accrual. Current legacy HR operations apply the actual advance-recovery state update when payroll is marked Paid. The timing of legal set-off versus final bank settlement needs CA/payroll review; do not post real financial closing entries until this policy is approved and reconciliation covers staff advances.
+- There is NO statutory deduction engine for PF, ESI, professional tax, TDS, employer contributions or state-specific compliance in this milestone. Unknown statutory fields are blocked rather than silently dropped. A registered payroll specialist must validate applicable effective-date rules.
