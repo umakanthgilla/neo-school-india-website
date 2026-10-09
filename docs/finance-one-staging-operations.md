@@ -71,3 +71,13 @@ Do not mark the project complete or request live money testing while any release
 - `sync-legacy-fee-receipt.mjs` is restricted to active authenticated Finance **write** membership. Verified receipt becomes one `neo_fin_cash_events` mirror and one balanced journal, without writing again to the existing school Daily Ledger. Repeated sync is idempotent; failed accounting postings can be retried without duplicating cash.
 - SQL + full-migration integration tests exist in `sync-legacy-fee-receipt.test.mjs` (10 scenarios: genuine receipt, repeat, missing proof, HO isolation, missing accrual, mismatches, duplicate legacy posting, immutable evidence, and accounting recovery). This is **not** a live bank integration; no public receipt-verification endpoint or untrusted client toggle is enabled.
 - Before staging enablement, verify exact ownership/effective dates and introduce an audited bank/cash evidence creation workflow. Do not backfill existing school receipts simply because they have `status: "Recorded by school"`.
+
+
+## Original Fee Invoice → verified Fee Receipt → accounting (2026-10-09)
+- `sync-legacy-fee-invoice.mjs` reads the original school invoice, student and fee structure under an independently resolved owner mapping. It does not recreate the old invoice or produce any cash movement. Its source document key includes both school and invoice ID so different schools under one legal business cannot collide.
+- The original invoice creates/recovers one approved Finance document (`source_kind='legacy_invoice'`) and its balanced accrual journal: Accounts Receivable Dr / Fee Revenue Cr. Retry and changed-source amount are checked for financial conflicts.
+- `legacy-fee-receipt-verifier.mjs` resolves the **same school's** original invoice, requires its posted accrual, exact school ledger link, immutable independent bank/cash evidence and correct ownership-effective date.
+- `sync-legacy-fee-receipt.mjs` then produces exactly one verified cash event and a corresponding Bank/Clearing Dr / Accounts Receivable Cr journal. It does NOT insert an additional `neo_portal_records` Daily Ledger entry.
+- Real full-migration tests exercise this entire path (including no duplicate legacy postings, HO denial, invalid fee structure, mismatched amounts, missing settlement evidence and no pre-payment cash).
+- GitHub Actions Draft PR #26 CI completed with **152/152 tests passing, 0 failed** in run 37888295778.
+- Still required: real source/verification evidence ingestion, accounting-policy signoff, production historical data migration strategy, full payroll/vouchers integration, authentic Cloudflare staging deployment, QA and security review. **Do not interpret this as a live banking integration or full application completion.**
