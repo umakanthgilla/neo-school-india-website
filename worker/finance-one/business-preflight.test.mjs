@@ -39,7 +39,7 @@ test('missing and inactive chart accounts block business readiness',async()=>{
  const f=fixture();f.sql.exec("DELETE FROM neo_fin_accounts WHERE account_code='2114'");
  f.sql.exec("UPDATE neo_fin_accounts SET active=0 WHERE account_code='1200'");
  const r=await financeOneBusinessPreflight(f.params);
- assert.equal(r.ready,false);assert.ok(r.blockers.includes('Missing chart account: 2114'));
+ assert.equal(r.ready,false);assert.equal(r.configuredAccounts,STANDARD_CHART.length-2);assert.ok(r.blockers.includes('Missing chart account: 2114'));
  assert.ok(r.blockers.includes('Inactive chart account: 1200'));f.sql.close();
 });
 test('reconciled bank event must have a posted journal; pending events block readiness',async()=>{
