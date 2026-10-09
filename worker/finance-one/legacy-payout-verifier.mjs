@@ -1,3 +1,4 @@
+import {requireReviewedStatutoryPayroll} from './reviewed-statutory-payroll.mjs';
 /**
  * Staging-only evidence verifier for LEGACY payroll/vendor/advance payouts.
  *
@@ -72,13 +73,20 @@ export async function verifyLegacyPayout(db,request) {
   const parts=['gross_paise','late_deduction_paise','attendance_deduction_paise',
    'advance_recovery_paise','deductions_paise','net_paise'];
   if(parts.some(k=>!Number.isSafeInteger(payment[k])||payment[k]<0))return null;
-  const deductions=payment.late_deduction_paise+payment.attendance_deduction_paise+payment.advance_recovery_paise;
+  let statutory;
+  try{statutory=await requireReviewedStatutoryPayroll(db,organizationId,schoolId,recordId,payment);}
+  catch{return null;}
+  const deductions=payment.late_deduction_paise+payment.attendance_deduction_paise+
+    payment.advance_recovery_paise+statutory.employeeTotalPaise;
   const earned=payment.gross_paise-payment.late_deduction_paise-payment.attendance_deduction_paise;
+  const payable=earned-statutory.employeeTotalPaise;
   if(!Number.isSafeInteger(deductions)||deductions!==payment.deductions_paise||
-    !Number.isSafeInteger(earned)||earned<=0||payment.net_paise+payment.advance_recovery_paise!==earned)return null;
+    !Number.isSafeInteger(earned)||earned<=0||!Number.isSafeInteger(payable)||payable<0||
+    payment.net_paise+payment.advance_recovery_paise!==payable)return null;
   const breakdown=['gross_paise','late_deduction_paise','attendance_deduction_paise',
    'advance_recovery_paise','deductions_paise','net_paise'].map(k=>payment[k]).join(':');
-  const accrualRef=schoolId.length+':'+schoolId+'|'+recordId.length+':'+recordId+'|'+breakdown;
+  const accrualRef=schoolId.length+':'+schoolId+'|'+recordId.length+':'+recordId+'|'+breakdown+
+    (statutory.fingerprint?'|ST:'+statutory.fingerprint:'');
   const accrual=await db.prepare(`SELECT d.gross_paise AS earned_paise,
    COUNT(l.line_no) AS line_count,
    SUM(l.debit_paise-l.credit_paise) AS balanced_paise,
