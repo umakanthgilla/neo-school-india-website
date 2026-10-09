@@ -1,0 +1,45 @@
+CONTINUE NEO SCHOOL INDIA — FINANCE & PAYROLL ONE V1 FROM THIS HANDOVER.
+DO NOT RESTART, REDESIGN COMPLETED FEATURES, OR DEPLOY PRODUCTION.
+
+SOURCE OF TRUTH:
+Repository: https://github.com/umakanthgilla/neo-school-india-website
+Development branch ONLY: feature/finance-payroll-one-foundation
+Draft PR: https://github.com/umakanthgilla/neo-school-india-website/pull/26
+Master handover: docs/FINANCE_ONE_V1_MASTER_HANDOFF.md
+Acceptance matrix: docs/FINANCE_ONE_V1_ACCEPTANCE_MATRIX.md
+Operations history: docs/finance-one-staging-operations.md
+Staging config example: wrangler.finance-one.staging.toml.example
+CI: .github/workflows/finance-one-tests.yml
+FINAL PINNED SHA: Read MANIFEST.txt from the GitHub Actions V1 handover artifact, not a guessed SHA.
+
+LOCKED DECISIONS:
+- No production main branch, existing School Worker/D1, HR, attendance, payroll, vouchers, receipts, Daily Accounts or Daily Ledger changes.
+- Separate Finance-only login. Head Office and independent Centers legally separate. HO cannot access Center financial books.
+- Source-driven immutable docs, verified-only Cash Ledger, balanced posted journals; no duplicate manually entered Money In/Out.
+- Paid/Released/Approved flags do NOT independently prove cash settlement.
+- Exactly 10 additive Finance staging SQL migrations; only apply to separately approved Cloudflare staging D1.
+- Read-only Finance portal and reconciliation warnings are engineering-preview functionality, NOT a complete Payroll UI.
+- Approved Finance documents, posted journals and cash entries must never be silently modified/deleted.
+- Bank-statement import, auto matching and verification DEFERRED TO VERSION 2 BY USER. Keep internal Cash/Journal audit in V1.
+- No automatic statutory rates, challan/filing certification or bank API claims.
+
+LAST VERIFIED BASELINE BEFORE HANDOVER:
+319/319 Node/SQLite tests + Cloudflare Wrangler deploy --dry-run successful:
+https://github.com/umakanthgilla/neo-school-india-website/actions/runs/37925323490
+Verify the final handover artifact's OWN GitHub run and SHA; do not assume the baseline SHA includes later documentation.
+
+CURRENT HANDOVER GOAL:
+The engineering source was prepared for transfer, not live release.
+Open the pinned GitHub branch/commit and read both handover documents. Do not invent staging URL, Cloudflare account IDs, or credentials.
+
+NEXT REQUIRED V1 WORK (ORDER):
+1) Authorized isolated Cloudflare Worker+D1 staging resources, access restrictions, secrets, backups.
+2) Apply 10 migrations to isolated staging only, run prepare/active schema preflight and independent HO/Center business readiness.
+3) Implement/audit missing operator approvals, password onboarding/MFA/security and legitimate compensating credit note/reversal process before allowing real corrections.
+4) Validate original-school ownership, real original data adapters, proof of settlement without trusting Paid status, payroll source deductions, accountant-reviewed PF/ESI/PT/TDS.
+5) End-to-end finance source→documents→journals→reports UAT with real staging account; obtain written signoff.
+6) Only after separate, explicit production authorization may staging code be considered for release. NEVER auto-merge this PR.
+
+Bank statement matching/auto reconciliation is V2 and must NOT block the V1 engineering handover, but verified source settlement evidence still must be genuine.
+
+USER STYLE: Respond concisely in Telugu + English and ACTUALLY code/test when asked to continue. Give verified GitHub CI outcomes; never say 'deployed' without a real Cloudflare deployment.
