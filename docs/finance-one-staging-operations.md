@@ -173,3 +173,13 @@ The development Worker gate now refuses Finance routes outright if `FINANCE_ONE_
 - The job uses a **synthetic staging D1 UUID**, keeps the Finance API flag OFF, supplies no Cloudflare credentials, and explicitly does **NOT** deploy anything.
 - Before actual staging publication, a separately authorized Cloudflare operator must create the staging D1 and Worker, set secrets and permitted origins through private configuration, enforce login rate limits/Access, apply all 8 migrations, provision independent Finance identities, and verify prepare/active staging + each organization's readiness. These blockers are **not** met by a successful dry-run.
 - Once permitted staging deployment is complete, the same Worker can deliver the Portal at its own HTTPS `/portal.html` path; **no real staging URL exists yet**.
+
+
+## Finance login native Cloudflare rate-limiting security gate — 2026-10-09
+- Login now requires **both** Cloudflare Workers native Rate Limit bindings: `FINANCE_ONE_LOGIN_CLIENT_LIMIT` (20 attempts per 60s, scoped to trusted edge client IP) and `FINANCE_ONE_LOGIN_ACCOUNT_LIMIT` (8 attempts per 60s, scoped to a SHA-256 hash of the Finance account ID).
+- `login-rate-limit.mjs` checks the client allowance **before JSON parsing and PBKDF2**, checks the account allowance before password verification, returns HTTP 429 with `Retry-After: 60` on excess, and returns HTTP 503 when a required binding is missing, returns malformed data or throws. Do not fall back to unprotected login.
+- Do not use user-provided `X-Forwarded-For` headers for security decisions. Unknown/absent trusted client identity is grouped in a restricted fallback key.
+- The staging config `wrangler.finance-one.staging.toml.example` includes **illustrative** rate-limit `namespace_id` strings. A Cloudflare operator must replace them with namespace IDs unique to the target account before an actual staging deployment.
+- Full staging preflight now refuses readiness if either native login limiter is missing. The CI Wrangler build gate checks both limiter configurations exist.
+- **Limitations:** Cloudflare native counters are per location and are not a substitute for Cloudflare Access, WAF, global attack protection, login security monitoring, MFA/secure reset, or an operator-approved onboarding process. IP-based quotas can also affect multiple legitimate staff on a shared network. Tune limits against real staging traffic before use.
+- GitHub Actions run `37917680984`: **258/258 automated Node/SQLite tests passed**, plus successful **Cloudflare Wrangler 4.129.1 dry-run**. Wrangler explicitly recognized both rate-limit bindings and Finance Portal Assets. No production or staging deployment occurred and no real bank data was used.
