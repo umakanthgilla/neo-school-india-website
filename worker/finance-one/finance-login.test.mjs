@@ -27,7 +27,7 @@ async function seed(db,accountId='fin:alice'){
  const record=await createFinancePasswordRecord({accountId,password});
  db.sql.prepare('INSERT INTO neo_fin_auth_accounts VALUES (?,?,?,?,1,0,NULL,1)').run(record.accountId,record.salt,record.passwordHash,record.iterations);
 }
-const env=db=>({DB:db,FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret});
+const env=db=>({DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret});
 const login=(accountId='fin:alice',pw=password,organizationId='CENTER_A')=>new Request('https://test.local/api/finance-one/v1/session',{
  method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({accountId,password:pw,organizationId})});
 const docs=(token,org='CENTER_A')=>new Request('https://test.local/api/finance-one/v1/organizations/'+org+'/documents',{headers:{Authorization:'Bearer '+token}});
