@@ -50,3 +50,15 @@ Until a real staging URL and test execution are verified, the work remains imple
 - Local focused audit tests passed 12/12 using Node 22, with SQLite fixtures for Center A, Center B and HO denial. Existing GitHub test workflow covers new `*.test.mjs` files, but remote CI result remains unverified.
 - Current snapshot is intentionally bounded; production-scale audit needs pagination / consistent snapshots and permission-aware setup. Do not run it as a global HO audit or copy private center finances.
 - This audit is NOT the final automatic posting migration and is NOT a user-facing staging portal.
+
+
+## 2026-10-09 current implementation milestone — automated accounting (staging only)
+- Added `accounting-chart.mjs`: an authorized independent-business Chart of Accounts bootstrap, idempotent and preflighting conflicts. Same capabilities for HO and any independent center, separate records.
+- Added `source-journal.mjs`: verified cash event to balanced debit/credit accounting journal; writes no duplicate Daily Cash Ledger entry and recovers from concurrent identical retries.
+- Added `accrual-journal.mjs`: approved sales invoice, purchase bill, and salary-liability source documents create double-entry accrual journals WITHOUT cash movements.
+- Added `sync-verified-payout.mjs`: authorized verified bank settlement -> idempotent cash event -> balanced journal, including retry repair if cash already posted but accounting was temporarily unavailable.
+- Added `finance-reports.mjs`: organization-isolated trial balance, cash movement and P&L from posted journals and cash projections. No HO access to private center reports by default.
+- Added automated tests for those five modules. 25/25 locally executed with Node 22 and SQLite fixtures. These tests use targeted SQLite test schemas, not deployed Cloudflare D1. Re-validate against complete migrations in real staging before any release.
+- Accounting policy assumptions need professional review before production: fee receipts applied against Accounts Receivable presume that invoice revenue was already recognized; purchase bills currently use a simplified cost-of-goods mapping, and bank/cash clearing needs transaction-specific bank accounts.
+- Important: separate cash posting then journal posting is recoverable/idempotent but not a single atomic transaction. Reconciliation and a scheduled recovery worker are needed before live launch.
+- No production deployment, bank connection, owner portal URL or comprehensive India statutory payroll release is implied.
