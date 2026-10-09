@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {postLegacyPayrollAccrual} from './legacy-payroll-accrual.mjs';
 import {postAccrualJournalForDocument} from './accrual-journal.mjs';
+import {payrollStatutoryFingerprint} from './reviewed-statutory-payroll.mjs';
 import {syncLegacyPayoutDocument} from './sync-legacy-payout-document.mjs';
 import {syncVerifiedLegacyPayout} from './sync-legacy-payout.mjs';
 import {recoverMissingCashJournals} from './journal-recovery.mjs';
@@ -11,7 +12,8 @@ import {postJournalForCashEvent} from './source-journal.mjs';
 
 const migrations=[
  'finance_payroll_one_foundation.sql','finance_payroll_one_cash_projection.sql',
- 'finance_payroll_one_accounting_journals.sql','finance_payroll_one_legacy_payout_integrity.sql'
+ 'finance_payroll_one_accounting_journals.sql','finance_payroll_one_legacy_payout_integrity.sql',
+ 'finance_payroll_one_statutory_review.sql'
 ].map(n=>readFileSync(new URL('../../migrations/'+n,import.meta.url),'utf8'));
 
 function fixture(overrides={}){
@@ -25,7 +27,10 @@ function fixture(overrides={}){
  INSERT INTO neo_fin_school_ownership(school_id,organization_id,effective_from) VALUES('SCHOOL_A','A','2026-01-01');
  INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type)
  VALUES ('A','SAL_EXP','5100','Salary Expense','expense'),('A','SAL_LIAB','2100','Net Salary Payable','liability'),
- ('A','ADV','1200','Employee Advance Receivable','asset'),('A','BANK','1000','Bank','asset');`);
+ ('A','ADV','1200','Employee Advance Receivable','asset'),('A','BANK','1000','Bank','asset'),
+ ('A','PF','2111','PF Payable','liability'),('A','ESI','2112','ESI Payable','liability'),
+ ('A','PT','2113','PT Payable','liability'),('A','TDS','2114','TDS Payable','liability'),
+ ('A','ER_EXP','5300','Employer contributions','expense');`);
  const payroll={staff_id:'STAFF1',month:'2026-09',status:'Approved',attendance_complete:true,
   approved_at:'2026-10-02T10:00:00Z',gross_paise:100000,late_deduction_paise:5000,
   attendance_deduction_paise:10000,advance_recovery_paise:20000,deductions_paise:35000,net_paise:65000,...overrides};
@@ -86,9 +91,9 @@ test('gross and deduction mismatch fails closed, never creates accounting docume
   f.sql.close();
  }
 });
-test('unmapped PF/ESI statutory deduction does not silently disappear',async()=>{
+test('unreviewed PF/ESI statutory deduction cannot be posted',async()=>{
  const f=fixture({employee_pf_paise:1200});
- await assert.rejects(postLegacyPayrollAccrual(f.params),/Unmapped statutory withholding/);
+ await assert.rejects(postLegacyPayrollAccrual(f.params),/Statutory review required/);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_journals').get().n,0);f.sql.close();
 });
 test('HO finance owner cannot accrue independent center payroll',async()=>{
