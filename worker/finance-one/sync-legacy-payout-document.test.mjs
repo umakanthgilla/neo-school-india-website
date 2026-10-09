@@ -28,15 +28,14 @@ function fixture(kind='payroll_payment'){
  insert.run('SCHOOL_A','vouchers',config.voucher,JSON.stringify({status:'Paid',source_kind:config.sourceKind,source_id:'P1',amount_paise:10000,voucher_no:'PV-2026-1',payment_mode:'Bank transfer'}));
  insert.run('SCHOOL_A','daily_accounts',config.ledger,JSON.stringify({direction:'OUT',status:'Posted',source_kind:'voucher',source_id:config.voucher,amount_paise:10000,reference:'PV-2026-1'}));
  if(kind==='payroll_payment'){
-  const ref='8:SCHOOL_A|2:P1',docId='PAY_ACCR|'+ref,journal='JNL-DOC|'+docId;
+  const originalRef='8:SCHOOL_A|2:P1',ref=originalRef+'|12000:0:0:2000:2000:10000',docId='PAY_ACCR|'+originalRef,journal='JNL-DOC|'+docId;
   sql.prepare(`INSERT INTO neo_fin_documents(organization_id,id,document_type,status,gross_paise,source_kind,source_id)
   VALUES('A',?,'payroll_liability','approved',12000,'legacy_payroll',?)`).run(docId,ref);
   sql.prepare("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A',?,'document',?)").run(journal,docId);
   const stmt=sql.prepare(`INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise,credit_paise)
   VALUES('A',?,?,?,?,?)`);
   stmt.run(journal,1,'SAL_EXP',12000,0);
-  stmt.run(journal,2,'SAL',0,10000);
-  stmt.run(journal,3,'ADV',0,2000);
+  stmt.run(journal,2,'SAL',0,12000);
   sql.prepare("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-08T10:00:00Z' WHERE id=?").run(journal);
  }
  const db={
