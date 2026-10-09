@@ -19,10 +19,16 @@ const REQUIRED_TRIGGERS=Object.freeze(['neo_fin_cash_events_no_update','neo_fin_
  'neo_fin_stat_remit_verify_insert','neo_fin_stat_remit_verify_update',
  'neo_fin_stat_remit_verified_no_update','neo_fin_stat_remit_verified_no_delete',
  'neo_fin_stat_remit_no_overclear']);
-export async function financeOneStagingPreflight({db,env}) {
+export async function financeOneStagingPreflight({db,env,phase='active'}) {
+ if(phase!=='prepare' && phase!=='active')throw new Error('Unknown finance staging preflight phase');
  const blockers=[];
  if(env?.FINANCE_ONE_ENVIRONMENT!=='staging')blockers.push('Not explicitly marked staging');
- if(env?.FINANCE_ONE_READ_API_ENABLED!=='true')blockers.push('Finance API feature flag not enabled for staging');
+ // Prepare validates a CLOSED staging service before activating Finance routes.
+ // Active validates the same service after explicit authorization to enable.
+ if(phase==='active' && env?.FINANCE_ONE_READ_API_ENABLED!=='true')
+   blockers.push('Finance API feature flag not enabled for staging');
+ if(phase==='prepare' && env?.FINANCE_ONE_READ_API_ENABLED==='true')
+   blockers.push('Finance API must remain disabled during preparation');
  if(typeof env?.FINANCE_ONE_SESSION_SECRET!=='string'||env.FINANCE_ONE_SESSION_SECRET.length<32)
    blockers.push('Dedicated Finance session secret missing');
  if(!db?.prepare)return Object.freeze({ready:false,blockers:[...blockers,'D1 database unavailable'],schema:{tables:0,views:0,triggers:0}});
