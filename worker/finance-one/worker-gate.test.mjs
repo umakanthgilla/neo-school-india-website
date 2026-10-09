@@ -10,7 +10,7 @@ const db={prepare(sql){return{bind(...values){return{first:async()=>{if(sql.incl
  if(sql.includes('neo_fin_daily_ledger'))return{results:[{event_id:'C1',amount_paise:500}]};
  throw Error('SQL');
 }}}}}};
-const enabled={DB:db,FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret};
+const enabled={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret};
 test('unrelated routes pass through',async()=>{
  const r=await financeOneWorkerGate({request:makeRequest('/api/portal/foo'),env:enabled});assert.equal(r,null);
 });
@@ -31,5 +31,11 @@ test('valid Finance token without membership cannot read another Center',async()
  const r=await financeOneWorkerGate({request:makeRequest(route,token),env:enabled});assert.equal(r.status,403);
 });
 test('missing D1 database returns unavailable',async()=>{
- const r=await financeOneWorkerGate({request:makeRequest(route),env:{FINANCE_ONE_READ_API_ENABLED:'true'}});assert.equal(r.status,503);
+ const r=await financeOneWorkerGate({request:makeRequest(route),env:{FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true'}});assert.equal(r.status,503);
+});
+
+test('production Worker never serves Finance ONE even if flag and signed credentials exist',async()=>{
+ const token=await issueFinanceOneToken({accountId:'fin:alice',credentialVersion:1,secret});
+ const response=await financeOneWorkerGate({request:makeRequest(route,token),env:{...enabled,FINANCE_ONE_ENVIRONMENT:'production'}});
+ assert.equal(response.status,404);
 });
