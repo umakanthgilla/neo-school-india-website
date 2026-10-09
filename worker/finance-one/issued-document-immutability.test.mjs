@@ -101,3 +101,23 @@ test('unlinked draft and independent organization documents remain editable',()=
  assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM neo_fin_documents WHERE organization_id='B'").get().n,0);
  sql.close();
 });
+
+
+test('second issued document cannot reuse same original Finance source in same legal business',()=>{
+ const {sql,document}=setup();
+ document({id:'PAY1',type:'payment',kind:'payroll_payment',source:'SCHOOL_A|PAY1'});
+ assert.throws(()=>document({id:'PAY2',type:'payment',kind:'payroll_payment',source:'SCHOOL_A|PAY1'}),/UNIQUE constraint failed/);
+ assert.equal(sql.prepare("SELECT COUNT(*) n FROM neo_fin_documents WHERE organization_id='A' AND source_kind='payroll_payment'").get().n,1);
+ sql.close();
+});
+test('rejected source and amount edits never change originally issued Finance evidence',()=>{
+ const {sql,document}=setup();
+ document({id:'INV1',amount:12500,kind:'legacy_invoice',source:'SCHOOL_A|INV1'});
+ for(const statement of [
+  "UPDATE neo_fin_documents SET gross_paise=300000 WHERE id='INV1'",
+  "UPDATE neo_fin_documents SET source_id='SCHOOL_B|INV2' WHERE id='INV1'"
+ ])assert.throws(()=>sql.exec(statement),issued);
+ assert.deepEqual(sql.prepare("SELECT gross_paise,source_id,status FROM neo_fin_documents WHERE id='INV1'").get(),
+  {gross_paise:12500,source_id:'SCHOOL_A|INV1',status:'approved'});
+ sql.close();
+});
