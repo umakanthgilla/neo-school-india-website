@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {syncVerifiedLegacyFeeReceipt} from './sync-legacy-fee-receipt.mjs';
 import {verifyLegacyFeeReceipt} from './legacy-fee-receipt-verifier.mjs';
+import {syncLegacyFeeInvoice} from './sync-legacy-fee-invoice.mjs';
 const migrations=[
  'finance_payroll_one_foundation.sql',
  'finance_payroll_one_cash_projection.sql',
@@ -11,7 +12,7 @@ const migrations=[
  'finance_payroll_one_receipt_evidence.sql'
 ].map(p=>readFileSync(new URL('../../migrations/'+p,import.meta.url),'utf8'));
 
-function setup({withEvidence=true,withInvoiceAccrual=true}={}){
+function setup({withEvidence=true,withInvoiceAccrual=true,preexistingInvoice=true}={}){
  const sql=new DatabaseSync(':memory:');
  sql.exec('PRAGMA foreign_keys=ON');
  for(const statement of migrations)sql.exec(statement);
@@ -26,10 +27,10 @@ function setup({withEvidence=true,withInvoiceAccrual=true}={}){
  sql.exec("INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES('A','fin:alice','owner'),('HO','fin:ho','owner')");
  sql.exec(`INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type)
  VALUES('A','BANK','1000','Bank','asset'),('A','AR','1100','Accounts Receivable','asset'),('A','REVENUE','4000','Fee Revenue','income');`);
- sql.exec(`INSERT INTO neo_fin_documents
+ if(preexistingInvoice)sql.exec(`INSERT INTO neo_fin_documents
  (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
- VALUES('A','DOC_INV1','sales_invoice','approved',10000,'legacy_invoice','INV1');`);
- if(withInvoiceAccrual){
+ VALUES('A','DOC_INV1','sales_invoice','approved',10000,'legacy_invoice','8:SCHOOL_A|4:INV1');`);
+ if(withInvoiceAccrual && preexistingInvoice){
   sql.exec(`INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A','J_INV1','document','DOC_INV1');
   INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise,credit_paise)
    VALUES('A','J_INV1',1,'AR',10000,0),('A','J_INV1',2,'REVENUE',0,10000);
@@ -40,6 +41,11 @@ function setup({withEvidence=true,withInvoiceAccrual=true}={}){
  const ledger={source_kind:'fee_payment',source_id:'P1',direction:'IN',amount_paise:10000,
    reference:'RCPT-2026-0001',status:'Posted',transaction_date:'2026-10-08'};
  const stmt=sql.prepare("INSERT INTO neo_portal_records(school_id,kind,id,data) VALUES (?,?,?,?)");
+ stmt.run('SCHOOL_A','fee_structures','FS1',JSON.stringify({title:'Annual fee',amount_paise:10000}));
+ stmt.run('SCHOOL_A','students','ST1',JSON.stringify({name:'Sample student'}));
+ stmt.run('SCHOOL_A','invoices','INV1',JSON.stringify({
+   student_id:'ST1',fee_structure_id:'FS1',amount_paise:10000,due_date:'2026-10-08'
+ }));
  stmt.run('SCHOOL_A','payments','P1',JSON.stringify(payment));
  stmt.run('SCHOOL_A','daily_accounts','FIN_FEE_P1',JSON.stringify(ledger));
  if(withEvidence){
@@ -153,4 +159,50 @@ test('failed journal can be retried without repeating verified cash movement',as
  assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),1);
  assert.equal(ctx.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
  ctx.sql.close();
+});
+
+test('source Fee Invoice sync creates accrual, then verified receipt clears receivable without duplicate legacy entry',async()=>{
+ const ctx=setup({preexistingInvoice:false});
+ const params={db:ctx.db,authenticatedAccountId:'fin:alice',organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'};
+ const invoice=await syncLegacyFeeInvoice(params);
+ assert.equal(invoice.documentCreated,true);assert.equal(invoice.journalCreated,true);
+ assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);
+ const receipt=await syncVerifiedLegacyFeeReceipt(request(ctx));
+ assert.equal(receipt.cashCreated,true);
+ const account=ctx.sql.prepare(`SELECT SUM(debit_paise-credit_paise) net
+   FROM neo_fin_posted_journal_lines WHERE organization_id='A' AND account_id='AR'`).get();
+ assert.equal(account.net,0);
+ assert.equal(ctx.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
+ const again=await syncLegacyFeeInvoice(params);
+ assert.equal(again.documentCreated,false);assert.equal(again.journalCreated,false);
+ ctx.sql.close();
+});
+test('Fee Invoice import rejects HO access to another legal business',async()=>{
+ const ctx=setup({preexistingInvoice:false});
+ await assert.rejects(syncLegacyFeeInvoice({db:ctx.db,authenticatedAccountId:'fin:ho',
+   organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'}),/Finance access denied/);
+ assert.equal(rowCount(ctx.sql,'neo_fin_documents'),0);ctx.sql.close();
+});
+test('Fee Invoice import rejects missing fee structure before creating accounting entries',async()=>{
+ const ctx=setup({preexistingInvoice:false});
+ ctx.sql.exec("DELETE FROM neo_portal_records WHERE school_id='SCHOOL_A' AND kind='fee_structures'");
+ await assert.rejects(syncLegacyFeeInvoice({db:ctx.db,authenticatedAccountId:'fin:alice',
+   organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'}),/fee structure missing/);
+ assert.equal(rowCount(ctx.sql,'neo_fin_documents'),0);ctx.sql.close();
+});
+test('changed source invoice amount is not silently accepted on retry',async()=>{
+ const ctx=setup({preexistingInvoice:false});
+ const params={db:ctx.db,authenticatedAccountId:'fin:alice',organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'};
+ await syncLegacyFeeInvoice(params);
+ ctx.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',9999) WHERE kind='invoices'");
+ await assert.rejects(syncLegacyFeeInvoice(params),/Conflicting fee invoice/);
+ ctx.sql.close();
+});
+test('invoice import never marks Fee Receipt paid before independent verification',async()=>{
+ const ctx=setup({preexistingInvoice:false,withEvidence:false});
+ await syncLegacyFeeInvoice({db:ctx.db,authenticatedAccountId:'fin:alice',
+   organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'});
+ assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);
+ await assert.rejects(syncVerifiedLegacyFeeReceipt(request(ctx)),/Source verification failed/);
+ assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);ctx.sql.close();
 });
