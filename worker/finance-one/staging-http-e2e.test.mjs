@@ -17,7 +17,8 @@ const migrations=[
  'finance_payroll_one_receipt_evidence.sql',
  'finance_payroll_one_legacy_payout_integrity.sql',
  'finance_payroll_one_statutory_review.sql',
- 'finance_payroll_one_statutory_remittance.sql'
+ 'finance_payroll_one_statutory_remittance.sql',
+ 'finance_payroll_one_session_revocations.sql'
 ].map(name=>readFileSync(new URL('../../migrations/'+name,import.meta.url),'utf8'));
 const api='https://staging-worker.example.invalid/api/finance-one/v1';
 const portal='https://finance-preview.example.invalid';
