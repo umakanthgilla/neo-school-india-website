@@ -20,6 +20,10 @@ test('incorrect closing balance flagged',()=>{
  const x=reconcileBusinessCash({organizationId:'CENTER_A',events:rows,closingBalancePaise:0});
  assert.equal(x.balanced,false);
 });
-test('invalid monetary values rejected',()=>{
- assert.throws(()=>reconcileBusinessCash({organizationId:'CENTER_A',openingBalancePaise:-1}),/Invalid amount/);
+test('negative opening balances are supported for business overdrafts',()=>{
+ const result=reconcileBusinessCash({organizationId:'CENTER_A',openingBalancePaise:-5000,events:rows});
+ assert.equal(result.calculatedClosingBalancePaise,8000);
+});
+test('unsafe opening balances are rejected',()=>{
+ assert.throws(()=>reconcileBusinessCash({organizationId:'CENTER_A',openingBalancePaise:Number.MAX_SAFE_INTEGER+1}),/Invalid amount/);
 });
