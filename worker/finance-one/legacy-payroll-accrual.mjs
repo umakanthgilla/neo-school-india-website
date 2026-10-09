@@ -54,8 +54,13 @@ export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organi
  const plan=planForPayroll(payroll,payrollRecordId);
  const owner=await row.bind(schoolId,organizationId,payroll.month).first();
  if(!owner)throw Error('Original payroll outside independent business ownership');
- const sourceRef=sourceId(schoolId,payrollRecordId);
- const documentId='PAY_ACCR|'+sourceRef;
+ const originalSourceRef=sourceId(schoolId,payrollRecordId);
+ // An immutable source snapshot makes retries reject changed advance/net splits
+ // even if earned salary expense is coincidentally unchanged.
+ const breakdown=['gross_paise','late_deduction_paise','attendance_deduction_paise',
+  'advance_recovery_paise','deductions_paise','net_paise'].map(k=>payroll[k]).join(':');
+ const sourceRef=originalSourceRef+'|'+breakdown;
+ const documentId='PAY_ACCR|'+originalSourceRef;
  const document=()=>db.prepare('SELECT id,document_type,status,gross_paise,source_kind,source_id FROM neo_fin_documents WHERE organization_id=? AND id=?').bind(organizationId,documentId).first();
  const checkDocument=async()=>{
   const d=await document();
