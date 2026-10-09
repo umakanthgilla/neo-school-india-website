@@ -17,7 +17,9 @@ const orderedMigrations=[
 const env={
  FINANCE_ONE_ENVIRONMENT:'staging',
  FINANCE_ONE_READ_API_ENABLED:'true',
- FINANCE_ONE_SESSION_SECRET:'temporary-test-secret-32-characters-minimum'
+ FINANCE_ONE_SESSION_SECRET:'temporary-test-secret-32-characters-minimum',
+ FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},
+ FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})}
 };
 function database(stopAfter=orderedMigrations.length){
  const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
