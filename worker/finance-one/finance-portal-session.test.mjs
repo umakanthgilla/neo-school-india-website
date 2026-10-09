@@ -21,7 +21,7 @@ function mount(fetchImpl){
  };
  document.getElementById('login-panel').hidden=false;
  document.getElementById('dashboard-panel').hidden=true;
- const context=vm.createContext({document,location:{origin:'https://finance.example.invalid'},
+ const context=vm.createContext({document,window:{},location:{origin:'https://finance.example.invalid'},
   fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent});
  new vm.Script(script,{filename:'portal.html:inline-script'}).runInContext(context);
  const $=id=>document.getElementById(id);
