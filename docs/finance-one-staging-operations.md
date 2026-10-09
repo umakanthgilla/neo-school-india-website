@@ -30,6 +30,7 @@ for staging verification. Do not invent a Cloudflare binding, database ID or URL
 5. `migrations/finance_payroll_one_receipt_evidence.sql`
 6. `migrations/finance_payroll_one_legacy_payout_integrity.sql`
 7. `migrations/finance_payroll_one_statutory_review.sql`
+8. `migrations/finance_payroll_one_statutory_remittance.sql`
 
 Migrations are never applied to production as part of this procedure.
 Do not copy confidential historical center/HO finance data into shared test fixtures.
@@ -115,3 +116,12 @@ Do not mark the project complete or request live money testing while any release
 - **This milestone does not calculate statutory rates or perform filing**. The existing live HR payroll does not yet generate legally reviewed amounts automatically. State applicability, thresholds, wage bases, TDS declarations, effective dates, employer exemptions, monthly remittance and government filing require current payroll-rule implementation and professional signoff.
 - No operator-facing endpoint exists to insert these approvals. Onboarding, dual-control reviewer authorization, audit evidence and rate changes must be secured before staging user acceptance.
 - GitHub Actions run 37890954349: **199/199 tests passed** with real SQLite migration fixtures and isolation/security regression cases. Production main and published sites unchanged.
+
+## Verified statutory payment voucher and liability clearance (2026-10-09)
+- Per-organization PF/ESI/PT/TDS closing balances from posted journals are exposed read-only by `statutory-liabilities.mjs` and Finance Dashboard; **debits are not automatically labelled government remittances** without verified bank and challan evidence.
+- An independently approved Finance payment voucher is stored in `neo_fin_documents` and immutably linked to an organization-scoped `neo_fin_statutory_remittances` approval (account type, period, exact amount, voucher number, reviewer). This is an internal reviewed workflow, not a public payment/write endpoint.
+- `statutory-remittance-verifier.mjs` requires the same business, exact approved voucher amount, unique matching bank settlement, independent verified bank reference, and sufficient posted statutory liability.
+- `sync-statutory-remittance.mjs` mirrors only independently verified bank settlement into exactly one Money Out cash event and balanced `Statutory Payable Dr / Bank Cr` journal. Idempotent retries/recovery never create a second cash entry and never write legacy `daily_accounts`.
+- `finance_payroll_one_statutory_remittance.sql` forbids multiple verified bank settlements against the same remittance document, freezes approved vouchers and bank evidence, and **prevents a concurrent overpayment at journal-post time**.
+- Security: HO membership does not allow access to an independently owned Center. Staging preflight now requires the remittance table and its protective SQL triggers before enabling a staging rollout.
+- Government payroll remittance endpoints, official challan verification, statutory rate calculation, annual TDS filings and actual Cloudflare D1 staging deployment are NOT connected. Approval and verification must come from separately authorized finance/bank operations, never a browser-provided verification boolean.
