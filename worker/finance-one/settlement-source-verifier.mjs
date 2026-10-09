@@ -12,7 +12,7 @@ export async function verifySettlementSource(db, request) {
            d.document_type,d.source_kind,d.source_id
       FROM neo_fin_payment_settlements s
       JOIN neo_fin_documents d ON d.organization_id=s.organization_id AND d.id=s.document_id
-     WHERE s.organization_id=? AND s.id=? AND s.document_id=?
+     WHERE s.organization_id=? AND s.id=? AND d.source_id=?
        AND s.status='verified' AND d.status='approved'
      LIMIT 1`
  ).bind(organizationId,sourceEventId,sourceId).first();
