@@ -6,6 +6,7 @@ on:
     paths:
       - 'worker/finance-one/**'
       - 'finance-one/**'
+      - 'docs/FINANCE_ONE_V1_*'
       - 'wrangler.finance-one.staging.toml.example'
       - 'migrations/finance_payroll_one_*.sql'
       - '.github/workflows/finance-one-tests.yml'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'worker/finance-one/**'
       - 'finance-one/**'
+      - 'docs/FINANCE_ONE_V1_*'
       - 'wrangler.finance-one.staging.toml.example'
       - 'migrations/finance_payroll_one_*.sql'
       - '.github/workflows/finance-one-tests.yml'
@@ -62,3 +64,53 @@ jobs:
         run: |
           npx --yes wrangler@4.129.1 deploy --dry-run --config wrangler.finance-one.staging.toml --outdir /tmp/finance-one-staging-bundle
           test -d /tmp/finance-one-staging-bundle
+
+  handover-package:
+    name: Assemble Finance ONE V1 source handover ZIP (NO DEPLOY)
+    needs: [authorization, package-staging]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate code and create immutable SHA-pinned handover snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE="$RUNNER_TEMP/finance-one-v1-handover"
+          mkdir -p "$BUNDLE/worker" "$BUNDLE/finance-one" "$BUNDLE/migrations" "$BUNDLE/docs" "$BUNDLE/.github/workflows"
+          cp -R worker/finance-one "$BUNDLE/worker/"
+          cp finance-one/portal.html "$BUNDLE/finance-one/portal.html"
+          cp migrations/finance_payroll_one_*.sql "$BUNDLE/migrations/"
+          cp docs/FINANCE_ONE_V1_* "$BUNDLE/docs/"
+          cp docs/finance-one-staging-operations.md "$BUNDLE/docs/"
+          cp wrangler.finance-one.staging.toml.example "$BUNDLE/"
+          cp .github/workflows/finance-one-tests.yml "$BUNDLE/.github/workflows/"
+          test "$(find "$BUNDLE/migrations" -type f -name '*.sql' | wc -l | tr -d ' ')" -eq 10
+          for required in FINANCE_ONE_V1_MASTER_HANDOFF.md FINANCE_ONE_V1_ACCEPTANCE_MATRIX.md FINANCE_ONE_V1_NEXT_CHAT_PROMPT.txt; do
+            test -s "$BUNDLE/docs/$required"
+          done
+          cat > "$BUNDLE/MANIFEST.txt" <<EOF
+          PROJECT=Neo School India Finance & Payroll ONE
+          HANDOVER_TYPE=V1 development source — isolated Cloudflare staging not deployed
+          REPOSITORY=https://github.com/umakanthgilla/neo-school-india-website
+          BRANCH=$GITHUB_REF_NAME
+          PINNED_COMMIT_SHA=$GITHUB_SHA
+          GITHUB_CI=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          POSTING_POLICY=Verified-source-only Cash Ledger; immutable posted accounting
+          MIGRATIONS=10 (staging-only)
+          BANK_STATEMENT_IMPORT_MATCHING=Deferred to Version 2
+          PRODUCTION_MAIN_AND_LIVE_WORKER=Untouched; deployment prohibited until approval
+          SOURCE_REPOSITORY_REQUIRED=Full existing school code is in the pinned GitHub repo; this ZIP contains the additive Finance ONE overlay
+          EOF
+          (cd "$RUNNER_TEMP" && zip -q -r "$GITHUB_WORKSPACE/finance-one-v1-handover.zip" finance-one-v1-handover)
+          test -s finance-one-v1-handover.zip
+          printf '### V1 engineering source handover\nCommit: %s\nArchive SHA256: ' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          sha256sum finance-one-v1-handover.zip >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Finance ONE V1 handover archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: FINANCE_ONE_V1_HANDOVER
+          path: finance-one-v1-handover.zip
+          if-no-files-found: error
+          retention-days: 30
