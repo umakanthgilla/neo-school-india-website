@@ -56,3 +56,22 @@ test('Finance owner credentials suspended -> not ready',async()=>{
  const r=await financeOneBusinessPreflight(f.params);
  assert.equal(r.ready,false);assert.ok(r.blockers.includes('Finance credentials missing or inactive'));f.sql.close();
 });
+
+
+test('a posted and balanced journal with WRONG Bank amount blocks Business staging',async()=>{
+ const f=fixture();
+ f.sql.exec(`INSERT INTO neo_fin_cash_events(organization_id,event_id,source_kind,source_id,
+ source_event_id,direction,amount_paise,effective_at,verification_reference)
+ VALUES('A','E1','fee_receipt','F1','V1','money_in',10000,'2026-10-09','BANK1');
+ INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id)
+ VALUES('A','JNL-E1','cash_event','E1');
+ INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise,credit_paise)
+ VALUES('A','JNL-E1',1,'SYS_1000',9000,0),('A','JNL-E1',2,'SYS_1100',0,9000);
+ UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='JNL-E1';`);
+ const result=await financeOneBusinessPreflight(f.params);
+ assert.equal(result.unreconciledCashEvents,0,'A posted header alone is insufficient for release');
+ assert.equal(result.ready,false);
+ assert.equal(result.cashJournalAuditIssues,1);
+ assert.ok(result.blockers.includes('Cash/Bank journal reconciliation issues: 1'));
+ f.sql.close();
+});
