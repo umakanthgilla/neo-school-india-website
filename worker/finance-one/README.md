@@ -59,3 +59,11 @@ Do not merge this branch into main or apply migrations to production without ful
 - Focused local Node 22 SQLite integration tests passed 13/13 for PBKDF2 login, cross-business membership, lockout, revocation and protected document reads. Additional GitHub tests for full Worker import, auth SQL constraints, and portal markup are committed; the complete CI result is NOT verified.
 - **Not ready for public access:** user provisioning/invitation lifecycle, Cloudflare per-IP rate limiting/WAF, abuse monitoring, secure reset, MFA where required, staging D1 migrations, deployed staging API/Pages URL, user acceptance testing and Indian payroll compliance remain release blockers.
 - Never create default Finance passwords, copy school passwords, or share HO financial membership with centers. Credential bootstrap should be performed via separate audited privileged workflow; no public registration or self-provisioning route exists.
+
+
+## Account provisioning and staging preflight — 2026-10-09
+- `provisioning.mjs` provides **internal-only**, audited-operator Finance identity creation. Passwords are salted PBKDF2 records; credential and organization membership are written in one transactional D1 batch. It does not expose HTTP registration and refuses existing accounts.
+- `staging-preflight.mjs` inspects actual SQLite/D1 schema using read-only queries and refuses staging readiness if essential tables/views/immutability triggers, staging marker, Finance feature flag or session secret are missing.
+- `provisioning.test.mjs` and `staging-preflight.test.mjs` add 11 local tests (11/11 passed using Node 22 and focused SQLite/mocked D1 fixtures). This is **not** evidence of full GitHub CI success or production readiness.
+- Exact staging requirements, migration order, regression gates and release blockers: `docs/finance-one-staging-operations.md`.
+- Operator authorization, onboarding/invitations, abuse prevention/WAF, staging Cloudflare deployment and independent accountant acceptance are still necessary. **Do not copy school credentials or issue public Finance accounts**.
