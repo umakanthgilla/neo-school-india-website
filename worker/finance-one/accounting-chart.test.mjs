@@ -27,5 +27,7 @@ test('auditor cannot bootstrap business accounts',async()=>{
 });
 test('conflicting account code fails closed',async()=>{
  const db=setup();db.sqlite.exec("INSERT INTO neo_fin_accounts VALUES('A','OTHER','1000','Misconfigured','liability',1)");
- await assert.rejects(ensureBusinessChart(db,'alice','A'),/Chart account conflict/);db.sqlite.close();
+ await assert.rejects(ensureBusinessChart(db,'alice','A'),/Chart account conflict/);
+ assert.equal(db.sqlite.prepare("SELECT COUNT(*) AS n FROM neo_fin_accounts WHERE organization_id='A'").get().n,1);
+ db.sqlite.close();
 });
