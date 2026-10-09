@@ -5,11 +5,13 @@ on:
       - feature/finance-payroll-one-foundation
     paths:
       - 'worker/finance-one/**'
+      - 'finance-one/**'
       - 'migrations/finance_payroll_one_*.sql'
       - '.github/workflows/finance-one-tests.yml'
   pull_request:
     paths:
       - 'worker/finance-one/**'
+      - 'finance-one/**'
       - '.github/workflows/finance-one-tests.yml'
 permissions:
   contents: read
