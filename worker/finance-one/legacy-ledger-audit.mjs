@@ -61,6 +61,16 @@ export function auditLegacyLedgerRows(records) {
       add('review','BANK_SETTLEMENT_UNVERIFIED','payroll',pay._recordId,'Legacy Paid status alone is not bank settlement proof');
     }
   }
+  // Ledger events should resolve to their original receipt/voucher. Unknown
+  // source kinds may be future modules, so audit only these known legacy links.
+  const paymentIds=new Set(grouped.payments.map(x=>x._recordId));
+  const voucherIds=new Set(grouped.vouchers.map(x=>x._recordId));
+  for(const entry of ledger) {
+    if(entry.source_kind==='fee_payment' && !paymentIds.has(entry.source_id))
+      add('high','ORPHAN_DAILY_LEDGER','daily_accounts',entry._recordId);
+    if(entry.source_kind==='voucher' && !voucherIds.has(entry.source_id))
+      add('high','ORPHAN_DAILY_LEDGER','daily_accounts',entry._recordId);
+  }
   return Object.freeze({sources:grouped.payments.length+grouped.vouchers.length+grouped.payroll.length+grouped.salary_advances.length,postings:ledger.length,findings});
 }
 
