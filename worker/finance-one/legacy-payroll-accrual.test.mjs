@@ -206,3 +206,63 @@ test('failed advance-recovery accounting repairs from verified cash without repo
  const again=await recoverMissingCashJournals({db:f.db,organizationId:'A'});
  assert.equal(again.checked,0);f.sql.close();
 });
+
+
+const reviewedPayroll={
+ employee_pf_paise:4000,employee_esi_paise:1000,professional_tax_paise:200,
+ tds_paise:1800,employer_pf_paise:3500,employer_esi_paise:1500,
+ statutory_review_id:'RULES-2026-09-REVIEWED',deductions_paise:42000,net_paise:58000
+};
+async function seedStatutoryReview(f){
+ const payroll=JSON.parse(f.sql.prepare("SELECT data FROM neo_portal_records WHERE kind='payroll'").get().data);
+ const fingerprint=await payrollStatutoryFingerprint(payroll);
+ f.sql.prepare(`INSERT INTO neo_fin_payroll_statutory_reviews
+  (organization_id,school_id,payroll_record_id,payroll_month,policy_reference,source_fingerprint,reviewed_by,reviewed_at,status,
+  employee_pf_paise,employee_esi_paise,professional_tax_paise,tds_paise,employer_pf_paise,employer_esi_paise)
+ VALUES('A','SCHOOL_A','STAFF1_2026-09','2026-09',?,?, 'fin:reviewer','2026-10-02T10:00:00Z','approved',?,?,?,?,?,?)`)
+ .run(payroll.statutory_review_id,fingerprint,payroll.employee_pf_paise,payroll.employee_esi_paise,
+   payroll.professional_tax_paise,payroll.tds_paise,payroll.employer_pf_paise,payroll.employer_esi_paise);
+}
+test('reviewed statutory payroll posts 9 balanced liability lines without invented tax rates',async()=>{
+ const f=fixture(reviewedPayroll);await seedStatutoryReview(f);
+ await postLegacyPayrollAccrual(f.params);
+ const lines=linesOf(f.sql);
+ assert.deepEqual(lines.map(x=>[x.account_id,x.debit_paise,x.credit_paise]),[
+  ['SAL_EXP',85000,0],['SAL_LIAB',0,78000],['PF',0,4000],['ESI',0,1000],
+  ['PT',0,200],['TDS',0,1800],['ER_EXP',5000,0],['PF',0,3500],['ESI',0,1500]
+ ]);
+ assert.equal(lines.reduce((n,l)=>n+l.debit_paise-l.credit_paise,0),0);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
+ const again=await postLegacyPayrollAccrual(f.params);
+ assert.equal(again.journalCreated,false);f.sql.close();
+});
+test('statutory approval mismatch and altered amount fail closed without journal',async()=>{
+ const f=fixture(reviewedPayroll);await seedStatutoryReview(f);
+ const source=JSON.parse(f.sql.prepare("SELECT data FROM neo_portal_records WHERE kind='payroll'").get().data);
+ source.employee_pf_paise=5000;
+ f.update(source);
+ await assert.rejects(postLegacyPayrollAccrual(f.params),/Statutory payroll approval or amounts mismatch/);
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_journals').get().n,0);
+ assert.throws(()=>f.sql.exec("DELETE FROM neo_fin_payroll_statutory_reviews"),/immutable/);
+ f.sql.close();
+});
+test('statutory withheld salary stays payable until a bank-verified net salary settlement',async()=>{
+ const f=fixture({...reviewedPayroll,status:'Paid'});await seedStatutoryReview(f);
+ const payrollId=seedLegacyPaidPayrollVoucher(f);
+ f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',58000) WHERE kind='vouchers'");
+ f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',58000) WHERE kind='daily_accounts'");
+ await postLegacyPayrollAccrual(f.params);
+ const payoutParams={...f.params,legacyRecordId:payrollId,sourceKind:'payroll_payment'};
+ const payout=await syncLegacyPayoutDocument(payoutParams);
+ f.sql.prepare(`INSERT INTO neo_fin_payment_settlements
+ (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
+ VALUES ('A','SET-STAT',?,58000,'verified','BANK-STAT','2026-10-09T12:00:00Z')`).run(payout.documentId);
+ const payment=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'SET-STAT'});
+ assert.equal(payment.journalCreated,true);
+ assert.equal(f.sql.prepare("SELECT COALESCE(SUM(credit_paise-debit_paise),0) balance FROM neo_fin_journal_lines WHERE account_id='SAL_LIAB'").get().balance,0);
+ assert.equal(f.sql.prepare("SELECT SUM(credit_paise) amount FROM neo_fin_journal_lines WHERE account_id='PF'").get().amount,7500);
+ assert.equal(f.sql.prepare("SELECT SUM(credit_paise) amount FROM neo_fin_journal_lines WHERE account_id='ESI'").get().amount,2500);
+ assert.equal(f.sql.prepare("SELECT amount_paise FROM neo_fin_cash_events").get().amount_paise,58000);
+ assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
+ f.sql.close();
+});
