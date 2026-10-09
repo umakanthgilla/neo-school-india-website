@@ -1,0 +1,22 @@
+# EXAMPLE ONLY — copy to a private staging Wrangler config and fill in real values.
+# Do not point this binding to a production D1 database.
+# Do not deploy without first running all staging D1 migrations and tests.
+name = "neo-finance-one-staging"
+main = "worker/finance-one/staging-entry.mjs"
+compatibility_date = "2026-10-09"
+workers_dev = true
+
+[vars]
+FINANCE_ONE_ENVIRONMENT = "staging"
+# Keep OFF until migrations + independent credentials + rate limits + review are complete.
+FINANCE_ONE_READ_API_ENABLED = "false"
+# Replace with the HTTPS origin serving finance-one/portal.html (no path or trailing slash).
+FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "neo-finance-one-staging"
+database_id = "REPLACE_WITH_SEPARATE_STAGING_D1_UUID"
+
+# FINANCE_ONE_SESSION_SECRET MUST be set with Wrangler secret management;
+# never put it in [vars], source code, or version control.
