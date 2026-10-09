@@ -35,3 +35,9 @@ test('Finance Portal includes PF ESI PT TDS balances and explicit no-filing caut
  assert.match(page,/not a government filing or payment confirmation/);
  assert.match(page,/statutory-review/);
 });
+
+test('Finance Portal checks read-only cash/journal reconciliation alongside trial balance',()=>{
+ assert.match(page,/cash-reconciliation-warning/);
+ assert.match(page,/call\(path\+'\/cash-reconciliation'\)/);
+ assert.match(page,/cashReconciliation\.ready===true/);
+});
