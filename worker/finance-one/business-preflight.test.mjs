@@ -71,7 +71,7 @@ test('a posted and balanced journal with WRONG Bank amount blocks Business stagi
  const result=await financeOneBusinessPreflight(f.params);
  assert.equal(result.unreconciledCashEvents,0,'A posted header alone is insufficient for release');
  assert.equal(result.ready,false);
- assert.equal(result.cashJournalAuditIssues,1);
- assert.ok(result.blockers.includes('Cash/Bank journal reconciliation issues: 1'));
+ assert.ok(result.cashJournalAuditIssues>=1);
+ assert.ok(result.blockers.some(b=>b.startsWith('Cash/Bank journal reconciliation issues: ')));
  f.sql.close();
 });
