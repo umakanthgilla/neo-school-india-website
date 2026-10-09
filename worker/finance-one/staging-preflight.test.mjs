@@ -5,7 +5,7 @@ const env={FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true'
  FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},
  FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})}};
 const objects={
- table:['neo_fin_organizations','neo_fin_school_ownership','neo_fin_memberships','neo_fin_auth_accounts','neo_fin_documents','neo_fin_payment_settlements','neo_fin_accounts','neo_fin_journals','neo_fin_journal_lines','neo_fin_cash_events','neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews','neo_fin_statutory_remittances'],
+ table:['neo_fin_organizations','neo_fin_school_ownership','neo_fin_memberships','neo_fin_auth_accounts','neo_fin_documents','neo_fin_payment_settlements','neo_fin_accounts','neo_fin_journals','neo_fin_journal_lines','neo_fin_cash_events','neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews','neo_fin_statutory_remittances','neo_fin_session_revocations'],
  view:['neo_fin_daily_ledger','neo_fin_posted_journal_lines'],
  trigger:['neo_fin_cash_events_no_update','neo_fin_cash_events_no_delete','neo_fin_journal_post_balanced','neo_fin_journal_posted_immutable','neo_fin_auth_rotate_credentials',
  'neo_fin_receipt_verification_no_update','neo_fin_receipt_verification_no_delete',
@@ -14,12 +14,12 @@ const objects={
  'neo_fin_statutory_remittance_no_update','neo_fin_statutory_remittance_no_delete',
  'neo_fin_stat_remit_verify_insert','neo_fin_stat_remit_verify_update',
  'neo_fin_stat_remit_verified_no_update','neo_fin_stat_remit_verified_no_delete',
- 'neo_fin_stat_remit_no_overclear']};
+ 'neo_fin_stat_remit_no_overclear','neo_fin_session_revocations_no_update']};
 const rows=Object.entries(objects).flatMap(([type,names])=>names.map(name=>({type,name})));
 const fakeDb=records=>({prepare(query){assert.match(query,/sqlite_master/);return{all:async()=>({results:records})}}});
 test('complete staging schema and secure configuration pass without database writes',async()=>{
  const result=await financeOneStagingPreflight({db:fakeDb(rows),env});
- assert.equal(result.ready,true);assert.deepEqual(result.blockers,[]);assert.equal(result.schema.tables,13);
+ assert.equal(result.ready,true);assert.deepEqual(result.blockers,[]);assert.equal(result.schema.tables,14);
 });
 test('never approve a production environment or disabled Finance feature',async()=>{
  const result=await financeOneStagingPreflight({db:fakeDb(rows),env:{...env,FINANCE_ONE_ENVIRONMENT:'production',FINANCE_ONE_READ_API_ENABLED:'false'}});
