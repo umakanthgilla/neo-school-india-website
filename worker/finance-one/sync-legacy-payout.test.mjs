@@ -41,7 +41,7 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
  (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
  VALUES ('A','DOC1','payment','approved',?,?,?)`).run(c.amount,sourceKind,'SCHOOL_A|RUN1');
  if(sourceKind==='payroll_payment'){
-  const accrualRef='8:SCHOOL_A|4:RUN1',accrualId='PAY_ACCR|'+accrualRef;
+  const originalRef='8:SCHOOL_A|4:RUN1',accrualRef=originalRef+'|30000:0:0:5000:5000:25000',accrualId='PAY_ACCR|'+originalRef;
   sql.prepare(`INSERT INTO neo_fin_documents
   (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
   VALUES('A',?,'payroll_liability','approved',30000,'legacy_payroll',?)`).run(accrualId,accrualRef);
@@ -49,8 +49,7 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
   const statement=sql.prepare(`INSERT INTO neo_fin_journal_lines
   (organization_id,journal_id,line_no,account_id,debit_paise,credit_paise) VALUES('A',?,?,?,?,?)`);
   statement.run('JNL-DOC|'+accrualId,1,'SAL_EXP',30000,0);
-  statement.run('JNL-DOC|'+accrualId,2,'SAL',0,25000);
-  statement.run('JNL-DOC|'+accrualId,3,'ADV',0,5000);
+  statement.run('JNL-DOC|'+accrualId,2,'SAL',0,30000);
   sql.prepare("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-08T10:00:00Z' WHERE organization_id='A' AND id=?").run('JNL-DOC|'+accrualId);
  }
  sql.prepare(`INSERT INTO neo_fin_payment_settlements
@@ -75,8 +74,15 @@ for(const kind of Object.keys(CASES)){
   const event=f.sql.prepare('SELECT direction,amount_paise FROM neo_fin_cash_events').get();
   assert.equal(event.direction,'money_out');assert.equal(event.amount_paise,f.c.amount);
   const lines=f.sql.prepare("SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines WHERE journal_id LIKE 'JNL|%' ORDER BY line_no").all();
-  assert.deepEqual(lines.map(l=>l.account_id),[f.c.account==='2100'?'SAL':f.c.account==='2000'?'AP':'ADV','BANK']);
-  assert.equal(lines[0].debit_paise,f.c.amount);assert.equal(lines[1].credit_paise,f.c.amount);
+  if(kind==='payroll_payment'){
+   assert.deepEqual(lines.map(l=>l.account_id),['SAL','BANK','ADV']);
+   assert.equal(lines[0].debit_paise,30000);
+   assert.equal(lines[1].credit_paise,25000);
+   assert.equal(lines[2].credit_paise,5000);
+  }else{
+   assert.deepEqual(lines.map(l=>l.account_id),[f.c.account==='2000'?'AP':'ADV','BANK']);
+   assert.equal(lines[0].debit_paise,f.c.amount);assert.equal(lines[1].credit_paise,f.c.amount);
+  }
   assert.equal(count(f.sql,'neo_fin_cash_events'),1);
   assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
   const retry=await syncVerifiedLegacyPayout(f.request());
