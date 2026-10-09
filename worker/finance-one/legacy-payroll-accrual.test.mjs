@@ -39,12 +39,12 @@ function fixture(overrides={}){
  return{sql,db,params,update(p){sql.prepare("UPDATE neo_portal_records SET data=? WHERE school_id='SCHOOL_A' AND kind='payroll'").run(JSON.stringify(p));}};
 }
 const linesOf=sql=>sql.prepare('SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines ORDER BY line_no').all();
-test('approved payroll posts earned expense, net salary payable and advance recovery, with NO cash movement',async()=>{
+test('approved payroll accrues earned salary payable, delays advance recovery until verified payout',async()=>{
  const f=fixture();const r=await postLegacyPayrollAccrual(f.params);
  assert.equal(r.documentCreated,true);assert.equal(r.journalCreated,true);
  const journalLines=linesOf(f.sql);
  assert.deepEqual(journalLines.map(r=>[r.account_id,r.debit_paise,r.credit_paise]),
-  [['SAL_EXP',85000,0],['SAL_LIAB',0,65000],['ADV',0,20000]]);
+  [['SAL_EXP',85000,0],['SAL_LIAB',0,85000]]);
  const doc=f.sql.prepare("SELECT document_type,source_kind,gross_paise FROM neo_fin_documents").get();
  assert.deepEqual({...doc},{document_type:'payroll_liability',source_kind:'legacy_payroll',gross_paise:85000});
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
@@ -62,7 +62,7 @@ test('payroll with zero advance recovery creates a balanced two-line journal',as
 test('fully recovered net-zero payroll accrues against advance receivable only',async()=>{
  const f=fixture({gross_paise:20000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:20000,deductions_paise:20000,net_paise:0});
  await postLegacyPayrollAccrual(f.params);
- assert.deepEqual(linesOf(f.sql).map(x=>x.account_id),['SAL_EXP','ADV']);
+ assert.deepEqual(linesOf(f.sql).map(x=>x.account_id),['SAL_EXP','SAL_LIAB']);
  f.sql.close();
 });
 test('unapproved or unfinished attendance payroll cannot accrue',async()=>{
@@ -106,7 +106,7 @@ test('changed advance deduction split on retry is detected even when gross expen
  f.update({staff_id:'STAFF1',month:'2026-09',status:'Paid',attendance_complete:true,approved_at:'2026-10-02T10:00:00Z',
   gross_paise:100000,late_deduction_paise:5000,attendance_deduction_paise:10000,advance_recovery_paise:10000,
   deductions_paise:25000,net_paise:75000});
- await assert.rejects(postLegacyPayrollAccrual(f.params),/Conflicting source payroll deductions/);
+ await assert.rejects(postLegacyPayrollAccrual(f.params),/Conflicting source payroll document|Conflicting source payroll deductions/);
  f.sql.close();
 });
 test('generic gross-based payroll posting cannot overwrite deduction-aware legacy accrual',async()=>{
@@ -154,6 +154,9 @@ test('real payroll source -> deduction-aware accrual -> Finance payout doc -> ve
  const account=f.sql.prepare(`SELECT SUM(l.credit_paise-l.debit_paise) AS balance
  FROM neo_fin_journal_lines l WHERE l.organization_id='A' AND l.account_id='SAL_LIAB'`).get();
  assert.equal(account.balance,0);
+ const recovery=f.sql.prepare(`SELECT SUM(l.credit_paise-l.debit_paise) AS recovered
+  FROM neo_fin_journal_lines l WHERE l.organization_id='A' AND l.account_id='ADV'`).get();
+ assert.equal(recovery.recovered,20000);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,1);
  assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
  const retry=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
