@@ -30,3 +30,14 @@ GitHub tests have been authored but passing CI or deployed D1 migrations are not
 
 ## Do not claim ready for testing
 Until a real staging URL and test execution are verified, the work remains implementation-in-progress.
+
+## 2026-10-09 validated staging foundation update
+- Added `migrations/finance_payroll_one_accounting_journals.sql`: independent Chart of Accounts and double-entry journal tables (separate from read-only Daily Cash Ledger).
+- Journal must originate with a source reference; a journal starts in Draft, and can become Posted only with at least two lines and exactly balanced debits/credits.
+- Posted headers and lines cannot be changed/deleted; lines cannot be moved from drafts into posted journals.
+- Combined staging SQL migration and accounting safety tests were reproduced locally using SQLite/Node 22: six schema tests passed. They do NOT substitute for a deployment or full production test.
+- Financial reconciliation permits negative opening balances (legitimate bank overdrafts), while rejecting unsafe numeric values.
+- Fixed payroll-domain versus finance-domain read permission confusion: payroll-only context cannot be used as a finance document context.
+- GitHub Actions workflow now includes the SQL schema tests. Its remote pass/fail result has not been verified.
+- Critical open issue: legacy production payroll Paid transition is not yet settlement-gated, and HO admin privileges currently differ from the required private independent-business model. Do not automatically migrate legacy access rules.
+- This foundation does not yet implement accounting source adapters, integrated receipt verifiers, full payroll, bank reconciliation, user-facing portal, staging URL, or production deployment.
