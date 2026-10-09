@@ -21,11 +21,24 @@ function fixture(kind='payroll_payment'){
  INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES('A','fin:alice','owner'),('HO','fin:ho','owner');
  INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type)
  VALUES('A','BANK','1000','Bank','asset'),('A','SAL','2100','Salary Liability','liability'),
- ('A','AP','2000','Accounts Payable','liability'),('A','ADV','1200','Employee Advance','asset');`);
+ ('A','AP','2000','Accounts Payable','liability'),('A','ADV','1200','Employee Advance','asset'),('A','SAL_EXP','5100','Salary expense','expense');`);
  const insert=sql.prepare('INSERT INTO neo_portal_records VALUES(?,?,?,?)');
- insert.run('SCHOOL_A',config.kind,'P1',JSON.stringify({status:config.status,[config.amountKey]:10000}));
+ const source=kind==='payroll_payment' ? {status:'Paid',net_paise:10000,gross_paise:12000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:2000,deductions_paise:2000}: {status:config.status,[config.amountKey]:10000};
+ insert.run('SCHOOL_A',config.kind,'P1',JSON.stringify(source));
  insert.run('SCHOOL_A','vouchers',config.voucher,JSON.stringify({status:'Paid',source_kind:config.sourceKind,source_id:'P1',amount_paise:10000,voucher_no:'PV-2026-1',payment_mode:'Bank transfer'}));
  insert.run('SCHOOL_A','daily_accounts',config.ledger,JSON.stringify({direction:'OUT',status:'Posted',source_kind:'voucher',source_id:config.voucher,amount_paise:10000,reference:'PV-2026-1'}));
+ if(kind==='payroll_payment'){
+  const ref='8:SCHOOL_A|2:P1',docId='PAY_ACCR|'+ref,journal='JNL-DOC|'+docId;
+  sql.prepare(`INSERT INTO neo_fin_documents(organization_id,id,document_type,status,gross_paise,source_kind,source_id)
+  VALUES('A',?,'payroll_liability','approved',12000,'legacy_payroll',?)`).run(docId,ref);
+  sql.prepare("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A',?,'document',?)").run(journal,docId);
+  const stmt=sql.prepare(`INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise,credit_paise)
+  VALUES('A',?,?,?,?,?)`);
+  stmt.run(journal,1,'SAL_EXP',12000,0);
+  stmt.run(journal,2,'SAL',0,10000);
+  stmt.run(journal,3,'ADV',0,2000);
+  sql.prepare("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-08T10:00:00Z' WHERE id=?").run(journal);
+ }
  const db={
   prepare(q){return{bind(...args){const st=sql.prepare(q);return{first:async()=>st.get(...args),all:async()=>({results:st.all(...args)}),run:async()=>{const r=st.run(...args);return{success:true,meta:{changes:r.changes}}}}}}},
   async batch(statements){sql.exec('BEGIN IMMEDIATE');try{const results=[];for(const st of statements)results.push(await st.run());sql.exec('COMMIT');return results}catch(e){sql.exec('ROLLBACK');throw e}}
@@ -38,7 +51,7 @@ for(const kind of ['payroll_payment','vendor_payment','salary_advance_release'])
   const r=await syncLegacyPayoutDocument(f.params());
   assert.equal(r.created,true);
   assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
-  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_journals').get().n,0);
+  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_journals').get().n,kind==='payroll_payment'?1:0);
   assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
   assert.equal((await syncLegacyPayoutDocument(f.params())).created,false);
   // Separately verified bank settlement is the only step that unlocks cash:
@@ -54,7 +67,7 @@ for(const kind of ['payroll_payment','vendor_payment','salary_advance_release'])
 test('a HO account cannot create a center payout document',async()=>{
  const f=fixture();
  await assert.rejects(syncLegacyPayoutDocument(f.params({authenticatedAccountId:'fin:ho'})),/Finance access denied/);
- assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,0);f.sql.close();
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents WHERE document_type=\'payment\'').get().n,0);f.sql.close();
 });
 test('mismatched legacy voucher amount blocks document import',async()=>{
  const f=fixture('vendor_payment');
@@ -74,5 +87,5 @@ test('changed original payout amount is rejected on repeated sync',async()=>{
  await syncLegacyPayoutDocument(f.params());
  f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.net_paise',20000) WHERE kind='payroll'");
  await assert.rejects(syncLegacyPayoutDocument(f.params()),/Original payout voucher missing or mismatched/);
- assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,1);f.sql.close();
+ assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents WHERE document_type=\'payment\'').get().n,1);f.sql.close();
 });
