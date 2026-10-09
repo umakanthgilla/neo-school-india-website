@@ -47,3 +47,15 @@ Do not merge this branch into main or apply migrations to production without ful
 - A Finance-specific login/credential verification + token issuance endpoint is still required; **never issue a Finance token merely on the strength of shared school-portal credentials**. Only use `issueFinanceOneToken` after a separately validated finance identity.
 - The gate is staged as an isolated module and is NOT yet imported by the deployed Worker. It requires a verified Cloudflare bundling/deployment path and staging database migrations.
 - Verified locally with Node 22: the new route, token, gate suites pass **22/22** tests. This does not confirm GitHub CI or an available staging URL.
+
+
+## Finance login + portal (2026-10-09)
+- `finance-password.mjs` defines dedicated salted PBKDF2-SHA256 Finance credentials (210,000 iterations), 5-failure lockout, and account-credential version checks. It is not the school portal password store.
+- `finance-login.mjs` adds POST `/api/finance-one/v1/session` accepting `{accountId,password,organizationId}`; success requires both a valid separate Finance password and explicit organization membership. Finance token lifetime is 15 minutes.
+- `finance-session.mjs` now carries `credentialVersion`. `worker-gate.mjs` checks the identity is active and its credential version is still current on each Finance request.
+- `migrations/finance_payroll_one_auth_accounts.sql` is additive and prevents silent credential changes/suspensions without token version rotation.
+- `worker/neo-lead-crm-api-worker-transport-phase1.js` imports and calls the Finance ONE gate only in THIS development branch. It is disabled unless `FINANCE_ONE_READ_API_ENABLED=true`. Main/production have not been changed.
+- `finance-one/portal.html` is a responsive read-only login and summary UI. It stores the Finance token in memory only (not localStorage), and does not allow manual ledger edits. For staging, configure `window.FINANCE_ONE_API_BASE` if the API is on a different origin.
+- Focused local Node 22 SQLite integration tests passed 13/13 for PBKDF2 login, cross-business membership, lockout, revocation and protected document reads. Additional GitHub tests for full Worker import, auth SQL constraints, and portal markup are committed; the complete CI result is NOT verified.
+- **Not ready for public access:** user provisioning/invitation lifecycle, Cloudflare per-IP rate limiting/WAF, abuse monitoring, secure reset, MFA where required, staging D1 migrations, deployed staging API/Pages URL, user acceptance testing and Indian payroll compliance remain release blockers.
+- Never create default Finance passwords, copy school passwords, or share HO financial membership with centers. Credential bootstrap should be performed via separate audited privileged workflow; no public registration or self-provisioning route exists.
