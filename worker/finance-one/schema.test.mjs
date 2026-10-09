@@ -65,3 +65,16 @@ test('double entry posting rejects unbalanced journals and cross-business accoun
  assert.throws(()=>db.exec("DELETE FROM neo_fin_journals WHERE id='J1'"),/immutable/);
  db.close();
 });
+
+test('cannot insert posted journals or move lines into posted journals',()=>{
+ const db=setup();db.exec(accounting);
+ assert.throws(()=>db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id,status,posted_at) VALUES('A','J0','invoice','I0','posted','2026-10-09')"),/start as draft/);
+ db.exec("INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES('A','A1','11','A1','asset'),('A','A2','12','A2','income')");
+ db.exec("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES('A','J1','invoice','I1'),('A','J2','invoice','I2')");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J1',1,'A1',100)");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,credit_paise) VALUES('A','J1',2,'A2',100)");
+ db.exec("UPDATE neo_fin_journals SET status='posted',posted_at='2026-10-09' WHERE id='J1'");
+ db.exec("INSERT INTO neo_fin_journal_lines(organization_id,journal_id,line_no,account_id,debit_paise) VALUES('A','J2',3,'A1',100)");
+ assert.throws(()=>db.exec("UPDATE neo_fin_journal_lines SET journal_id='J1' WHERE journal_id='J2'"),/immutable/);
+ db.close();
+});
