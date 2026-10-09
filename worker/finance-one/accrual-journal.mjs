@@ -8,8 +8,9 @@ const mappings=Object.freeze({
 });
 export async function postAccrualJournalForDocument(db,organizationId,documentId,{postedAt}={}) {
  if(!db || !organizationId || !documentId || typeof organizationId!=='string'||typeof documentId!=='string')throw new Error('Business and document required');
- const doc=await db.prepare('SELECT organization_id,id,document_type,status,gross_paise FROM neo_fin_documents WHERE organization_id=? AND id=?').bind(organizationId,documentId).first();
+ const doc=await db.prepare('SELECT organization_id,id,document_type,status,gross_paise,source_kind FROM neo_fin_documents WHERE organization_id=? AND id=?').bind(organizationId,documentId).first();
  if(!doc || doc.status!=='approved' || doc.organization_id!==organizationId)throw new Error('Approved document for business required');
+ if(doc.document_type==='payroll_liability' && doc.source_kind==='legacy_payroll')throw new Error('Legacy payroll requires deduction-aware accrual journal');
  const rule=Object.prototype.hasOwnProperty.call(mappings,doc.document_type)?mappings[doc.document_type]:null;
  if(!rule)throw new Error('Unsupported accounting document');
  if(!Number.isSafeInteger(doc.gross_paise)||doc.gross_paise<=0)throw new Error('Invalid document amount');
