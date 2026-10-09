@@ -37,3 +37,15 @@ test('missing database and failed inspection cannot certify staging',async()=>{
  const bad=await financeOneStagingPreflight({db:{prepare(){throw Error('not ready')}},env});
  assert.equal(bad.ready,false);assert.ok(bad.blockers.includes('Finance schema inspection failed'));
 });
+
+
+test('staging API cannot be enabled without both native login abuse-limit bindings',async()=>{
+ const full=await financeOneStagingPreflight({db:fakeDb(rows),env});
+ assert.equal(full.ready,true);
+ for(const missing of ['FINANCE_ONE_LOGIN_CLIENT_LIMIT','FINANCE_ONE_LOGIN_ACCOUNT_LIMIT']){
+  const missingEnv={...env,[missing]:undefined};
+  const result=await financeOneStagingPreflight({db:fakeDb(rows),env:missingEnv});
+  assert.equal(result.ready,false);
+  assert.ok(result.blockers.some(x=>x.includes('rate limiter missing')));
+ }
+});
