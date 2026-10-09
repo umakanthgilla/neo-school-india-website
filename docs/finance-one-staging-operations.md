@@ -165,3 +165,11 @@ The development Worker gate now refuses Finance routes outright if `FINANCE_ONE_
 - The GitHub Finance tests workflow has a separate `package-staging` job: after all Node/SQLite tests it checks a synthetic, **disabled** Wrangler config and runs `wrangler deploy --dry-run` to compile Worker/portal static assets. This is a compilation check, NEVER a deployment, Cloudflare authentication, real D1 migration or live HTTPS endpoint.
 - Live staging publication (only after approval): use an independently named Staging Worker and staging-only D1 database, replace the example UUID locally, set the unique signing secret through Cloudflare secret management, confirm `phase:'prepare'` readiness with feature OFF, and only then enable Finance in isolated staging and run `phase:'active'` plus per-company readiness checks.
 - The real staging portal URL is not available until an authorized Cloudflare deployment is completed. Do not advertise a GitHub file link or simulated test domain as a working login.
+
+
+## Verified Cloudflare package dry-run — 2026-10-09
+- GitHub Actions run `37915091106` completed successfully: **248/248** Finance ONE Node/SQLite tests passed and the separate **`package-staging`** job passed.
+- The packaging job uses Wrangler v4.129.1 with `deploy --dry-run`; Wrangler bundled the isolated Finance API Worker, discovered the single `finance-one/portal.html` asset and resolved the `ASSETS` binding. The bundle's reported upload size was approximately 27.98 KiB (7.48 KiB compressed).
+- The job uses a **synthetic staging D1 UUID**, keeps the Finance API flag OFF, supplies no Cloudflare credentials, and explicitly does **NOT** deploy anything.
+- Before actual staging publication, a separately authorized Cloudflare operator must create the staging D1 and Worker, set secrets and permitted origins through private configuration, enforce login rate limits/Access, apply all 8 migrations, provision independent Finance identities, and verify prepare/active staging + each organization's readiness. These blockers are **not** met by a successful dry-run.
+- Once permitted staging deployment is complete, the same Worker can deliver the Portal at its own HTTPS `/portal.html` path; **no real staging URL exists yet**.
