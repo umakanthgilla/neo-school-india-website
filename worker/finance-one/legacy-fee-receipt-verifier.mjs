@@ -15,6 +15,7 @@ export async function verifyLegacyFeeReceipt(db,request){
    FROM neo_fin_receipt_verifications v
    JOIN neo_fin_school_ownership o
      ON o.school_id=v.school_id AND o.organization_id=v.organization_id AND o.effective_to IS NULL
+     AND date(v.settled_at)>=date(o.effective_from)
    WHERE v.organization_id=? AND v.verification_id=? AND v.payment_record_id=? AND v.status='verified'
    LIMIT 1`).bind(organizationId,sourceEventId,sourceId).first();
  if(!evidence || evidence.organization_id!==organizationId ||
