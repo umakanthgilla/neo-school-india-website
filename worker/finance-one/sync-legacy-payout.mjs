@@ -6,6 +6,7 @@
 import {resolveFinanceOrganization} from './organization-access.mjs';
 import {postVerifiedSourceEvent} from './atomic-posting.mjs';
 import {postJournalForCashEvent} from './source-journal.mjs';
+import {postLegacyPayrollSettlementJournal} from './legacy-payroll-settlement-journal.mjs';
 import {verifyLegacyPayout} from './legacy-payout-verifier.mjs';
 const KINDS=new Set(['vendor_payment','payroll_payment','salary_advance_release']);
 const ID=/^[A-Za-z0-9_-]{1,100}$/;
@@ -21,7 +22,9 @@ export async function syncVerifiedLegacyPayout({
   source:{organizationId,sourceKind,sourceId,sourceEventId:settlementId},
   verifySource:verifyLegacyPayout
  });
- const journal=await postJournalForCashEvent(db,organizationId,cash.eventId);
+ const journal=sourceKind==='payroll_payment'
+  ? await postLegacyPayrollSettlementJournal(db,organizationId,cash.eventId)
+  : await postJournalForCashEvent(db,organizationId,cash.eventId);
  return Object.freeze({
   organizationId,schoolId,legacyRecordId,sourceKind,settlementId,
   cashCreated:cash.created,journalCreated:journal.created,eventId:cash.eventId,journalId:journal.journalId
