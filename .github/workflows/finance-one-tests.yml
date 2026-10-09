@@ -48,6 +48,9 @@ jobs:
           grep -Fxq 'FINANCE_ONE_ENVIRONMENT = "staging"' wrangler.finance-one.staging.toml
           grep -Fxq 'FINANCE_ONE_READ_API_ENABLED = "false"' wrangler.finance-one.staging.toml
           grep -Fxq 'run_worker_first = true' wrangler.finance-one.staging.toml
+          grep -Fxq 'name = "FINANCE_ONE_LOGIN_CLIENT_LIMIT"' wrangler.finance-one.staging.toml
+          grep -Fxq 'name = "FINANCE_ONE_LOGIN_ACCOUNT_LIMIT"' wrangler.finance-one.staging.toml
+          test "$(grep -Fc '[[ratelimits]]' wrangler.finance-one.staging.toml)" -eq 2
           grep -Fxq 'name = "neo-finance-one-staging"' wrangler.finance-one.staging.toml
           if grep -Eq '^(route|routes|zone_id) *=' wrangler.finance-one.staging.toml; then
             echo "Refusing routes in staging dry-run configuration"
