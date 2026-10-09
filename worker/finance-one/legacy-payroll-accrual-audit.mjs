@@ -45,11 +45,19 @@ export async function approvedLegacyPayrollAccrualMatches(db,organizationId,docu
  try{
   const snap=decode(document?.source_id);
   if(!snap||document.id!=='PAY_ACCR|'+snap.sourcePrefix)return false;
+  const month=snap.payrollId.match(/_(20[0-9]{2}-(?:0[1-9]|1[0-2]))$/)?.[1];
+  if(!month)return false;
+  // A payroll journal must still belong to its current independent legal
+  // business. Matching source numbers alone do not grant cross-center access.
+  const owner=await db.prepare(`SELECT school_id FROM neo_fin_school_ownership
+   WHERE organization_id=? AND school_id=? AND effective_to IS NULL
+     AND date(? || '-01')>=date(effective_from) LIMIT 1`)
+   .bind(organizationId,snap.schoolId,month).first();
+  if(!owner)return false;
   const stat=Object.fromEntries([...STAT_CODES.map(([field])=>field),
    'employer_pf_paise','employer_esi_paise'].map(k=>[k,0]));
   if(snap.statFingerprint){
-   const month=snap.payrollId.match(/_(20[0-9]{2}-(?:0[1-9]|1[0-2]))$/)?.[1];
-   if(!month)return false;
+
    const review=await db.prepare(`SELECT status,payroll_month,source_fingerprint,
     reviewed_at,reviewed_by,employee_pf_paise,employee_esi_paise,
     professional_tax_paise,tds_paise,employer_pf_paise,employer_esi_paise
