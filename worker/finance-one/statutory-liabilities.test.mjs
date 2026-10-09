@@ -44,7 +44,7 @@ test('posted payroll and remittance show correct organization-only statutory lia
  const {sql,db}=fixture();
  const r=await readStatutoryLiabilities({db,authenticatedAccountId:'fin:alice',organizationId:'A'});
  assert.equal(r.items.length,4);assert.equal(r.items[0].balancePaise,2500);
- assert.equal(r.items[0].remittedPaise,5000);assert.equal(r.netLiabilityPaise,6200);
+ assert.equal(r.items[0].debitedPaise,5000);assert.equal(r.netLiabilityPaise,6200);
  assert.equal(r.requiresReview,false);
  assert.ok(!JSON.stringify(r).includes('950000'));sql.close();
 });
