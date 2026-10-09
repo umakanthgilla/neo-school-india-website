@@ -44,6 +44,7 @@ const bodyFor=(url,organization)=>{
    document_type:'sales_invoice',status:'approved',gross_paise:10000}]};
   case 'settlements':return {organizationId:organization,entries:[]};
   case 'statutory-liabilities':return {organizationId:organization,items:[],requiresReview:false};
+  case 'cash-reconciliation':return {organizationId:organization,ready:true,issueCount:0,findings:[]};
   default:throw Error('Unrecognized Finance request '+url);
  }
 };
@@ -115,4 +116,17 @@ test('login response cannot silently switch organization to another legal busine
  await app.login('CENTER_A');
  assert.equal(app.$('dashboard-panel').hidden,true);
  assert.match(app.$('login-error').textContent,/organization mismatch/);
+});
+
+test('cash/journal reconciliation issue is shown and clears on sign-out',async()=>{
+ const app=mount(async(url,options)=>{
+  if(new URL(url).pathname.endsWith('/session'))return json({token:'T',organizationId:'CENTER_A'});
+  const result=bodyFor(url,'CENTER_A');
+  if(new URL(url).pathname.endsWith('/cash-reconciliation'))result.ready=false;
+  return json(result);
+ });
+ await app.login('CENTER_A');
+ assert.equal(app.$('cash-reconciliation-warning').hidden,false);
+ app.signOut();
+ assert.equal(app.$('cash-reconciliation-warning').hidden,true);
 });
