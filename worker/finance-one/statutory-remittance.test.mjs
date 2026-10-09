@@ -10,7 +10,7 @@ import {readStatutoryLiabilities} from './statutory-liabilities.mjs';
 const migrations=['finance_payroll_one_foundation.sql','finance_payroll_one_cash_projection.sql',
  'finance_payroll_one_accounting_journals.sql','finance_payroll_one_statutory_remittance.sql']
  .map(n=>readFileSync(new URL('../../migrations/'+n,import.meta.url),'utf8'));
-function fixture({verified=true,liability=15000,bankActive=true}={}){
+function fixture({verified=true,liability=15000,bankActive=true,wrongVoucherReference=false}={}){
  const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
  for(const m of migrations)sql.exec(m);
  sql.exec(`INSERT INTO neo_fin_organizations(id,legal_name,organization_type)
@@ -41,7 +41,7 @@ function fixture({verified=true,liability=15000,bankActive=true}={}){
   sql.prepare(`INSERT INTO neo_fin_payment_settlements
     (organization_id,id,document_id,bank_reference,amount_paise,status,verified_at,voucher_id)
     VALUES('A',?,'DOC_'||?,'BANK-'||?, ?,?,'2026-10-09T10:00:00Z',?)`)
-    .run(settlement,id,settlement,amount,verified?'verified':'pending',number);
+    .run(settlement,id,settlement,amount,verified?'verified':'pending',wrongVoucherReference?'WRONG':number);
   return {doc,number};
  }
  voucher('PF_SEP','2026-09');
@@ -87,10 +87,10 @@ test('HO cannot post independent Center A statutory payments',async()=>{
  await assert.rejects(syncVerifiedStatutoryRemittance(f.params({authenticatedAccountId:'fin:ho'})),/Finance access denied/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);f.sql.close();
 });
-test('bank reference voucher ID mismatch refuses cash posting',async()=>{
- const f=fixture();
- f.sql.exec("UPDATE neo_fin_payment_settlements SET voucher_id='WRONG' WHERE id='SET1'");
+test('original bank verification with mismatched voucher ID refuses cash posting',async()=>{
+ const f=fixture({wrongVoucherReference:true});
  await assert.rejects(syncVerifiedStatutoryRemittance(f.params()),/Source verification failed/);
+ assert.equal(count(f.sql,'neo_fin_cash_events'),0);
  f.sql.close();
 });
 test('second full verified settlement blocked by database trigger',()=>{
