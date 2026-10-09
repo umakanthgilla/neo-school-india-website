@@ -68,3 +68,34 @@ test('staging auth, posted-journal and verified statutory evidence are enforced 
  VALUES('A','J1','document','D1','posted','2026-10-09')`),/Journal must start as draft/);
  sql.close();
 });
+
+
+test('staging pre-activation is safe with Finance routes switched OFF',async()=>{
+ const {sql,db}=database();
+ const closed={...env,FINANCE_ONE_READ_API_ENABLED:'false'};
+ const before=await financeOneStagingPreflight({db,env:closed,phase:'prepare'});
+ assert.equal(before.ready,true,JSON.stringify(before.blockers));
+ const exposed=await financeOneStagingPreflight({db,env,phase:'prepare'});
+ assert.equal(exposed.ready,false);
+ assert.ok(exposed.blockers.includes('Finance API must remain disabled during preparation'));
+ const active=await financeOneStagingPreflight({db,env:closed,phase:'active'});
+ assert.equal(active.ready,false);
+ assert.ok(active.blockers.includes('Finance API feature flag not enabled for staging'));
+ sql.close();
+});
+test('staging preparation refuses incomplete schema even with disabled endpoint',async()=>{
+ const {sql,db}=database(7);
+ const result=await financeOneStagingPreflight({db,env:{...env,FINANCE_ONE_READ_API_ENABLED:'false'},phase:'prepare'});
+ assert.equal(result.ready,false);
+ assert.ok(result.blockers.includes('Missing table neo_fin_statutory_remittances'));
+ sql.close();
+});
+test('no preflight phase can greenlight a production environment',async()=>{
+ const {sql,db}=database();
+ for(const phase of ['prepare','active']){
+  const result=await financeOneStagingPreflight({db,env:{...env,FINANCE_ONE_ENVIRONMENT:'production',FINANCE_ONE_READ_API_ENABLED:phase==='prepare'?'false':'true'},phase});
+  assert.equal(result.ready,false);
+  assert.ok(result.blockers.includes('Not explicitly marked staging'));
+ }
+ sql.close();
+});
