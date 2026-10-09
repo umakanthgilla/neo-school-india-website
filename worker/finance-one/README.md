@@ -38,3 +38,12 @@ node --experimental-sqlite --test worker/finance-one/*.test.mjs
 ```
 
 Do not merge this branch into main or apply migrations to production without full staging and security review.
+
+
+## Authenticated read API — 2026-10-09
+- `finance-read-api.mjs` exposes GET-only handlers for `summary`, `documents` and `daily-ledger` under `/api/finance-one/v1/organizations/{organizationId}/...`.
+- `finance-session.mjs` supplies short-lived HMAC-SHA256 Finance-specific tokens. Tokens from the old school or generic HO admin portal are NOT valid Finance credentials.
+- `worker-gate.mjs` stays DISABLED unless `FINANCE_ONE_READ_API_ENABLED=true`. It requires `FINANCE_ONE_SESSION_SECRET` and a valid server-issued Finance token, then checks active membership for the requested business.
+- A Finance-specific login/credential verification + token issuance endpoint is still required; **never issue a Finance token merely on the strength of shared school-portal credentials**. Only use `issueFinanceOneToken` after a separately validated finance identity.
+- The gate is staged as an isolated module and is NOT yet imported by the deployed Worker. It requires a verified Cloudflare bundling/deployment path and staging database migrations.
+- Verified locally with Node 22: the new route, token, gate suites pass **22/22** tests. This does not confirm GitHub CI or an available staging URL.
