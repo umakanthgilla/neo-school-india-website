@@ -1,4 +1,5 @@
 import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
+import {auditFinanceAccrualJournals} from './accrual-journal-audit.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -151,6 +152,8 @@ test('real payroll source -> deduction-aware accrual -> Finance payout doc -> ve
  const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
  const source=await postLegacyPayrollAccrual(f.params);
  assert.equal(source.journalCreated,true);
+ const accrued=await auditFinanceAccrualJournals({db:f.db,authenticatedAccountId:'fin:alice',organizationId:'A'});
+ assert.equal(accrued.ready,true,JSON.stringify(accrued.findings));
  const paymentDoc=await syncLegacyPayoutDocument(payoutParams);
  assert.equal(paymentDoc.created,true);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
@@ -235,6 +238,8 @@ test('reviewed statutory payroll posts 9 balanced liability lines without invent
   ['PT',0,200],['TDS',0,1800],['ER_EXP',5000,0],['PF',0,3500],['ESI',0,1500]
  ]);
  assert.equal(lines.reduce((n,l)=>n+l.debit_paise-l.credit_paise,0),0);
+ const statutoryAudit=await auditFinanceAccrualJournals({db:f.db,authenticatedAccountId:'fin:alice',organizationId:'A'});
+ assert.equal(statutoryAudit.ready,true,JSON.stringify(statutoryAudit.findings));
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,0);
  const again=await postLegacyPayrollAccrual(f.params);
  assert.equal(again.journalCreated,false);f.sql.close();
