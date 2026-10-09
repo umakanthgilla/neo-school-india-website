@@ -1,3 +1,4 @@
+import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -164,6 +165,8 @@ test('real payroll source -> deduction-aware accrual -> Finance payout doc -> ve
  const recovery=f.sql.prepare(`SELECT SUM(l.credit_paise-l.debit_paise) AS recovered
   FROM neo_fin_journal_lines l WHERE l.organization_id='A' AND l.account_id='ADV'`).get();
  assert.equal(recovery.recovered,20000);
+ const audit=await auditFinanceCashJournals({db:f.db,authenticatedAccountId:'fin:alice',organizationId:'A'});
+ assert.equal(audit.ready,true,JSON.stringify(audit.findings));
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_cash_events').get().n,1);
  assert.equal(f.sql.prepare("SELECT COUNT(*) n FROM neo_portal_records WHERE kind='daily_accounts'").get().n,1);
  const retry=await syncVerifiedLegacyPayout({...payoutParams,settlementId:'BANKPAY1'});
