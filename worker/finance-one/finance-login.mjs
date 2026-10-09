@@ -1,6 +1,7 @@
 /** Internal Finance ONE login route, isolated from school/admin authentication. */
 import {verifyFinancePassword} from './finance-password.mjs';
 import {issueFinanceOneToken} from './finance-session.mjs';
+import {checkFinanceLoginClientLimit,checkFinanceLoginAccountLimit} from './login-rate-limit.mjs';
 const route='/api/finance-one/v1/session';
 const json=(body,status,extra={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...extra}});
 async function smallJson(request){
@@ -16,11 +17,15 @@ export async function handleFinanceLogin({request,env}){
  if(request.method!=='POST')return json({error:'Method not allowed'},405,{Allow:'POST'});
  if(env?.FINANCE_ONE_ENVIRONMENT!=='staging' || env?.FINANCE_ONE_READ_API_ENABLED!=='true')return json({error:'Not found'},404);
  if(!env.DB||typeof env.FINANCE_ONE_SESSION_SECRET!=='string'||env.FINANCE_ONE_SESSION_SECRET.length<32)return json({error:'Finance login unavailable'},503);
+ const clientLimit=await checkFinanceLoginClientLimit({request,env});
+ if(clientLimit)return clientLimit;
  if(!(request.headers.get('content-type')||'').toLowerCase().startsWith('application/json'))return json({error:'Expected JSON'},415);
  let input;try{input=await smallJson(request);}catch{return json({error:'Invalid request'},400);}
  const {accountId,password,organizationId}=input||{};
  if(typeof accountId!=='string'||!accountId.startsWith('fin:')||accountId.length>128||typeof password!=='string'||password.length>256||
   typeof organizationId!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(organizationId))return json({error:'Invalid credentials'},401);
+ const accountLimit=await checkFinanceLoginAccountLimit({env,accountId});
+ if(accountLimit)return accountLimit;
  try{
   const identity=await verifyFinancePassword({db:env.DB,accountId,password});
   if(!identity)return json({error:'Invalid credentials'},401);
