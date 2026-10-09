@@ -21,8 +21,8 @@ function setup(){
  const event=(org,id,direction,amount=10000)=>{
   sql.prepare(`INSERT INTO neo_fin_cash_events
    (organization_id,event_id,source_kind,source_id,source_event_id,direction,amount_paise,effective_at,verification_reference)
-   VALUES (?,?, 'fee_receipt', ?, 'ACK', ?, ?, '2026-10-09T10:00:00Z','VERIFIED')`)
-   .run(org,id,'SOURCE_'+id,direction,amount);
+   VALUES (?,?, ?, ?, 'ACK', ?, ?, '2026-10-09T10:00:00Z','VERIFIED')`)
+   .run(org,id,direction==='money_out'?'vendor_payment':'fee_receipt','SOURCE_'+id,direction,amount);
  };
  const journal=(org,id,sourceId,lines,posted=true)=>{
   sql.prepare("INSERT INTO neo_fin_journals(organization_id,id,source_kind,source_id) VALUES(?,?,'cash_event',?)")
@@ -90,4 +90,27 @@ test('a recorded debit and credit to the same bank account fails the exact-movem
  f.journal('A','SPLIT','E1',[['BANK_A',11000,0],['BANK_A',0,1000],['AR_A',0,10000]]);
  const r=await auditFinanceCashJournals(f.params);
  assert.equal(r.counts.bank_amount_mismatch,1);f.sql.close();
+});
+
+test('a balanced journal with exactly correct Bank money but WRONG contra account is rejected',async()=>{
+ const f=setup();f.event('A','E1','money_in',10000);
+ f.journal('A','CONTRA_WRONG','E1',[['BANK_A',10000,0],['AP_A',0,10000]]);
+ const audit=await auditFinanceCashJournals(f.params);
+ assert.equal(audit.ready,false);
+ assert.equal(audit.counts.bank_amount_mismatch,undefined);
+ assert.equal(audit.counts.contra_account_mismatch,1);
+ assert.equal(audit.issueCount,1);f.sql.close();
+});
+test('valid Bank Dr and Fee AR Cr passes full contra-account verification',async()=>{
+ const f=setup();f.event('A','E1','money_in',10000);
+ f.journal('A','CORRECT','E1',[['BANK_A',10000,0],['AR_A',0,10000]]);
+ const audit=await auditFinanceCashJournals(f.params);
+ assert.equal(audit.ready,true);assert.equal(audit.issueCount,0);f.sql.close();
+});
+test('same Bank movement but inactive Bank account cannot pass reconciliation',async()=>{
+ const f=setup();f.event('A','E1','money_in',10000);
+ f.journal('A','CORRECT','E1',[['BANK_A',10000,0],['AR_A',0,10000]]);
+ f.sql.exec("UPDATE neo_fin_accounts SET active=0 WHERE id='BANK_A' AND organization_id='A'");
+ const audit=await auditFinanceCashJournals(f.params);
+ assert.equal(audit.counts.contra_account_mismatch,1);f.sql.close();
 });
