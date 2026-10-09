@@ -8,6 +8,7 @@ export class FinanceAccessError extends Error {
     this.status = status;
   }
 }
+const validatedContexts = new WeakSet();
 const ALLOWED_ROLES = new Set(['owner','finance_admin','payroll_admin','accountant','auditor','employee']);
 const READ_ROLES = {
   finance: new Set(['owner','finance_admin','accountant','auditor']),
@@ -43,10 +44,12 @@ export async function resolveFinanceOrganization(db, accountId, organizationId, 
     try { return assertFinanceCapability(m,domain,operation); } catch { return false; }
   });
   if (!granted) throw new FinanceAccessError();
-  return Object.freeze({organizationId:granted.organization_id, accountId, role:granted.role});
+  const ctx = Object.freeze({organizationId:granted.organization_id, accountId, role:granted.role});
+  validatedContexts.add(ctx);
+  return ctx;
 }
 export async function listOwnDocuments(db, context, limit=50) {
-  if (!context || !context.organizationId) throw new FinanceAccessError();
+  if (!context || !validatedContexts.has(context)) throw new FinanceAccessError();
   const bounded = Math.max(1,Math.min(100,Number.isInteger(limit)?limit:50));
   return (await db.prepare(
     'SELECT id,document_type,party_id,status,currency,gross_paise,created_at FROM neo_fin_documents WHERE organization_id=? ORDER BY created_at DESC,id DESC LIMIT ?'
