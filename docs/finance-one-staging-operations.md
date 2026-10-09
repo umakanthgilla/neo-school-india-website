@@ -28,6 +28,7 @@ for staging verification. Do not invent a Cloudflare binding, database ID or URL
 3. `migrations/finance_payroll_one_accounting_journals.sql`
 4. `migrations/finance_payroll_one_auth_accounts.sql`
 5. `migrations/finance_payroll_one_receipt_evidence.sql`
+6. `migrations/finance_payroll_one_legacy_payout_integrity.sql`
 
 Migrations are never applied to production as part of this procedure.
 Do not copy confidential historical center/HO finance data into shared test fixtures.
@@ -81,3 +82,12 @@ Do not mark the project complete or request live money testing while any release
 - Real full-migration tests exercise this entire path (including no duplicate legacy postings, HO denial, invalid fee structure, mismatched amounts, missing settlement evidence and no pre-payment cash).
 - GitHub Actions Draft PR #26 CI completed with **152/152 tests passing, 0 failed** in run 37888295778.
 - Still required: real source/verification evidence ingestion, accounting-policy signoff, production historical data migration strategy, full payroll/vouchers integration, authentic Cloudflare staging deployment, QA and security review. **Do not interpret this as a live banking integration or full application completion.**
+
+## Legacy Payroll / Vendor Payment / Salary Advance verification
+- `sync-legacy-payout-document.mjs` validates the original payroll/vendor/advance source plus its source-specific voucher and unique linked legacy Daily Ledger entry; it creates exactly one independent Finance `payment` document, but **not** cash. Retry is idempotent. Legacy `Paid` and `Released` alone do not prove settlement.
+- `neo_fin_payment_settlements` must be independently and securely verified against actual bank evidence; the client cannot set a `verified` boolean and use it as payment proof.
+- `legacy-payout-verifier.mjs` requires same legal business ownership, matching source document, voucher, amount, unique legacy ledger, one *full* verified settlement, and bank reference before authorizing a cash mirror.
+- `sync-legacy-payout.mjs` then posts exactly one Finance cash event and balanced journal without touching school Daily Ledger; retry is idempotent.
+- `finance_payroll_one_legacy_payout_integrity.sql` prevents partial or duplicate verified settlements for these **legacy single-payment** records and freezes their verified evidence. Actual bank reversals/chargebacks need new compensating journal and cash reversal workflow before production.
+- Original invoice/payroll/vendor accrual accounting source linkage and detailed statutory salary deductions are **not** automatically resolved by this payout bridge. The generic A/P and salary-payable debit mappings must be reconciled with accountant-approved liabilities, not treated as proof of a fully working financial closing workflow.
+- Tested against real staging schema migrations in automated SQLite tests. No live bank provider, production Worker or public finance write endpoints are connected.
