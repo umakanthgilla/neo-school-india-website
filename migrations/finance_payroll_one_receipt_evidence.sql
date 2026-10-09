@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS neo_fin_receipt_verifications (
   amount_paise INTEGER NOT NULL CHECK(amount_paise > 0),
   evidence_type TEXT NOT NULL CHECK(evidence_type IN ('bank_reconciled','cash_counted')),
   verification_reference TEXT NOT NULL CHECK(length(trim(verification_reference)) > 0),
+  settled_at TEXT NOT NULL CHECK(length(trim(settled_at)) > 0),
   verified_at TEXT NOT NULL CHECK(length(trim(verified_at)) > 0),
   verified_by TEXT NOT NULL CHECK(length(trim(verified_by)) > 0),
   status TEXT NOT NULL DEFAULT 'verified' CHECK(status = 'verified'),
