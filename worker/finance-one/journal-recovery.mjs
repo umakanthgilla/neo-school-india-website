@@ -5,6 +5,7 @@
  */
 import {postJournalForCashEvent} from './source-journal.mjs';
 import {postLegacyPayrollSettlementJournal} from './legacy-payroll-settlement-journal.mjs';
+import {postStatutoryRemittanceJournal} from './statutory-remittance-journal.mjs';
 export async function recoverMissingCashJournals({db,organizationId,limit=100}) {
  if(!db||typeof organizationId!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(organizationId))throw new Error('Valid organization required');
  if(!Number.isInteger(limit)||limit<1||limit>500)throw new Error('Invalid recovery limit');
@@ -17,7 +18,9 @@ export async function recoverMissingCashJournals({db,organizationId,limit=100}) 
  for(const entry of pending.results||[]) {
   try{
    const payroll=entry.source_kind==='payroll_payment' && typeof entry.source_id==='string' && entry.source_id.includes('|');
-   const r=payroll?await postLegacyPayrollSettlementJournal(db,organizationId,entry.event_id)
+   const r=entry.source_kind==='statutory_remittance_paid'
+     ?await postStatutoryRemittanceJournal(db,organizationId,entry.event_id)
+     :payroll?await postLegacyPayrollSettlementJournal(db,organizationId,entry.event_id)
      :await postJournalForCashEvent(db,organizationId,entry.event_id);
    posted.push({eventId:entry.event_id,created:r.created});
   }
