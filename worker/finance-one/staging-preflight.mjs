@@ -6,14 +6,15 @@ const REQUIRED_TABLES=Object.freeze([
  'neo_fin_organizations','neo_fin_school_ownership','neo_fin_memberships',
  'neo_fin_auth_accounts','neo_fin_documents','neo_fin_payment_settlements',
  'neo_fin_accounts','neo_fin_journals','neo_fin_journal_lines','neo_fin_cash_events',
- 'neo_fin_receipt_verifications'
+ 'neo_fin_receipt_verifications','neo_fin_payroll_statutory_reviews'
 ]);
 const REQUIRED_VIEWS=Object.freeze(['neo_fin_daily_ledger','neo_fin_posted_journal_lines']);
 const REQUIRED_TRIGGERS=Object.freeze(['neo_fin_cash_events_no_update','neo_fin_cash_events_no_delete',
  'neo_fin_journal_post_balanced','neo_fin_journal_posted_immutable','neo_fin_auth_rotate_credentials',
  'neo_fin_receipt_verification_no_update','neo_fin_receipt_verification_no_delete',
  'neo_fin_legacy_payout_verify_insert','neo_fin_legacy_payout_verify_update',
- 'neo_fin_legacy_payout_verified_immutable','neo_fin_legacy_payout_verified_no_delete']);
+ 'neo_fin_legacy_payout_verified_immutable','neo_fin_legacy_payout_verified_no_delete',
+ 'neo_fin_payroll_review_no_update','neo_fin_payroll_review_no_delete']);
 export async function financeOneStagingPreflight({db,env}) {
  const blockers=[];
  if(env?.FINANCE_ONE_ENVIRONMENT!=='staging')blockers.push('Not explicitly marked staging');
