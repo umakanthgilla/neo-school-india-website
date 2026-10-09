@@ -30,8 +30,10 @@ export function journalPlanForEvent(event) {
 }
 export async function postJournalForCashEvent(db,organizationId,eventId,{postedAt}={}) {
   if(!db || !safeId(organizationId) || !safeId(eventId)) throw new Error('Trusted organization and event required');
-  const event=await db.prepare('SELECT organization_id,event_id,source_kind,direction,amount_paise FROM neo_fin_cash_events WHERE organization_id=? AND event_id=?').bind(organizationId,eventId).first();
+  const event=await db.prepare('SELECT organization_id,event_id,source_kind,source_id,direction,amount_paise FROM neo_fin_cash_events WHERE organization_id=? AND event_id=?').bind(organizationId,eventId).first();
   if(!event) throw new Error('Verified cash event not found');
+  if(event.source_kind==='payroll_payment' && typeof event.source_id==='string' &&
+     event.source_id.includes('|'))throw new Error('Legacy payroll requires verified advance-recovery settlement journal');
   const plan=journalPlanForEvent(event);
   if(plan.organizationId!==organizationId) throw new Error('Cross-business event rejected');
   const accounts=await db.prepare('SELECT id,account_code,active FROM neo_fin_accounts WHERE organization_id=? AND account_code IN (?,?)').bind(organizationId,plan.debitCode,plan.creditCode).all();
