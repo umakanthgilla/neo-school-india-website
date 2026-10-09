@@ -4,7 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {journalPlanForEvent,postJournalForCashEvent} from './source-journal.mjs';
 function init(){
  const db=new DatabaseSync(':memory:');db.exec('PRAGMA foreign_keys=ON');
- db.exec(`CREATE TABLE neo_fin_cash_events(organization_id TEXT,event_id TEXT,source_kind TEXT,direction TEXT,amount_paise INTEGER,PRIMARY KEY(organization_id,event_id));
+ db.exec(`CREATE TABLE neo_fin_cash_events(organization_id TEXT,event_id TEXT,source_kind TEXT,source_id TEXT,direction TEXT,amount_paise INTEGER,PRIMARY KEY(organization_id,event_id));
  CREATE TABLE neo_fin_accounts(organization_id TEXT,id TEXT,account_code TEXT,active INTEGER,PRIMARY KEY(organization_id,id));
  CREATE TABLE neo_fin_journals(organization_id TEXT,id TEXT,source_kind TEXT,source_id TEXT,status TEXT DEFAULT 'draft',posted_at TEXT,PRIMARY KEY(organization_id,id),UNIQUE(organization_id,source_kind,source_id));
  CREATE TABLE neo_fin_journal_lines(organization_id TEXT,journal_id TEXT,line_no INTEGER,account_id TEXT,debit_paise INTEGER,credit_paise INTEGER,PRIMARY KEY(organization_id,journal_id,line_no));
@@ -18,8 +18,8 @@ function init(){
  const bind=(sql,params)=>{const stmt=db.prepare(sql);return {first:async()=>stmt.get(...params),all:async()=>({results:stmt.all(...params)}),run:async()=>{const m=stmt.run(...params);return{success:true,meta:{changes:m.changes}}}}};
  return {sqlite:db,prepare(sql){return {bind(...params){return bind(sql,params);}}},async batch(statements){db.exec('BEGIN');try{const out=[];for(const statement of statements)out.push(await statement.run());db.exec('COMMIT');return out;}catch(err){db.exec('ROLLBACK');throw err;}}};
 }
-const event=(org,kind,dir='money_in',amount=5000,id='E1')=>({organization_id:org,event_id:id,source_kind:kind,direction:dir,amount_paise:amount});
-const seed=(db,e)=>db.sqlite.prepare('INSERT INTO neo_fin_cash_events VALUES (?,?,?,?,?)').run(e.organization_id,e.event_id,e.source_kind,e.direction,e.amount_paise);
+const event=(org,kind,dir='money_in',amount=5000,id='E1')=>({organization_id:org,event_id:id,source_kind:kind,source_id:'ORIGINAL',direction:dir,amount_paise:amount});
+const seed=(db,e)=>db.sqlite.prepare('INSERT INTO neo_fin_cash_events VALUES (?,?,?,?,?,?)').run(e.organization_id,e.event_id,e.source_kind,e.source_id,e.direction,e.amount_paise);
 test('fee collection maps to Bank Dr and A/R Cr, not duplicate fee revenue',()=>{
  const x=journalPlanForEvent(event('A','fee_receipt'));assert.equal(x.debitCode,'1000');assert.equal(x.creditCode,'1100');
 });
