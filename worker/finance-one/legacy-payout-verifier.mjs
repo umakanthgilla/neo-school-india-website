@@ -92,7 +92,12 @@ export async function verifyLegacyPayout(db,request) {
    SUM(l.debit_paise-l.credit_paise) AS balanced_paise,
    SUM(CASE WHEN a.account_code='5100' THEN l.debit_paise-l.credit_paise ELSE 0 END) AS expense_paise,
    SUM(CASE WHEN a.account_code='2100' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS salary_payable_paise,
-   SUM(CASE WHEN a.account_code='1200' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS advance_recovery_paise
+   SUM(CASE WHEN a.account_code='1200' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS advance_recovery_paise,
+   SUM(CASE WHEN a.account_code='5300' THEN l.debit_paise-l.credit_paise ELSE 0 END) AS employer_expense_paise,
+   SUM(CASE WHEN a.account_code='2111' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS pf_paise,
+   SUM(CASE WHEN a.account_code='2112' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS esi_paise,
+   SUM(CASE WHEN a.account_code='2113' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS pt_paise,
+   SUM(CASE WHEN a.account_code='2114' THEN l.credit_paise-l.debit_paise ELSE 0 END) AS tds_paise
    FROM neo_fin_documents d JOIN neo_fin_journals j ON
     j.organization_id=d.organization_id AND j.source_kind='document' AND j.source_id=d.id AND j.status='posted'
    JOIN neo_fin_journal_lines l ON l.organization_id=j.organization_id AND l.journal_id=j.id
@@ -100,10 +105,18 @@ export async function verifyLegacyPayout(db,request) {
    WHERE d.organization_id=? AND d.source_kind='legacy_payroll' AND d.source_id=?
     AND d.document_type='payroll_liability' AND d.status='approved'
    GROUP BY d.id,d.gross_paise`).bind(organizationId,accrualRef).first();
+  const expectedLines=1+(payable>0?1:0)+
+   ['employee_pf_paise','employee_esi_paise','professional_tax_paise','tds_paise',
+    'employer_pf_paise','employer_esi_paise'].filter(k=>statutory[k]>0).length+
+   (statutory.employerTotalPaise>0?1:0);
   if(!accrual||accrual.earned_paise!==earned||accrual.expense_paise!==earned||
-    accrual.salary_payable_paise!==earned||
-    accrual.advance_recovery_paise!==0||
-    accrual.balanced_paise!==0||accrual.line_count!==2)return null;
+    accrual.salary_payable_paise!==payable||accrual.advance_recovery_paise!==0||
+    accrual.employer_expense_paise!==statutory.employerTotalPaise||
+    accrual.pf_paise!==statutory.employee_pf_paise+statutory.employer_pf_paise||
+    accrual.esi_paise!==statutory.employee_esi_paise+statutory.employer_esi_paise||
+    accrual.pt_paise!==statutory.professional_tax_paise||
+    accrual.tds_paise!==statutory.tds_paise||
+    accrual.balanced_paise!==0||accrual.line_count!==expectedLines)return null;
  }
  // One *full* independently verified settlement for each legacy payout.
  // The schema's separate trigger rejects a second verified settlement for
