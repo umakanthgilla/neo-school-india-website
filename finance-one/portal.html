@@ -56,6 +56,13 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    <div class="table-wrap"><table><thead><tr><th>Document</th><th>Type</th><th>Status</th><th class="amount">Amount</th></tr></thead><tbody id="document-rows"></tbody></table></div><p id="documents-empty" class="empty" hidden>No documents available.</p>
   </article>
  </div>
+ <article class="card accent section" style="margin-top:16px">
+  <h2>Payment Verification & Reconciliation</h2>
+  <p class="caption">Verified bank settlements versus payments awaiting independent confirmation — read only</p>
+  <div class="table-wrap"><table><thead><tr><th>Payment Document</th><th>Source</th><th>Bank Verification</th><th class="amount">Verified / Total</th></tr></thead>
+   <tbody id="settlement-rows"></tbody></table></div>
+  <p id="settlement-empty" class="empty" hidden>No payment documents available.</p>
+ </article>
  <p class="foot">Finance ONE · Read-only preview · Actual financial transactions are entered in their original modules.</p>
 </section>
 </main>
@@ -76,7 +83,9 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  async function load(){
   $('dash-error').textContent='';const org=encodeURIComponent(state.org);const path='/api/finance-one/v1/organizations/'+org;
   try{
-   const [summary,ledger,documents]=await Promise.all([call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50')]);
+   const [summary,ledger,documents,settlements]=await Promise.all([
+    call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50')
+   ]);
    if(!state.token)return;
    $('money-in').textContent=money(summary.moneyInPaise);$('money-out').textContent=money(summary.moneyOutPaise);
    $('net').textContent=money(summary.netCashMovementPaise);$('profit').textContent=money(summary.profitPaise);
@@ -93,6 +102,18 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
     const amt=text(r,money(item.gross_paise));amt.className='amount';docs.appendChild(r);
    }
    $('documents-empty').hidden=docs.children.length>0;
+   const payouts=$('settlement-rows');payouts.replaceChildren();
+   const descriptions={pending:'Awaiting bank verification',partially_verified:'Partially verified',
+    verified:'Bank verified',over_verified:'Amount mismatch — review'};
+   for(const item of settlements.entries||[]){
+    const r=document.createElement('tr');
+    text(r,item.documentId);text(r,item.sourceKind||'Payment');
+    const verification=text(r,descriptions[item.status]||'Review required');
+    verification.className=item.status==='verified'?'in':item.status==='over_verified'?'out':'';
+    const amt=text(r,money(item.verifiedAmountPaise)+' / '+money(item.amountPaise));amt.className='amount';
+    payouts.appendChild(r);
+   }
+   $('settlement-empty').hidden=payouts.children.length>0;
   }catch(e){$('dash-error').textContent=e.message||'Unable to load Finance records.';}
  }
  $('login-form').addEventListener('submit',async event=>{
