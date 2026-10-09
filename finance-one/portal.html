@@ -45,6 +45,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  <p role="alert" class="alert" id="dash-error" aria-live="polite"></p>
  <p role="alert" class="alert" id="trial-warning" hidden>Accounting trial balance does not balance. Finance review required before relying on these figures.</p>
  <p role="alert" class="alert" id="cash-reconciliation-warning" hidden>Cash Ledger / Bank journal reconciliation has issues. Finance review required before relying on these figures.</p>
+ <p role="alert" class="alert" id="accrual-reconciliation-warning" hidden>Approved Invoice / Payroll accrual journal reconciliation has issues. Finance review required.</p>
  <section class="stats" aria-label="Financial summary">
   <div class="stat"><div class="label">Money In (all-time verified)</div><div id="money-in" class="value in">—</div></div>
   <div class="stat"><div class="label">Money Out (all-time verified)</div><div id="money-out" class="value out">—</div></div>
@@ -86,7 +87,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  function logout(){
   state.sessionVersion++;state.requestVersion++;state.token=null;state.org=null;
   $('password').value='';$('dashboard-panel').hidden=true;$('login-panel').hidden=false;
-  $('org-label').textContent='';$('dash-error').textContent='';$('trial-warning').hidden=true;$('cash-reconciliation-warning').hidden=true;
+  $('org-label').textContent='';$('dash-error').textContent='';$('trial-warning').hidden=true;$('cash-reconciliation-warning').hidden=true;$('accrual-reconciliation-warning').hidden=true;
   for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
   for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
   $('statutory-review').hidden=true;
@@ -104,13 +105,14 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   const requestVersion=++state.requestVersion;
   $('dash-error').textContent='';const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
   try{
-   const [summary,ledger,documents,settlements,statutory,cashReconciliation]=await Promise.all([
-    call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities'),call(path+'/cash-reconciliation')
+   const [summary,ledger,documents,settlements,statutory,cashReconciliation,accrualReconciliation]=await Promise.all([
+    call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities'),call(path+'/cash-reconciliation'),call(path+'/accrual-reconciliation')
    ]);
    if(sessionVersion!==state.sessionVersion||requestVersion!==state.requestVersion||
       token!==state.token||organization!==state.org)return;
    $('trial-warning').hidden=summary.balanced!==false;
    $('cash-reconciliation-warning').hidden=cashReconciliation.ready===true;
+   $('accrual-reconciliation-warning').hidden=accrualReconciliation.ready===true;
    $('money-in').textContent=money(summary.moneyInPaise);$('money-out').textContent=money(summary.moneyOutPaise);
    $('net').textContent=money(summary.netCashMovementPaise);$('profit').textContent=money(summary.profitPaise);
    const led=$('ledger-rows');led.replaceChildren();
