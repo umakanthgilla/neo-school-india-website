@@ -28,12 +28,20 @@ function planForPayroll(p,payrollId,stat) {
     p.deductions_paise>p.gross_paise || p.gross_paise-p.deductions_paise!==p.net_paise)
   throw Error('Payroll deduction or net mismatch; reconcile before accrual');
  const earned=p.gross_paise-p.late_deduction_paise-p.attendance_deduction_paise;
- if(!safe(earned)||earned===0||p.net_paise+p.advance_recovery_paise!==earned)
-  throw Error('Payroll expense, advance recovery and net do not balance');
- // Legacy HR changes the employee advance balance when Payroll becomes Paid.
- // Do not recognize recovery at Approved; wait for independently verified payout.
- const entries=[{code:'5100',debit:earned,credit:0},{code:'2100',debit:0,credit:earned}];
- return Object.freeze({earnedPaise:earned,entries,approvedAt:new Date(p.approved_at).toISOString()});
+ const payable=earned-stat.employeeTotalPaise;
+ if(!safe(earned)||earned===0||!safe(payable)||p.net_paise+p.advance_recovery_paise!==payable)
+  throw Error('Payroll expense, withholding, advance recovery and net do not balance');
+ const entries=[{code:'5100',debit:earned,credit:0}];
+ if(payable>0)entries.push({code:'2100',debit:0,credit:payable});
+ for(const [field,code] of [['employee_pf_paise','2111'],['employee_esi_paise','2112'],
+   ['professional_tax_paise','2113'],['tds_paise','2114']])
+  if(stat[field]>0)entries.push({code,debit:0,credit:stat[field]});
+ if(stat.employerTotalPaise>0){
+  entries.push({code:'5300',debit:stat.employerTotalPaise,credit:0});
+  if(stat.employer_pf_paise>0)entries.push({code:'2111',debit:0,credit:stat.employer_pf_paise});
+  if(stat.employer_esi_paise>0)entries.push({code:'2112',debit:0,credit:stat.employer_esi_paise});
+ }
+ return Object.freeze({earnedPaise:earned,payablePaise:payable,entries,approvedAt:new Date(p.approved_at).toISOString()});
 }
 
 export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organizationId,schoolId,payrollRecordId}){
@@ -75,9 +83,8 @@ export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organi
   documentCreated=res.meta.changes===1;
  }
  await checkDocument();
- const codes=plan.entries.map(e=>e.code);
- const accountRows=await db.prepare('SELECT id,account_code,active FROM neo_fin_accounts WHERE organization_id=? AND account_code IN (?,?,?)')
-   .bind(organizationId,'5100','2100','1200').all();
+ const accountRows=await db.prepare('SELECT id,account_code,active FROM neo_fin_accounts WHERE organization_id=?')
+   .bind(organizationId).all();
  const accountIds=new Map((accountRows.results||[]).filter(x=>x.active===1).map(x=>[x.account_code,x.id]));
  const lines=plan.entries.map(e=>({...e,accountId:accountIds.get(e.code)}));
  if(lines.some(l=>!l.accountId) || new Set(lines.map(l=>l.accountId)).size!==lines.length)throw Error('Independent payroll chart accounts unavailable');
