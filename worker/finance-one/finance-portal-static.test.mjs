@@ -41,3 +41,9 @@ test('Finance Portal checks read-only cash/journal reconciliation alongside tria
  assert.match(page,/call\(path\+'\/cash-reconciliation'\)/);
  assert.match(page,/cashReconciliation\.ready===true/);
 });
+
+test('Finance Portal warns on missing invoice/payroll accrual posting without making it editable',()=>{
+ assert.match(page,/accrual-reconciliation-warning/);
+ assert.match(page,/call\(path\+'\/accrual-reconciliation'\)/);
+ assert.match(page,/accrualReconciliation\.ready===true/);
+});
