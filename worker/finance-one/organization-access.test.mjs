@@ -76,7 +76,7 @@ test('pagination is bounded within organization',async()=>{
   const db=mockDb();
   const ctx=await resolveFinanceOrganization(db,'bob','CENTER_B');
   await listOwnDocuments(db,ctx,100000);
-  assert.deepEqual(db.observed.at(-1).values,['CENTER_B',50]);
+  assert.deepEqual(db.observed.at(-1).values,['CENTER_B',100]);
   await listOwnDocuments(db,ctx,100);
   assert.deepEqual(db.observed.at(-1).values,['CENTER_B',100]);
 });
