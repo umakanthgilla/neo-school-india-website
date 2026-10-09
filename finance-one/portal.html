@@ -124,7 +124,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    const statutoryRows=$('statutory-rows');statutoryRows.replaceChildren();
    for(const item of statutory.items||[]){
     const r=document.createElement('tr');text(r,item.label);
-    for(const amount of [item.creditedPaise,item.remittedPaise,item.balancePaise]){
+    for(const amount of [item.creditedPaise,item.debitedPaise,item.balancePaise]){
      const cell=text(r,money(amount));cell.className='amount'+(amount<0?' out':'');
     }
     statutoryRows.appendChild(r);
