@@ -13,7 +13,9 @@ function fixture(){
  VALUES('A','Independent Center','independent_center'),('B','Other Center','independent_center'),
  ('HO','Head Office','head_office');
  INSERT INTO neo_fin_memberships(organization_id,account_id,role)
- VALUES('A','fin:alice','owner'),('B','fin:bob','owner'),('HO','fin:ho','owner');`);
+ VALUES('A','fin:alice','owner'),('B','fin:bob','owner'),('HO','fin:ho','owner');
+ INSERT INTO neo_fin_school_ownership(school_id,organization_id,effective_from)
+ VALUES('SCHOOL_A','A','2026-01-01'),('SCHOOL_B','B','2026-01-01');`);
  for(const org of ['A','B']){
   const q=sql.prepare('INSERT INTO neo_fin_accounts(organization_id,id,account_code,account_name,account_type) VALUES(?,?,?,?,?)');
   const chart=[['1100','asset'],['4000','income'],['5200','expense'],['2000','liability'],
@@ -147,6 +149,16 @@ test('malformed source ID and fake payroll document prefix block accrual audit',
  f.document('RUN1','payroll_liability',85000,'approved','A','legacy_payroll',plainSnapshot);
  f.post('RUN1',[['5100',85000,0],['2100',0,85000]]);
  assert.equal((await auditFinanceAccrualJournals(f.params)).counts.accrual_posting_mismatch,1);f.sql.close();
+});
+test('a balanced payroll journal from a school owned by another Center cannot pass audit',async()=>{
+ const f=fixture();
+ f.sql.exec("UPDATE neo_fin_school_ownership SET organization_id='B' WHERE school_id='SCHOOL_A'");
+ f.document(payrollDoc,'payroll_liability',85000,'approved','A','legacy_payroll',plainSnapshot);
+ f.post(payrollDoc,[['5100',85000,0],['2100',0,85000]]);
+ const result=await auditFinanceAccrualJournals(f.params);
+ assert.equal(result.ready,false);
+ assert.equal(result.counts.accrual_posting_mismatch,1);
+ f.sql.close();
 });
 test('legacy payroll with unrelated credit posting fails even when balanced',async()=>{
  const f=fixture();f.document(payrollDoc,'payroll_liability',85000,'approved','A','legacy_payroll',plainSnapshot);
