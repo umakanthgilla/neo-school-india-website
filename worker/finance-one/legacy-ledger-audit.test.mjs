@@ -28,3 +28,8 @@ test('rejects oversized snapshot instead of silent truncation',async()=>{
  const db={prepare(){return{bind(){return{all:async()=>({results:[{},{},{}]})};}}}};
  await assert.rejects(readLegacySchoolRows(db,'CENTER_A',{limit:2}),/paginate/);
 });
+
+test('orphan ledger postings without source are detected',()=>{
+ const orphan=rec('daily_accounts','ORPHAN',{direction:'OUT',amount_paise:100,source_kind:'voucher',source_id:'MISSING'});
+ assert.ok(auditLegacyLedgerRows([orphan]).findings.some(x=>x.code==='ORPHAN_DAILY_LEDGER'));
+});
