@@ -71,8 +71,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      HANDOVER_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+      HANDOVER_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify the EXACT source snapshot being handed over (no deployment)
+        run: |
+          test "$(git rev-parse HEAD)" = "$HANDOVER_COMMIT_SHA"
+          node --experimental-sqlite --test worker/finance-one/*.test.mjs
       - name: Validate code and create immutable SHA-pinned handover snapshot
         shell: bash
         run: |
@@ -94,8 +103,8 @@ jobs:
           PROJECT=Neo School India Finance & Payroll ONE
           HANDOVER_TYPE=V1 development source — isolated Cloudflare staging not deployed
           REPOSITORY=https://github.com/umakanthgilla/neo-school-india-website
-          BRANCH=$GITHUB_REF_NAME
-          PINNED_COMMIT_SHA=$GITHUB_SHA
+          BRANCH=$HANDOVER_BRANCH
+          PINNED_COMMIT_SHA=$HANDOVER_COMMIT_SHA
           GITHUB_CI=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           POSTING_POLICY=Verified-source-only Cash Ledger; immutable posted accounting
           MIGRATIONS=10 (staging-only)
@@ -105,7 +114,7 @@ jobs:
           EOF
           (cd "$RUNNER_TEMP" && zip -q -r "$GITHUB_WORKSPACE/finance-one-v1-handover.zip" finance-one-v1-handover)
           test -s finance-one-v1-handover.zip
-          printf '### V1 engineering source handover\nCommit: %s\nArchive SHA256: ' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf '### V1 engineering source handover\nCommit: %s\nArchive SHA256: ' "$HANDOVER_COMMIT_SHA" >> "$GITHUB_STEP_SUMMARY"
           sha256sum finance-one-v1-handover.zip >> "$GITHUB_STEP_SUMMARY"
       - name: Upload Finance ONE V1 handover archive
         uses: actions/upload-artifact@v4
