@@ -2945,6 +2945,36 @@ function validateDailyRhythm(value,fail){
  for(let i=0;i<rows.length;i++)for(let j=i+1;j<rows.length;j++)if(rows[i].start<rows[j].end&&rows[j].start<rows[i].end)fail('Daily Rhythm blocks overlap.');
  return rows;
 }
+function validateResourceManifest(value,fail){
+ const rows=value===undefined||value===null||value===''?[]:value;
+ if(!Array.isArray(rows))fail('Resource Manifest must be a list.');
+ if(rows.length>1200)fail('Resource Manifest supports up to 1200 resources.');
+ const ids=new Set();
+ return rows.map((r,i)=>{
+  if(!r||typeof r!=='object')fail('Check Resource Manifest row '+(i+1)+'.');
+  const resourceId=typeof r.resource_id==='string'?r.resource_id.trim():'';
+  if(!/^[A-Za-z0-9_-]{3,120}$/.test(resourceId)||ids.has(resourceId))fail('Resource IDs must be unique and use letters, numbers, underscore or hyphen.');
+  ids.add(resourceId);
+  const day=Number(r.day),experienceNo=Number(r.experience_no);
+  if(!Number.isInteger(day)||day<1||day>200)fail('Resource '+resourceId+': day must be 1–200.');
+  if(!Number.isInteger(experienceNo)||experienceNo<1||experienceNo>9)fail('Resource '+resourceId+': experience_no must be 1–9.');
+  const item={resource_id:resourceId,day,experience_no:experienceNo};
+  for(const [key,max,required] of [
+   ['experience_name',120,false],['resource_type',100,true],['title',240,true],['objective',700,false],
+   ['file_path_or_url',1200,false],['classwork_home_either',40,false],['parent_share',20,false],
+   ['teacher_instruction',1600,false],['status',40,false],['revision_note',1000,false]
+  ]){
+   const v=typeof r[key]==='string'?r[key].trim():'';
+   if(required&&!v)fail('Resource '+resourceId+': '+key+' is required.');
+   if(v.length>max)fail('Resource '+resourceId+': check '+key+'.');
+   item[key]=v;
+  }
+  if(item.classwork_home_either&&!['Class','Home practice','Either'].includes(item.classwork_home_either))fail('Resource '+resourceId+': classwork_home_either must be Class, Home practice or Either.');
+  if(item.parent_share&&!['Yes','No','Optional'].includes(item.parent_share))fail('Resource '+resourceId+': parent_share must be Yes, No or Optional.');
+  return item;
+ });
+}
+
 function validateMasterCurriculum(b){
  const fail=m=>{throw new TypeError(m)};
  if(!b||typeof b!=='object')fail('Upload a master curriculum object.');
@@ -3044,7 +3074,8 @@ function validateMasterCurriculum(b){
   academic_reviewed_at:academicReviewedAt,
   lessons,
   daily_rhythm:validateDailyRhythm(b.daily_rhythm,fail),
-  daily_experiences:validateDailyExperiences(b.daily_experiences,fail)
+  daily_experiences:validateDailyExperiences(b.daily_experiences,fail),
+  resource_manifest:validateResourceManifest(b.resource_manifest,fail)
  };
 }
 
@@ -3200,6 +3231,18 @@ if(url.pathname==='/api/learning/master-curricula/publish'&&request.method==='PO
    ]
   };
   const schema=v2Schemas[checked.curriculum_schema];
+  const manifest=Array.isArray(checked.resource_manifest)?checked.resource_manifest:[];
+  const manifestById=new Map(manifest.map(r=>[r.resource_id,r]));
+  const linked=checked.daily_experiences.filter(x=>String(x.resource_id||'').trim());
+  for(const x of linked){
+   const m=manifestById.get(x.resource_id);
+   if(!m)return out({error:'Every linked Resource ID must exist in Resource Manifest. Missing '+x.resource_id+'.'},400);
+   if(Number(m.day)!==Number(x.day)||Number(m.experience_no)!==Number(x.experience_no))
+    return out({error:'Resource '+x.resource_id+' must map to the same Day and Learning Experience as the curriculum row.'},400);
+   const fileBased=/worksheet|readiness|printable|flashcard|story|audio|image/i.test(String(x.resource_type||m.resource_type||''));
+   if(fileBased&&!String(m.file_path_or_url||x.resource_url||'').trim())
+    return out({error:'Resource '+x.resource_id+' needs an approved file path or URL before production publish.'},400);
+  }
   if(checked.daily_experiences.length!==1800)
    return out({error:checked.level+' V2 production publish requires exactly 9 Learning Experiences for each of 200 days.'},400);
   for(let day=1;day<=200;day++){
