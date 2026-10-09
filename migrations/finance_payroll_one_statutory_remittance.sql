@@ -65,3 +65,29 @@ CREATE TRIGGER IF NOT EXISTS neo_fin_stat_remit_verified_no_delete
   WHERE d.organization_id=OLD.organization_id AND d.id=OLD.document_id
   AND d.source_kind='statutory_remittance_paid')
  BEGIN SELECT RAISE(ABORT,'Verified statutory bank evidence immutable'); END;
+
+
+-- Check available liability again AT journal posting in the same SQL transaction:
+-- concurrent independently-verified payments cannot over-clear the same payable.
+CREATE TRIGGER IF NOT EXISTS neo_fin_stat_remit_no_overclear
+BEFORE UPDATE OF status ON neo_fin_journals
+WHEN NEW.status='posted' AND OLD.status='draft' AND NEW.source_kind='cash_event'
+ AND EXISTS (
+  SELECT 1 FROM neo_fin_cash_events c WHERE c.organization_id=NEW.organization_id
+  AND c.event_id=NEW.source_id AND c.source_kind='statutory_remittance_paid')
+BEGIN
+ SELECT CASE WHEN
+  (SELECT COALESCE(SUM(p.credit_paise-p.debit_paise),0)
+   FROM neo_fin_posted_journal_lines p
+   JOIN neo_fin_accounts a ON a.organization_id=p.organization_id AND a.id=p.account_id
+   JOIN neo_fin_cash_events c ON c.organization_id=NEW.organization_id AND c.event_id=NEW.source_id
+   JOIN neo_fin_statutory_remittances r ON r.organization_id=c.organization_id AND r.id=c.source_id
+   WHERE p.organization_id=NEW.organization_id AND a.account_code=r.account_code)
+  <
+  (SELECT COALESCE(SUM(l.debit_paise),0) FROM neo_fin_journal_lines l
+   JOIN neo_fin_accounts a ON a.organization_id=l.organization_id AND a.id=l.account_id
+   JOIN neo_fin_cash_events c ON c.organization_id=NEW.organization_id AND c.event_id=NEW.source_id
+   JOIN neo_fin_statutory_remittances r ON r.organization_id=c.organization_id AND r.id=c.source_id
+   WHERE l.organization_id=NEW.organization_id AND l.journal_id=NEW.id AND a.account_code=r.account_code)
+ THEN RAISE(ABORT,'Statutory payment exceeds posted payable balance') END;
+END;
