@@ -33,14 +33,15 @@ export async function syncLegacyFeeInvoice({
  const student=await db.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='students' AND id=?")
    .bind(schoolId,source.student_id).first();
  if(!student)throw Error('Original student record missing');
- const documentId='FEE_INV|'+schoolId.length+':'+schoolId+'|'+invoiceRecordId.length+':'+invoiceRecordId;
+ const sourceRef=schoolId.length+':'+schoolId+'|'+invoiceRecordId.length+':'+invoiceRecordId;
+ const documentId='FEE_INV|'+sourceRef;
  const prior=()=>db.prepare(`SELECT id,document_type,status,gross_paise,source_kind,source_id,currency
  FROM neo_fin_documents WHERE organization_id=? AND id=?`).bind(organizationId,documentId).first();
  const confirm=async()=>{
    const doc=await prior();
    if(!doc || doc.document_type!=='sales_invoice'||doc.status!=='approved'||
       doc.gross_paise!==source.amount_paise||doc.source_kind!=='legacy_invoice'||
-      doc.source_id!==invoiceRecordId||doc.currency!=='INR')
+      doc.source_id!==sourceRef||doc.currency!=='INR')
      throw Error('Conflicting fee invoice accounting record; reconcile');
  };
  // Document may exist after a previous interruption. New inserts are unique per
@@ -52,7 +53,7 @@ export async function syncLegacyFeeInvoice({
     (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
     VALUES (?,?,'sales_invoice','approved',?,'legacy_invoice',?)
     ON CONFLICT(organization_id,id) DO NOTHING`)
-    .bind(organizationId,documentId,source.amount_paise,invoiceRecordId).run();
+    .bind(organizationId,documentId,source.amount_paise,sourceRef).run();
   if(r?.success!==true||!Number.isInteger(r?.meta?.changes))throw Error('Fee invoice posting failed');
   created=r.meta.changes===1;
  }
