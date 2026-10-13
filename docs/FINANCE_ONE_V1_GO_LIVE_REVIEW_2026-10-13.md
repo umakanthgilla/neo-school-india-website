@@ -21,7 +21,7 @@ This dated review supersedes older statements that staging does not exist. The s
 
 | Area | Evidence / status | What remains before client use |
 |---|---|---|
-| Automated Node/SQLite tests | 337/337 local tests passed, Node 24; CI uses Node 22 | Exact candidate CI evidence recorded below |
+| Automated Node/SQLite tests | 337/337 local tests passed, Node 24; CI uses Node 22 | Node 22 CI also passed on candidate `a03107b`; see validation record |
 | Worker packaging | Wrangler 4.129.1 `deploy --dry-run` passed; no deployment | Package/deployed version identity on isolated staging |
 | Receipts, vouchers, ledger, payroll, permissions, accounting, reports | Existing synthetic-source tests passed; signed HTTP correction flow added | Real isolated staging source journeys and user acceptance |
 | Correction approvals | Implemented/tested for full invoice/bill accrual reversals | Cloud D1 trigger validation, real separate reviewer identities; source cancellation/refund/payroll correction integration |
@@ -31,13 +31,15 @@ This dated review supersedes older statements that staging does not exist. The s
 | Manual reconciliation | Procedure below prepared; internal automated consistency checks exist | Named maker/checker, bank/cash evidence intake and source-linked verification demonstrated end-to-end |
 | Staging access/security | Cloudflare Access redirect observed | Authorized Access session, working Finance login; WAF/MFA/reset and recovery review; no credential values required in chat |
 | Backup/rollback | Isolated-staging procedure prepared; SQL rollback fault test passed | Actual staging export, bookmark and restore rehearsal; production plan after separate authorization |
-| Mobile/browser QA | See candidate validation record below | Actual protected staging mobile/desktop acceptance and print/export testing |
+| Mobile/browser QA | Chromium + WebKit synthetic fixture passed at 390/768/1440px; local Chromium mobile screenshot inspected | Actual protected staging mobile/desktop acceptance and print/export testing |
 | Production deployment architecture | Existing Worker intentionally rejects production environment | Separately reviewed standalone production configuration/entrypoint and staged rollout; do not relabel the staging flag to bypass this gate |
 | Bank-statement automatic matching | Deferred by owner | Not a V1 blocker if the verified manual process is accepted |
 
 ## Candidate validation record
 
-The feature branch and its GitHub Actions run are the authoritative candidate identity. Record the SHA and run URL with the reviewer sign-off. Browser fixture results, if successful, prove only synthetic local behavior; cloud acceptance remains pending.
+Engineering candidate `a03107b1d5f169269cd695ed0bd838ac6ba71703` was published to the requested feature branch. CI run: https://github.com/umakanthgilla/neo-school-india-website/actions/runs/38389911678 . Authorization/tests and packaging succeeded; Chromium and WebKit both logged PASS for login, independent correction approval, logout privacy, zero cash posting and 390/768/1440px layouts. Local Chromium also passed and its 390px screenshot was visually inspected. Local WebKit lacked host libraries; the CI WebKit runner completed successfully.
+
+The subsequent validation-record commit strengthens the browser profit assertion to require exactly zero (rather than a substring match) and records this evidence. Use the final PR head and its green CI for deployment, never a floating artifact. Synthetic tests do not prove protected Cloudflare login, deployed D1 behavior, real banking evidence, payroll compliance or client acceptance.
 
 ## Safe manual reconciliation process (no duplicate ledger entry)
 

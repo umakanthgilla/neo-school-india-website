@@ -45,7 +45,7 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   await page.getByLabel(/Review note for/).fill('Synthetic independent review confirms full accrual reversal');
   await page.getByRole('button',{name:'Approve accounting reversal'}).click();
   await expect(page.locator('#correction-requests')).toContainText('approved');
-  await expect(page.locator('#profit')).toContainText('0.00');
+  await expect(page.locator('#profit')).toHaveText(/^₹\s?0\.00$/);
   for(const width of [390,768,1440]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,name+' layout overflow at '+width);
