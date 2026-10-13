@@ -56,9 +56,9 @@ Use the previously documented staging backup/rollback runbook in `FINANCE_ONE_V1
 
 ## Current remote resume point
 
-User-provided staging database: `neo-finance-one-staging`, ID `17c1d0d7-aab1-4e4a-9afe-6b36554b8f93`. This identifier has not been verified against a live binding. The user is already signed into Cloudflare in Mac Chrome; that session is not shared with the agent browser. Do not repeat the user's local login or infer migrations from the reported 16-table count.
+User-provided staging database: `neo-finance-one-staging`, ID `17c1d0d7-aab1-4e4a-9afe-6b36554b8f93`. The user-provided screenshot shows this D1 identity in the Cloudflare Console URL; the Worker-to-D1 binding has not yet been verified. The user is already signed into Cloudflare in Mac Chrome; that session is not shared with the agent browser. Do not repeat the user's local login or infer migrations from the reported 16-table count.
 
-Next read-only query in that database's D1 Console:
+The user has executed this read-only query in that database's D1 Console:
 
 ```sql
 SELECT type, name
@@ -67,7 +67,7 @@ WHERE name LIKE 'neo_fin_%'
 ORDER BY type, name;
 ```
 
-No result has been received. Inspect its tables, indexes, views and triggers before selecting any remote migration. Follow with read-only schema definitions/version checks as needed; object names alone are not proof of correct definitions. There is no authorization to use a production binding.
+A partial screenshot of the result was received: receipt-verification, payroll-review, session-revocation and statutory-remittance triggers plus the two ledger/journal views are visible. The tables, correction triggers and unique reversal index are above the captured portion; their presence and migration completeness remain unverified. Inspect the full inventory before selecting any remote migration. Follow with read-only schema definitions/version checks as needed; object names alone are not proof of correct definitions. There is no authorization to use a production binding.
 
 ## Exact access and final authorization
 
@@ -79,4 +79,8 @@ No result has been received. Inspect its tables, indexes, views and triggers bef
 
 ## Final validation record
 
-Pending publication of this candidate and completion of its GitHub CI. No cloud acceptance is implied by this record.
+Published implementation commit: **`d48a1a46fded0d1c47c4272432ab38a3d794ed35`**, built on `ccbbcb6066a3f3b3d94629465336799e0f11a1c6`. The published Git tree exactly matched the locally tested tree (`eb7d9f73954cb6c7afcf164d8fa28466c36ff572`). All **350/350** local Node/SQLite tests passed after integrating the newer handover.
+
+CI: https://github.com/umakanthgilla/neo-school-india-website/actions/runs/38436520967 . Authorization tests, Wrangler packaging, Chromium/WebKit browser QA and the exact-source handover test/package/upload steps passed. Chromium and WebKit logs both explicitly report PASS for login, independent corrections, source import, authenticated audit identity, CSV totals, logout privacy, zero unintended cash and 390/768/1440px layouts. The CSV check also confirms text formula neutralization. The handover contains 12 migrations.
+
+This documentation update records the screenshot and validation evidence; it changes no runtime code or tests. Check the final PR head's CI before selecting a deployment artifact. PR #26 remains draft/unmerged. No remote staging deployment, D1 migration, production mutation or government filing was performed. Actual cloud acceptance remains blocked as listed above.
