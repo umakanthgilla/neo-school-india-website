@@ -1,3 +1,5 @@
+import {pbkdf2Async} from '@noble/hashes/pbkdf2.js';
+import {sha256} from '@noble/hashes/sha2.js';
 /**
  * Finance ONE isolated credential helper. Internal provisioning only.
  * Never expose createFinancePasswordRecord as a public registration endpoint.
@@ -13,8 +15,7 @@ function validatePassword(password){
  return password;
 }
 async function derive(password,salt,iterations){
- const material=await crypto.subtle.importKey('raw',encoder.encode(password),'PBKDF2',false,['deriveBits']);
- return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations},material,256));
+ return pbkdf2Async(sha256,encoder.encode(password),salt,{c:iterations,dkLen:32});
 }
 function equal(a,b){if(a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a[i]^b[i];return diff===0;}
 // A separately authorized invitation or private bootstrap tool must call this.
