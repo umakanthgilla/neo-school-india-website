@@ -49,5 +49,9 @@ export async function financeOneStagingPreflight({db,env,phase='active'}) {
  for(const name of REQUIRED_TABLES)if(!names.table.has(name))blockers.push('Missing table '+name);
  for(const name of REQUIRED_VIEWS)if(!names.view.has(name))blockers.push('Missing view '+name);
  for(const name of REQUIRED_TRIGGERS)if(!names.trigger.has(name))blockers.push('Missing trigger '+name);
+ if(env?.FINANCE_ONE_OPERATIONS_ENABLED==='true'){
+  for(const name of ['neo_fin_correction_requests','neo_fin_correction_decisions'])if(!names.table.has(name))blockers.push('Missing table '+name);
+  for(const name of ['neo_fin_correction_request_validate','neo_fin_correction_decision_validate','neo_fin_correction_post','neo_fin_correction_journal_authorized','neo_fin_correction_journal_exact','neo_fin_correction_request_no_update','neo_fin_correction_request_no_delete','neo_fin_correction_decision_no_update','neo_fin_correction_decision_no_delete'])if(!names.trigger.has(name))blockers.push('Missing trigger '+name);
+ }
  return Object.freeze({ready:blockers.length===0,blockers,schema:{tables:names.table.size,views:names.view.size,triggers:names.trigger.size}});
 }

@@ -144,3 +144,19 @@ test('approved document/journal reconciliation warning is cleared on sign out',a
  app.signOut();
  assert.equal(app.$('accrual-reconciliation-warning').hidden,true);
 });
+
+test('delayed correction queue cannot repopulate confidential data after sign out',async()=>{
+ let pending=[];
+ const app=mount(async(url,options)=>{
+  if(new URL(url).pathname.endsWith('/session'))return json({token:'TOKEN_A',organizationId:'CENTER_A'});
+  if(url.endsWith('/corrections')||url.endsWith('/correction-journals'))return new Promise(resolve=>pending.push({url,resolve}));
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ await app.login('CENTER_A');const load=app.$('corrections-open').handlers.click();await flush();
+ assert.equal(pending.length,2);app.signOut();
+ for(const item of pending)item.resolve(json(item.url.endsWith('/corrections')?{requests:[{id:'PRIVATE',reason:'private financial reason'}]}:{journals:[]}));
+ await load;
+ assert.equal(app.$('corrections-panel').hidden,true);
+ assert.equal(app.$('correction-requests').children.length,0);
+ assert.equal(app.$('corrections-message').textContent,'');
+});

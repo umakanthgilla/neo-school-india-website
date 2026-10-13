@@ -1,3 +1,4 @@
+import {payrollStatutoryFingerprint} from './reviewed-statutory-payroll.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -7,7 +8,7 @@ const files=[
  'finance_payroll_one_foundation.sql',
  'finance_payroll_one_cash_projection.sql',
  'finance_payroll_one_accounting_journals.sql',
- 'finance_payroll_one_legacy_payout_integrity.sql'
+ 'finance_payroll_one_legacy_payout_integrity.sql','finance_payroll_one_statutory_review.sql'
 ];
 const migrations=files.map(x=>readFileSync(new URL('../../migrations/'+x,import.meta.url),'utf8'));
 const CASES={
@@ -15,7 +16,7 @@ const CASES={
  vendor_payment:{kind:'vendor_payments',status:'Paid',vKind:'vendor_payment',vId:'VENDOR_RUN1',ledgerId:'FIN_VENDOR_RUN1',amountKey:'amount_paise',amount:17500,account:'2000'},
  salary_advance_release:{kind:'salary_advances',status:'Released',vKind:'salary_advance',vId:'ADV_RUN1',ledgerId:'FIN_ADV_RUN1',amountKey:'amount_paise',amount:40000,account:'1200'}
 };
-function fixture(sourceKind='payroll_payment', {verified=true}={}){
+async function fixture(sourceKind='payroll_payment', {verified=true}={}){
  const c=CASES[sourceKind];
  const sql=new DatabaseSync(':memory:');
  sql.exec('PRAGMA foreign_keys=ON');
@@ -32,6 +33,12 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
  ('A','AP','2000','Accounts payable','liability'),('A','ADV','1200','Employee advance','asset'),('A','SAL_EXP','5100','Salary expense','expense');`);
  const insert=sql.prepare('INSERT INTO neo_portal_records VALUES (?,?,?,?)');
  const source=sourceKind==='payroll_payment' ? {status:'Paid',net_paise:c.amount,gross_paise:c.amount+5000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:5000,deductions_paise:5000}: {status:c.status,[c.amountKey]:c.amount};
+ const fingerprint=await payrollStatutoryFingerprint({...source,month:'2026-09'});
+ if(sourceKind==='payroll_payment'){
+  source.month='2026-09';source.statutory_review_id='TEST-NIL-APPLICABILITY';
+  sql.prepare(`INSERT INTO neo_fin_payroll_statutory_reviews(organization_id,school_id,payroll_record_id,payroll_month,policy_reference,source_fingerprint,reviewed_by,reviewed_at,status)
+  VALUES('A','SCHOOL_A',?,'2026-09','TEST-NIL-APPLICABILITY',?,'fin:reviewer','2026-10-02T10:00:00Z','approved')`).run('RUN1',fingerprint);
+ }
  insert.run('SCHOOL_A',c.kind,'RUN1',JSON.stringify(source));
  const voucher={status:'Paid',source_kind:c.vKind,source_id:'RUN1',amount_paise:c.amount,voucher_no:'PV-2026-1',payment_mode:'Bank transfer'};
  insert.run('SCHOOL_A','vouchers',c.vId,JSON.stringify(voucher));
@@ -41,7 +48,7 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
  (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
  VALUES ('A','DOC1','payment','approved',?,?,?)`).run(c.amount,sourceKind,'SCHOOL_A|RUN1');
  if(sourceKind==='payroll_payment'){
-  const originalRef='8:SCHOOL_A|4:RUN1',accrualRef=originalRef+'|30000:0:0:5000:5000:25000',accrualId='PAY_ACCR|'+originalRef;
+  const originalRef='8:SCHOOL_A|4:RUN1',accrualRef=originalRef+'|30000:0:0:5000:5000:25000|ST:'+fingerprint,accrualId='PAY_ACCR|'+originalRef;
   sql.prepare(`INSERT INTO neo_fin_documents
   (organization_id,id,document_type,status,gross_paise,source_kind,source_id)
   VALUES('A',?,'payroll_liability','approved',30000,'legacy_payroll',?)`).run(accrualId,accrualRef);
@@ -68,7 +75,7 @@ function fixture(sourceKind='payroll_payment', {verified=true}={}){
 const count=(s,t)=>s.prepare('SELECT COUNT(*) AS n FROM '+t).get().n;
 for(const kind of Object.keys(CASES)){
  test(kind+' verified bank settlement posts one cash event and balanced journal without legacy duplicates',async()=>{
-  const f=fixture(kind);
+  const f=await fixture(kind);
   const created=await syncVerifiedLegacyPayout(f.request());
   assert.equal(created.cashCreated,true);assert.equal(created.journalCreated,true);
   const event=f.sql.prepare('SELECT direction,amount_paise FROM neo_fin_cash_events').get();
@@ -91,54 +98,54 @@ for(const kind of Object.keys(CASES)){
  });
 }
 test('old Paid flag and original voucher never replace independent bank verification',async()=>{
- const f=fixture('payroll_payment',{verified:false});
+ const f=await fixture('payroll_payment',{verified:false});
  await assert.rejects(syncVerifiedLegacyPayout(f.request()),/Source verification failed/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);f.sql.close();
 });
 test('HO account cannot access Center A payroll payout',async()=>{
- const f=fixture();
+ const f=await fixture();
  await assert.rejects(syncVerifiedLegacyPayout(f.request({authenticatedAccountId:'fin:ho'})),/Finance access denied/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);f.sql.close();
 });
 test('verified settlement amount must match original payroll net and voucher',async()=>{
- const f=fixture();
+ const f=await fixture();
  f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.net_paise',99000) WHERE kind='payroll'");
  await assert.rejects(syncVerifiedLegacyPayout(f.request()),/Source verification failed/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);f.sql.close();
 });
 test('missing original voucher blocks Finance mirror',async()=>{
- const f=fixture('vendor_payment');
+ const f=await fixture('vendor_payment');
  f.sql.exec("DELETE FROM neo_portal_records WHERE kind='vouchers'");
  await assert.rejects(syncVerifiedLegacyPayout(f.request()),/Source verification failed/);
  f.sql.close();
 });
 test('orphan, duplicate or mismatched legacy ledger blocks Finance mirror',async()=>{
- const f=fixture('salary_advance_release');
+ const f=await fixture('salary_advance_release');
  f.insert.run('SCHOOL_A','daily_accounts','COPY',JSON.stringify({source_kind:'voucher',source_id:'ADV_RUN1',direction:'OUT',amount_paise:40000,reference:'PV-2026-1',status:'Posted'}));
  await assert.rejects(syncVerifiedLegacyPayout(f.request()),/Source verification failed/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);
  f.sql.close();
 });
 test('Cash and Cheque voucher modes do not qualify for bank-reconciled payout',async()=>{
- const f=fixture('vendor_payment');
+ const f=await fixture('vendor_payment');
  f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.payment_mode','Cash') WHERE kind='vouchers'");
  await assert.rejects(syncVerifiedLegacyPayout(f.request()),/Source verification failed/);
  assert.equal(count(f.sql,'neo_fin_cash_events'),0);f.sql.close();
 });
-test('database rejects second full verified settlement for the same legacy payment',()=>{
- const f=fixture('vendor_payment');
+test('database rejects second full verified settlement for the same legacy payment',async()=>{
+ const f=await fixture('vendor_payment');
  assert.throws(()=>f.sql.exec(`INSERT INTO neo_fin_payment_settlements
  (organization_id,id,document_id,amount_paise,status,bank_reference,verified_at)
  VALUES('A','SET2','DOC1',17500,'verified','BANK2','2026-10-09T11:00:00Z')`),/already settled/);
  f.sql.close();
 });
-test('database refuses partial verified settlements against a legacy full payout',()=>{
- const f=fixture('vendor_payment',{verified:false});
+test('database refuses partial verified settlements against a legacy full payout',async()=>{
+ const f=await fixture('vendor_payment',{verified:false});
  assert.throws(()=>f.sql.exec("UPDATE neo_fin_payment_settlements SET amount_paise=1,status='verified' WHERE id='SET1'"),/exact full settlement/);
  f.sql.close();
 });
-test('original verified bank evidence cannot be edited or deleted',()=>{
- const f=fixture();
+test('original verified bank evidence cannot be edited or deleted',async()=>{
+ const f=await fixture();
  assert.throws(()=>f.sql.exec("UPDATE neo_fin_payment_settlements SET status='reversed' WHERE id='SET1'"),/immutable/);
  assert.throws(()=>f.sql.exec("DELETE FROM neo_fin_payment_settlements WHERE id='SET1'"),/immutable/);
  f.sql.close();

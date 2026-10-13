@@ -107,10 +107,10 @@ function seedReviewedPF(f,org='A',pf=7000,employer=2500){
  VALUES(?, 'SCHOOL_A','STAFF1_2026-09','2026-09','REVIEW-1',?,'fin:reviewer','2026-10-02T11:00:00Z','approved',?,?)`)
  .run(org,'a'.repeat(64),pf,employer);
 }
-test('unreviewed legacy payroll snapshot recognizes earned expense and exact full salary liability',async()=>{
+test('unreviewed legacy payroll snapshot blocks readiness even with balanced salary liability',async()=>{
  const f=fixture();f.document(payrollDoc,'payroll_liability',85000,'approved','A','legacy_payroll',plainSnapshot);
  f.post(payrollDoc,[['5100',85000,0],['2100',0,85000]]);
- assert.equal((await auditFinanceAccrualJournals(f.params)).ready,true);f.sql.close();
+ assert.equal((await auditFinanceAccrualJournals(f.params)).ready,false);f.sql.close();
 });
 test('reviewed statutory payroll recognizes exact PF withholding, salary payable and employer PF',async()=>{
  const f=fixture();seedReviewedPF(f);

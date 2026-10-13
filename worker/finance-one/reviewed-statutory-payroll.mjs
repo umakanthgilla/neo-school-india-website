@@ -40,8 +40,8 @@ export async function payrollStatutoryFingerprint(payroll){
 export async function requireReviewedStatutoryPayroll(db,organizationId,schoolId,payrollRecordId,payroll){
  const stat=statutoryAmounts(payroll);
  const ref=payroll?.statutory_review_id;
- const hasValues=stat.employeeTotalPaise>0||stat.employerTotalPaise>0;
- if(!hasValues && ref===undefined)return Object.freeze({...stat,fingerprint:null,reviewed:false});
+ // Zero deductions are not proof of statutory exemption. Require reviewed
+ // applicability (including explicit nil amounts) for every payroll source.
  if(typeof ref!=='string'||ref.trim().length<3)throw Error('Statutory review required for payroll withholding');
  const fingerprint=await payrollStatutoryFingerprint(payroll);
  const review=await db.prepare(`SELECT payroll_month,policy_reference,source_fingerprint,reviewed_by,reviewed_at,status,

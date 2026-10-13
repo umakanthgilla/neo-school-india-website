@@ -18,7 +18,7 @@ const migrations=[
  'finance_payroll_one_statutory_review.sql'
 ].map(n=>readFileSync(new URL('../../migrations/'+n,import.meta.url),'utf8'));
 
-function fixture(overrides={}){
+async function fixture(overrides={}){
  const sql=new DatabaseSync(':memory:');
  sql.exec('PRAGMA foreign_keys=ON');
  for(const migration of migrations)sql.exec(migration);
@@ -45,11 +45,16 @@ function fixture(overrides={}){
   async batch(stmts){sql.exec('BEGIN IMMEDIATE');try{const results=[];for(const st of stmts)results.push(await st.run());sql.exec('COMMIT');return results}catch(err){sql.exec('ROLLBACK');throw err}}
  };
  const params={db,authenticatedAccountId:'fin:alice',organizationId:'A',schoolId:'SCHOOL_A',payrollRecordId:'STAFF1_2026-09'};
+ if(!payroll.statutory_review_id&&!['employee_pf_paise','employee_esi_paise','professional_tax_paise','tds_paise','employer_pf_paise','employer_esi_paise'].some(k=>payroll[k])){
+  payroll.statutory_review_id='TEST-EXPLICIT-NIL-APPLICABILITY';
+  sql.prepare("UPDATE neo_portal_records SET data=? WHERE kind='payroll'").run(JSON.stringify(payroll));
+  await seedStatutoryReview({sql});
+ }
  return{sql,db,params,update(p){sql.prepare("UPDATE neo_portal_records SET data=? WHERE school_id='SCHOOL_A' AND kind='payroll'").run(JSON.stringify(p));}};
 }
 const linesOf=sql=>sql.prepare('SELECT account_id,debit_paise,credit_paise FROM neo_fin_journal_lines ORDER BY line_no').all();
 test('approved payroll accrues earned salary payable, delays advance recovery until verified payout',async()=>{
- const f=fixture();const r=await postLegacyPayrollAccrual(f.params);
+ const f=await fixture();const r=await postLegacyPayrollAccrual(f.params);
  assert.equal(r.documentCreated,true);assert.equal(r.journalCreated,true);
  const journalLines=linesOf(f.sql);
  assert.deepEqual(journalLines.map(r=>[r.account_id,r.debit_paise,r.credit_paise]),
@@ -63,20 +68,20 @@ test('approved payroll accrues earned salary payable, delays advance recovery un
  f.sql.close();
 });
 test('payroll with zero advance recovery creates a balanced two-line journal',async()=>{
- const f=fixture({advance_recovery_paise:0,deductions_paise:15000,net_paise:85000});
+ const f=await fixture({advance_recovery_paise:0,deductions_paise:15000,net_paise:85000});
  await postLegacyPayrollAccrual(f.params);
  assert.deepEqual(linesOf(f.sql).map(x=>x.account_id),['SAL_EXP','SAL_LIAB']);
  f.sql.close();
 });
 test('fully recovered net-zero payroll accrues against advance receivable only',async()=>{
- const f=fixture({gross_paise:20000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:20000,deductions_paise:20000,net_paise:0});
+ const f=await fixture({gross_paise:20000,late_deduction_paise:0,attendance_deduction_paise:0,advance_recovery_paise:20000,deductions_paise:20000,net_paise:0});
  await postLegacyPayrollAccrual(f.params);
  assert.deepEqual(linesOf(f.sql).map(x=>x.account_id),['SAL_EXP','SAL_LIAB']);
  f.sql.close();
 });
 test('unapproved or unfinished attendance payroll cannot accrue',async()=>{
  for(const patch of [{status:'Draft'},{attendance_complete:false},{approved_at:null}]){
-  const f=fixture(patch);
+  const f=await fixture(patch);
   await assert.rejects(postLegacyPayrollAccrual(f.params),/Approved and attendance-complete/);
   assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,0);
   f.sql.close();
@@ -87,44 +92,44 @@ test('gross and deduction mismatch fails closed, never creates accounting docume
   {net_paise:64000},{deductions_paise:34000},{gross_paise:9000},
   {late_deduction_paise:9007199254740991}
  ]){
-  const f=fixture(patch);
+  const f=await fixture(patch);
   await assert.rejects(postLegacyPayrollAccrual(f.params),/Payroll deduction|Payroll expense|Invalid payroll/);
   assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,0);
   f.sql.close();
  }
 });
 test('unreviewed PF/ESI statutory deduction cannot be posted',async()=>{
- const f=fixture({employee_pf_paise:1200});
+ const f=await fixture({employee_pf_paise:1200});
  await assert.rejects(postLegacyPayrollAccrual(f.params),/Statutory review required/);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_journals').get().n,0);f.sql.close();
 });
 test('HO finance owner cannot accrue independent center payroll',async()=>{
- const f=fixture();
+ const f=await fixture();
  await assert.rejects(postLegacyPayrollAccrual({...f.params,authenticatedAccountId:'fin:ho'}),/Finance access denied/);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,0);f.sql.close();
 });
 test('school payroll before its legal business ownership date is rejected',async()=>{
- const f=fixture();
+ const f=await fixture();
  f.sql.exec("UPDATE neo_fin_school_ownership SET effective_from='2026-10-01'");
  await assert.rejects(postLegacyPayrollAccrual(f.params),/outside independent business ownership/);
  f.sql.close();
 });
 test('changed advance deduction split on retry is detected even when gross expense is unchanged',async()=>{
- const f=fixture();
+ const f=await fixture();
  await postLegacyPayrollAccrual(f.params);
  f.update({staff_id:'STAFF1',month:'2026-09',status:'Paid',attendance_complete:true,approved_at:'2026-10-02T10:00:00Z',
   gross_paise:100000,late_deduction_paise:5000,attendance_deduction_paise:10000,advance_recovery_paise:10000,
   deductions_paise:25000,net_paise:75000});
- await assert.rejects(postLegacyPayrollAccrual(f.params),/Conflicting source payroll document|Conflicting source payroll deductions/);
+ await assert.rejects(postLegacyPayrollAccrual(f.params),/Statutory review required|Statutory payroll approval or amounts mismatch/);
  f.sql.close();
 });
 test('generic gross-based payroll posting cannot overwrite deduction-aware legacy accrual',async()=>{
- const f=fixture();const x=await postLegacyPayrollAccrual(f.params);
+ const f=await fixture();const x=await postLegacyPayrollAccrual(f.params);
  await assert.rejects(postAccrualJournalForDocument(f.db,'A',x.documentId),/deduction-aware/);
  f.sql.close();
 });
 test('journal DB batch failure can be retried safely without creating duplicate payroll document',async()=>{
- const f=fixture();
+ const f=await fixture();
  f.sql.exec("CREATE TRIGGER fail_post BEFORE INSERT ON neo_fin_journal_lines BEGIN SELECT RAISE(ABORT,'forced'); END");
  await assert.rejects(postLegacyPayrollAccrual(f.params),/forced/);
  assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM neo_fin_documents').get().n,1);
@@ -147,7 +152,7 @@ function seedLegacyPaidPayrollVoucher(f){
  return originalId;
 }
 test('real payroll source -> deduction-aware accrual -> Finance payout doc -> verified bank -> zero net salary payable',async()=>{
- const f=fixture({status:'Paid'});
+ const f=await fixture({status:'Paid'});
  const originalId=seedLegacyPaidPayrollVoucher(f);
  const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
  const source=await postLegacyPayrollAccrual(f.params);
@@ -177,7 +182,7 @@ test('real payroll source -> deduction-aware accrual -> Finance payout doc -> ve
  f.sql.close();
 });
 test('bank settlement cannot debit Salary Payable before source payroll accrual has posted',async()=>{
- const f=fixture({status:'Paid'});
+ const f=await fixture({status:'Paid'});
  const originalId=seedLegacyPaidPayrollVoucher(f);
  const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
  const paymentDoc=await syncLegacyPayoutDocument(payoutParams);
@@ -193,7 +198,7 @@ test('bank settlement cannot debit Salary Payable before source payroll accrual 
 });
 
 test('failed advance-recovery accounting repairs from verified cash without reposting cash ledger',async()=>{
- const f=fixture({status:'Paid'});const originalId=seedLegacyPaidPayrollVoucher(f);
+ const f=await fixture({status:'Paid'});const originalId=seedLegacyPaidPayrollVoucher(f);
  await postLegacyPayrollAccrual(f.params);
  const payoutParams={...f.params,legacyRecordId:originalId,sourceKind:'payroll_payment'};
  const doc=await syncLegacyPayoutDocument(payoutParams);
@@ -226,11 +231,11 @@ async function seedStatutoryReview(f){
   (organization_id,school_id,payroll_record_id,payroll_month,policy_reference,source_fingerprint,reviewed_by,reviewed_at,status,
   employee_pf_paise,employee_esi_paise,professional_tax_paise,tds_paise,employer_pf_paise,employer_esi_paise)
  VALUES('A','SCHOOL_A','STAFF1_2026-09','2026-09',?,?, 'fin:reviewer','2026-10-02T10:00:00Z','approved',?,?,?,?,?,?)`)
- .run(payroll.statutory_review_id,fingerprint,payroll.employee_pf_paise,payroll.employee_esi_paise,
-   payroll.professional_tax_paise,payroll.tds_paise,payroll.employer_pf_paise,payroll.employer_esi_paise);
+ .run(payroll.statutory_review_id,fingerprint,payroll.employee_pf_paise??0,payroll.employee_esi_paise??0,
+   payroll.professional_tax_paise??0,payroll.tds_paise??0,payroll.employer_pf_paise??0,payroll.employer_esi_paise??0);
 }
 test('reviewed statutory payroll posts 9 balanced liability lines without invented tax rates',async()=>{
- const f=fixture(reviewedPayroll);await seedStatutoryReview(f);
+ const f=await fixture(reviewedPayroll);await seedStatutoryReview(f);
  await postLegacyPayrollAccrual(f.params);
  const lines=linesOf(f.sql);
  assert.deepEqual(lines.map(x=>[x.account_id,x.debit_paise,x.credit_paise]),[
@@ -245,7 +250,7 @@ test('reviewed statutory payroll posts 9 balanced liability lines without invent
  assert.equal(again.journalCreated,false);f.sql.close();
 });
 test('statutory approval mismatch and altered amount fail closed without journal',async()=>{
- const f=fixture(reviewedPayroll);await seedStatutoryReview(f);
+ const f=await fixture(reviewedPayroll);await seedStatutoryReview(f);
  const source=JSON.parse(f.sql.prepare("SELECT data FROM neo_portal_records WHERE kind='payroll'").get().data);
  source.employee_pf_paise=5000;
  f.update(source);
@@ -255,7 +260,7 @@ test('statutory approval mismatch and altered amount fail closed without journal
  f.sql.close();
 });
 test('statutory withheld salary stays payable until a bank-verified net salary settlement',async()=>{
- const f=fixture({...reviewedPayroll,status:'Paid'});await seedStatutoryReview(f);
+ const f=await fixture({...reviewedPayroll,status:'Paid'});await seedStatutoryReview(f);
  const payrollId=seedLegacyPaidPayrollVoucher(f);
  f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',58000) WHERE kind='vouchers'");
  f.sql.exec("UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',58000) WHERE kind='daily_accounts'");

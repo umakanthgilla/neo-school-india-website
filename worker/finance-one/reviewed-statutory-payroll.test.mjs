@@ -38,3 +38,10 @@ test('approval schema prevents changes or deletion of reviewed statutory amounts
  assert.throws(()=>sql.exec("DELETE FROM neo_fin_payroll_statutory_reviews"),/immutable/);
  sql.close();
 });
+
+test('zero or missing deductions never imply statutory exemption without review',async()=>{
+ const db={prepare(){throw Error('Unreviewed payroll must stop before querying');}};
+ for(const fields of [{},{employee_pf_paise:0,employee_esi_paise:0,professional_tax_paise:0,tds_paise:0,employer_pf_paise:0,employer_esi_paise:0}]){
+  await assert.rejects(requireReviewedStatutoryPayroll(db,'A','SCHOOL_A','S1_2026-09',{staff_id:'S1',month:'2026-09',...fields}),/Statutory review required/);
+ }
+});

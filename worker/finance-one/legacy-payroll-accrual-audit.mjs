@@ -44,7 +44,7 @@ function entries(snapshot,stat){
 export async function approvedLegacyPayrollAccrualMatches(db,organizationId,document,lines){
  try{
   const snap=decode(document?.source_id);
-  if(!snap||document.id!=='PAY_ACCR|'+snap.sourcePrefix)return false;
+  if(!snap||!snap.statFingerprint||document.id!=='PAY_ACCR|'+snap.sourcePrefix)return false;
   const month=snap.payrollId.match(/_(20[0-9]{2}-(?:0[1-9]|1[0-2]))$/)?.[1];
   if(!month)return false;
   // A payroll journal must still belong to its current independent legal

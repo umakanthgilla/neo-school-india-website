@@ -3,6 +3,7 @@
  * Disabled by default. Never authorizes finance from generic HO admin privileges.
  * Uses a dedicated signed finance session + explicit finance organization membership.
  */
+import {handleCorrectionsApi} from './corrections-api.mjs';
 import {handleFinanceReadApi} from './finance-read-api.mjs';
 import {readFinanceOneSession} from './finance-session.mjs';
 import {activeFinanceCredential} from './finance-password.mjs';
@@ -35,7 +36,8 @@ export async function financeOneWorkerGate({request,env,corsHeaders}){
  // Dedicated personal finance identity; legacy school and HO admin tokens
  // cannot grant access. Active memberships are checked for every request.
  const accountId=session.accountId;
- const result=await handleFinanceReadApi({request,db:env.DB,authenticatedAccountId:accountId});
+ const result=await handleCorrectionsApi({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_OPERATIONS_ENABLED==='true'})
+  || await handleFinanceReadApi({request,db:env.DB,authenticatedAccountId:accountId});
  if(!result)return errorResponse('Not found',404,headers);
  const responseHeaders=new Headers(result.headers);
  for(const [key,value] of Object.entries(headers))responseHeaders.set(key,value);

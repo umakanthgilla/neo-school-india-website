@@ -4,6 +4,8 @@ on:
     branches:
       - feature/finance-payroll-one-foundation
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - 'worker/finance-one/**'
       - 'finance-one/**'
       - 'docs/FINANCE_ONE_V1_*'
@@ -12,6 +14,8 @@ on:
       - '.github/workflows/finance-one-tests.yml'
   pull_request:
     paths:
+      - 'package.json'
+      - 'package-lock.json'
       - 'worker/finance-one/**'
       - 'finance-one/**'
       - 'docs/FINANCE_ONE_V1_*'
@@ -32,6 +36,26 @@ jobs:
         run: npm ci
       - name: Test organization access
         run: node --experimental-sqlite --test worker/finance-one/*.test.mjs
+
+  browser-qa:
+    name: Chromium and WebKit isolated Finance operations QA
+    needs: authorization
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Test synthetic local Worker on mobile tablet and desktop
+        run: node --experimental-sqlite worker/finance-one/browser-qa.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: finance-one-synthetic-browser-qa
+          path: /tmp/finance-one-browser-qa/
+          if-no-files-found: ignore
 
   package-staging:
     name: Check staging Worker/portal bundle (NO DEPLOY)
@@ -71,7 +95,7 @@ jobs:
 
   handover-package:
     name: Assemble Finance ONE V1 source handover ZIP (NO DEPLOY)
-    needs: [authorization, package-staging]
+    needs: [authorization, package-staging, browser-qa]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -105,19 +129,19 @@ jobs:
           cp docs/finance-one-staging-operations.md "$BUNDLE/docs/"
           cp wrangler.finance-one.staging.toml.example "$BUNDLE/"
           cp .github/workflows/finance-one-tests.yml "$BUNDLE/.github/workflows/"
-          test "$(find "$BUNDLE/migrations" -type f -name '*.sql' | wc -l | tr -d ' ')" -eq 10
+          test "$(find "$BUNDLE/migrations" -type f -name '*.sql' | wc -l | tr -d ' ')" -eq 11
           for required in FINANCE_ONE_V1_MASTER_HANDOFF.md FINANCE_ONE_V1_ACCEPTANCE_MATRIX.md FINANCE_ONE_V1_NEXT_CHAT_PROMPT.txt; do
             test -s "$BUNDLE/docs/$required"
           done
           cat > "$BUNDLE/MANIFEST.txt" <<EOF
           PROJECT=Neo School India Finance & Payroll ONE
-          HANDOVER_TYPE=V1 development source — isolated Cloudflare staging not deployed
+          HANDOVER_TYPE=Development candidate — deployment and acceptance must be verified separately
           REPOSITORY=https://github.com/umakanthgilla/neo-school-india-website
           BRANCH=$HANDOVER_BRANCH
           PINNED_COMMIT_SHA=$HANDOVER_COMMIT_SHA
           GITHUB_CI=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           POSTING_POLICY=Verified-source-only Cash Ledger; immutable posted accounting
-          MIGRATIONS=10 (staging-only)
+          MIGRATIONS=11 (staging-only)
           BANK_STATEMENT_IMPORT_MATCHING=Deferred to Version 2
           PRODUCTION_MAIN_AND_LIVE_WORKER=Untouched; deployment prohibited until approval
           SOURCE_REPOSITORY_REQUIRED=Full existing school code is in the pinned GitHub repo; this ZIP contains the additive Finance ONE overlay

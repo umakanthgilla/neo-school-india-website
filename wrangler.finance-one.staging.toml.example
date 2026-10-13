@@ -10,6 +10,8 @@ workers_dev = true
 FINANCE_ONE_ENVIRONMENT = "staging"
 # Keep OFF until migrations + independent credentials + rate limits + review are complete.
 FINANCE_ONE_READ_API_ENABLED = "false"
+# Requires migration 11 and two separate authorized Finance reviewers.
+FINANCE_ONE_OPERATIONS_ENABLED = "false"
 # Optional alternate HTTPS portal origin. The same-origin portal is served at /portal.html.
 # Replace this illustrative value with an approved HTTPS hostname before enabling Finance.
 FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
