@@ -1,21 +1,11 @@
+import {readOperationBody as body} from './operation-body.mjs';
 /** Staging operations. Reviewed full accrual reversal; never a cash refund. */
 import {correctionSchemaReady} from './corrections-schema.mjs';
 import {FinanceAccessError,resolveFinanceOrganization} from './organization-access.mjs';
 const route=/^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(correction-journals|corrections)(?:\/([A-Za-z0-9_-]{8,80})\/decision)?$/;
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const invalid=message=>{throw new FinanceAccessError(message,400);};
-async function body(request,keys){
- if(!/^application\/json(?:;|$)/i.test(request.headers.get('content-type')||''))invalid('JSON required');
- const reader=request.body?.getReader();if(!reader)invalid('Request body required');
- let size=0;const parts=[];
- try {for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;
-  if(size>8192){await reader.cancel();invalid('Request body too large');}parts.push(value);}}
- finally{reader.releaseLock();}
- const bytes=new Uint8Array(size);let offset=0;for(const part of parts){bytes.set(part,offset);offset+=part.byteLength;}
- let value;try{value=JSON.parse(new TextDecoder().decode(bytes));}catch{invalid('Invalid JSON');}
- if(!value||Array.isArray(value)||typeof value!=='object'||Object.keys(value).some(k=>!keys.includes(k)))invalid('Unexpected request fields');
- return value;
-}
+
 function string(value,min,max,label){if(typeof value!=='string'||value.trim().length<min||value.length>max)invalid('Invalid '+label);return value.trim();}
 async function run(statement){const r=await statement.run();if(r?.success!==true)throw Error('Write failed');}
 export async function handleCorrectionsApi({request,db,authenticatedAccountId,enabled}){

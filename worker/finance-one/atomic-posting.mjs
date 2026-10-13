@@ -14,11 +14,18 @@ export async function postVerifiedSourceEvent({db,organizationId,source,verifySo
  const key=[event.organizationId,event.sourceKind,event.sourceId,event.sourceEventId];
  // Deterministic event id; uniqueness is enforced by composite unique index in SQL.
  const eventId=key.map(v=>v.length+':'+v).join('|');
+ // Recheck invoice reversal in the same SQL statement as the cash insertion.
+ // The trusted verifier supplies this link; no browser field reaches it.
+ const guardInvoice=typeof verified.accrualDocumentId==='string' && Boolean(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").bind('neo_fin_correction_decisions').first());
+ const postingGuard=guardInvoice?` WHERE NOT EXISTS (
+  SELECT 1 FROM neo_fin_correction_decisions c JOIN neo_fin_journals j
+   ON j.organization_id=c.organization_id AND j.id=c.journal_id
+  WHERE c.organization_id=? AND j.source_kind='document' AND j.source_id=? AND c.decision='approved')`:'';
  const result=await db.prepare(
   `INSERT INTO neo_fin_cash_events
    (organization_id,event_id,source_kind,source_id,source_event_id,direction,amount_paise,effective_at,verification_reference)
-   VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(organization_id,source_kind,source_id,source_event_id) DO NOTHING`
- ).bind(event.organizationId,eventId,event.sourceKind,event.sourceId,event.sourceEventId,event.direction,event.amountPaise,event.effectiveAt,event.verificationReference).run();
+   SELECT ?,?,?,?,?,?,?,?,?${postingGuard} ON CONFLICT(organization_id,source_kind,source_id,source_event_id) DO NOTHING`
+ ).bind(event.organizationId,eventId,event.sourceKind,event.sourceId,event.sourceEventId,event.direction,event.amountPaise,event.effectiveAt,event.verificationReference,...(guardInvoice?[organizationId,verified.accrualDocumentId]:[])).run();
  if(result?.success!==true || !Number.isInteger(result?.meta?.changes)) throw new Error('Database posting not confirmed');
  const created=result.meta.changes===1;
  if(!created){

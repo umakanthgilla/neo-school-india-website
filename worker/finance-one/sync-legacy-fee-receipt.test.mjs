@@ -206,3 +206,31 @@ test('invoice import never marks Fee Receipt paid before independent verificatio
  await assert.rejects(syncVerifiedLegacyFeeReceipt(request(ctx)),/Source verification failed/);
  assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);ctx.sql.close();
 });
+
+test('approved invoice reversal blocks new receipt posting and cannot be undone by invoice reimport',async()=>{
+ const ctx=setup({preexistingInvoice:false});try{
+  ctx.sql.exec(readFileSync(new URL('../../migrations/finance_payroll_one_corrections.sql',import.meta.url),'utf8'));
+  ctx.sql.exec("INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES('A','fin:checker','owner')");
+  const params={db:ctx.db,authenticatedAccountId:'fin:alice',organizationId:'A',schoolId:'SCHOOL_A',invoiceRecordId:'INV1'};
+  const invoice=await syncLegacyFeeInvoice(params);
+  ctx.sql.prepare("INSERT INTO neo_fin_correction_requests(organization_id,id,journal_id,reason,requested_by) VALUES('A','request-reverse',?,'Duplicate original invoice','fin:alice')").run(invoice.journalId);
+  ctx.sql.prepare("INSERT INTO neo_fin_correction_decisions(organization_id,request_id,journal_id,decision,review_note,reviewed_by) VALUES('A','request-reverse',?,'approved','Independently verified duplicate invoice','fin:checker')").run(invoice.journalId);
+  await assert.rejects(syncVerifiedLegacyFeeReceipt(request(ctx)),/Source verification failed/);
+  await assert.rejects(syncLegacyFeeInvoice(params),/accrual reversed/);
+  assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);
+ }finally{ctx.sql.close();}
+});
+
+test('reversal committed between source validation and cash insert cannot create a new receipt',async()=>{
+ const ctx=setup();try{
+  ctx.sql.exec(readFileSync(new URL('../../migrations/finance_payroll_one_corrections.sql',import.meta.url),'utf8'));
+  ctx.sql.exec("INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES('A','fin:checker','owner'); INSERT INTO neo_fin_correction_requests(organization_id,id,journal_id,reason,requested_by) VALUES('A','race-request','J_INV1','Duplicate original invoice','fin:alice');");
+  const db={...ctx.db,prepare(q){const st=ctx.db.prepare(q);if(!q.includes('INSERT INTO neo_fin_cash_events'))return st;
+   return {bind(...args){const bound=st.bind(...args);return {...bound,run:async()=>{
+    ctx.sql.exec("INSERT INTO neo_fin_correction_decisions(organization_id,request_id,journal_id,decision,review_note,reviewed_by) VALUES('A','race-request','J_INV1','approved','Independently reviewed original invoice','fin:checker')");return bound.run();
+   }};}};
+  }};
+  await assert.rejects(syncVerifiedLegacyFeeReceipt({...request(ctx),db}),/Conflicting source event/);
+  assert.equal(rowCount(ctx.sql,'neo_fin_cash_events'),0);
+ }finally{ctx.sql.close();}
+});

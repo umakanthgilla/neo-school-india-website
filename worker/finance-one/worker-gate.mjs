@@ -1,3 +1,4 @@
+import {handleSourceOperations} from './source-operations.mjs';
 /**
  * Finance ONE Worker integration boundary (development branch only).
  * Disabled by default. Never authorizes finance from generic HO admin privileges.
@@ -36,7 +37,8 @@ export async function financeOneWorkerGate({request,env,corsHeaders}){
  // Dedicated personal finance identity; legacy school and HO admin tokens
  // cannot grant access. Active memberships are checked for every request.
  const accountId=session.accountId;
- const result=await handleCorrectionsApi({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_OPERATIONS_ENABLED==='true'})
+ const result=await handleSourceOperations({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_SOURCE_OPERATIONS_ENABLED==='true'})
+  || await handleCorrectionsApi({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_OPERATIONS_ENABLED==='true'})
   || await handleFinanceReadApi({request,db:env.DB,authenticatedAccountId:accountId});
  if(!result)return errorResponse('Not found',404,headers);
  const responseHeaders=new Headers(result.headers);

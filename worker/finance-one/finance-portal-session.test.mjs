@@ -160,3 +160,18 @@ test('delayed correction queue cannot repopulate confidential data after sign ou
  assert.equal(app.$('correction-requests').children.length,0);
  assert.equal(app.$('corrections-message').textContent,'');
 });
+
+test('delayed source audit response cannot restore private history after logout or another Center login',async()=>{
+ let finish;
+ const app=mount(async(url,options)=>{
+  if(new URL(url).pathname.endsWith('/session')){const {organizationId}=JSON.parse(options.body);return json({token:'TOKEN_'+organizationId,organizationId});}
+  if(new URL(url).pathname.endsWith('/session/logout'))return new Response(null,{status:204});
+  if(new URL(url).pathname.endsWith('/source-operations'))return new Promise(resolve=>{finish=resolve;});
+  return json(bodyFor(url,url.includes('/CENTER_A/')?'CENTER_A':'CENTER_B'));
+ });
+ await app.login('CENTER_A');const pending=app.$('source-open').handlers.click();await flush();
+ await app.signOut();await app.login('CENTER_B','fin:bob');
+ finish(json({entries:[{action:'receipt',status:'succeeded',source_json:'PRIVATE_CENTER_A_SOURCE',requested_by:'fin:alice'}]}));
+ await pending;assert.equal(app.$('source-history').children.length,0);assert.equal(app.$('source-panel').hidden,true);
+ assert.equal(app.$('org-label').textContent,'CENTER_B');
+});

@@ -41,7 +41,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  <p class="note">Finance data stays separate for every Head Office and Center. No direct Daily Ledger editing is available. This preview is staging-only and requires separately authorized Finance credentials. It is not the live payroll system.</p>
 </section>
 <section id="dashboard-panel" hidden>
- <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="corrections-open" class="small-btn">Corrections &amp; Approvals</button><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
+ <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="source-open" class="small-btn">Import source records</button><button type="button" id="corrections-open" class="small-btn">Corrections &amp; Approvals</button><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
  <p role="alert" class="alert" id="dash-error" aria-live="polite"></p>
  <p role="alert" class="alert" id="trial-warning" hidden>Accounting trial balance does not balance. Finance review required before relying on these figures.</p>
  <p role="alert" class="alert" id="cash-reconciliation-warning" hidden>Cash Ledger / Bank journal reconciliation has issues. Finance review required before relying on these figures.</p>
@@ -74,6 +74,25 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   <tbody id="statutory-rows"></tbody></table></div>
   <p id="statutory-review" role="status" class="alert" hidden>One or more statutory balances are negative. Finance review is required.</p>
  </article>
+ <article class="card accent section below-grid">
+  <h2>Trial Balance</h2><p class="caption">All-time posted journals, including approved corrections. Amounts in INR.</p>
+  <button id="trial-export" class="small-btn" type="button" disabled>Export trial balance CSV</button>
+  <div class="table-wrap"><table><thead><tr><th>Code</th><th>Account</th><th class="amount">Debits</th><th class="amount">Credits</th></tr></thead><tbody id="trial-rows"></tbody></table></div>
+ </article>
+ <article id="source-panel" class="card accent section below-grid" hidden>
+  <h2>Import Original Source Records</h2>
+  <p class="caption">Use the original record IDs. Invoice and payroll accruals create no cash movement. Receipt and payout imports require previously verified evidence. This screen does not approve sources, certify bank evidence or send payments.</p>
+  <form id="source-form">
+   <label for="source-action">Import type</label><select id="source-action"><option value="invoice">Fee invoice accrual</option><option value="receipt">Verified fee receipt</option><option value="payout_document">Payment voucher document</option><option value="payout">Verified payout</option><option value="payroll_accrual">Approved payroll accrual</option></select>
+   <div id="source-school-field"><label for="source-school">Original school ID</label><input id="source-school" maxlength="100" required></div>
+   <label id="source-record-label" for="source-record">Original invoice record ID</label><input id="source-record" maxlength="100" required>
+   <div id="source-kind-field" hidden><label for="source-kind">Payout kind</label><select id="source-kind"><option value="vendor_payment">Vendor payment</option><option value="payroll_payment">Payroll payment</option><option value="salary_advance_release">Salary advance</option></select></div>
+   <div id="source-evidence-field" hidden><label for="source-evidence">Existing verification / settlement ID</label><input id="source-evidence" maxlength="100"></div>
+   <button id="source-submit" class="primary" type="submit">Validate and import source</button>
+  </form>
+  <p id="source-message" role="status" aria-live="polite"></p>
+  <h3>Import audit history (latest 100 attempts)</h3><div id="source-history"></div>
+ </article>
  <article id="corrections-panel" class="card accent section below-grid" hidden>
   <h2>Invoice &amp; Bill Corrections</h2>
   <p class="caption">Full accounting reversal only. Original entries remain visible. This does not refund money, cancel the original school invoice, or reverse payroll. A different Finance owner or administrator must review each request.</p>
@@ -93,6 +112,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  const base=(typeof window.FINANCE_ONE_API_BASE==='string'?window.FINANCE_ONE_API_BASE:location.origin).replace(/\/$/,'');
  const $=id=>document.getElementById(id);
  const state={token:null,org:null,sessionVersion:0,requestVersion:0};
+ let trialSnapshot=null,sourceAttempt=null,sourceLoadVersion=0;
  const money=paise=>typeof paise==='number'&&Number.isFinite(paise)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(paise/100):'—';
  const text=(parent,value)=>{const node=document.createElement('td');node.textContent=String(value??'');parent.appendChild(node);return node;};
  function logout(){
@@ -102,6 +122,9 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
   for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
   $('statutory-review').hidden=true;
+  trialSnapshot=null;$('trial-rows').replaceChildren();$('trial-export').disabled=true;
+  $('source-submit').disabled=false;sourceAttempt=null;sourceLoadVersion++;$('source-panel').hidden=true;$('source-history').replaceChildren();$('source-message').textContent='';
+  for(const id of ['source-school','source-record','source-evidence'])$(id).value='';
   $('corrections-panel').hidden=true;$('correction-journal').replaceChildren();$('correction-requests').replaceChildren();$('correction-reason').value='';$('corrections-message').textContent='';correctionAttempt=null;
  }
  async function call(path,options={}){
@@ -115,13 +138,17 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   const token=state.token,organization=state.org,sessionVersion=state.sessionVersion;
   if(!token||!organization)return;
   const requestVersion=++state.requestVersion;
-  $('dash-error').textContent='';const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
+  $('dash-error').textContent='';trialSnapshot=null;$('trial-export').disabled=true;const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
   try{
    const [summary,ledger,documents,settlements,statutory,cashReconciliation,accrualReconciliation]=await Promise.all([
     call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities'),call(path+'/cash-reconciliation'),call(path+'/accrual-reconciliation')
    ]);
    if(sessionVersion!==state.sessionVersion||requestVersion!==state.requestVersion||
       token!==state.token||organization!==state.org)return;
+   trialSnapshot=summary;$('trial-export').disabled=false;
+   const trial=$('trial-rows');trial.replaceChildren();
+   for(const item of summary.trialBalance||[]){const r=document.createElement('tr');text(r,item.code);text(r,item.name);for(const amount of [item.debitPaise,item.creditPaise])text(r,money(amount)).className='amount';trial.appendChild(r);}
+   const total=document.createElement('tr');text(total,'TOTAL');text(total,'');text(total,money(summary.totalDebitPaise)).className='amount';text(total,money(summary.totalCreditPaise)).className='amount';trial.appendChild(total);
    $('trial-warning').hidden=summary.balanced!==false;
    $('cash-reconciliation-warning').hidden=cashReconciliation.ready===true;
    $('accrual-reconciliation-warning').hidden=accrualReconciliation.ready===true;
@@ -235,6 +262,49 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   $('correction-submit').disabled=true;
   try{await call(operationPath()+'/corrections',{method:'POST',body:JSON.stringify(correctionAttempt)});if(isCurrent(session)){correctionAttempt=null;$('correction-reason').value='';await loadCorrections();}}
   catch(e){if(isCurrent(session))$('corrections-message').textContent=e.message;}finally{$('correction-submit').disabled=false;}
+ });
+ function sourceFields(){
+  const action=$('source-action').value,receipt=action==='receipt',payout=action==='payout'||action==='payout_document';
+  $('source-school-field').hidden=receipt;$('source-school').required=!receipt;
+  $('source-kind-field').hidden=!payout;
+  $('source-evidence-field').hidden=!(receipt||action==='payout');$('source-evidence').required=receipt||action==='payout';
+  $('source-record-label').textContent=action==='invoice'?'Original invoice record ID':receipt?'Original payment record ID':action==='payroll_accrual'?'Original payroll record ID':'Original payout record ID';
+ }
+ $('source-action').addEventListener('change',sourceFields);
+ async function loadSourceHistory(){
+  const session=currentSession(),version=++sourceLoadVersion;if(!session.token)return;
+  $('source-panel').hidden=false;
+  try{const result=await call(operationPath()+'/source-operations');
+   if(!isCurrent(session)||version!==sourceLoadVersion)return;
+   const list=$('source-history');list.replaceChildren();
+   for(const entry of result.entries||[]){const row=document.createElement('div');row.className='review-card';
+    for(const value of [entry.action+' — '+(entry.status||'Completion unconfirmed — reconcile before retry'),entry.source_json,'Requested by '+entry.requested_by+' · '+entry.created_at,'Request '+entry.id+' · Attempt '+(entry.attempt_id||'not started')]){const p=document.createElement('p');p.textContent=value;row.appendChild(p);}list.appendChild(row);}
+  }catch(e){if(isCurrent(session)&&version===sourceLoadVersion)$('source-message').textContent=e.message;}
+ }
+ $('source-open').addEventListener('click',loadSourceHistory);
+ $('source-form').addEventListener('submit',async event=>{
+  event.preventDefault();const session=currentSession();if(!session.token)return;
+  const action=$('source-action').value,id=$('source-record').value.trim(),school=$('source-school').value.trim(),evidence=$('source-evidence').value.trim();
+  let source;
+  if(action==='invoice')source={schoolId:school,invoiceRecordId:id};
+  else if(action==='receipt')source={paymentRecordId:id,verificationId:evidence};
+  else if(action==='payroll_accrual')source={schoolId:school,payrollRecordId:id};
+  else source={schoolId:school,legacyRecordId:id,sourceKind:$('source-kind').value,...(action==='payout'?{settlementId:evidence}:{})};
+  if(!sourceAttempt||sourceAttempt.action!==action||JSON.stringify(sourceAttempt.source)!==JSON.stringify(source))sourceAttempt={requestId:crypto.randomUUID(),action,source};
+  const attempt=sourceAttempt;$('source-submit').disabled=true;$('source-message').textContent='Validating original source…';
+  try{const result=await call(operationPath()+'/source-operations',{method:'POST',body:JSON.stringify(attempt)});
+   if(isCurrent(session)){$('source-message').textContent='Import validated. Request '+result.requestId+'. Review the refreshed ledger and reconciliation warnings.';sourceAttempt=null;await loadSourceHistory();await load();if(isCurrent(session)&&!$('corrections-panel').hidden)await loadCorrections();}
+  }catch(e){if(isCurrent(session)){$('source-message').textContent=e.message;await loadSourceHistory();await load();}}
+  finally{if(isCurrent(session))$('source-submit').disabled=false;}
+ });
+ $('trial-export').addEventListener('click',()=>{
+  if(!state.token||!trialSnapshot||trialSnapshot.organizationId!==state.org)return;
+  const snapshot=trialSnapshot;
+  // Quote all cells and neutralize spreadsheet formulas in text fields.
+  const cell=value=>'"'+String(value??'').replace(/^[\s]*[=+@-]/,m=>"'"+m).replace(/"/g,'""')+'"';
+  const rows=[['Organization',state.org],['Scope','All-time posted journals; INR paise'],['Balanced',String(snapshot.balanced)],['Account code','Account name','Debit paise','Credit paise'],...(snapshot.trialBalance||[]).map(r=>[r.code,r.name,r.debitPaise,r.creditPaise]),['TOTAL','',snapshot.totalDebitPaise,snapshot.totalCreditPaise]];
+  const url=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='finance-trial-balance-'+state.org+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
  $('refresh').addEventListener('click',load);$('sign-out').addEventListener('click',signOut);
 })();

@@ -1,3 +1,5 @@
+> **Latest continuation:** Migration 12 adds audited source-import operations; receipt reversal races and correction reconciliation are covered. See [current client release status](FINANCE_ONE_V1_CLIENT_RELEASE_STATUS_2026-10-13.md) for current evidence and remaining blockers. Production remains **NO GO**. Older counts and missing-feature statements below are historical.
+
 # Finance & Payroll ONE — client go-live review, 13 October 2026
 
 **Decision: NO GO for client production. Development fixes are not production acceptance.**

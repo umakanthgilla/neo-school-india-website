@@ -1,3 +1,4 @@
+import {isAccrualReversed} from './accrual-reversal-state.mjs';
 /**
  * Trusted, staging-only verifier for existing Neo School India fee payments.
  * The legacy 'Recorded by school' and 'Posted' labels are NOT bank verification.
@@ -57,9 +58,9 @@ export async function verifyLegacyFeeReceipt(db,request){
    WHERE d.organization_id=? AND d.document_type='sales_invoice'
      AND d.source_kind='legacy_invoice' AND d.source_id=? AND d.status='approved'
    LIMIT 1`).bind(organizationId,invoiceRef).first();
- if(!invoice)return null;
+ if(!invoice||await isAccrualReversed(db,organizationId,invoice.id))return null;
  return Object.freeze({
-   organizationId,sourceKind:'fee_receipt',sourceId,sourceEventId,
+   organizationId,sourceKind:'fee_receipt',sourceId,sourceEventId,accrualDocumentId:invoice.id,
    amountPaise:evidence.amount_paise,
    verificationReference:evidence.verification_reference,
    effectiveAt:settled.toISOString()

@@ -12,6 +12,8 @@ FINANCE_ONE_ENVIRONMENT = "staging"
 FINANCE_ONE_READ_API_ENABLED = "false"
 # Requires migration 11 and two separate authorized Finance reviewers.
 FINANCE_ONE_OPERATIONS_ENABLED = "false"
+# Requires migration 12 and validated original sources; never certifies evidence.
+FINANCE_ONE_SOURCE_OPERATIONS_ENABLED = "false"
 # Optional alternate HTTPS portal origin. The same-origin portal is served at /portal.html.
 # Replace this illustrative value with an approved HTTPS hostname before enabling Finance.
 FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"

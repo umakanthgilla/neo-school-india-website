@@ -171,3 +171,16 @@ test('online corrections fail closed if a posting trigger or duplicate-reversal 
   }finally{f.sql.close();}
  }
 });
+
+test('accrual reconciliation inspects correction journals and rejects orphan or missing compensation',async()=>{
+ const {auditFinanceAccrualJournals}=await import('./accrual-journal-audit.mjs');
+ const f=await fixture();try{
+  await f.create();await f.decide();
+  const audit=()=>auditFinanceAccrualJournals({db:f.db,authenticatedAccountId:'Areader',organizationId:'A'});
+  assert.equal((await audit()).ready,true);
+  // Simulate an incomplete historical migration/database restore, never production.
+  f.sql.exec('DROP TRIGGER neo_fin_journal_posted_no_delete; DROP TRIGGER neo_fin_journal_lines_no_delete_posted;');
+  f.sql.exec("DELETE FROM neo_fin_journal_lines WHERE journal_id='REV|request-001'; DELETE FROM neo_fin_journals WHERE id='REV|request-001';");
+  const result=await audit();assert.equal(result.ready,false);assert.equal(result.counts.correction_journal_missing_or_invalid,1);
+ }finally{f.sql.close();}
+});

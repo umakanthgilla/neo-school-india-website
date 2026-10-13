@@ -9,7 +9,7 @@ import worker from './staging-entry.mjs';
 import {createFinancePasswordRecord} from './finance-password.mjs';
 import {postAccrualJournalForDocument} from './accrual-journal.mjs';
 const password='SyntheticQAOnly-Password-2026!';
-const migrations=['foundation','cash_projection','accounting_journals','auth_accounts','receipt_evidence','legacy_payout_integrity','statutory_review','statutory_remittance','session_revocations','issued_document_immutability','corrections'];
+const migrations=['foundation','cash_projection','accounting_journals','auth_accounts','receipt_evidence','legacy_payout_integrity','statutory_review','statutory_remittance','session_revocations','issued_document_immutability','corrections','source_operations'];
 const html=readFileSync(new URL('../../finance-one/portal.html',import.meta.url),'utf8');
 async function fixture(){
  const sqlite=new DatabaseSync(':memory:');sqlite.exec('PRAGMA foreign_keys=ON');
@@ -19,9 +19,12 @@ async function fixture(){
  INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES('QA_CENTER','fin:maker','accountant'),('QA_CENTER','fin:checker','owner');
  INSERT INTO neo_fin_documents(organization_id,id,document_type,status,gross_paise) VALUES('QA_CENTER','QA-INVOICE','sales_invoice','approved',10000);`);
  for(const [code,name,type] of STANDARD_CHART)sqlite.prepare("INSERT INTO neo_fin_accounts VALUES('QA_CENTER',?,?,?,?,1)").run(code,code,name,type);
+ sqlite.prepare("UPDATE neo_fin_accounts SET account_name=? WHERE account_code='1000'").run('=HYPERLINK("https://example.invalid","synthetic")');
  for(const accountId of ['fin:maker','fin:checker']){const p=await createFinancePasswordRecord({accountId,password});sqlite.prepare('INSERT INTO neo_fin_auth_accounts(account_id,salt,password_hash,iterations) VALUES(?,?,?,?)').run(accountId,p.salt,p.passwordHash,p.iterations);}
+ sqlite.exec("CREATE TABLE neo_portal_records(school_id TEXT,kind TEXT,id TEXT,data TEXT,PRIMARY KEY(school_id,kind,id)); INSERT INTO neo_fin_school_ownership(school_id,organization_id,effective_from) VALUES('QA_SCHOOL','QA_CENTER','2026-01-01');");
+ for(const [kind,id,data] of [['students','ST1',{}],['fee_structures','FS1',{}],['invoices','IMPORT1',{student_id:'ST1',fee_structure_id:'FS1',amount_paise:15000,due_date:'2026-10-08'}]])sqlite.prepare("INSERT INTO neo_portal_records VALUES('QA_SCHOOL',?,?,?)").run(kind,id,JSON.stringify(data));
  await postAccrualJournalForDocument(db,'QA_CENTER','QA-INVOICE');
- const env={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:'SyntheticQAOnly-32-character-session-secret',FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})},ASSETS:{fetch:async()=>new Response(html)}};
+ const env={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SOURCE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:'SyntheticQAOnly-32-character-session-secret',FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})},ASSETS:{fetch:async()=>new Response(html)}};
  const server=createServer(async(req,res)=>{try{const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=Buffer.concat(chunks);const response=await worker.fetch(new Request('http://'+req.headers.host+req.url,{method:req.method,headers:req.headers,...(body.length?{body}: {})}),env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){res.writeHead(500);res.end('Fixture failed');console.error(e);}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  return{sqlite,server,url:'http://127.0.0.1:'+server.address().port};
@@ -46,6 +49,19 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   await page.getByRole('button',{name:'Approve accounting reversal'}).click();
   await expect(page.locator('#correction-requests')).toContainText('approved');
   await expect(page.locator('#profit')).toHaveText(/^₹\s?0\.00$/);
+  await page.getByRole('button',{name:'Import source records',exact:true}).click();
+  await page.getByLabel('Original school ID').fill('QA_SCHOOL');
+  await page.getByLabel('Original invoice record ID').fill('IMPORT1');
+  await page.getByRole('button',{name:'Validate and import source'}).click();
+  await expect(page.locator('#source-message')).toContainText('Import validated');
+  await expect(page.locator('#source-history')).toContainText('succeeded');
+  await expect(page.locator('#profit')).toHaveText(/^₹\s?150\.00$/);
+  const downloadPromise=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export trial balance CSV'}).click();
+  const download=await downloadPromise;const csv=readFileSync(await download.path(),'utf8');
+  assert.match(csv,/All-time posted journals; INR paise/);assert.match(csv,/"QA_CENTER"/);
+  assert.ok(csv.includes('"\'=HYPERLINK(""https://example.invalid"",""synthetic"")"'),'CSV text formula must be neutralized');
+  assert.match(csv,/"TOTAL","","35000","35000"/);
   for(const width of [390,768,1440]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,name+' layout overflow at '+width);
@@ -53,7 +69,10 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   }
   assert.equal(f.sqlite.prepare('SELECT count(*) n FROM neo_fin_cash_events').get().n,0);
   assert.equal(f.sqlite.prepare('SELECT count(*) n FROM neo_fin_correction_decisions').get().n,1);
+  await page.getByRole('button',{name:'Sign out',exact:true}).click();
+  await expect(page.locator('#source-history')).toBeEmpty();await expect(page.locator('#trial-rows')).toBeEmpty();
+  await expect(page.locator('#trial-export')).toBeDisabled();
   assert.deepEqual(errors,[]);
-  console.log(name+': PASS — login, independent correction approval, logout privacy, zero cash, 390/768/1440px');
+  console.log(name+': PASS — login, independent correction approval, source import, audited identity, CSV totals, logout privacy, zero cash, 390/768/1440px');
  }finally{if(browser)await browser.close();await new Promise(resolve=>f.server.close(resolve));f.sqlite.close();}
 }

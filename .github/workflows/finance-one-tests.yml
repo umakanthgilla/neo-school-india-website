@@ -129,7 +129,7 @@ jobs:
           cp docs/finance-one-staging-operations.md "$BUNDLE/docs/"
           cp wrangler.finance-one.staging.toml.example "$BUNDLE/"
           cp .github/workflows/finance-one-tests.yml "$BUNDLE/.github/workflows/"
-          test "$(find "$BUNDLE/migrations" -type f -name '*.sql' | wc -l | tr -d ' ')" -eq 11
+          test "$(find "$BUNDLE/migrations" -type f -name '*.sql' | wc -l | tr -d ' ')" -eq 12
           for required in FINANCE_ONE_V1_MASTER_HANDOFF.md FINANCE_ONE_V1_ACCEPTANCE_MATRIX.md FINANCE_ONE_V1_NEXT_CHAT_PROMPT.txt; do
             test -s "$BUNDLE/docs/$required"
           done
@@ -141,7 +141,7 @@ jobs:
           PINNED_COMMIT_SHA=$HANDOVER_COMMIT_SHA
           GITHUB_CI=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           POSTING_POLICY=Verified-source-only Cash Ledger; immutable posted accounting
-          MIGRATIONS=11 (staging-only)
+          MIGRATIONS=12 (staging-only)
           BANK_STATEMENT_IMPORT_MATCHING=Deferred to Version 2
           PRODUCTION_MAIN_AND_LIVE_WORKER=Untouched; deployment prohibited until approval
           SOURCE_REPOSITORY_REQUIRED=Full existing school code is in the pinned GitHub repo; this ZIP contains the additive Finance ONE overlay

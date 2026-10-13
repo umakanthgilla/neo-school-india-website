@@ -1,3 +1,4 @@
+import {auditCorrectionJournals} from './correction-journal-audit.mjs';
 /**
  * STAGING-ONLY, READ-ONLY Finance approved accrual document ↔ posted journal audit.
  * A balanced total is insufficient: the accounts, source document and amounts
@@ -75,6 +76,11 @@ export async function auditFinanceAccrualJournals({db,authenticatedAccountId,org
  }
  for(const journal of journals.results)
   add(result,'orphan_accrual_journal',{documentId:journal.source_id,journalId:journal.journal_id});
+ const corrections=await auditCorrectionJournals({db,authenticatedAccountId,organizationId});
+ // Count every issue even though detailed samples are bounded.
+ for(const [code,count] of Object.entries(corrections.counts))result.counts[code]=(result.counts[code]||0)+count;
+ result.issueCount+=corrections.issueCount;
+ for(const finding of corrections.findings)if(result.findings.length<LIMIT)result.findings.push(Object.freeze(finding));
  return Object.freeze({
   organizationId,ready:result.issueCount===0,
   documentCount:result.documentCount,orphanJournalCount:result.orphanJournalCount,

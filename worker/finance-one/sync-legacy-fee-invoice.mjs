@@ -1,3 +1,4 @@
+import {isAccrualReversed} from './accrual-reversal-state.mjs';
 /**
  * Finance ONE staging: import an EXISTING, source-validated Neo School India
  * fee invoice into the owning independent business accounting books.
@@ -58,6 +59,7 @@ export async function syncLegacyFeeInvoice({
   created=r.meta.changes===1;
  }
  await confirm();
+ if(await isAccrualReversed(db,organizationId,documentId))throw Error('Original invoice accrual reversed; approved source correction required');
  // Invoice creates accrual accounting only; no money movement until a separately
  // verified matching fee receipt is settled.
  const journal=await postAccrualJournalForDocument(db,organizationId,documentId);
