@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pinned Finance dependencies
+        run: npm ci
       - name: Test organization access
         run: node --experimental-sqlite --test worker/finance-one/*.test.mjs
 
@@ -42,6 +44,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pinned Finance dependencies
+        run: npm ci
       - name: Generate an inert staging-only Wrangler dry-run config
         shell: bash
         run: |
@@ -78,6 +82,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Finance dependencies
+        run: npm ci
       - name: Verify the EXACT source snapshot being handed over (no deployment)
         run: |
           test "$(git rev-parse HEAD)" = "$HANDOVER_COMMIT_SHA"
@@ -88,6 +97,7 @@ jobs:
           set -euo pipefail
           BUNDLE="$RUNNER_TEMP/finance-one-v1-handover"
           mkdir -p "$BUNDLE/worker" "$BUNDLE/finance-one" "$BUNDLE/migrations" "$BUNDLE/docs" "$BUNDLE/.github/workflows"
+          cp package.json package-lock.json "$BUNDLE/"
           cp -R worker/finance-one "$BUNDLE/worker/"
           cp finance-one/portal.html "$BUNDLE/finance-one/portal.html"
           cp migrations/finance_payroll_one_*.sql "$BUNDLE/migrations/"
