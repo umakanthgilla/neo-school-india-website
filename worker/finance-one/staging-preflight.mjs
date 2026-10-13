@@ -1,3 +1,4 @@
+import {CORRECTION_SCHEMA} from './corrections-schema.mjs';
 /**
  * Read-only staging deployment checklist. Does not alter DB or flip feature flags.
  * Require an explicit staging environment to prevent accidental production rollout.
@@ -40,18 +41,18 @@ export async function financeOneStagingPreflight({db,env,phase='active'}) {
  if(!db?.prepare)return Object.freeze({ready:false,blockers:[...blockers,'D1 database unavailable'],schema:{tables:0,views:0,triggers:0}});
  let rows;
  try {
-  const result=await db.prepare("SELECT type,name FROM sqlite_master WHERE type IN ('table','view','trigger') AND name LIKE 'neo_fin_%'").all();
+  const result=await db.prepare("SELECT type,name FROM sqlite_master WHERE type IN ('table','view','trigger','index') AND name LIKE 'neo_fin_%'").all();
   rows=result?.results;
   if(!Array.isArray(rows))throw new Error('No schema data');
  }catch{return Object.freeze({ready:false,blockers:[...blockers,'Finance schema inspection failed'],schema:{tables:0,views:0,triggers:0}});}
- const names={table:new Set(),view:new Set(),trigger:new Set()};
+ const names={table:new Set(),view:new Set(),trigger:new Set(),index:new Set()};
  for(const row of rows)if(names[row.type])names[row.type].add(row.name);
  for(const name of REQUIRED_TABLES)if(!names.table.has(name))blockers.push('Missing table '+name);
  for(const name of REQUIRED_VIEWS)if(!names.view.has(name))blockers.push('Missing view '+name);
  for(const name of REQUIRED_TRIGGERS)if(!names.trigger.has(name))blockers.push('Missing trigger '+name);
  if(env?.FINANCE_ONE_OPERATIONS_ENABLED==='true'){
-  for(const name of ['neo_fin_correction_requests','neo_fin_correction_decisions'])if(!names.table.has(name))blockers.push('Missing table '+name);
-  for(const name of ['neo_fin_correction_request_validate','neo_fin_correction_decision_validate','neo_fin_correction_post','neo_fin_correction_journal_authorized','neo_fin_correction_journal_exact','neo_fin_correction_request_no_update','neo_fin_correction_request_no_delete','neo_fin_correction_decision_no_update','neo_fin_correction_decision_no_delete'])if(!names.trigger.has(name))blockers.push('Missing trigger '+name);
+  for(const [type,required] of Object.entries(CORRECTION_SCHEMA))for(const name of required)
+   if(!names[type].has(name))blockers.push('Missing '+type+' '+name);
  }
  return Object.freeze({ready:blockers.length===0,blockers,schema:{tables:names.table.size,views:names.view.size,triggers:names.trigger.size}});
 }

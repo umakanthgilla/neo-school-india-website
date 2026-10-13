@@ -13,7 +13,7 @@ This dated review supersedes older statements that staging does not exist. The s
 - Approval atomically writes the decision and an exact compensating journal. Failure rolls back both. Original journal/document remains immutable. Duplicate retries cannot post twice; a second approved reversal of the same original is prevented by a unique database index. SQL guards also reject forged correction journals.
 - Added staging operational forms for eligible invoice/bill journal selection, correction request, independent approval/rejection and audit history. Browser tokens remain memory-only; sign-out clears the correction queue and delayed responses cannot restore it.
 - Correction scope is deliberately **full INR sales-invoice or purchase-bill accrual reversal only**. It is an accounting adjustment, not a cash refund, statutory credit-note certificate, original-school invoice cancellation, partial correction, payroll reversal or payment cancellation. Those require their own validated source workflows.
-- Added `FINANCE_ONE_OPERATIONS_ENABLED=false` by default. Enabling requires migration 11; preflight checks its tables/security triggers. Existing ten-migration read-only staging remains usable with operations OFF.
+- Added `FINANCE_ONE_OPERATIONS_ENABLED=false` by default. Enabling requires migration 11; preflight and every online operation check its tables, security triggers and unique reversal index. Missing posting machinery returns 503 before accepting any decision. Existing ten-migration read-only staging remains usable with operations OFF.
 - Closed a payroll safety gap: zero/omitted statutory deductions no longer imply exemption. Every payroll requires an explicit approved applicability/amount review matching the original-source fingerprint, including nil amounts. Both accrual and payroll settlement enforce this. Older unreviewed payroll snapshots now fail reconciliation and require controlled remediation; no silent rewriting of historical postings.
 - CI now reacts to package/lock changes; packaging includes migration 11. Added Chromium/WebKit tests against a disposable local Worker/SQLite fixture at mobile, tablet and desktop sizes. This is not real Cloudflare D1 or a cloud UAT substitute.
 
@@ -21,7 +21,7 @@ This dated review supersedes older statements that staging does not exist. The s
 
 | Area | Evidence / status | What remains before client use |
 |---|---|---|
-| Automated Node/SQLite tests | 337/337 local tests passed, Node 24; CI uses Node 22 | Node 22 CI also passed on candidate `a03107b`; see validation record |
+| Automated Node/SQLite tests | 338/338 local tests passed, Node 24; CI uses Node 22 | Node 22 CI also passed on candidate `a03107b`; see validation record |
 | Worker packaging | Wrangler 4.129.1 `deploy --dry-run` passed; no deployment | Package/deployed version identity on isolated staging |
 | Receipts, vouchers, ledger, payroll, permissions, accounting, reports | Existing synthetic-source tests passed; signed HTTP correction flow added | Real isolated staging source journeys and user acceptance |
 | Correction approvals | Implemented/tested for full invoice/bill accrual reversals | Cloud D1 trigger validation, real separate reviewer identities; source cancellation/refund/payroll correction integration |

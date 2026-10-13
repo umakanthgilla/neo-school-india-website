@@ -1,4 +1,5 @@
 /** Staging operations. Reviewed full accrual reversal; never a cash refund. */
+import {correctionSchemaReady} from './corrections-schema.mjs';
 import {FinanceAccessError,resolveFinanceOrganization} from './organization-access.mjs';
 const route=/^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(correction-journals|corrections)(?:\/([A-Za-z0-9_-]{8,80})\/decision)?$/;
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -25,6 +26,8 @@ export async function handleCorrectionsApi({request,db,authenticatedAccountId,en
   const write=request.method==='POST';
   if(!['GET','POST'].includes(request.method)||resource==='correction-journals'&&(write||id)||id&&!write)return reply({error:'Method not allowed'},405);
   const context=await resolveFinanceOrganization(db,authenticatedAccountId,org,'finance',write?'write':'read');
+  try{if(!await correctionSchemaReady(db))return reply({error:'Correction schema incomplete; operations unavailable'},503);}
+  catch{return reply({error:'Correction schema checks unavailable'},503);}
   const reviewer=await db.prepare("SELECT account_id FROM neo_fin_memberships WHERE organization_id=? AND account_id=? AND active=1 AND role IN ('owner','finance_admin') LIMIT 1").bind(org,authenticatedAccountId).first();
   if(!write){
    if(resource==='correction-journals'){

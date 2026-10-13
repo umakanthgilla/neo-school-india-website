@@ -161,3 +161,13 @@ test('signed Worker HTTP boundary enforces origin, environment, operation flag a
   assert.equal(f.sql.prepare("SELECT status FROM neo_fin_journals WHERE organization_id='A' AND id='REV|http-request-001'").get().status,'posted');
  }finally{f.sql.close();}
 });
+
+test('online corrections fail closed if a posting trigger or duplicate-reversal index is missing',async()=>{
+ for(const object of ['TRIGGER neo_fin_correction_post','INDEX neo_fin_one_approved_reversal']){
+  const f=await fixture();try{
+   await f.create();f.sql.exec('DROP '+object);
+   assert.equal((await f.decide()).status,503);
+   assert.equal(f.sql.prepare('SELECT count(*) n FROM neo_fin_correction_decisions').get().n,0);
+  }finally{f.sql.close();}
+ }
+});
