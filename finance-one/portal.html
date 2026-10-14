@@ -252,7 +252,11 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    $('corrections-message').textContent=select.children.length?'Review the original source before requesting a reversal.':'No eligible unreversed invoice or bill journals in the latest 100.';
   }catch(e){if(isCurrent(session)&&version===correctionLoadVersion)$('corrections-message').textContent=e.message;}
  }
- $('corrections-open').addEventListener('click',loadCorrections);
+ function revealOperationPanel(id){
+  const panel=$(id);panel.hidden=false;panel.tabIndex=-1;
+  panel.focus?.({preventScroll:true});panel.scrollIntoView?.({block:'start',behavior:'instant'});
+ }
+ $('corrections-open').addEventListener('click',()=>{revealOperationPanel('corrections-panel');return loadCorrections();});
  $('correction-form').addEventListener('submit',async event=>{
   event.preventDefault();const session=currentSession();if(!session.token)return;
   const journalId=$('correction-journal').value,reason=$('correction-reason').value.trim();
@@ -281,7 +285,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
     for(const value of [entry.action+' — '+(entry.status||'Completion unconfirmed — reconcile before retry'),entry.source_json,'Requested by '+entry.requested_by+' · '+entry.created_at,'Request '+entry.id+' · Attempt '+(entry.attempt_id||'not started')]){const p=document.createElement('p');p.textContent=value;row.appendChild(p);}list.appendChild(row);}
   }catch(e){if(isCurrent(session)&&version===sourceLoadVersion)$('source-message').textContent=e.message;}
  }
- $('source-open').addEventListener('click',loadSourceHistory);
+ $('source-open').addEventListener('click',()=>{revealOperationPanel('source-panel');return loadSourceHistory();});
  $('source-form').addEventListener('submit',async event=>{
   event.preventDefault();const session=currentSession();if(!session.token)return;
   const action=$('source-action').value,id=$('source-record').value.trim(),school=$('source-school').value.trim(),evidence=$('source-evidence').value.trim();
