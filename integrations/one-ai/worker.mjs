@@ -14,6 +14,7 @@ export default {async fetch(request,env) {
   if(!schools||!Object.hasOwn(schools,claims.tenantId)||typeof schools[claims.tenantId]!=='string')return reply({error:'Not found'},404);
   const school=schools[claims.tenantId],leadId=match[1];let row;
   if(leadId.startsWith('growth:')) {
+   if(env.ENABLE_GROWTH_CONTEXT!=='true')return reply({error:'Not found'},404);
    row=await env.NEO_DB.prepare(`SELECT l.status FROM leads l JOIN neo_growth_lead_meta m ON m.lead_id=l.lead_id
     JOIN neo_schools s ON s.school_id=m.branch_id AND s.active=1
     WHERE l.lead_id=? AND m.branch_id=? AND l.enquiry_type='Preschool Admission'`).bind(leadId.slice(7),school).first();

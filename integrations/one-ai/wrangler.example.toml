@@ -5,6 +5,7 @@ compatibility_date = "2026-10-13"
 workers_dev = false
 preview_urls = false
 [vars]
+ENABLE_GROWTH_CONTEXT = "false"
 ENGINE_AUDIENCE = "one-ai:neo-school-india:staging"
 TENANT_SCHOOLS_JSON = '{"neo-test":"TEST-SCHOOL"}'
 [[d1_databases]]

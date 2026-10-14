@@ -14,7 +14,7 @@ test('real SQLite admissions queries enforce branch ownership and return no pare
  INSERT INTO neo_growth_lead_meta VALUES ('L1','A'),('F1','A');
  INSERT INTO neo_portal_records VALUES ('A','enquiries','E1','{"status":"Interested","child_name":"PRIVATE","mobile":"9999999999"}');`);
  let queries=0;
- const env={CRM_TOKEN_SECRET:'test-crm-secret-'.repeat(3),ENGINE_AUDIENCE:'one-ai:neo:staging',TENANT_SCHOOLS_JSON:'{"tenant-a":"A","tenant-b":"B"}',
+ const env={ENABLE_GROWTH_CONTEXT:'true',CRM_TOKEN_SECRET:'test-crm-secret-'.repeat(3),ENGINE_AUDIENCE:'one-ai:neo:staging',TENANT_SCHOOLS_JSON:'{"tenant-a":"A","tenant-b":"B"}',
  NEO_DB:{prepare(sql){queries++;assert.ok(/^SELECT/.test(sql));let args;return {bind(...a){args=a;return this;},async first(){return db.prepare(sql).get(...args)||null;}};}}};
  async function call(leadId,tenantId='tenant-a',patch={},pathLead=leadId) {
   const now=Math.floor(Date.now()/1000);const token=await signClaims({iss:env.ENGINE_AUDIENCE,aud:'one-ai-crm',product:'neo-school-india',tenantId,sub:'staff',version:1,jti:crypto.randomUUID(),leadId,iat:now,exp:now+60,...patch},env.CRM_TOKEN_SECRET);
@@ -28,5 +28,6 @@ test('real SQLite admissions queries enforce branch ownership and return no pare
  assert.equal((await call('growth:L1','unmapped')).status,404);
  const count=queries;assert.equal((await call('growth:L1','tenant-a',{product:'usha-one'})).status,401);
  assert.equal((await call('growth:L1','tenant-a',{},'growth:OTHER')).status,401);assert.equal(queries,count);
+ env.ENABLE_GROWTH_CONTEXT='false';const beforeDisabled=queries;assert.equal((await call('growth:L1')).status,404);assert.equal(queries,beforeDisabled);env.ENABLE_GROWTH_CONTEXT='true';
  db.exec("UPDATE neo_schools SET active=0 WHERE school_id='A'");assert.equal((await call('growth:L1')).status,404);
 });
