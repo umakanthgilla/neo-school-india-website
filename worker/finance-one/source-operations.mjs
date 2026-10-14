@@ -31,6 +31,8 @@ export async function handleSourceOperations({request,db,authenticatedAccountId,
    (type='table' AND name IN ('neo_fin_source_requests','neo_fin_source_attempts','neo_fin_source_outcomes')) OR
    (type='trigger' AND name IN ('neo_fin_source_request_authorized','neo_fin_source_request_no_update','neo_fin_source_request_no_delete','neo_fin_source_attempt_no_update','neo_fin_source_attempt_no_delete','neo_fin_source_outcome_no_update','neo_fin_source_outcome_no_delete'))`).first();
   if(schema?.n!==10)return reply({error:'Source audit schema incomplete; imports disabled'},503);
+  const sourceTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_portal_records'").first();
+  if(!sourceTable)return reply({error:'School source data is unavailable in this Finance database; imports disabled. Configure an isolated source integration before enabling imports.'},503);
   const input=await readOperationBody(request,['requestId','action','source']);
   if(typeof input.requestId!=='string'||!/^[A-Za-z0-9_-]{8,80}$/.test(input.requestId)||typeof input.action!=='string'||!Object.hasOwn(actions,input.action))throw new FinanceAccessError('Invalid request ID or action',400);
   const source=input.source,keys=fields[input.action];
