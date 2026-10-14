@@ -1,0 +1,16 @@
+# Copy to a local, ignored config and fill verified STAGING identifiers only.
+name = "neo-one-ai-context-staging"
+main = "worker.mjs"
+compatibility_date = "2026-10-13"
+workers_dev = false
+preview_urls = false
+[vars]
+ENABLE_GROWTH_CONTEXT = "false"
+ENGINE_AUDIENCE = "one-ai:neo-school-india:staging"
+TENANT_SCHOOLS_JSON = '{"neo-test":"TEST-SCHOOL"}'
+[[d1_databases]]
+binding = "NEO_DB"
+database_name = "REPLACE_NEO_STAGING_CLONE"
+database_id = "REPLACE_NEO_STAGING_CLONE_ID"
+# Secret: CRM_TOKEN_SECRET; distinct from USHA and login credentials.
+# No migration directory: never apply ONE AI migrations to this database.

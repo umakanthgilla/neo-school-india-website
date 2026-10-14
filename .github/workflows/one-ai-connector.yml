@@ -1,0 +1,19 @@
+name: ONE AI admissions connector checks
+on:
+  pull_request:
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
+  push:
+    branches: ['feature/one-ai-admissions-connector']
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --check integrations/one-ai/worker.mjs
+      - run: node --test integrations/one-ai/worker.test.mjs
