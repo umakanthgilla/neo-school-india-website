@@ -52,6 +52,16 @@ async function fixture(){
  return{sql,db,env,call,read,invoice,tokens};
 }
 const count=(f,t)=>f.sql.prepare('SELECT COUNT(*) n FROM '+t).get().n;
+test('missing school source table blocks imports before audit attempts or financial writes',async()=>{
+ const f=await fixture();try{
+  f.sql.exec('DROP TABLE neo_portal_records');
+  const response=await f.invoice();
+  assert.equal(response.status,503);
+  assert.match((await response.json()).error,/School source data is unavailable/);
+  for(const table of ['neo_fin_source_requests','neo_fin_source_attempts','neo_fin_source_outcomes','neo_fin_documents','neo_fin_cash_events','neo_fin_journals'])assert.equal(count(f,table),0);
+  assert.equal((await f.read()).status,200,'existing audit history remains readable');
+ }finally{f.sql.close();}
+});
 test('signed invoice → verified receipt → ledger, accounting and reports; retries do not duplicate source or cash',async()=>{
  const f=await fixture();try{
   const before=count(f,'neo_portal_records');assert.equal((await f.invoice()).status,200);
