@@ -32,10 +32,15 @@ COMPLETED IN SOURCE:
 - Maker/checker actual cloud read/isolation/logout suites passed. Reader login hit
   a Worker resource-limit 503; full reader/HO/B suites remain incomplete.
 
-NOT YET VERIFIED DEPLOYED:
-Optional Access login, print/report updates and separate-source adapter. Last
-reported deployed Worker was 6c2bb91f-6d1e-4bc6-b419-73367e0d3090.
-Operation flags remain OFF. No cloud financial postings were accepted.
+LAST REPORTED DEPLOYMENT:
+Source bda278e7e5272bacd37ef53b7e92d60cef581c5a deployed as Worker
+3586576f-d9c6-493e-9c0d-323a6f9ca4fb, with operation flags OFF. Source adapter
+code is included but separate-source binding remains OFF/unconfigured.
+Access login returned 401 with both normal and explicit assertion requests;
+Finance Access identity could not be verified. Runtime diagnosis is incomplete.
+Later ACCESS_* diagnostic changes need their own deployment verification.
+Do not rerun the old baseline rollout helper after targeted fixes: it pins bda.
+No cloud financial postings were accepted.
 Do not blindly rerun migrations or the existing Finance QA identity seed.
 
 CURRENT GATES:

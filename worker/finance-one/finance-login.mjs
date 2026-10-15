@@ -2,7 +2,7 @@
 import {verifyFinancePassword} from './finance-password.mjs';
 import {issueFinanceOneToken} from './finance-session.mjs';
 import {checkFinanceLoginClientLimit,checkFinanceLoginAccountLimit} from './login-rate-limit.mjs';
-import {accessConfiguration,verifyAccessIdentity} from './access-identity.mjs';
+import {accessConfiguration,verifyAccessIdentity,accessFailure} from './access-identity.mjs';
 import {activeFinanceCredential} from './finance-password.mjs';
 const route='/api/finance-one/v1/session';
 const json=(body,status,extra={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff',...extra}});
@@ -30,7 +30,7 @@ export async function handleFinanceLogin({request,env}){
  if(access){
   let config;try{config=accessConfiguration(env);}catch{return json({error:'Finance Access login unavailable'},503);}
   try{accessIdentity=await verifyAccessIdentity(request,config);accountId=accessIdentity.accountId;}
-  catch{return json({error:'Finance Access identity could not be verified'},401);}
+  catch(error){const failure=accessFailure(error);return json({error:failure.status===503?'Finance Access verification temporarily unavailable':'Finance Access identity could not be verified',code:failure.code},failure.status);}
  }
  if(typeof accountId!=='string'||!accountId.startsWith('fin:')||accountId.length>128||(!access&&(typeof password!=='string'||password.length>256))||
   typeof organizationId!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(organizationId))return json({error:'Invalid credentials'},401);

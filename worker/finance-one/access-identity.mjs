@@ -1,6 +1,14 @@
 /** Optional Access authentication. Access admission never grants Finance membership. */
 const enc=new TextEncoder();
 const cache=new Map();
+// Preserve the native global fetch receiver on Workers; tests may inject a fetcher.
+const fetchAccessKeys=(url,options)=>globalThis.fetch(url,options);
+const dependencyCodes=new Set(['ACCESS_KEYS_FETCH','ACCESS_KEYS_RESPONSE','ACCESS_KEY_IMPORT','ACCESS_VERIFY_RUNTIME']);
+export function accessFailure(error){
+ const code=error?.accessCode;
+ const known=new Set(['ACCESS_ASSERTION_MISSING','ACCESS_ASSERTION_ENCODING','ACCESS_ASSERTION_HEADER','ACCESS_ASSERTION_ISSUER','ACCESS_ASSERTION_AUDIENCE','ACCESS_ASSERTION_TIME','ACCESS_ASSERTION_IDENTITY','ACCESS_KEYS_FETCH','ACCESS_KEYS_RESPONSE','ACCESS_KEY_SELECTION','ACCESS_KEY_IMPORT','ACCESS_SIGNATURE_INVALID','ACCESS_VERIFY_RUNTIME','ACCESS_IDENTITY_UNLINKED']);
+ return {code:known.has(code)?code:'ACCESS_VERIFICATION_UNAVAILABLE',status:known.has(code)?(dependencyCodes.has(code)?503:401):503};
+}
 function decode(part){
  if(!/^[A-Za-z0-9_-]+$/.test(part))throw Error('Invalid assertion');
  const bytes=Uint8Array.from(atob(part.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-part.length%4)%4)),c=>c.charCodeAt(0));
@@ -24,22 +32,33 @@ export function accessConfiguration(env){
  }
  return {issuer,audience,identities};
 }
-export async function verifyAccessIdentity(request,config,{fetcher=fetch,now=Date.now()}={}){
+export async function verifyAccessIdentity(request,config,{fetcher=fetchAccessKeys,now=Date.now()}={}){
+ let stage='ACCESS_ASSERTION_MISSING';
+ try{
  const token=request.headers.get('Cf-Access-Jwt-Assertion');
  if(!token||token.length>16384)throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_ENCODING';
  const parts=token.split('.');if(parts.length!==3)throw Error('Invalid assertion');
  const header=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(decode(parts[0])));
  const claims=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(decode(parts[1])));
+ stage='ACCESS_ASSERTION_HEADER';
  if(header.alg!=='RS256'||typeof header.kid!=='string'||header.kid.length>256||header.crit!==undefined||header.jku!==undefined||header.jwk!==undefined)throw Error('Invalid assertion');
  const seconds=Math.floor(now/1000);
- if(claims.iss!==config.issuer||claims.type!=='app'||!Array.isArray(claims.aud)||!claims.aud.includes(config.audience)||
-  !Number.isSafeInteger(claims.exp)||claims.exp<seconds+60||!Number.isSafeInteger(claims.iat)||claims.iat>seconds||claims.iat>=claims.exp||
-  (claims.nbf!==undefined&&(!Number.isSafeInteger(claims.nbf)||claims.nbf>seconds))||
-  typeof claims.sub!=='string'||!claims.sub||claims.sub.length>128)throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_ISSUER';
+ if(claims.iss!==config.issuer)throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_AUDIENCE';
+ if(!Array.isArray(claims.aud)||!claims.aud.includes(config.audience))throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_TIME';
+ if(!Number.isSafeInteger(claims.exp)||claims.exp<seconds+60||!Number.isSafeInteger(claims.iat)||claims.iat>seconds||claims.iat>=claims.exp||
+  (claims.nbf!==undefined&&(!Number.isSafeInteger(claims.nbf)||claims.nbf>seconds)))throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_IDENTITY';
+ if(claims.type!=='app'||typeof claims.sub!=='string'||!claims.sub||claims.sub.length>128)throw Error('Invalid assertion');
  // The endpoint is derived only from operator configuration, never token headers.
  let entry=cache.get(config.issuer);
  if(!entry||entry.until<=now||entry.fetcher!==fetcher){
+  stage='ACCESS_KEYS_FETCH';
   const response=await fetcher(config.issuer+'/cdn-cgi/access/certs',{redirect:'error',signal:AbortSignal.timeout(5000)});
+  stage='ACCESS_KEYS_RESPONSE';
   if(!response.ok||!response.body)throw Error('Access keys unavailable');
   const reader=response.body.getReader();let chunks=[],size=0;
   try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536){await reader.cancel();throw Error('Access keys too large');}chunks.push(value);}}
@@ -50,11 +69,23 @@ export async function verifyAccessIdentity(request,config,{fetcher=fetch,now=Dat
   entry={keys:result.keys,until:now+300000,fetcher};
   cache.clear();cache.set(config.issuer,entry);
  }
+ stage='ACCESS_KEY_SELECTION';
  const matches=entry.keys.filter(k=>k.kid===header.kid&&k.kty==='RSA'&&(!k.alg||k.alg==='RS256')&&(!k.use||k.use==='sig'));
  if(matches.length!==1)throw Error('Access key unavailable');
+ stage='ACCESS_KEY_IMPORT';
  const key=await crypto.subtle.importKey('jwk',matches[0],{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
- if(!await crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,decode(parts[2]),enc.encode(parts[0]+'.'+parts[1])))throw Error('Invalid assertion');
+ stage='ACCESS_ASSERTION_ENCODING';
+ const signature=decode(parts[2]);
+ stage='ACCESS_VERIFY_RUNTIME';
+ const verified=await crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,signature,enc.encode(parts[0]+'.'+parts[1]));
+ stage='ACCESS_SIGNATURE_INVALID';
+ if(!verified)throw Error('Invalid assertion');
+ stage='ACCESS_IDENTITY_UNLINKED';
  const identity=config.identities.find(row=>row.subject===claims.sub);
  if(!identity)throw Error('Unlinked Access identity');
  return {accountId:identity.accountId,expiresAt:claims.exp*1000};
+ }catch{
+  // Fixed stage only. Never return token, claims, key material or native error text.
+  const error=Error('Finance Access verification failed');error.accessCode=stage;throw error;
+ }
 }

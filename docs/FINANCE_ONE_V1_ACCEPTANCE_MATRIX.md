@@ -6,7 +6,7 @@ different states. This table supersedes the historical baseline below.
 | Area | Implemented / synthetic evidence | Actual cloud acceptance / remaining gate |
 |---|---|---|
 | Independent Center/HO books | Tenant permissions, immutable postings and source-only cash rules tested | Maker/checker own reads and cross-Center/HO denial passed; reader/HO full suites incomplete |
-| Authentication | Dedicated Finance sessions, rate limits, logout revocation; optional explicitly linked Access identity login added and tested | Password login hit Worker resource limits; new Access login not deployed or cloud verified |
+| Authentication | Dedicated Finance sessions, rate limits, logout revocation; optional explicitly linked Access identity login added and tested | Password login hit Worker resource limits; Access login deployed as 3586576f but returns 401; runtime diagnosis and cloud acceptance incomplete |
 | Schema | Migrations 1–12, fail-closed audit/correction guards tested | Migration 11/12 objects checked on staging and restore-check; quick_check passed |
 | Receipts / vouchers / ledger | Existing-source verifiers, settlement evidence prerequisites, no duplicate cash or school Ledger writes tested | Actual financial cloud journeys and evidence intake incomplete; operations remain OFF |
 | School source integration | Separate read-only school binding supports invoices, receipts, payroll and all three payout types; two physical SQLite databases tested | New isolated source D1/binding and exact deployed code need verification; no live school binding authorized |

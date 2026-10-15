@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
-import {accessConfiguration,verifyAccessIdentity} from './access-identity.mjs';
+import {accessConfiguration,verifyAccessIdentity,accessFailure} from './access-identity.mjs';
 import {handleFinanceLogin} from './finance-login.mjs';
 import {readFinanceOneSession} from './finance-session.mjs';
 const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
@@ -17,6 +17,25 @@ async function assertion(claims={},header={}){
 }
 const request=token=>new Request('https://finance.test/api/finance-one/v1/session/access',{method:'POST',headers:{'content-type':'application/json',...(token?{'Cf-Access-Jwt-Assertion':token}:{})},body:JSON.stringify({organizationId:'CENTER_A',accountId:'fin:attacker'})});
 const fetcher=async url=>{assert.equal(url,issuer+'/cdn-cgi/access/certs');return Response.json({keys:[jwk]});};
+test('default Access key fetch retains the native global receiver',async()=>{
+ const original=globalThis.fetch,otherIssuer='https://receiver-test.cloudflareaccess.com';let called=false;
+ globalThis.fetch=async function(url){assert.equal(this,globalThis);assert.equal(url,otherIssuer+'/cdn-cgi/access/certs');called=true;return Response.json({keys:[jwk]});};
+ try{assert.equal((await verifyAccessIdentity(request(await assertion({iss:otherIssuer})),{...config,issuer:otherIssuer},{now})).accountId,'fin:alice');assert.equal(called,true);}
+ finally{globalThis.fetch=original;}
+});
+test('Access failure diagnostics identify the failed stage without exposing tokens, claims or native errors',async()=>{
+ for(const [claims,code] of [[{iss:'https://other.cloudflareaccess.com'},'ACCESS_ASSERTION_ISSUER'],[{aud:['b'.repeat(64)]},'ACCESS_ASSERTION_AUDIENCE'],[{exp:1},'ACCESS_ASSERTION_TIME'],[{type:'service'},'ACCESS_ASSERTION_IDENTITY'],[{sub:'unlinked'},'ACCESS_IDENTITY_UNLINKED']]){
+  const token=await assertion(claims);
+  await assert.rejects(verifyAccessIdentity(request(token),config,{fetcher,now}),error=>{
+   assert.deepEqual(accessFailure(error),{code,status:401});assert.ok(!JSON.stringify(accessFailure(error)).includes(token));return true;
+  });
+ }
+ await assert.rejects(verifyAccessIdentity(request(await assertion()),config,{fetcher:async()=>{throw Error('PRIVATE-NATIVE-DETAILS');},now}),error=>{
+  assert.deepEqual(accessFailure(error),{code:'ACCESS_KEYS_FETCH',status:503});assert.ok(!error.message.includes('PRIVATE-NATIVE-DETAILS'));return true;
+ });
+ assert.deepEqual(accessFailure(Error('PRIVATE-DETAILS')),{code:'ACCESS_VERIFICATION_UNAVAILABLE',status:503});
+ assert.deepEqual(accessFailure({accessCode:'PRIVATE-DETAILS'}),{code:'ACCESS_VERIFICATION_UNAVAILABLE',status:503});
+});
 test('Access validates real RSA signature and explicit subject mapping; ignores email header',async()=>{
  const token=await assertion();const r=request(token);r.headers.set('Cf-Access-Authenticated-User-Email','untrusted@example.com');
  assert.equal((await verifyAccessIdentity(r,config,{fetcher,now})).accountId,'fin:alice');
@@ -63,6 +82,13 @@ test('Access login requires existing active Finance credentials and selected org
   const result=await response.json();assert.equal(result.organizationId,'CENTER_A');assert.ok(result.expiresInSeconds<=600);
   const session=await readFinanceOneSession(new Request('https://finance.test',{headers:{Authorization:'Bearer '+result.token}}),settings);
   assert.equal(session.accountId,'fin:alice');assert.equal(session.credentialVersion,3);
+  const denied=await handleFinanceLogin({request:request(await assertion({aud:['b'.repeat(64)]})),env:settings});
+  assert.equal(denied.status,401);assert.deepEqual(await denied.json(),{error:'Finance Access identity could not be verified',code:'ACCESS_ASSERTION_AUDIENCE'});
+  const unavailableIssuer='https://unavailable-keys.cloudflareaccess.com';
+  globalThis.fetch=async()=>{throw Error('PRIVATE-ERROR-CONTENT');};
+  const unavailable=await handleFinanceLogin({request:request(await assertion({iss:unavailableIssuer})),env:{...settings,FINANCE_ONE_ACCESS_ISSUER:unavailableIssuer}});
+  assert.equal(unavailable.status,503);assert.deepEqual(await unavailable.json(),{error:'Finance Access verification temporarily unavailable',code:'ACCESS_KEYS_FETCH'});
+  globalThis.fetch=fetcher;
   for(const statement of ["UPDATE neo_fin_memberships SET active=0","UPDATE neo_fin_auth_accounts SET active=0","UPDATE neo_fin_organizations SET status='inactive'"]){
    sql.exec('UPDATE neo_fin_memberships SET active=1;UPDATE neo_fin_auth_accounts SET active=1;UPDATE neo_fin_organizations SET status=\'active\';'+statement);
    assert.equal((await handleFinanceLogin({request:request(token),env:settings})).status,401);

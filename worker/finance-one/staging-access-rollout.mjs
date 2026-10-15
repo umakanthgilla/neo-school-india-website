@@ -71,7 +71,11 @@ export async function stagingAccessSmoke(accessToken,{request=fetch}={}){
  const check=async(path,expected,{method='GET',token,body,requestOrigin=origin}={})=>{
   const r=await request(origin+path,{method,redirect:'manual',signal:AbortSignal.timeout(20000),headers:{Origin:requestOrigin,'cf-access-token':accessToken,
    ...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
-  if(r.status!==expected){const error=Error('Staging smoke check failed');error.smoke={path,status:r.status,expected,cfRay:r.headers.get('cf-ray')};throw error;}
+  if(r.status!==expected){
+   const body=await r.clone().json().catch(()=>({}));
+   const code=typeof body.code==='string'&&/^ACCESS_[A-Z_]{1,60}$/.test(body.code)?body.code:undefined;
+   const error=Error('Staging smoke check failed');error.smoke={path,status:r.status,expected,cfRay:r.headers.get('cf-ray'),code};throw error;
+  }
   passed++;return r;
  };
  const api='/api/finance-one/v1',base=api+'/organizations/'+organizationId;

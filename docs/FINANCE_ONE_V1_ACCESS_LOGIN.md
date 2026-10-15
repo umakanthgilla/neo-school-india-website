@@ -95,3 +95,24 @@ failures require checking staging deployments rather than blindly retrying.
 Never paste the Access token or private logs. Share only the final deployment
 version and PASS/STOPPED diagnostic. No API token, password or paid plan change is
 requested by the helper.
+
+## Observed cloud failure and safe diagnosis
+
+The operator reported deployment of baseline `bda278e7e5272bacd37ef53b7e92d60cef581c5a`
+as Worker version `3586576f-d9c6-493e-9c0d-323a6f9ca4fb`. The first cloud Access
+login failed with HTTP 401; both normal and explicit assertion requests returned
+`Finance Access identity could not be verified`. This is not a passed login test
+or proof that password resource limits are resolved.
+
+Verification failures now expose a fixed `ACCESS_*` stage code without assertion,
+claim values, personal identifiers, key material or native exception text. Missing
+or invalid identity assertions still deny access with 401. Key-fetch/key-response
+and native crypto dependency failures return 503 rather than falsely reporting
+invalid credentials. The verifier invokes native fetch with its global receiver.
+Neither signature/audience/expiry validation nor Finance membership is relaxed.
+
+After a later diagnostic/fix deployment, do not rerun the original baseline rollout
+helper: it intentionally pins the old passing source. Preserve its private config
+and use a verified targeted update, record the new version and re-run exported
+`stagingAccessSmoke` without executing the baseline rollout function. Operations
+must remain OFF until actual acceptance completes.

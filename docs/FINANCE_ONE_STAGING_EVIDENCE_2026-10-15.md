@@ -27,10 +27,15 @@ production deployment or production database writes are authorized.
   suite remains unverified. Reader login failed with HTTP 503, HTML response
   classified as Worker resource limit; CF-Ray a4ac09652e8fe1d9-MRS. Reader and HO
   full access suites remain incomplete.
-- Last reported deployed Worker remains
-  `6c2bb91f-6d1e-4bc6-b419-73367e0d3090`. Later source commits are not proven
-  deployed. Source/correction operations remain intended OFF; no cloud source
-  imports or financial postings have been verified.
+- Operator reported deployment of source
+  `bda278e7e5272bacd37ef53b7e92d60cef581c5a` as Worker version
+  `3586576f-d9c6-493e-9c0d-323a6f9ca4fb`. The verified-source helper retained
+  correction/source operations OFF and executed no migrations or financial posts.
+- Post-deploy smoke stopped at Access login HTTP 401, CF-Ray
+  `a4acd76d8f4e189a-MRS`. Both normal and explicitly supplied assertion requests
+  returned `Finance Access identity could not be verified`. The new login is
+  deployed but NOT cloud accepted. Later diagnostic source changes still need
+  deployment and actual confirmation; no cloud financial journeys have passed.
 
 ## Login runtime fix — source only
 
@@ -51,6 +56,9 @@ One person must not be linked to both maker and checker. See
 Commit `3aa1df100d1ba7c43c367cf0656810a8f8be29f1` passed 360 local tests and
 [CI including Chromium/WebKit, Worker bundle and handover](https://github.com/umakanthgilla/neo-school-india-website/actions/runs/38685375109).
 This does not prove login reliability within the real staging Worker budget.
+The reported deployment subsequently failed identity verification (401).
+Fixed non-sensitive verification stage codes and correct dependency-failure
+status reporting are now added for runtime diagnosis; no checks are bypassed.
 
 ## Source integration — source only
 
