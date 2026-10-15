@@ -29,7 +29,7 @@ async function main(){
  check((await request(api+'/organizations/'+organizations[0]+'/documents')).status===401,'anonymous financial read denied');
  for(const identity of identities){
   const login=await request(api+'/session',{method:'POST',body:{organizationId:identity.organizationId,accountId:identity.accountId,password:identity.password}});
-  check(login.status===200,'login '+identity.accountId);
+  check(login.status===200,'login '+identity.accountId+' (HTTP '+login.status+', Retry-After '+(login.headers.get('retry-after')||'none')+')');
   const {token}=await login.json();
   if(typeof token!=='string'||!token)throw Error('Missing session token');
   let revoked=false;
