@@ -1,4 +1,30 @@
-> **Latest continuation:** Migration 12 adds audited source-import operations; receipt reversal races and correction reconciliation are covered. See [current client release status](FINANCE_ONE_V1_CLIENT_RELEASE_STATUS_2026-10-13.md) for current evidence and remaining blockers. Production remains **NO GO**. Older counts and missing-feature statements below are historical.
+# Current acceptance status — 15 October 2026
+
+**Client production: NO GO.** Implemented, synthetic-tested and cloud-tested are
+different states. This table supersedes the historical baseline below.
+
+| Area | Implemented / synthetic evidence | Actual cloud acceptance / remaining gate |
+|---|---|---|
+| Independent Center/HO books | Tenant permissions, immutable postings and source-only cash rules tested | Maker/checker own reads and cross-Center/HO denial passed; reader/HO full suites incomplete |
+| Authentication | Dedicated Finance sessions, rate limits, logout revocation; optional explicitly linked Access identity login added and tested | Password login hit Worker resource limits; new Access login not deployed or cloud verified |
+| Schema | Migrations 1–12, fail-closed audit/correction guards tested | Migration 11/12 objects checked on staging and restore-check; quick_check passed |
+| Receipts / vouchers / ledger | Existing-source verifiers, settlement evidence prerequisites, no duplicate cash or school Ledger writes tested | Actual financial cloud journeys and evidence intake incomplete; operations remain OFF |
+| School source integration | Separate read-only school binding supports invoices, receipts, payroll and all three payout types; two physical SQLite databases tested | New isolated source D1/binding and exact deployed code need verification; no live school binding authorized |
+| Payroll | Explicit statutory review including nil deductions, accrual/settlement/advance recovery and journal recovery tested | Employer inputs, calculations/applicability/filing evidence and accountant acceptance missing |
+| Corrections | Full invoice/bill accrual reversal with independent decision, atomic compensating journal and audit trail tested | Cloud maker/checker journey incomplete; cash refunds, payroll reversals, partial/source corrections remain incomplete |
+| Reports / operations UI | Read-only summary, reconciliation, full trial-balance CSV and print; stale-response/logout privacy tested | Actual client financial/mobile/print acceptance incomplete |
+| Backup / restore | Populated disposable SQLite restore test; actual empty-financial-data D1 snapshot restored and matched | Populated financial Cloudflare D1 restore rehearsal still required |
+| Bank reconciliation | Manual reconciliation procedure written; automatic matching deferred | Manual evidence intake/reconciliation must pass end-to-end; written runbook alone is insufficient |
+| Build / handover | 368 local Node/SQLite tests passed for split-source candidate; exact-commit CI tracks browser/build/handover | CI is synthetic evidence; neither a deployment nor client acceptance |
+| Production release | Current entrypoint intentionally rejects production; PR #26 stays draft | Review production configuration, accepted UAT/security/accounting checks, backup/rollback and exact final authorization required |
+
+See [15 October remote evidence and blockers](FINANCE_ONE_STAGING_EVIDENCE_2026-10-15.md),
+[optional Access login](FINANCE_ONE_V1_ACCESS_LOGIN.md), and
+[separate school source setup and limits](FINANCE_ONE_V1_SEPARATE_SCHOOL_SOURCE.md).
+
+## Historical baseline — retained for traceability
+
+> Migration 12 added audited source-import operations; receipt reversal races and correction reconciliation are covered. The older counts and missing-feature statements below are historical and do not override the current table above.
 
 > **13 October 2026 update:** This is a historical baseline. Staging now responds behind Cloudflare Access. Candidate migration 11 adds reviewed invoice/bill accrual corrections; all payrolls now require statutory review, including nil deductions. Production is still NO GO. See [current go-live review](FINANCE_ONE_V1_GO_LIVE_REVIEW_2026-10-13.md) for current evidence, limitations and gates.
 
