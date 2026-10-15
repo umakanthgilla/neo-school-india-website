@@ -21,7 +21,8 @@ function mount(fetchImpl){
  };
  document.getElementById('login-panel').hidden=false;
  document.getElementById('dashboard-panel').hidden=true;
- const context=vm.createContext({document,window:{},location:{origin:'https://finance.example.invalid'},
+ const prints=[];
+ const context=vm.createContext({document,window:{print(){prints.push({organization:document.getElementById('trial-context').textContent,rows:document.getElementById('trial-rows').children.length});}},location:{origin:'https://finance.example.invalid'},
   fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent});
  new vm.Script(script,{filename:'portal.html:inline-script'}).runInContext(context);
  const $=id=>document.getElementById(id);
@@ -29,7 +30,7 @@ function mount(fetchImpl){
   $('org').value=org;$('account').value=account;$('password').value='ValidPassword1234!';
   return $('login-form').handlers.submit({preventDefault(){}});
  };
- return {$,login,signOut:()=>$('sign-out').handlers.click(),refresh:()=>$('refresh').handlers.click()};
+ return {$,login,prints,signOut:()=>$('sign-out').handlers.click(),refresh:()=>$('refresh').handlers.click()};
 }
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
 const bodyFor=(url,organization)=>{
@@ -117,6 +118,27 @@ test('login response cannot silently switch organization to another legal busine
  await app.login('CENTER_A');
  assert.equal(app.$('dashboard-panel').hidden,true);
  assert.match(app.$('login-error').textContent,/organization mismatch/);
+});
+
+test('trial balance printing includes the entire report, review warning and clears on logout or failed refresh',async()=>{
+ let fail=false;
+ const app=mount(async(url)=>{
+  if(url.endsWith('/session'))return json({token:'TOKEN_A',organizationId:'CENTER_A'});
+  if(fail)return json({error:'Service unavailable'},503);
+  const result=bodyFor(url,'CENTER_A');
+  if(url.endsWith('/summary'))Object.assign(result,{balanced:false,trialBalance:Array.from({length:75},(_,i)=>({code:String(i),name:'<script>unsafe</script>',debitPaise:100,creditPaise:0})),totalDebitPaise:7500,totalCreditPaise:0});
+  return json(result);
+ });
+ app.$('trial-print').handlers.click();assert.equal(app.prints.length,0);
+ await app.login('CENTER_A');
+ app.$('trial-print').handlers.click();
+ assert.equal(app.prints[0].rows,76);
+ assert.match(app.prints[0].organization,/CENTER_A.*FINANCE REVIEW REQUIRED/);
+ assert.equal(app.$('trial-rows').children[0].children[1].textContent,'<script>unsafe</script>');
+ fail=true;await app.refresh();app.$('trial-print').handlers.click();
+ assert.equal(app.prints.length,1);assert.equal(app.$('trial-rows').children.length,0);
+ app.signOut();assert.equal(app.$('trial-print').disabled,true);assert.equal(app.$('trial-context').textContent,'');
+ app.$('trial-print').handlers.click();assert.equal(app.prints.length,1);
 });
 
 test('cash/journal reconciliation issue is shown and clears on sign-out',async()=>{
