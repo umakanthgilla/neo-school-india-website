@@ -6,6 +6,7 @@
  * portal.html access while Finance ONE is disabled.
  */
 import {financeOneWorkerGate} from './worker-gate.mjs';
+import {accessConfiguration} from './access-identity.mjs';
 
 function allowedOrigin(request,env){
  const origin=request.headers.get('Origin');
@@ -51,9 +52,12 @@ async function servePortal(request,env){
   return json(503,{error:'Finance preview invalid'},request,env);
  const bytes=crypto.getRandomValues(new Uint8Array(18));
  const nonce=btoa(String.fromCharCode(...bytes));
- const secured=html.replace('<style>','<style nonce="'+nonce+'">')
+ let secured=html.replace('<style>','<style nonce="'+nonce+'">')
    .replace('<script>','<script nonce="'+nonce+'">');
  if(secured===html)return json(503,{error:'Finance preview invalid'},request,env);
+ if(env?.FINANCE_ONE_ACCESS_LOGIN_ENABLED==='true'){
+  try{accessConfiguration(env);secured=secured.replace('id="access-sign-in" hidden','id="access-sign-in"');}catch{/* Keep optional login hidden when configuration is incomplete. */}
+ }
  return new Response(secured,{status:200,headers:{
   'content-type':'text/html; charset=utf-8','cache-control':'no-store',
   'x-content-type-options':'nosniff','x-frame-options':'DENY',
