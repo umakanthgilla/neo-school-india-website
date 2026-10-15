@@ -1,16 +1,25 @@
 /** Actual cloud access QA. Credentials stay on the operator's Mac. No accounting writes. */
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 const origin='https://neo-finance-one-staging.umakanthgilla.workers.dev';
 const api='/api/finance-one/v1';
 const organizations=['QA_FIN_20261014_A','QA_FIN_20261014_B','QA_FIN_20261014_HO'];
 const expectedAccounts=['fin:qa20261014_a_maker','fin:qa20261014_a_checker','fin:qa20261014_a_reader','fin:qa20261014_b_owner','fin:qa20261014_ho_owner'];
 let passed=0;
+let accessToken;
 function check(ok,label){if(!ok)throw Error(label);passed++;console.log('PASS '+label);}
 async function request(path,{token,method='GET',body,requestOrigin=origin}={}){
- return fetch(origin+path,{method,redirect:'error',signal:AbortSignal.timeout(20000),headers:{Origin:requestOrigin,...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+ const response=await fetch(origin+path,{method,redirect:'manual',signal:AbortSignal.timeout(20000),headers:{Origin:requestOrigin,...(accessToken?{'cf-access-token':accessToken}:{}),...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+ if(response.status>=300&&response.status<400)throw Error('Cloudflare Access redirected this request; authenticate using cloudflared and rerun with --cloudflare-access. No redirect was followed.');
+ return response;
 }
 async function main(){
- if(process.argv.length!==3)throw Error('Pass the local private-logins-rotated.json path');
+ if(process.argv.length<3||process.argv.length>4||(process.argv[3]&&process.argv[3]!=='--cloudflare-access'))throw Error('Pass the local private-logins-rotated.json path and optionally --cloudflare-access');
+ if(process.argv[3]){
+  try{accessToken=execFileSync('cloudflared',['access','token','--app='+origin],{encoding:'utf8',timeout:60000,stdio:['ignore','pipe','ignore']}).trim();}
+  catch{throw Error('Cloudflare Access token unavailable. Complete cloudflared access login for the staging URL first.');}
+  if(!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(accessToken))throw Error('Cloudflare Access did not return a valid token format');
+ }
  const identities=JSON.parse(readFileSync(process.argv[2],'utf8'));
  if(!Array.isArray(identities)||identities.length!==5||new Set(identities.map(i=>i.accountId)).size!==5||identities.some(i=>!expectedAccounts.includes(i.accountId)||!organizations.includes(i.organizationId)||typeof i.password!=='string'))throw Error('Expected the five dedicated synthetic QA identities');
  const portal=await request('/portal.html');
@@ -50,4 +59,4 @@ async function main(){
  }
  console.log('CLOUD ACCESS QA COMPLETE: '+passed+' checks passed. No source imports or financial postings performed.');
 }
-main().catch(error=>{console.error('QA STOPPED: '+(error?.name==='TimeoutError'?'network timeout':error?.name==='TypeError'?'network request failed':error.message));process.exitCode=1;});
+main().catch(error=>{console.error('QA STOPPED: '+(error?.name==='SyntaxError'?'private login JSON could not be parsed':error?.name==='TimeoutError'?'network timeout':error?.name==='TypeError'?'network request failed':error.message));process.exitCode=1;});
