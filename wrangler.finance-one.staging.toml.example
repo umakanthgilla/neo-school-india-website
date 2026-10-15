@@ -14,6 +14,13 @@ FINANCE_ONE_READ_API_ENABLED = "false"
 FINANCE_ONE_OPERATIONS_ENABLED = "false"
 # Requires migration 12 and validated original sources; never certifies evidence.
 FINANCE_ONE_SOURCE_OPERATIONS_ENABLED = "false"
+# Optional CPU-light Access login; requires verified application AUD and explicit
+# one-person/one-Finance-account subject mapping. Existing Finance memberships apply.
+# See docs/FINANCE_ONE_V1_ACCESS_LOGIN.md. No new database migration required.
+FINANCE_ONE_ACCESS_LOGIN_ENABLED = "false"
+# FINANCE_ONE_ACCESS_ISSUER = "https://YOUR-TEAM.cloudflareaccess.com"
+# FINANCE_ONE_ACCESS_AUDIENCE = "REPLACE_WITH_APPLICATION_64_HEX_AUD"
+# FINANCE_ONE_ACCESS_IDENTITIES = '[{"subject":"VERIFIED_ACCESS_USER_SUB","accountId":"fin:authorized-user"}]'
 # Optional alternate HTTPS portal origin. The same-origin portal is served at /portal.html.
 # Replace this illustrative value with an approved HTTPS hostname before enabling Finance.
 FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
