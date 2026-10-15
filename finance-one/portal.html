@@ -22,6 +22,21 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
 .amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}.in{color:#14755d}.out{color:#a03b47}.empty{color:var(--muted);font-size:13px;padding:15px 4px}.foot{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}@media(max-width:480px){main{padding:20px 12px}.top{padding:15px}.top-side{display:none}.login{margin:30px auto;padding:20px}.stat{padding:14px}.stat .value{font-size:19px}.dash-head{align-items:flex-start;flex-direction:column}.actions{width:100%}.small-btn{flex:1}.section{padding:15px}}
 .below-grid{margin-top:16px}
+@media print{
+ @page{margin:15mm}
+ body{background:white;color:black;min-height:0}
+ body>header,main>#login-panel,#dashboard-panel>:not(#trial-report),#trial-report button,.foot{display:none!important}
+ main{max-width:none;padding:0;margin:0}
+ #trial-report{margin:0;padding:0;border:0;border-radius:0;box-shadow:none;overflow:visible}
+ #trial-report:before{display:none}
+ #trial-report .table-wrap{overflow:visible;max-height:none}
+ #trial-report table{font-size:10pt;table-layout:fixed}
+ #trial-report thead{display:table-header-group}
+ #trial-report tr{break-inside:avoid}
+ #trial-report th{position:static}
+ #trial-report td,#trial-report th{white-space:normal;overflow-wrap:anywhere}
+ #trial-report td:nth-child(2){max-width:none;overflow:visible;text-overflow:clip}
+}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -74,9 +89,11 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   <tbody id="statutory-rows"></tbody></table></div>
   <p id="statutory-review" role="status" class="alert" hidden>One or more statutory balances are negative. Finance review is required.</p>
  </article>
- <article class="card accent section below-grid">
+ <article id="trial-report" class="card accent section below-grid">
   <h2>Trial Balance</h2><p class="caption">All-time posted journals, including approved corrections. Amounts in INR.</p>
+  <p id="trial-context" class="caption"></p>
   <button id="trial-export" class="small-btn" type="button" disabled>Export trial balance CSV</button>
+  <button id="trial-print" class="small-btn" type="button" disabled>Print / Save trial balance PDF</button>
   <div class="table-wrap"><table><thead><tr><th>Code</th><th>Account</th><th class="amount">Debits</th><th class="amount">Credits</th></tr></thead><tbody id="trial-rows"></tbody></table></div>
  </article>
  <article id="source-panel" class="card accent section below-grid" hidden>
@@ -122,7 +139,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
   for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
   $('statutory-review').hidden=true;
-  trialSnapshot=null;$('trial-rows').replaceChildren();$('trial-export').disabled=true;
+  trialSnapshot=null;$('trial-rows').replaceChildren();$('trial-context').textContent='';$('trial-export').disabled=true;$('trial-print').disabled=true;
   $('source-submit').disabled=false;sourceAttempt=null;sourceLoadVersion++;$('source-panel').hidden=true;$('source-history').replaceChildren();$('source-message').textContent='';
   for(const id of ['source-school','source-record','source-evidence'])$(id).value='';
   $('corrections-panel').hidden=true;$('correction-journal').replaceChildren();$('correction-requests').replaceChildren();$('correction-reason').value='';$('corrections-message').textContent='';correctionAttempt=null;
@@ -138,14 +155,16 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   const token=state.token,organization=state.org,sessionVersion=state.sessionVersion;
   if(!token||!organization)return;
   const requestVersion=++state.requestVersion;
-  $('dash-error').textContent='';trialSnapshot=null;$('trial-export').disabled=true;const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
+  $('dash-error').textContent='';trialSnapshot=null;$('trial-export').disabled=true;$('trial-print').disabled=true;$('trial-context').textContent='Report unavailable while refreshing.';$('trial-rows').replaceChildren();const org=encodeURIComponent(organization);const path='/api/finance-one/v1/organizations/'+org;
   try{
    const [summary,ledger,documents,settlements,statutory,cashReconciliation,accrualReconciliation]=await Promise.all([
     call(path+'/summary'),call(path+'/daily-ledger?limit=50'),call(path+'/documents?limit=50'),call(path+'/settlements?limit=50'),call(path+'/statutory-liabilities'),call(path+'/cash-reconciliation'),call(path+'/accrual-reconciliation')
    ]);
    if(sessionVersion!==state.sessionVersion||requestVersion!==state.requestVersion||
       token!==state.token||organization!==state.org)return;
-   trialSnapshot=summary;$('trial-export').disabled=false;
+   trialSnapshot=summary;$('trial-export').disabled=false;$('trial-print').disabled=false;
+   const reviewed=summary.balanced===true&&cashReconciliation.ready===true&&accrualReconciliation.ready===true;
+   $('trial-context').textContent='Organization: '+organization+' · Loaded: '+new Date().toISOString()+' · '+(reviewed?'Balanced; cash and accrual reconciliation checks passed.':'FINANCE REVIEW REQUIRED: balance or reconciliation checks did not pass.');
    const trial=$('trial-rows');trial.replaceChildren();
    for(const item of summary.trialBalance||[]){const r=document.createElement('tr');text(r,item.code);text(r,item.name);for(const amount of [item.debitPaise,item.creditPaise])text(r,money(amount)).className='amount';trial.appendChild(r);}
    const total=document.createElement('tr');text(total,'TOTAL');text(total,'');text(total,money(summary.totalDebitPaise)).className='amount';text(total,money(summary.totalCreditPaise)).className='amount';trial.appendChild(total);
@@ -300,6 +319,10 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    if(isCurrent(session)){$('source-message').textContent='Import validated. Request '+result.requestId+'. Review the refreshed ledger and reconciliation warnings.';sourceAttempt=null;await loadSourceHistory();await load();if(isCurrent(session)&&!$('corrections-panel').hidden)await loadCorrections();}
   }catch(e){if(isCurrent(session)){$('source-message').textContent=e.message;await loadSourceHistory();await load();}}
   finally{if(isCurrent(session))$('source-submit').disabled=false;}
+ });
+ $('trial-print').addEventListener('click',()=>{
+  if(!state.token||!trialSnapshot||trialSnapshot.organizationId!==state.org)return;
+  window.print();
  });
  $('trial-export').addEventListener('click',()=>{
   if(!state.token||!trialSnapshot||trialSnapshot.organizationId!==state.org)return;
