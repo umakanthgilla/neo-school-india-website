@@ -62,6 +62,19 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   assert.match(csv,/All-time posted journals; INR paise/);assert.match(csv,/"QA_CENTER"/);
   assert.ok(csv.includes('"\'=HYPERLINK(""https://example.invalid"",""synthetic"")"'),'CSV text formula must be neutralized');
   assert.match(csv,/"TOTAL","","35000","35000"/);
+  await page.evaluate(()=>{window.financeQaPrintCalls=0;window.print=()=>window.financeQaPrintCalls++;});
+  await page.getByRole('button',{name:'Print / Save trial balance PDF'}).click();
+  assert.equal(await page.evaluate(()=>window.financeQaPrintCalls),1);
+  await expect(page.locator('#trial-context')).toContainText('Organization: QA_CENTER');
+  await page.emulateMedia({media:'print'});
+  assert.equal(await page.locator('#trial-report').isVisible(),true);
+  assert.equal(await page.locator('#ledger-rows').isVisible(),false);
+  assert.equal(await page.locator('#source-panel').isVisible(),false);
+  assert.equal(await page.locator('#trial-print').isVisible(),false);
+  assert.equal(await page.locator('#trial-report .table-wrap').evaluate(el=>getComputedStyle(el).maxHeight),'none');
+  await page.screenshot({path:'/tmp/finance-one-browser-qa/'+name+'-trial-print.png',fullPage:true});
+  if(name==='chromium')await page.pdf({path:'/tmp/finance-one-browser-qa/trial-balance.pdf',format:'A4'});
+  await page.emulateMedia({media:'screen'});
   for(const width of [390,768,1440]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,name+' layout overflow at '+width);
@@ -72,6 +85,7 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   await page.getByRole('button',{name:'Sign out',exact:true}).click();
   await expect(page.locator('#source-history')).toBeEmpty();await expect(page.locator('#trial-rows')).toBeEmpty();
   await expect(page.locator('#trial-export')).toBeDisabled();
+  await expect(page.locator('#trial-print')).toBeDisabled();await expect(page.locator('#trial-context')).toBeEmpty();
   assert.deepEqual(errors,[]);
   console.log(name+': PASS — login, independent correction approval, source import, audited identity, CSV totals, logout privacy, zero cash, 390/768/1440px');
  }finally{if(browser)await browser.close();await new Promise(resolve=>f.server.close(resolve));f.sqlite.close();}
