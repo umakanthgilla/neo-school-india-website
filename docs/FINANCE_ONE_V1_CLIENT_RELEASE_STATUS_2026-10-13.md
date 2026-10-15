@@ -1,3 +1,5 @@
+> **Current continuation — 15 October 2026:** The current acceptance matrix and [remote evidence report](FINANCE_ONE_STAGING_EVIDENCE_2026-10-15.md) supersede older counts and missing-feature statements below. There are 12 migrations; split-source candidate has 368 local tests. Optional Access login, separate read-only school source binding and trial-balance print are implemented but not cloud accepted. Use the exact CI artifact manifest SHA. Production remains **NO GO**; PR #26 stays draft. See [Access setup](FINANCE_ONE_V1_ACCESS_LOGIN.md) and [separate school source limits](FINANCE_ONE_V1_SEPARATE_SCHOOL_SOURCE.md).
+
 # Finance & Payroll ONE — client release status, 13 October 2026
 
 **Decision: NO GO for client production.** This continuation adds verified engineering functionality; it does not certify protected Cloudflare staging, statutory compliance or client acceptance. PR #26 remains draft. No production database, production deployment or merge was performed.
