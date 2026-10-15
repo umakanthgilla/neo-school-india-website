@@ -126,6 +126,7 @@ jobs:
           cp finance-one/portal.html "$BUNDLE/finance-one/portal.html"
           cp migrations/finance_payroll_one_*.sql "$BUNDLE/migrations/"
           cp docs/FINANCE_ONE_V1_* "$BUNDLE/docs/"
+          cp docs/FINANCE_ONE_STAGING_EVIDENCE_2026-10-15.md "$BUNDLE/docs/"
           cp docs/finance-one-staging-operations.md "$BUNDLE/docs/"
           cp wrangler.finance-one.staging.toml.example "$BUNDLE/"
           cp .github/workflows/finance-one-tests.yml "$BUNDLE/.github/workflows/"
