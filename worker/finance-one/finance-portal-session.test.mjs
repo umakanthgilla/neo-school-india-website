@@ -33,6 +33,18 @@ function mount(fetchImpl){
  return {$,login,prints,signOut:()=>$('sign-out').handlers.click(),refresh:()=>$('refresh').handlers.click()};
 }
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
+test('Cloudflare Finance sign-in sends only organization, then uses the existing private dashboard and sign-out',async()=>{
+ const seen=[];
+ const app=mount(async(url,options)=>{
+  if(url.endsWith('/session/access')){seen.push(JSON.parse(options.body));return json({token:'access-finance-token',organizationId:'CENTER_A'});}
+  if(url.endsWith('/session/logout'))return new Response(null,{status:204});
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ app.$('org').value='CENTER_A';app.$('password').value='must-never-be-sent';app.$('account').value='fin:cannot-select-checker';
+ await app.$('access-sign-in').handlers.click();
+ assert.deepEqual(seen,[{organizationId:'CENTER_A'}]);assert.equal(app.$('dashboard-panel').hidden,false);
+ assert.equal(app.$('password').value,'');await app.signOut();assert.equal(app.$('dashboard-panel').hidden,true);
+});
 const bodyFor=(url,organization)=>{
  const resource=new URL(url).pathname.split('/').pop();
  switch(resource){
