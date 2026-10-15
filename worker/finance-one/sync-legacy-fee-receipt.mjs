@@ -9,7 +9,7 @@ import {verifyLegacyFeeReceipt} from './legacy-fee-receipt-verifier.mjs';
 import {postJournalForCashEvent} from './source-journal.mjs';
 
 export async function syncVerifiedLegacyFeeReceipt({
- db,authenticatedAccountId,organizationId,paymentRecordId,verificationId
+ db,sourceDb=db,authenticatedAccountId,organizationId,paymentRecordId,verificationId
 }){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','write');
  if(typeof paymentRecordId!=='string'||!paymentRecordId.trim()||
@@ -17,7 +17,7 @@ export async function syncVerifiedLegacyFeeReceipt({
  const result=await postVerifiedSourceEvent({
    db,organizationId,
    source:{organizationId,sourceKind:'fee_receipt',sourceId:paymentRecordId,sourceEventId:verificationId},
-   verifySource:verifyLegacyFeeReceipt
+   verifySource:(financeDb,source)=>verifyLegacyFeeReceipt(financeDb,source,sourceDb)
  });
  // Accounting posting may temporarily fail after cash is mirrored. Safe retries
  // and journal-recovery complete the journal without a second cash movement.

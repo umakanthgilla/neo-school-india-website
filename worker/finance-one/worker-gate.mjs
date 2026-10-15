@@ -37,7 +37,9 @@ export async function financeOneWorkerGate({request,env,corsHeaders}){
  // Dedicated personal finance identity; legacy school and HO admin tokens
  // cannot grant access. Active memberships are checked for every request.
  const accountId=session.accountId;
- const result=await handleSourceOperations({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_SOURCE_OPERATIONS_ENABLED==='true'})
+ const sourceDb=env.FINANCE_ONE_SEPARATE_SOURCE_ENABLED==='true'
+  ?(env.FINANCE_ONE_SOURCE_ENVIRONMENT==='staging'&&env.SCHOOL_SOURCE_DB!==env.DB?(env.SCHOOL_SOURCE_DB||null):null):env.DB;
+ const result=await handleSourceOperations({request,db:env.DB,sourceDb,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_SOURCE_OPERATIONS_ENABLED==='true'})
   || await handleCorrectionsApi({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_OPERATIONS_ENABLED==='true'})
   || await handleFinanceReadApi({request,db:env.DB,authenticatedAccountId:accountId});
  if(!result)return errorResponse('Not found',404,headers);

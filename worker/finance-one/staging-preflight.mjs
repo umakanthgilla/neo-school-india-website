@@ -1,4 +1,5 @@
 import {CORRECTION_SCHEMA} from './corrections-schema.mjs';
+import {readOnlySchoolSource} from './school-source.mjs';
 /**
  * Read-only staging deployment checklist. Does not alter DB or flip feature flags.
  * Require an explicit staging environment to prevent accidental production rollout.
@@ -38,6 +39,15 @@ export async function financeOneStagingPreflight({db,env,phase='active'}) {
    blockers.push('Native Finance login client rate limiter missing');
  if(typeof env?.FINANCE_ONE_LOGIN_ACCOUNT_LIMIT?.limit!=='function')
    blockers.push('Native Finance login account rate limiter missing');
+ if(env?.FINANCE_ONE_SEPARATE_SOURCE_ENABLED==='true'){
+  if(env.FINANCE_ONE_SOURCE_ENVIRONMENT!=='staging')blockers.push('School source is not explicitly marked staging');
+  const source=readOnlySchoolSource(env.SCHOOL_SOURCE_DB);
+  if(!source||env.SCHOOL_SOURCE_DB===db)blockers.push('Separate school source D1 binding unavailable');
+  else try{
+   if(!await source.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_portal_records'").first())blockers.push('School source records table missing');
+   if(await source.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_fin_organizations'").first())blockers.push('School source binding contains Finance books');
+  }catch{blockers.push('School source schema inspection failed');}
+ }
  if(!db?.prepare)return Object.freeze({ready:false,blockers:[...blockers,'D1 database unavailable'],schema:{tables:0,views:0,triggers:0}});
  let rows;
  try {

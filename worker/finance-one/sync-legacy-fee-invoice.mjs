@@ -11,7 +11,7 @@ const positive=value=>Number.isSafeInteger(value)&&value>0;
 const validId=value=>typeof value==='string'&&value.length>0&&value.length<=128;
 
 export async function syncLegacyFeeInvoice({
- db,authenticatedAccountId,organizationId,schoolId,invoiceRecordId
+ db,sourceDb=db,authenticatedAccountId,organizationId,schoolId,invoiceRecordId
 }){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','write');
  if(!validId(schoolId)||!validId(invoiceRecordId))throw Error('School and original invoice required');
@@ -19,7 +19,7 @@ export async function syncLegacyFeeInvoice({
    WHERE school_id=? AND organization_id=? AND effective_to IS NULL LIMIT 1`)
    .bind(schoolId,organizationId).first();
  if(!owner)throw Error('School is not owned by this independent business');
- const stored=await db.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='invoices' AND id=?")
+ const stored=await sourceDb.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='invoices' AND id=?")
    .bind(schoolId,invoiceRecordId).first();
  if(!stored?.data)throw Error('Original school fee invoice unavailable');
  let source;try{source=JSON.parse(stored.data);}catch{throw Error('Invalid original fee invoice');}
@@ -28,10 +28,10 @@ export async function syncLegacyFeeInvoice({
    throw Error('Invalid original fee invoice');
  // Existing portal generates invoices from a fee structure. Refuse non-existent
  // or cross-school fee structures before recognizing receivable/revenue.
- const feeStructure=await db.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='fee_structures' AND id=?")
+ const feeStructure=await sourceDb.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='fee_structures' AND id=?")
    .bind(schoolId,source.fee_structure_id).first();
  if(!feeStructure)throw Error('Original fee structure missing');
- const student=await db.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='students' AND id=?")
+ const student=await sourceDb.prepare("SELECT id FROM neo_portal_records WHERE school_id=? AND kind='students' AND id=?")
    .bind(schoolId,source.student_id).first();
  if(!student)throw Error('Original student record missing');
  const sourceRef=schoolId.length+':'+schoolId+'|'+invoiceRecordId.length+':'+invoiceRecordId;

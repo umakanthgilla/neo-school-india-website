@@ -14,6 +14,10 @@ FINANCE_ONE_READ_API_ENABLED = "false"
 FINANCE_ONE_OPERATIONS_ENABLED = "false"
 # Requires migration 12 and validated original sources; never certifies evidence.
 FINANCE_ONE_SOURCE_OPERATIONS_ENABLED = "false"
+# Optional separate school source binding. Keep OFF until isolated source QA.
+# See docs/FINANCE_ONE_V1_SEPARATE_SCHOOL_SOURCE.md. No migration required.
+FINANCE_ONE_SEPARATE_SOURCE_ENABLED = "false"
+# FINANCE_ONE_SOURCE_ENVIRONMENT = "staging"
 # Optional CPU-light Access login; requires verified application AUD and explicit
 # one-person/one-Finance-account subject mapping. Existing Finance memberships apply.
 # See docs/FINANCE_ONE_V1_ACCESS_LOGIN.md. No new database migration required.
@@ -29,6 +33,13 @@ FINANCE_ONE_PORTAL_ORIGIN = "https://finance-staging.example.com"
 binding = "DB"
 database_name = "neo-finance-one-staging"
 database_id = "REPLACE_WITH_SEPARATE_STAGING_D1_UUID"
+
+# Optional: NEW isolated school SOURCE staging database, never neo-lead-crm live
+# and never a Finance database. The application exposes SELECT reads only.
+# [[d1_databases]]
+# binding = "SCHOOL_SOURCE_DB"
+# database_name = "neo-finance-school-source-qa"
+# database_id = "REPLACE_WITH_NEW_ISOLATED_SCHOOL_SOURCE_STAGING_UUID"
 
 # FINANCE_ONE_SESSION_SECRET MUST be set with Wrangler secret management;
 # never put it in [vars], source code, or version control.

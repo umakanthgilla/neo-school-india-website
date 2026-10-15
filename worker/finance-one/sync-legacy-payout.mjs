@@ -11,7 +11,7 @@ import {verifyLegacyPayout} from './legacy-payout-verifier.mjs';
 const KINDS=new Set(['vendor_payment','payroll_payment','salary_advance_release']);
 const ID=/^[A-Za-z0-9_-]{1,100}$/;
 export async function syncVerifiedLegacyPayout({
- db,authenticatedAccountId,organizationId,schoolId,legacyRecordId,sourceKind,settlementId
+ db,sourceDb=db,authenticatedAccountId,organizationId,schoolId,legacyRecordId,sourceKind,settlementId
 }){
  if(!KINDS.has(sourceKind)||![schoolId,legacyRecordId,settlementId].every(x=>typeof x==='string'&&ID.test(x)))
   throw new Error('Invalid original payout or bank settlement');
@@ -20,10 +20,10 @@ export async function syncVerifiedLegacyPayout({
  const cash=await postVerifiedSourceEvent({
   db,organizationId,
   source:{organizationId,sourceKind,sourceId,sourceEventId:settlementId},
-  verifySource:verifyLegacyPayout
+  verifySource:(financeDb,source)=>verifyLegacyPayout(financeDb,source,sourceDb)
  });
  const journal=sourceKind==='payroll_payment'
-  ? await postLegacyPayrollSettlementJournal(db,organizationId,cash.eventId)
+  ? await postLegacyPayrollSettlementJournal(db,organizationId,cash.eventId,sourceDb)
   : await postJournalForCashEvent(db,organizationId,cash.eventId);
  return Object.freeze({
   organizationId,schoolId,legacyRecordId,sourceKind,settlementId,

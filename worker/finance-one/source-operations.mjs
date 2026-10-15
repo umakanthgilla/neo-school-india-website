@@ -6,12 +6,13 @@ import {syncLegacyPayoutDocument} from './sync-legacy-payout-document.mjs';
 import {syncVerifiedLegacyPayout} from './sync-legacy-payout.mjs';
 import {postLegacyPayrollAccrual} from './legacy-payroll-accrual.mjs';
 import {readOperationBody} from './operation-body.mjs';
+import {readOnlySchoolSource} from './school-source.mjs';
 const route=/^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/source-operations$/;
 const actions={invoice:syncLegacyFeeInvoice,receipt:syncVerifiedLegacyFeeReceipt,payout_document:syncLegacyPayoutDocument,payout:syncVerifiedLegacyPayout,payroll_accrual:postLegacyPayrollAccrual};
 const fields={invoice:['schoolId','invoiceRecordId'],receipt:['paymentRecordId','verificationId'],payout_document:['schoolId','legacyRecordId','sourceKind'],payout:['schoolId','legacyRecordId','sourceKind','settlementId'],payroll_accrual:['schoolId','payrollRecordId']};
 const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json','cache-control':'no-store','x-content-type-options':'nosniff'}});
 async function run(statement){if((await statement.run())?.success!==true)throw Error('Audit write not confirmed');}
-export async function handleSourceOperations({request,db,authenticatedAccountId,enabled}){
+export async function handleSourceOperations({request,db,sourceDb=db,authenticatedAccountId,enabled}){
  const match=new URL(request.url).pathname.match(route);if(!match)return null;
  if(!enabled)return reply({error:'Source operations disabled'},404);
  const organizationId=match[1];
@@ -31,8 +32,11 @@ export async function handleSourceOperations({request,db,authenticatedAccountId,
    (type='table' AND name IN ('neo_fin_source_requests','neo_fin_source_attempts','neo_fin_source_outcomes')) OR
    (type='trigger' AND name IN ('neo_fin_source_request_authorized','neo_fin_source_request_no_update','neo_fin_source_request_no_delete','neo_fin_source_attempt_no_update','neo_fin_source_attempt_no_delete','neo_fin_source_outcome_no_update','neo_fin_source_outcome_no_delete'))`).first();
   if(schema?.n!==10)return reply({error:'Source audit schema incomplete; imports disabled'},503);
-  const sourceTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_portal_records'").first();
-  if(!sourceTable)return reply({error:'School source data is unavailable in this Finance database; imports disabled. Configure an isolated source integration before enabling imports.'},503);
+  const schoolSource=readOnlySchoolSource(sourceDb);
+  const sourceTable=schoolSource&&await schoolSource.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_portal_records'").first();
+  if(!sourceTable)return reply({error:'School source data is unavailable; imports disabled. Configure an isolated staging source integration before enabling imports.'},503);
+  if(sourceDb!==db&&await schoolSource.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='neo_fin_organizations'").first())
+   return reply({error:'School source binding contains Finance books; imports disabled. Use a separate isolated school source database.'},503);
   const input=await readOperationBody(request,['requestId','action','source']);
   if(typeof input.requestId!=='string'||!/^[A-Za-z0-9_-]{8,80}$/.test(input.requestId)||typeof input.action!=='string'||!Object.hasOwn(actions,input.action))throw new FinanceAccessError('Invalid request ID or action',400);
   const source=input.source,keys=fields[input.action];
@@ -55,7 +59,7 @@ export async function handleSourceOperations({request,db,authenticatedAccountId,
   const attemptId=crypto.randomUUID();
   await run(db.prepare('INSERT INTO neo_fin_source_attempts(organization_id,id,request_id) VALUES(?,?,?)').bind(organizationId,attemptId,input.requestId));
   let result;
-  try{result=await actions[input.action]({db,authenticatedAccountId,organizationId,...source});}
+  try{result=await actions[input.action]({db,sourceDb:schoolSource,authenticatedAccountId,organizationId,...source});}
   catch{
    await run(db.prepare("INSERT INTO neo_fin_source_outcomes(organization_id,attempt_id,status) VALUES(?,?,'failed')").bind(organizationId,attemptId));
    return reply({error:'Source import incomplete. Review original approval, ownership, statutory review, verified evidence and reconciliation; retry the same request after resolving the issue. A cash mirror may require journal recovery.',requestId:input.requestId,attemptId},409);

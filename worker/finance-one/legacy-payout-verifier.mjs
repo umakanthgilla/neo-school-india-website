@@ -22,13 +22,13 @@ async function record(db,schoolId,kind,id) {
  if(!row?.data)return null;
  try{return JSON.parse(row.data);}catch{return null;}
 }
-export async function verifyLegacyPayout(db,request) {
+export async function verifyLegacyPayout(db,request,sourceDb=db) {
  const {organizationId,sourceKind,sourceId,sourceEventId}=request||{};
  const spec=Object.prototype.hasOwnProperty.call(TYPES,sourceKind)?TYPES[sourceKind]:null;
  const ids=parse(sourceId);
  if(!db?.prepare ||!spec ||!ids||!idPattern.test(organizationId||'')||!idPattern.test(sourceEventId||''))return null;
  const [schoolId,recordId]=ids;
- const payment=await record(db,schoolId,spec.kind,recordId);
+ const payment=await record(sourceDb,schoolId,spec.kind,recordId);
  if(!payment||!spec.allowed.includes(payment.status)||!amount(payment[spec.amountKey]))return null;
  const payout=await db.prepare(`SELECT s.organization_id,s.id AS verification_id,s.document_id,
      s.amount_paise,s.bank_reference,s.verified_at,s.status,
@@ -50,12 +50,12 @@ export async function verifyLegacyPayout(db,request) {
  // Legacy financial workflows create one unique voucher per payment and a
  // deterministic corresponding school Daily Ledger entry.
  const voucherId=spec.voucherPrefix+recordId;
- const voucher=await record(db,schoolId,'vouchers',voucherId);
+ const voucher=await record(sourceDb,schoolId,'vouchers',voucherId);
  if(!voucher||voucher.status!=='Paid'||voucher.source_kind!==spec.voucherKind||
    voucher.source_id!==recordId||voucher.amount_paise!==payment[spec.amountKey]||
    typeof voucher.voucher_no!=='string'||!voucher.voucher_no.trim()||
    (voucher.payment_mode==='Cash' || voucher.payment_mode==='Cheque'))return null;
- const entries=await db.prepare(`SELECT id,data FROM neo_portal_records
+ const entries=await sourceDb.prepare(`SELECT id,data FROM neo_portal_records
    WHERE school_id=? AND kind='daily_accounts'
      AND json_extract(data,'$.source_kind')='voucher'
      AND json_extract(data,'$.source_id')=? LIMIT 2`).bind(schoolId,voucherId).all();

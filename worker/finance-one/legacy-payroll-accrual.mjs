@@ -44,13 +44,13 @@ function planForPayroll(p,payrollId,stat) {
  return Object.freeze({earnedPaise:earned,payablePaise:payable,entries,approvedAt:new Date(p.approved_at).toISOString()});
 }
 
-export async function postLegacyPayrollAccrual({db,authenticatedAccountId,organizationId,schoolId,payrollRecordId}){
+export async function postLegacyPayrollAccrual({db,sourceDb=db,authenticatedAccountId,organizationId,schoolId,payrollRecordId}){
  await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'payroll','write');
  if(!valid(schoolId)||!valid(payrollRecordId))throw Error('Original school and payroll required');
  const row=await db.prepare(`SELECT school_id FROM neo_fin_school_ownership
  WHERE school_id=? AND organization_id=? AND effective_to IS NULL
    AND date(? || '-01')>=date(effective_from) LIMIT 1`);
- const stored=await db.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payroll' AND id=?")
+ const stored=await sourceDb.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payroll' AND id=?")
    .bind(schoolId,payrollRecordId).first();
  if(!stored?.data)throw Error('Original payroll source unavailable');
  let payroll;

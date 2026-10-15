@@ -7,7 +7,7 @@
 import {verifyLegacyPayout} from './legacy-payout-verifier.mjs';
 const safe=n=>Number.isSafeInteger(n)&&n>=0;
 const ids=s=>typeof s==='string'&&/^[A-Za-z0-9_-]{1,100}\|[A-Za-z0-9_-]{1,100}$/.test(s);
-export async function postLegacyPayrollSettlementJournal(db,organizationId,eventId) {
+export async function postLegacyPayrollSettlementJournal(db,organizationId,eventId,sourceDb=db) {
  if(!db?.prepare||!db?.batch||!organizationId||!eventId)throw Error('Verified payroll event required');
  const event=await db.prepare(`SELECT organization_id,event_id,source_kind,source_id,source_event_id,
    direction,amount_paise,effective_at,verification_reference FROM neo_fin_cash_events
@@ -16,12 +16,12 @@ export async function postLegacyPayrollSettlementJournal(db,organizationId,event
     event.direction!=='money_out'||!ids(event.source_id)||
     !safe(event.amount_paise)||event.amount_paise<=0)throw Error('Legacy payroll cash event required');
  const verified=await verifyLegacyPayout(db,{organizationId,sourceKind:'payroll_payment',
-  sourceId:event.source_id,sourceEventId:event.source_event_id});
+  sourceId:event.source_id,sourceEventId:event.source_event_id},sourceDb);
  if(!verified||verified.amountPaise!==event.amount_paise||
     verified.verificationReference!==event.verification_reference||
     verified.effectiveAt!==event.effective_at)throw Error('Original verified payroll settlement no longer matches');
  const [schoolId,payrollRecordId]=event.source_id.split('|');
- const stored=await db.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payroll' AND id=?")
+ const stored=await sourceDb.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payroll' AND id=?")
   .bind(schoolId,payrollRecordId).first();
  let payroll;try{payroll=JSON.parse(stored.data)}catch{throw Error('Invalid verified payroll breakdown')}
  const advance=payroll.advance_recovery_paise,net=payroll.net_paise;

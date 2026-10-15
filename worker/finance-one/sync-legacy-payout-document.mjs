@@ -16,7 +16,7 @@ async function legacy(db,school,kind,id){
  try{return JSON.parse(r.data);}catch{return null;}
 }
 export async function syncLegacyPayoutDocument({
- db,authenticatedAccountId,organizationId,schoolId,legacyRecordId,sourceKind
+ db,sourceDb=db,authenticatedAccountId,organizationId,schoolId,legacyRecordId,sourceKind
 }){
  const spec=Object.prototype.hasOwnProperty.call(TYPES,sourceKind)?TYPES[sourceKind]:null;
  if(!spec||![schoolId,legacyRecordId].every(x=>typeof x==='string'&&idPattern.test(x)))throw Error('Invalid original payout');
@@ -24,15 +24,15 @@ export async function syncLegacyPayoutDocument({
  const owner=await db.prepare("SELECT organization_id FROM neo_fin_school_ownership WHERE school_id=? AND organization_id=? AND effective_to IS NULL LIMIT 1")
   .bind(schoolId,organizationId).first();
  if(!owner)throw Error('Independent business ownership required');
- const original=await legacy(db,schoolId,spec.kind,legacyRecordId);
+ const original=await legacy(sourceDb,schoolId,spec.kind,legacyRecordId);
  const amount=original?.[spec.amount];
  if(!original||!spec.status.includes(original.status)||!Number.isSafeInteger(amount)||amount<=0)throw Error('Original payout not approved or invalid');
  const voucherId=spec.voucher+legacyRecordId;
- const voucher=await legacy(db,schoolId,'vouchers',voucherId);
+ const voucher=await legacy(sourceDb,schoolId,'vouchers',voucherId);
  if(!voucher||voucher.source_kind!==spec.voucherSource||voucher.source_id!==legacyRecordId||
   voucher.status!=='Paid'||voucher.amount_paise!==amount||!voucher.voucher_no)
   throw Error('Original payout voucher missing or mismatched');
- const matching=await db.prepare(`SELECT id,data FROM neo_portal_records
+ const matching=await sourceDb.prepare(`SELECT id,data FROM neo_portal_records
  WHERE school_id=? AND kind='daily_accounts'
  AND json_extract(data,'$.source_kind')='voucher'
  AND json_extract(data,'$.source_id')=? LIMIT 2`).bind(schoolId,voucherId).all();

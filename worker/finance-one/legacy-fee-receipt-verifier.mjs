@@ -6,7 +6,7 @@ import {isAccrualReversed} from './accrual-reversal-state.mjs';
  * legacy Daily Ledger entry + a pre-posted invoice accrual journal.
  * Does not insert another legacy Daily Ledger row.
  */
-export async function verifyLegacyFeeReceipt(db,request){
+export async function verifyLegacyFeeReceipt(db,request,sourceDb=db){
  const {organizationId,sourceKind,sourceId,sourceEventId}=request||{};
  if(!db?.prepare || sourceKind!=='fee_receipt' ||
    ![organizationId,sourceId,sourceEventId].every(v=>typeof v==='string' && v.length>0))return null;
@@ -27,7 +27,7 @@ export async function verifyLegacyFeeReceipt(db,request){
  const settled=new Date(evidence.settled_at),verified=new Date(evidence.verified_at);
  if(!Number.isFinite(settled.getTime())||!Number.isFinite(verified.getTime())||
    verified.getTime()<settled.getTime())return null;
- const record=await db.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payments' AND id=?")
+ const record=await sourceDb.prepare("SELECT data FROM neo_portal_records WHERE school_id=? AND kind='payments' AND id=?")
    .bind(evidence.school_id,sourceId).first();
  if(!record?.data)return null;
  let fee;
@@ -38,7 +38,7 @@ export async function verifyLegacyFeeReceipt(db,request){
  if((fee.method==='Cash')!==(evidence.evidence_type==='cash_counted'))return null;
  // An old posted flag is useful for linkage only; it does not prove settlement.
  // Check for duplicate source projections, not just the deterministic legacy id.
- const postings=await db.prepare(`SELECT id,data FROM neo_portal_records
+ const postings=await sourceDb.prepare(`SELECT id,data FROM neo_portal_records
    WHERE school_id=? AND kind='daily_accounts'
    AND json_extract(data,'$.source_kind')='fee_payment'
    AND json_extract(data,'$.source_id')=? LIMIT 2`).bind(evidence.school_id,sourceId).all();

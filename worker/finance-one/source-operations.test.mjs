@@ -9,8 +9,10 @@ import {issueFinanceOneToken} from './finance-session.mjs';
 import {STANDARD_CHART} from './accounting-chart.mjs';
 import {payrollStatutoryFingerprint} from './reviewed-statutory-payroll.mjs';
 import {financeOneStagingPreflight} from './staging-preflight.mjs';
+import {recoverMissingCashJournals} from './journal-recovery.mjs';
+import {readOnlySchoolSource} from './school-source.mjs';
 const migrations=['foundation','cash_projection','accounting_journals','auth_accounts','receipt_evidence','legacy_payout_integrity','statutory_review','statutory_remittance','session_revocations','issued_document_immutability','corrections','source_operations'];
-async function fixture(){
+async function fixture({separate=false}={}){
  const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
  for(const name of migrations)sql.exec(readFileSync(new URL('../../migrations/finance_payroll_one_'+name+'.sql',import.meta.url),'utf8'));
  sql.exec('CREATE TABLE neo_portal_records(school_id TEXT,kind TEXT,id TEXT,data TEXT,PRIMARY KEY(school_id,kind,id))');
@@ -45,13 +47,21 @@ async function fixture(){
   put('daily_accounts',ledger+id,{source_kind:'voucher',source_id:prefix+id,status:'Posted',direction:'OUT',amount_paise:amount,reference:'PV-'+id});
  }
  const env={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_SOURCE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:secret,FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit(){}},FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit(){}}};
+ let sourceSql=sql;
+ if(separate){
+  sourceSql=new DatabaseSync(':memory:');sourceSql.exec('CREATE TABLE neo_portal_records(school_id TEXT,kind TEXT,id TEXT,data TEXT,PRIMARY KEY(school_id,kind,id))');
+  for(const r of sql.prepare('SELECT * FROM neo_portal_records').all())sourceSql.prepare('INSERT INTO neo_portal_records VALUES(?,?,?,?)').run(r.school_id,r.kind,r.id,r.data);
+  sql.exec('DROP TABLE neo_portal_records');sourceSql.exec('PRAGMA query_only=ON');
+  env.SCHOOL_SOURCE_DB={prepare(q){assert.match(q,/^SELECT /);const s=sourceSql.prepare(q),bound=args=>({first:async()=>s.get(...args),all:async()=>({results:s.all(...args)})});return {...bound([]),bind:(...args)=>bound(args)};}};
+  env.FINANCE_ONE_SEPARATE_SOURCE_ENABLED='true';env.FINANCE_ONE_SOURCE_ENVIRONMENT='staging';
+ }
  let next=0;
  const call=(action,source,{actor='Aowner',org='A',requestId='request-'+String(++next).padStart(4,'0'),overrideEnv={},origin='https://staging.invalid',extra={}}={})=>worker.fetch(new Request('https://staging.invalid/api/finance-one/v1/organizations/'+org+'/source-operations',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin,Authorization:'Bearer '+tokens[actor]},body:JSON.stringify({requestId,action,source,...extra})}),{...env,...overrideEnv});
  const read=(resource='source-operations',actor='Areader',org='A')=>worker.fetch(new Request('https://staging.invalid/api/finance-one/v1/organizations/'+org+'/'+resource,{headers:{Authorization:'Bearer '+tokens[actor]}}),env);
  const invoice=()=>call('invoice',{schoolId:'S_A',invoiceRecordId:'INV1'});
- return{sql,db,env,call,read,invoice,tokens};
+ return{sql,sourceSql,db,env,call,read,invoice,tokens,close(){if(sourceSql!==sql)sourceSql.close();sql.close();}};
 }
-const count=(f,t)=>f.sql.prepare('SELECT COUNT(*) n FROM '+t).get().n;
+const count=(f,t)=>(t==='neo_portal_records'?f.sourceSql:f.sql).prepare('SELECT COUNT(*) n FROM '+t).get().n;
 test('missing school source table blocks imports before audit attempts or financial writes',async()=>{
  const f=await fixture();try{
   f.sql.exec('DROP TABLE neo_portal_records');
@@ -62,8 +72,9 @@ test('missing school source table blocks imports before audit attempts or financ
   assert.equal((await f.read()).status,200,'existing audit history remains readable');
  }finally{f.sql.close();}
 });
-test('signed invoice → verified receipt → ledger, accounting and reports; retries do not duplicate source or cash',async()=>{
- const f=await fixture();try{
+for(const separate of [false,true])test('signed invoice → verified receipt → ledger, accounting and reports; retries do not duplicate source or cash (separate source '+separate+')',async()=>{
+ const f=await fixture({separate});try{
+  const original=f.sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all();
   const before=count(f,'neo_portal_records');assert.equal((await f.invoice()).status,200);
   assert.equal(count(f,'neo_fin_cash_events'),0);
   for(let i=0;i<2;i++)assert.equal((await f.call('receipt',{paymentRecordId:'P1',verificationId:'VER1'},{requestId:'receipt-request-1'})).status,200);
@@ -73,10 +84,12 @@ test('signed invoice → verified receipt → ledger, accounting and reports; re
   assert.equal(report.trialBalance.find(a=>a.code==='1100').creditPaise,10000);
   for(const resource of ['cash-reconciliation','accrual-reconciliation'])assert.equal((await(await f.read(resource)).json()).ready,true);
   const history=await(await f.read()).json();assert.equal(history.entries.length,3);assert.ok(history.entries.every(r=>r.requested_by==='fin:Aowner'&&r.status==='succeeded'));
- }finally{f.sql.close();}
+  assert.deepEqual(f.sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all(),original);
+ }finally{f.close();}
 });
-test('payroll accrual and verified payroll/vendor/advance vouchers reuse original source workflows',async()=>{
- const f=await fixture();try{
+for(const separate of [false,true])test('payroll accrual and verified payroll/vendor/advance vouchers reuse original source workflows (separate source '+separate+')',async()=>{
+ const f=await fixture({separate});try{
+  const original=f.sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all();
   const before=count(f,'neo_portal_records');
   assert.equal((await f.call('payroll_accrual',{schoolId:'S_A',payrollRecordId:'STAFF1_2026-09'})).status,200);
   for(const [sourceKind,id,amount] of [['payroll_payment','STAFF1_2026-09',20000],['vendor_payment','V1',5000],['salary_advance_release','ADV1',1000]]){
@@ -90,7 +103,50 @@ test('payroll accrual and verified payroll/vendor/advance vouchers reuse origina
   assert.equal(count(f,'neo_fin_cash_events'),3);assert.equal(count(f,'neo_portal_records'),before);
   const report=await(await f.read('summary')).json();assert.equal(report.moneyOutPaise,26000);assert.equal(report.balanced,true);
   assert.equal((await(await f.read('cash-reconciliation')).json()).ready,true);
- }finally{f.sql.close();}
+  assert.deepEqual(f.sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all(),original);
+ }finally{f.close();}
+});
+test('separate school binding fails closed when missing, mislabeled, aliased or unavailable; ownership and roles remain mandatory',async()=>{
+ const f=await fixture({separate:true});try{
+  assert.equal((await financeOneStagingPreflight({db:f.db,env:f.env})).ready,true);
+  for(const extra of [{SCHOOL_SOURCE_DB:undefined},{SCHOOL_SOURCE_DB:f.db},{FINANCE_ONE_SOURCE_ENVIRONMENT:'production'}])
+   assert.equal((await financeOneStagingPreflight({db:f.db,env:{...f.env,...extra}})).ready,false);
+  const source={schoolId:'S_A',invoiceRecordId:'INV1'};
+  for(const overrideEnv of [{SCHOOL_SOURCE_DB:undefined},{FINANCE_ONE_SOURCE_ENVIRONMENT:'production'},{FINANCE_ONE_SOURCE_ENVIRONMENT:undefined},{SCHOOL_SOURCE_DB:f.db},{SCHOOL_SOURCE_DB:{prepare(){throw Error('offline');}}},{FINANCE_ONE_SEPARATE_SOURCE_ENABLED:'false'}])
+   assert.equal((await f.call('invoice',source,{overrideEnv})).status,503);
+  for(const actor of ['Bowner','HOowner','Areader'])assert.equal((await f.call('invoice',source,{actor})).status,403);
+  assert.equal((await f.call('invoice',{schoolId:'S_B',invoiceRecordId:'INV1'})).status,409);
+  assert.equal(count(f,'neo_fin_documents'),0);assert.equal(count(f,'neo_fin_cash_events'),0);
+ }finally{f.close();}
+});
+test('a different binding object pointing to Finance books cannot act as the school source',async()=>{
+ const f=await fixture();try{
+  const response=await f.call('invoice',{schoolId:'S_A',invoiceRecordId:'INV1'},{overrideEnv:{FINANCE_ONE_SEPARATE_SOURCE_ENABLED:'true',FINANCE_ONE_SOURCE_ENVIRONMENT:'staging',SCHOOL_SOURCE_DB:{prepare:q=>f.db.prepare(q)}}});
+  assert.equal(response.status,503);assert.match((await response.json()).error,/contains Finance books/);
+  assert.equal(count(f,'neo_fin_source_attempts'),0);assert.equal(count(f,'neo_fin_documents'),0);
+ }finally{f.close();}
+});
+test('separate-source payroll journal recovery revalidates originals without creating a second cash event',async()=>{
+ const f=await fixture({separate:true});try{
+  const source={schoolId:'S_A',legacyRecordId:'STAFF1_2026-09',sourceKind:'payroll_payment'};
+  assert.equal((await f.call('payroll_accrual',{schoolId:'S_A',payrollRecordId:'STAFF1_2026-09'})).status,200);
+  const doc=await(await f.call('payout_document',source)).json();
+  f.sql.prepare("INSERT INTO neo_fin_payment_settlements(organization_id,id,document_id,amount_paise,status,bank_reference,verified_at) VALUES('A','RECOVER-PAY',?,20000,'verified','TEST-BANK','2026-10-09T12:00:00Z')").run(doc.result.documentId);
+  f.sql.exec("CREATE TRIGGER fail_payroll_journal BEFORE INSERT ON neo_fin_journals WHEN NEW.source_kind='cash_event' BEGIN SELECT RAISE(ABORT,'synthetic outage'); END;");
+  assert.equal((await f.call('payout',{...source,settlementId:'RECOVER-PAY'})).status,409);assert.equal(count(f,'neo_fin_cash_events'),1);
+  f.sql.exec('DROP TRIGGER fail_payroll_journal');
+  const recovered=await recoverMissingCashJournals({db:f.db,sourceDb:readOnlySchoolSource(f.env.SCHOOL_SOURCE_DB),organizationId:'A'});
+  assert.equal(recovered.posted.length,1);assert.deepEqual(recovered.failed,[]);
+  assert.equal(count(f,'neo_fin_cash_events'),1);assert.equal((await(await f.read('cash-reconciliation')).json()).ready,true);
+ }finally{f.close();}
+});
+test('separate-source retry rejects a changed original amount and preserves the posted invoice',async()=>{
+ const f=await fixture({separate:true});try{
+  assert.equal((await f.invoice()).status,200);
+  f.sourceSql.exec("PRAGMA query_only=OFF;UPDATE neo_portal_records SET data=json_set(data,'$.amount_paise',20000) WHERE kind='invoices';PRAGMA query_only=ON;");
+  assert.equal((await f.invoice()).status,409);assert.equal(count(f,'neo_fin_documents'),1);assert.equal(count(f,'neo_fin_journals'),1);
+  assert.equal(f.sql.prepare('SELECT gross_paise FROM neo_fin_documents').get().gross_paise,10000);
+ }finally{f.close();}
 });
 test('role, tenant, origin, environment, disabled flag and forged fields prevent source mutations',async()=>{
  const f=await fixture();try{

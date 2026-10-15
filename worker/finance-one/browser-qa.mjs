@@ -25,9 +25,17 @@ async function fixture(){
  for(const [kind,id,data] of [['students','ST1',{}],['fee_structures','FS1',{}],['invoices','IMPORT1',{student_id:'ST1',fee_structure_id:'FS1',amount_paise:15000,due_date:'2026-10-08'}]])sqlite.prepare("INSERT INTO neo_portal_records VALUES('QA_SCHOOL',?,?,?)").run(kind,id,JSON.stringify(data));
  await postAccrualJournalForDocument(db,'QA_CENTER','QA-INVOICE');
  const env={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SOURCE_OPERATIONS_ENABLED:'true',FINANCE_ONE_SESSION_SECRET:'SyntheticQAOnly-32-character-session-secret',FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})},ASSETS:{fetch:async()=>new Response(html)}};
+ // Exercise the real split-source path in both engines. Finance has no school
+ // records table, and the school connection rejects every write at SQLite level.
+ const sourceSql=new DatabaseSync(':memory:');sourceSql.exec('CREATE TABLE neo_portal_records(school_id TEXT,kind TEXT,id TEXT,data TEXT,PRIMARY KEY(school_id,kind,id))');
+ for(const r of sqlite.prepare('SELECT * FROM neo_portal_records').all())sourceSql.prepare('INSERT INTO neo_portal_records VALUES(?,?,?,?)').run(r.school_id,r.kind,r.id,r.data);
+ const sourceSnapshot=sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all();
+ sqlite.exec('DROP TABLE neo_portal_records');sourceSql.exec('PRAGMA query_only=ON');
+ env.SCHOOL_SOURCE_DB={prepare(q){const stmt=sourceSql.prepare(q),bound=args=>({first:async()=>stmt.get(...args),all:async()=>({results:stmt.all(...args)})});return {...bound([]),bind:(...args)=>bound(args)};}};
+ env.FINANCE_ONE_SEPARATE_SOURCE_ENABLED='true';env.FINANCE_ONE_SOURCE_ENVIRONMENT='staging';
  const server=createServer(async(req,res)=>{try{const chunks=[];for await(const chunk of req)chunks.push(chunk);const body=Buffer.concat(chunks);const response=await worker.fetch(new Request('http://'+req.headers.host+req.url,{method:req.method,headers:req.headers,...(body.length?{body}: {})}),env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){res.writeHead(500);res.end('Fixture failed');console.error(e);}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
- return{sqlite,server,url:'http://127.0.0.1:'+server.address().port};
+ return{sqlite,sourceSql,sourceSnapshot,server,url:'http://127.0.0.1:'+server.address().port};
 }
 mkdirSync('/tmp/finance-one-browser-qa',{recursive:true});
 for(const [name,engine] of Object.entries({chromium,webkit})){
@@ -88,5 +96,8 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   await expect(page.locator('#trial-print')).toBeDisabled();await expect(page.locator('#trial-context')).toBeEmpty();
   assert.deepEqual(errors,[]);
   console.log(name+': PASS — login, independent correction approval, source import, audited identity, CSV totals, logout privacy, zero cash, 390/768/1440px');
- }finally{if(browser)await browser.close();await new Promise(resolve=>f.server.close(resolve));f.sqlite.close();}
+ }finally{if(browser)await browser.close();await new Promise(resolve=>f.server.close(resolve));
+  try{assert.deepEqual(f.sourceSql.prepare('SELECT * FROM neo_portal_records ORDER BY school_id,kind,id').all(),f.sourceSnapshot);}
+  finally{f.sourceSql.close();f.sqlite.close();}
+ }
 }
