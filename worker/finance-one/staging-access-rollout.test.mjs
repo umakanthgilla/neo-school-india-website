@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+import worker from './staging-entry.mjs';
+import {STANDARD_CHART} from './accounting-chart.mjs';
 import {rolloutInputs,stagingConfig,releaseFiles,validBlob,stagingAccessSmoke,SOURCE_SHA} from './staging-access-rollout.mjs';
 const input={audience:'a'.repeat(64),subject:'11111111-2222-5333-8444-555555555555',email:'reviewer@example.test'};
 test('rollout validates reviewed identity before any remote or local mutation',()=>{
@@ -47,4 +51,31 @@ test('a failed smoke still revokes the newly issued Finance session',async()=>{
   if(url.endsWith('/summary'))return new Response(null,{status:503,headers:{'cf-ray':'synthetic-ray'}});
   return new Response(null,{status:401});
  }}));assert.equal(revoked,true);
+});
+test('the rollout smoke passes the real Worker with signed Access identity, actual schema, tenant denial and revocations',async()=>{
+ const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
+ for(const name of ['foundation','cash_projection','accounting_journals','auth_accounts','receipt_evidence','legacy_payout_integrity','statutory_review','statutory_remittance','session_revocations','issued_document_immutability','corrections','source_operations'])
+  sql.exec(readFileSync(new URL('../../migrations/finance_payroll_one_'+name+'.sql',import.meta.url),'utf8'));
+ const db={prepare(q){const stmt=sql.prepare(q),bound=args=>({first:async()=>stmt.get(...args),all:async()=>({results:stmt.all(...args)}),run:async()=>({success:true,meta:{changes:stmt.run(...args).changes}})});return {...bound([]),bind:(...args)=>bound(args)};}};
+ for(const suffix of ['A','B','HO'])sql.prepare('INSERT INTO neo_fin_organizations(id,legal_name,organization_type) VALUES(?,?,?)').run('QA_FIN_20261014_'+suffix,'Synthetic '+suffix,suffix==='HO'?'head_office':'independent_center');
+ const org='QA_FIN_20261014_A',account='fin:qa20261014_a_checker';
+ sql.prepare('INSERT INTO neo_fin_memberships(organization_id,account_id,role) VALUES(?,?,?)').run(org,account,'owner');
+ sql.prepare('INSERT INTO neo_fin_auth_accounts(account_id,salt,password_hash,iterations) VALUES(?,?,?,210000)').run(account,'a'.repeat(32),'b'.repeat(64));
+ for(const [code,name,type] of STANDARD_CHART)sql.prepare('INSERT INTO neo_fin_accounts VALUES(?,?,?,?,?,1)').run(org,code,code,name,type);
+ const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+ const jwk={...await crypto.subtle.exportKey('jwk',pair.publicKey),kid:'rollout-fixture',alg:'RS256',use:'sig'};
+ const issuer='https:'+'//'+'lingering-bird-11ec.cloudflareaccess.com',seconds=Math.floor(Date.now()/1000);
+ const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
+ const signed=encode({alg:'RS256',kid:jwk.kid})+'.'+encode({iss:issuer,aud:[input.audience],type:'app',sub:input.subject,email:input.email,iat:seconds-5,exp:seconds+1800});
+ const assertion=signed+'.'+Buffer.from(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(signed))).toString('base64url');
+ const env={DB:db,FINANCE_ONE_ENVIRONMENT:'staging',FINANCE_ONE_READ_API_ENABLED:'true',FINANCE_ONE_ACCESS_LOGIN_ENABLED:'true',
+  FINANCE_ONE_ACCESS_ISSUER:issuer,FINANCE_ONE_ACCESS_AUDIENCE:input.audience,FINANCE_ONE_ACCESS_IDENTITIES:JSON.stringify([{subject:input.subject,accountId:account}]),
+  FINANCE_ONE_SESSION_SECRET:'synthetic-only-finance-session-secret-32-plus',FINANCE_ONE_LOGIN_CLIENT_LIMIT:{limit:async()=>({success:true})},FINANCE_ONE_LOGIN_ACCOUNT_LIMIT:{limit:async()=>({success:true})},
+  ASSETS:{fetch:async()=>new Response(readFileSync(new URL('../../finance-one/portal.html',import.meta.url),'utf8'))}};
+ const original=globalThis.fetch;globalThis.fetch=async url=>{assert.equal(url,issuer+'/cdn-cgi/access/certs');return Response.json({keys:[jwk]});};
+ try{
+  const result=await stagingAccessSmoke(assertion,{request:async(url,options)=>{const headers=new Headers(options.headers);headers.set('Cf-Access-Jwt-Assertion',assertion);return worker.fetch(new Request(url,{...options,headers}),env);}});
+  assert.equal(result.passed,29);assert.equal(sql.prepare('SELECT count(*) n FROM neo_fin_session_revocations').get().n,3);
+  for(const table of ['neo_fin_cash_events','neo_fin_documents','neo_fin_journals'])assert.equal(sql.prepare('SELECT count(*) n FROM '+table).get().n,0);
+ }finally{globalThis.fetch=original;sql.close();}
 });

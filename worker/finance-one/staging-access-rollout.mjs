@@ -115,7 +115,7 @@ export async function executeStagingAccessRollout(input){
   writeFileSync(join(root,'SOURCE_SHA.txt'),SOURCE_SHA+'\n',{mode:0o600,flag:'wx'});
   const config=join(root,'wrangler.access.staging.toml');writeFileSync(config,stagingConfig(input),{mode:0o600,flag:'wx'});
   const run=(binary,args,capture=false)=>execFileSync(binary,args,{cwd:root,timeout:300000,maxBuffer:4*1024*1024,
-   env:{...process.env,CI:'true'},encoding:'utf8',stdio:capture?['ignore','pipe','pipe']:'inherit'});
+   env:{...process.env,CI:'true',CLOUDFLARE_ACCOUNT_ID:'9e116ff1df56f3e8aa0da63f21e9ba97'},encoding:'utf8',stdio:capture?['ignore','pipe','pipe']:'inherit'});
   const wrangler=(args,capture=false)=>run('npx',['--yes','wrangler@4.129.1',...args,'--config',config],capture);
   phase='verify-cloudflare-identity';
   const binary=join(homedir(),'neo-finance-backup.9LrtWd/tools/cloudflared-2026.10.0/cloudflared');
