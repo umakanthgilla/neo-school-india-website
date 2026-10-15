@@ -51,6 +51,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   <label for="account">Finance Account ID</label><input id="account" name="accountId" autocomplete="username" required maxlength="128" placeholder="fin:your-account">
   <label for="password">Finance Password</label><input id="password" name="password" type="password" required autocomplete="current-password" minlength="12" maxlength="256" placeholder="Your Finance password">
   <button id="sign-in" class="primary" type="submit">Sign in securely</button>
+  <button id="access-sign-in" hidden class="small-btn" type="button">Continue with authorized Cloudflare login</button>
   <p role="alert" id="login-error" class="alert" aria-live="polite"></p>
  </form>
  <p class="note">Finance data stays separate for every Head Office and Center. No direct Daily Ledger editing is available. This preview is staging-only and requires separately authorized Finance credentials. It is not the live payroll system.</p>
@@ -212,17 +213,20 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
     $('dash-error').textContent=e.message||'Unable to load Finance records.';
   }
  }
- $('login-form').addEventListener('submit',async event=>{
-  event.preventDefault();$('login-error').textContent='';const btn=$('sign-in');btn.disabled=true;
+ async function login(access=false){
+  $('login-error').textContent='';const btn=$('sign-in');btn.disabled=true;$('access-sign-in').disabled=true;
   const org=$('org').value.trim(),account=$('account').value.trim(),password=$('password').value;
   try{
-   const result=await call('/api/finance-one/v1/session',{method:'POST',body:JSON.stringify({organizationId:org,accountId:account,password})});
+   if(!org)throw Error('Enter your Business / Organization ID.');
+   const result=await call('/api/finance-one/v1/session'+(access?'/access':''),{method:'POST',body:JSON.stringify(access?{organizationId:org}:{organizationId:org,accountId:account,password})});
    if(typeof result.token!=='string'||!result.token)throw Error('Finance login failed.');
    if(typeof result.organizationId!=='string'||result.organizationId!==org)throw Error('Finance organization mismatch.');
    state.sessionVersion++;state.requestVersion++;state.token=result.token;state.org=result.organizationId;$('password').value='';$('org-label').textContent=state.org;
    $('login-panel').hidden=true;$('dashboard-panel').hidden=false;await load();
-  }catch(e){$('login-error').textContent=e.message||'Invalid Finance login.';}finally{btn.disabled=false;}
- });
+  }catch(e){$('login-error').textContent=e.message||'Invalid Finance login.';}finally{btn.disabled=false;$('access-sign-in').disabled=false;}
+ }
+ $('login-form').addEventListener('submit',event=>{event.preventDefault();return login();});
+ $('access-sign-in').addEventListener('click',()=>login(true));
  async function signOut(){
   const token=state.token,version=state.sessionVersion;
   logout(); // Clear confidential on-screen data immediately.
