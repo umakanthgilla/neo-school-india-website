@@ -22,13 +22,22 @@ async function main(){
  }
  const identities=JSON.parse(readFileSync(process.argv[2],'utf8'));
  if(!Array.isArray(identities)||identities.length!==5||new Set(identities.map(i=>i.accountId)).size!==5||identities.some(i=>!expectedAccounts.includes(i.accountId)||!organizations.includes(i.organizationId)||typeof i.password!=='string'))throw Error('Expected the five dedicated synthetic QA identities');
+ const onlyAccount=process.env.FINANCE_QA_ONLY_ACCOUNT;
+ if(onlyAccount&&!expectedAccounts.includes(onlyAccount))throw Error('Unknown QA account filter');
+ const selected=onlyAccount?identities.filter(i=>i.accountId===onlyAccount):identities;
+ console.log('QA scope: '+(onlyAccount||'all five synthetic accounts'));
  const portal=await request('/portal.html');
  check(portal.status===200,'staging portal available');
  check(portal.headers.get('cache-control')==='no-store','portal caching disabled');
  check(portal.headers.get('content-security-policy')?.includes("frame-ancestors 'none'"),'portal frame protection');
  check((await request(api+'/organizations/'+organizations[0]+'/documents')).status===401,'anonymous financial read denied');
- for(const identity of identities){
+ for(const identity of selected){
   const login=await request(api+'/session',{method:'POST',body:{organizationId:identity.organizationId,accountId:identity.accountId,password:identity.password}});
+  if(login.status!==200){
+   const body=await login.text();
+   const category=/1102|exceeded.*(?:CPU|resources)|CPU.*(?:limit|exceeded)/i.test(body)?'Worker resource limit':/Finance login unavailable/.test(body)?'Finance login dependency unavailable':/Invalid credentials/.test(body)?'Credentials or membership denied':/Too many login attempts/.test(body)?'Login rate limit':'Unclassified HTTP failure';
+   console.log('Login diagnostic: '+category+'; content-type '+(login.headers.get('content-type')||'none')+'; CF-Ray '+(login.headers.get('cf-ray')||'none'));
+  }
   check(login.status===200,'login '+identity.accountId+' (HTTP '+login.status+', Retry-After '+(login.headers.get('retry-after')||'none')+')');
   const {token}=await login.json();
   if(typeof token!=='string'||!token)throw Error('Missing session token');
@@ -57,6 +66,6 @@ async function main(){
    if(!revoked)await request(api+'/session/logout',{token,method:'POST'}).catch(()=>{});
   }
  }
- console.log('CLOUD ACCESS QA COMPLETE: '+passed+' checks passed. No source imports or financial postings performed.');
+ console.log('CLOUD ACCESS QA COMPLETE: '+passed+' checks passed; scope '+(onlyAccount||'all five synthetic accounts')+'. No source imports or financial postings performed.');
 }
 main().catch(error=>{console.error('QA STOPPED: '+(error?.name==='SyntaxError'?'private login JSON could not be parsed':error?.name==='TimeoutError'?'network timeout':error?.name==='TypeError'?'network request failed':error.message));process.exitCode=1;});
