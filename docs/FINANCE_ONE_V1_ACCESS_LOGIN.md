@@ -64,3 +64,34 @@ Access policy still permits only approved people and covers every staging path.
 The broader release remains **NO GO** until source integration, financial journeys,
 corrections, statutory review and populated restore acceptance are complete.
 This login alternative does not authorize production deployment or merge PR #26.
+
+## Fixed-target operator rollout helper
+
+`worker/finance-one/staging-access-rollout.mjs --execute-staging AUD SUBJECT EMAIL`
+is an operator-only Mac helper, not a Worker route. It downloads the runtime from
+passing candidate `bda278e7e5272bacd37ef53b7e92d60cef581c5a`, verifies its CI status
+and each source Git blob hash, revalidates the reviewed signed Access identity,
+checks the existing QA Center A checker account and signing-secret presence, records
+current staging deployments, bundles and deploys only `neo-finance-one-staging`.
+Its account, Worker, D1, rate-limit namespaces and QA owner mapping are fixed;
+callers cannot select a production target or a different Finance identity.
+
+It creates a new private release directory in the operator's home and records
+source SHA, deployment version and smoke evidence there. It never imports a SQL
+file or changes migrations. Corrections, source operations and separate-source
+selection remain OFF. Existing signing secrets are retained. The deployment
+replaces runtime variables with the reviewed helper configuration; review it if
+staging configuration changes after the 15 October evidence.
+
+After deployment it runs three actual Access-to-Finance login/logout sessions,
+own-summary, Center B/HO denial, foreign-Origin denial, disabled operation gates
+and revoked-token replay checks. Only Finance session revocations are written by
+those checks; there are no financial postings. It does not prove actual bank,
+payroll, separate-source or independent-human maker/checker acceptance. A smoke
+failure after deployment leaves operations OFF and reports acceptance incomplete.
+Network/download/preflight failures stop before deployment; ambiguous deploy
+failures require checking staging deployments rather than blindly retrying.
+
+Never paste the Access token or private logs. Share only the final deployment
+version and PASS/STOPPED diagnostic. No API token, password or paid plan change is
+requested by the helper.
