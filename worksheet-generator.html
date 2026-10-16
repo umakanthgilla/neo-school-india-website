@@ -143,16 +143,17 @@ body{padding:18px 20px 22px;overflow-x:hidden}
  .meta-card{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 8px;margin:6px 0 8px;padding:6px 8px;font-size:10px}
  .page.has-letterhead{padding-top:108px}
 }
-/* Lower the student fields and footer identity further while preserving activity clearance */
+/* Translucent footer label with white text; move Name/Date and title down by about half an inch */
 .page{padding-top:22px;padding-bottom:108px}
-.meta-card.compact-ident{position:absolute!important;left:38px;right:38px;bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;padding:7px 2px;border:0;border-top:1px solid #dce5f1;border-radius:0;background:transparent;font:12px/1.2 Inter,system-ui,sans-serif}
-.meta-card.compact-ident b{display:inline;font-size:9px;letter-spacing:.03em;margin:0 5px 0 0}
-.meta-card.compact-ident .serial{font-size:13px;font-weight:900}
-.meta-card.compact-ident .subject-ident{font-size:12px;font-weight:800}
-.student{margin-top:60px;margin-bottom:26px}
+.meta-card.compact-ident{position:absolute!important;left:38px;right:38px;bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;padding:10px 14px;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(18,35,72,.62);color:#fff;font:12px/1.2 Inter,system-ui,sans-serif;box-shadow:0 2px 8px rgba(15,30,60,.10)}
+.meta-card.compact-ident b{display:inline;color:#fff;font-size:9px;letter-spacing:.03em;margin:0 5px 0 0}
+.meta-card.compact-ident .serial{font-size:13px;font-weight:900;color:#fff}
+.meta-card.compact-ident .subject-ident{font-size:12px;font-weight:800;color:#fff}
+.student{margin-top:108px;margin-bottom:26px}
 .worksheet-title{margin-bottom:28px}
 .page.has-letterhead{padding-top:122px;padding-bottom:108px}
-.page.has-letterhead .meta-card.compact-ident{left:38px;right:38px;bottom:4px;padding:7px 2px;margin:0;border:0;border-top:1px solid #dce5f1;border-radius:0;background:transparent}
+.page.has-letterhead .meta-card.compact-ident{left:38px;right:38px;bottom:4px;padding:10px 14px;margin:0;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(18,35,72,.62);color:#fff;box-shadow:0 2px 8px rgba(15,30,60,.10)}
+.page.has-letterhead .meta-card.compact-ident b,.page.has-letterhead .meta-card.compact-ident .serial,.page.has-letterhead .meta-card.compact-ident .subject-ident{color:#fff}
 </style></head>
 <body><header class="studio-nav"><div><div class="nav-brand">NEO SCHOOL INDIA · WORKSHEET STUDIO</div><span class="nav-crumb">ACADEMICS / WORKSHEET GENERATOR</span></div><nav class="nav-links" aria-label="Workspace navigation"><a class="primary" href="worksheet-portal.html">← Back to Worksheet Studio</a></nav></header><div class="layout">
 <section class="card"><div class="eyebrow">Worksheet Studio · Setup</div><h2>Worksheet setup</h2><div class="settings-shell"><nav class="settings-tabs" aria-label="Worksheet settings"><button type="button" class="settings-tab active" data-tab="school">🏫<span>School</span></button><button type="button" class="settings-tab" data-tab="content">🖼️<span>Content</span></button><button type="button" class="settings-tab" data-tab="class">📚<span>Class & Subject</span></button><button type="button" class="settings-tab" data-tab="activities">✏️<span>Activities</span></button></nav><div class="settings-body">
