@@ -4,13 +4,14 @@
  * The host MUST supply authenticatedAccountId from its verified server session.
  */
 import {FinanceAccessError, resolveFinanceOrganization, listOwnDocuments} from './organization-access.mjs';
+import {readLedgerExportPage} from './ledger-export.mjs';
 import {getFinanceSnapshot} from './finance-reports.mjs';
 import {listPayoutSettlementStatus} from './settlement-status.mjs';
 import {readStatutoryLiabilities} from './statutory-liabilities.mjs';
 import {auditFinanceCashJournals} from './cash-journal-audit.mjs';
 import {auditFinanceAccrualJournals} from './accrual-journal-audit.mjs';
 
-const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger|settlements|statutory-liabilities|cash-reconciliation|accrual-reconciliation)\/?$/;
+const ROUTE = /^\/api\/finance-one\/v1\/organizations\/([A-Za-z0-9][A-Za-z0-9_-]{0,79})\/(summary|documents|daily-ledger|ledger-export|settlements|statutory-liabilities|cash-reconciliation|accrual-reconciliation)\/?$/;
 function json(body,status=200) {
   return new Response(JSON.stringify(body), {status, headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 }
@@ -32,6 +33,7 @@ export async function handleFinanceReadApi({request,db,authenticatedAccountId}){
   const [,organizationId,resource]=match;
   try {
     const context=await resolveFinanceOrganization(db,authenticatedAccountId,organizationId,'finance','read');
+    if(resource==='ledger-export')return json(await readLedgerExportPage({db,organizationId,cursor:url.searchParams.get('cursor')}));
     if(resource==='summary')return json(await getFinanceSnapshot({db,accountId:authenticatedAccountId,organizationId}));
     if(resource==='statutory-liabilities')return json(await readStatutoryLiabilities({db,authenticatedAccountId,organizationId}));
     if(resource==='cash-reconciliation')return json(await auditFinanceCashJournals({db,authenticatedAccountId,organizationId}));

@@ -81,3 +81,10 @@ test('backend errors do not leak private database internals',async()=>{
  const response=await handleFinanceReadApi({request:req('A','documents'),db,authenticatedAccountId:'alice'});
  assert.equal(response.status,500);assert.deepEqual(await response.json(),{error:'Finance read failed'});
 });
+
+test('full ledger export requires organization membership before reading any export rows',async()=>{
+ const f=fixture();
+ for(const actor of ['ho','bob','teacher'])assert.equal((await call(f,actor,'A','ledger-export')).status,403);
+ assert.equal((await call(f,undefined,'A','ledger-export')).status,401);
+ assert.equal(f.queries.some(q=>q.sql.includes('neo_fin_cash_events')),false);
+});

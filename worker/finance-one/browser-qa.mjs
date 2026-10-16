@@ -70,6 +70,12 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   assert.match(csv,/All-time posted journals; INR paise/);assert.match(csv,/"QA_CENTER"/);
   assert.ok(csv.includes('"\'=HYPERLINK(""https://example.invalid"",""synthetic"")"'),'CSV text formula must be neutralized');
   assert.match(csv,/"TOTAL","","35000","35000"/);
+  const ledgerDownloadPromise=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export full cash ledger CSV'}).click();
+  const ledgerDownload=await ledgerDownloadPromise;
+  const ledgerCsv=readFileSync(await ledgerDownload.path(),'utf8');
+  assert.match(ledgerCsv,/"Organization","QA_CENTER"/);assert.match(ledgerCsv,/"Entries","0"/);
+  await expect(page.locator('#ledger-export-message')).toContainText('Exported 0 verified cash events');
   await page.evaluate(()=>{window.financeQaPrintCalls=0;window.print=()=>window.financeQaPrintCalls++;});
   await page.getByRole('button',{name:'Print / Save trial balance PDF'}).click();
   assert.equal(await page.evaluate(()=>window.financeQaPrintCalls),1);
@@ -92,6 +98,7 @@ for(const [name,engine] of Object.entries({chromium,webkit})){
   assert.equal(f.sqlite.prepare('SELECT count(*) n FROM neo_fin_correction_decisions').get().n,1);
   await page.getByRole('button',{name:'Sign out',exact:true}).click();
   await expect(page.locator('#source-history')).toBeEmpty();await expect(page.locator('#trial-rows')).toBeEmpty();
+  await expect(page.locator('#ledger-export')).toBeDisabled();await expect(page.locator('#ledger-export-message')).toBeEmpty();
   await expect(page.locator('#trial-export')).toBeDisabled();
   await expect(page.locator('#trial-print')).toBeDisabled();await expect(page.locator('#trial-context')).toBeEmpty();
   assert.deepEqual(errors,[]);

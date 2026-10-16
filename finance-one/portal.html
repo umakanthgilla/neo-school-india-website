@@ -69,8 +69,8 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   <div class="stat"><div class="label">Accounting Profit</div><div id="profit" class="value">—</div></div>
  </section>
  <div class="grid">
-  <article class="card accent section"><h2>Daily Cash Ledger</h2><p class="caption">Latest 50 verified cash events — view only. Summary amounts include all-time transactions.</p>
-   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Transaction</th><th>Direction</th><th class="amount">Amount</th></tr></thead><tbody id="ledger-rows"></tbody></table></div><p id="ledger-empty" class="empty" hidden>No transactions available.</p>
+  <article class="card accent section"><h2>Daily Cash Ledger</h2><p class="caption">Latest 50 verified cash events — view only. Summary amounts include all-time transactions. CSV exports all entries at export start, up to 10,000 entries.</p>
+   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Transaction</th><th>Direction</th><th class="amount">Amount</th></tr></thead><tbody id="ledger-rows"></tbody></table></div><p id="ledger-empty" class="empty" hidden>No transactions available.</p><button id="ledger-export" type="button" class="small-btn" disabled>Export full cash ledger CSV</button><p id="ledger-export-message" role="status" aria-live="polite"></p>
   </article>
   <article class="card accent section"><h2>Accounting Documents</h2><p class="caption">Business invoices, bills, receipts and payment records</p>
    <div class="table-wrap"><table><thead><tr><th>Document</th><th>Type</th><th>Status</th><th class="amount">Amount</th></tr></thead><tbody id="document-rows"></tbody></table></div><p id="documents-empty" class="empty" hidden>No documents available.</p>
@@ -140,6 +140,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
   for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
   $('statutory-review').hidden=true;
+  $('ledger-export').disabled=true;$('ledger-export-message').textContent='';
   trialSnapshot=null;$('trial-rows').replaceChildren();$('trial-context').textContent='';$('trial-export').disabled=true;$('trial-print').disabled=true;
   $('source-submit').disabled=false;sourceAttempt=null;sourceLoadVersion++;$('source-panel').hidden=true;$('source-history').replaceChildren();$('source-message').textContent='';
   for(const id of ['source-school','source-record','source-evidence'])$(id).value='';
@@ -163,6 +164,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    ]);
    if(sessionVersion!==state.sessionVersion||requestVersion!==state.requestVersion||
       token!==state.token||organization!==state.org)return;
+   $('ledger-export').disabled=false;
    trialSnapshot=summary;$('trial-export').disabled=false;$('trial-print').disabled=false;
    const reviewed=summary.balanced===true&&cashReconciliation.ready===true&&accrualReconciliation.ready===true;
    $('trial-context').textContent='Organization: '+organization+' · Loaded: '+new Date().toISOString()+' · '+(reviewed?'Balanced; cash and accrual reconciliation checks passed.':'FINANCE REVIEW REQUIRED: balance or reconciliation checks did not pass.');
@@ -323,6 +325,34 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    if(isCurrent(session)){$('source-message').textContent='Import validated. Request '+result.requestId+'. Review the refreshed ledger and reconciliation warnings.';sourceAttempt=null;await loadSourceHistory();await load();if(isCurrent(session)&&!$('corrections-panel').hidden)await loadCorrections();}
   }catch(e){if(isCurrent(session)){$('source-message').textContent=e.message;await loadSourceHistory();await load();}}
   finally{if(isCurrent(session))$('source-submit').disabled=false;}
+ });
+ $('ledger-export').addEventListener('click',async()=>{
+  const session=currentSession();if(!session.token)return;
+  $('ledger-export').disabled=true;$('ledger-export-message').textContent='Preparing complete ledger export…';
+  try{
+   const entries=[];let cursor=null,snapshot,total;const seen=new Set();
+   do{
+    const page=await call(operationPath()+'/ledger-export'+(cursor?'?cursor='+encodeURIComponent(cursor):''));
+    if(!isCurrent(session))return;
+    if(page.organizationId!==session.org||typeof page.snapshot!=='string'||!/^(0|[1-9]\d*)$/.test(page.snapshot)||!Array.isArray(page.entries)||!Number.isSafeInteger(page.totalEntries)||page.totalEntries<0||page.totalEntries>10000)throw Error('Export unavailable or exceeds 10,000 entries. No partial file downloaded.');
+    if(snapshot===undefined){snapshot=page.snapshot;total=page.totalEntries;}
+    if(page.snapshot!==snapshot||page.totalEntries!==total)throw Error('Ledger snapshot changed. Restart export.');
+    for(const entry of page.entries){
+     if(typeof entry.event_id!=='string'||seen.has(entry.event_id)||!Number.isSafeInteger(entry.amount_paise)||entry.amount_paise<=0||!['money_in','money_out'].includes(entry.direction))throw Error('Ledger export validation failed.');
+     seen.add(entry.event_id);entries.push(entry);
+    }
+    if(page.nextCursor!==null&&(typeof page.nextCursor!=='string'||page.nextCursor===cursor||page.entries.length===0))throw Error('Invalid export continuation.');
+    cursor=page.nextCursor;
+    if(entries.length>10000||entries.length>total)throw Error('Ledger export validation failed.');
+   }while(cursor);
+   if(entries.length!==total)throw Error('Ledger export incomplete. No partial file downloaded.');
+   const cell=value=>String.fromCharCode(34)+String(value??'').replace(/^[\s]*[=+@-]/,m=>"'"+m).replace(/"/g,'""')+String.fromCharCode(34);
+   const rows=[['Organization',session.org],['Scope','Verified cash events at export start; INR paise; posting insertion order'],['Entries',total],['Event ID','Effective at','Source kind','Source ID','Direction','Amount paise','Verification reference'],...entries.map(e=>[e.event_id,e.effective_at,e.source_kind,e.source_id,e.direction,e.amount_paise,e.verification_reference])];
+   const url=URL.createObjectURL(new Blob(['\uFEFF'+rows.map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'}));
+   const a=document.createElement('a');a.href=url;a.download='finance-cash-ledger-'+session.org+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+   $('ledger-export-message').textContent='Exported '+total+' verified cash events. Amounts are INR paise.';
+  }catch(error){if(isCurrent(session))$('ledger-export-message').textContent=error.message;}
+  finally{if(isCurrent(session))$('ledger-export').disabled=false;}
  });
  $('trial-print').addEventListener('click',()=>{
   if(!state.token||!trialSnapshot||trialSnapshot.organizationId!==state.org)return;

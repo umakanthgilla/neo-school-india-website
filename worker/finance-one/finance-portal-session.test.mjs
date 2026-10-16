@@ -12,6 +12,7 @@ class FakeElement {
  addEventListener(type,fn){this.handlers[type]=fn;}
  appendChild(node){this.children.push(node);return node;}
  replaceChildren(){this.children=[];}
+ click(){}
 }
 function mount(fetchImpl){
  const nodes=new Map();
@@ -21,16 +22,16 @@ function mount(fetchImpl){
  };
  document.getElementById('login-panel').hidden=false;
  document.getElementById('dashboard-panel').hidden=true;
- const prints=[];
+ const prints=[],downloads=[];
  const context=vm.createContext({document,window:{print(){prints.push({organization:document.getElementById('trial-context').textContent,rows:document.getElementById('trial-rows').children.length});}},location:{origin:'https://finance.example.invalid'},
-  fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent});
+  fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent,Blob,URL:{createObjectURL(blob){downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},setTimeout(fn){fn();}});
  new vm.Script(script,{filename:'portal.html:inline-script'}).runInContext(context);
  const $=id=>document.getElementById(id);
  const login=(org,account='fin:alice')=>{
   $('org').value=org;$('account').value=account;$('password').value='ValidPassword1234!';
   return $('login-form').handlers.submit({preventDefault(){}});
  };
- return {$,login,prints,signOut:()=>$('sign-out').handlers.click(),refresh:()=>$('refresh').handlers.click()};
+ return {$,login,prints,downloads,signOut:()=>$('sign-out').handlers.click(),refresh:()=>$('refresh').handlers.click()};
 }
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
 test('Cloudflare Finance sign-in sends only organization, then uses the existing private dashboard and sign-out',async()=>{
@@ -208,4 +209,38 @@ test('delayed source audit response cannot restore private history after logout 
  finish(json({entries:[{action:'receipt',status:'succeeded',source_json:'PRIVATE_CENTER_A_SOURCE',requested_by:'fin:alice'}]}));
  await pending;assert.equal(app.$('source-history').children.length,0);assert.equal(app.$('source-panel').hidden,true);
  assert.equal(app.$('org-label').textContent,'CENTER_B');
+});
+
+test('full ledger CSV consumes all pages and neutralizes formula references',async()=>{
+ let pages=0;
+ const entry=id=>({event_id:id,effective_at:'2026-10-16',source_kind:'receipt',source_id:id,direction:'money_in',amount_paise:100,verification_reference:'=HYPERLINK("private")'});
+ const app=mount(async(url)=>{
+  if(url.endsWith('/session'))return json({token:'TEST',organizationId:'CENTER_A'});
+  if(url.includes('/ledger-export')){pages++;return json({organizationId:'CENTER_A',snapshot:'2',totalEntries:2,entries:[entry(pages===1?'ONE':'TWO')],nextCursor:pages===1?'CENTER_A:2:1':null});}
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ await app.login('CENTER_A');await app.$('ledger-export').handlers.click();
+ assert.equal(pages,2);assert.equal(app.downloads.length,1);
+ const csv=await app.downloads[0].text();assert.match(csv,/ONE/);assert.match(csv,/TWO/);assert.match(csv,/'=HYPERLINK/);assert.match(app.$('ledger-export-message').textContent,/Exported 2/);
+});
+test('logout during full ledger export prevents download and clears export feedback',async()=>{
+ let finish;
+ const app=mount(async(url)=>{
+  if(url.endsWith('/session'))return json({token:'TEST',organizationId:'CENTER_A'});
+  if(url.endsWith('/session/logout'))return new Response(null,{status:204});
+  if(url.includes('/ledger-export'))return new Promise(resolve=>finish=resolve);
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ await app.login('CENTER_A');const pending=app.$('ledger-export').handlers.click();await flush();await app.signOut();
+ finish(json({organizationId:'CENTER_A',snapshot:'0',totalEntries:0,entries:[],nextCursor:null}));await pending;
+ assert.equal(app.downloads.length,0);assert.equal(app.$('ledger-export').disabled,true);assert.equal(app.$('ledger-export-message').textContent,'');
+});
+test('incomplete ledger pages never produce a partial CSV download',async()=>{
+ const app=mount(async(url)=>{
+  if(url.endsWith('/session'))return json({token:'TEST',organizationId:'CENTER_A'});
+  if(url.includes('/ledger-export'))return json({organizationId:'CENTER_A',snapshot:'2',totalEntries:2,entries:[],nextCursor:null});
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ await app.login('CENTER_A');await app.$('ledger-export').handlers.click();
+ assert.equal(app.downloads.length,0);assert.match(app.$('ledger-export-message').textContent,/incomplete/);
 });
