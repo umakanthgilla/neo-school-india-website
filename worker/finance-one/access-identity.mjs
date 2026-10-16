@@ -57,7 +57,8 @@ export async function verifyAccessIdentity(request,config,{fetcher=fetchAccessKe
  let entry=cache.get(config.issuer);
  if(!entry||entry.until<=now||entry.fetcher!==fetcher){
   stage='ACCESS_KEYS_FETCH';
-  const response=await fetcher(config.issuer+'/cdn-cgi/access/certs',{redirect:'error',signal:AbortSignal.timeout(5000)});
+  // Workerd accepts follow/manual only. Reject redirects below without following them.
+  const response=await fetcher(config.issuer+'/cdn-cgi/access/certs',{redirect:'manual',signal:AbortSignal.timeout(5000)});
   stage='ACCESS_KEYS_RESPONSE';
   if(!response.ok||!response.body)throw Error('Access keys unavailable');
   const reader=response.body.getReader();let chunks=[],size=0;

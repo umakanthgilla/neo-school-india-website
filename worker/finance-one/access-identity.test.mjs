@@ -97,3 +97,12 @@ test('Access login requires existing active Finance credentials and selected org
   assert.equal((await handleFinanceLogin({request:request(token),env:{...settings,FINANCE_ONE_ENVIRONMENT:'production'}})).status,404);
  }finally{globalThis.fetch=original;sql.close();}
 });
+
+test('Access certificates use Workers manual redirects and reject redirect responses without following',async()=>{
+ const token=await assertion();let calls=0;
+ await assert.rejects(verifyAccessIdentity(request(token),config,{fetcher:async(url,options)=>{
+  calls++;assert.equal(url,issuer+'/cdn-cgi/access/certs');assert.equal(options.redirect,'manual');
+  return new Response(null,{status:302,headers:{location:'https://untrusted.test/keys'}});
+ },now}),error=>{assert.deepEqual(accessFailure(error),{code:'ACCESS_KEYS_RESPONSE',status:503});return true;});
+ assert.equal(calls,1);
+});
