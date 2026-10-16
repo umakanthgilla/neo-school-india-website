@@ -286,16 +286,14 @@ function thinkingActivity(act,topic,classCode,items,pageIndex=0){
    {q:'Find the missing number. Use the pictures to explain your rule.',groups:[['● ●','2'],['● ● ● ●','4']],follow:'2, 4, __, 8. The rule is to add ____.'}
   ][level];
   const countVariants=[
-   [['🍎 🍎','🍎 🍎 🍎'],['🟡 🟡','🟡 🟡 🟡']],
-   [['⭐ ⭐ ⭐','⭐ ⭐ ⭐ ⭐'],['🔵 🔵','🔵 🔵 🔵']],
-   [['🐟 🐟','🐟 🐟 🐟 🐟'],['🍓 🍓 🍓','🍓 🍓 🍓 🍓']],
-   [['🚗 🚗 🚗','🚗 🚗 🚗 🚗'],['🌼 🌼','🌼 🌼 🌼']],
-   [['🧸 🧸','🧸 🧸 🧸 🧸'],['🍌 🍌 🍌','🍌 🍌 🍌 🍌']],
-   [['🦋 🦋 🦋','🦋 🦋 🦋 🦋 🦋'],['⚽ ⚽','⚽ ⚽ ⚽']]
+   ['🍎 🍎','🍎 🍎 🍎'],
+   ['⭐ ⭐ ⭐','⭐ ⭐ ⭐ ⭐'],
+   ['🐟 🐟','🐟 🐟 🐟 🐟'],
+   ['🚗 🚗 🚗','🚗 🚗 🚗 🚗'],
+   ['🧸 🧸','🧸 🧸 🧸 🧸'],
+   ['🦋 🦋 🦋','🦋 🦋 🦋 🦋 🦋']
   ][variant];
-  data.groups=[{0:[countVariants[0][0][0],countVariants[0][0][1]]}][0]||data.groups;
-  if(level===0){data.q='Count with your teacher. Point to each picture once.';data.groups=[{0:countVariants[0][0][0]}].map((_,i)=>[countVariants[variant][0][0],''],);}
-  data.groups=[countVariants[variant][0],countVariants[variant][1]].map((g,i)=>[g[i===0?0:1], '']);
+  data.groups=[[countVariants[0],''],[countVariants[1],'']];
   if(level===0){data.q='Count with your teacher. Which group has more?';data.follow='Point to the group with MORE.';}
   else if(level===1){data.q='Count each set. Circle the group with one more.';data.follow='Which group has one more picture?';}
   else if(level===2){data.q='Count, compare and write the number for each group.';data.follow='How many more are in the larger group?';}
