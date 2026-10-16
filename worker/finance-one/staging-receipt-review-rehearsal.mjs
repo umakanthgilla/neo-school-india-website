@@ -14,12 +14,7 @@ const checks=[
  ['integrity','PRAGMA quick_check;'],
  ['foreign-keys','PRAGMA foreign_key_check;'],
  ['schema',"SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name LIKE 'neo_fin_%' ORDER BY type,name;"],
- ['financial-counts',`SELECT 'documents' AS item,COUNT(*) AS total FROM neo_fin_documents
- UNION ALL SELECT 'settlements',COUNT(*) FROM neo_fin_payment_settlements
- UNION ALL SELECT 'cash_events',COUNT(*) FROM neo_fin_cash_events
- UNION ALL SELECT 'journals',COUNT(*) FROM neo_fin_journals
- UNION ALL SELECT 'journal_lines',COUNT(*) FROM neo_fin_journal_lines
- UNION ALL SELECT 'receipt_verifications',COUNT(*) FROM neo_fin_receipt_verifications;`]
+ ...['documents','payment_settlements','cash_events','journals','journal_lines','receipt_verifications'].map(table=>['count-'+table,"SELECT '"+table+"' AS item,COUNT(*) AS total FROM neo_fin_"+table+';'])
 ];
 export async function rehearseReceiptReview({folder,stagingConfig,runner=execFileSync,request=fetch,log=console.log,now=Date.now}){
  let phase='backup verification';
@@ -38,7 +33,8 @@ export async function rehearseReceiptReview({folder,stagingConfig,runner=execFil
     const parsed=JSON.parse(raw);
     // One query per invocation: do not assume how D1 groups multi-statement results.
     if(!Array.isArray(parsed)||parsed.length!==1||parsed[0].success!==true||!Array.isArray(parsed[0].results))throw Error('Unconfirmed query');
-    results.push(parsed[0].results);
+    if(results.length<3)results.push(parsed[0].results);
+    else{if(!results[3])results[3]=[];results[3].push(...parsed[0].results);}
    }
    if(results[0]?.[0]?.quick_check!=='ok'||results[1].length)throw Error('Integrity failed');
    writeFileSync(join(folder,label+'-check.json'),JSON.stringify(results,null,2),{mode:0o600});
@@ -46,8 +42,10 @@ export async function rehearseReceiptReview({folder,stagingConfig,runner=execFil
   };
   log('PASS: backup checksum and staging guards');
   const before=inspect(stagingConfig,'neo-finance-one-staging','source');
+  phase='verify migration 13 is absent';
   if(before[2].some(r=>r.name.startsWith('neo_fin_receipt_evidence_')))throw Error('Migration 13 already present; inspect before selecting migrations');
   const config=join(folder,'wrangler.review-restore.toml');
+  phase='check restore resume state';
   if(existsSync(config))throw Error('Existing restore config found; preserve and inspect it instead of creating another database');
   phase='create isolated restore database';
   const name='neo-finance-review-restore-'+now().toString(36);
@@ -78,7 +76,12 @@ export async function rehearseReceiptReview({folder,stagingConfig,runner=execFil
   writeFileSync(join(folder,'migration-13-rehearsal.json'),JSON.stringify(evidence,null,2),{mode:0o600});
   log('PASS: migration 13 restore rehearsal');log('PASS: integrity OK; financial counts unchanged');log('STAGING MIGRATION: NOT APPLIED');log('EVIDENCE FOLDER: '+folder);
   return evidence;
- }catch{log('RESTORE STOPPED: '+phase);return null;}
+ }catch(error){
+  log('RESTORE STOPPED: '+phase);
+  const detail=String(error?.stdout||'')+' '+String(error?.stderr||'')+' '+String(error?.message||'');
+  const code=detail.includes('too many terms in compound SELECT')?'D1_COMPOUND_SELECT_LIMIT':detail.includes('SQLITE_AUTH')?'D1_SQLITE_AUTH':detail.includes('Existing restore config')?'EXISTING_RESTORE_CONFIG':detail.includes('Backup verification failed')?'BACKUP_MISMATCH':detail.includes('already present')?'MIGRATION_ALREADY_PRESENT':'CHECK_OR_COMMAND_FAILED';
+  log('SAFE RESTORE CODE: '+code);return null;
+ }
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  const folder=process.argv[2];

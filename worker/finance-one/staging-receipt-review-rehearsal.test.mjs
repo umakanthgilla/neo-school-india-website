@@ -24,6 +24,7 @@ function fixture(){
    assert.notEqual(name,'neo-finance-one-staging');writes++;restored.exec(readFileSync(args[args.indexOf('--file')+1],'utf8'));return '';
   }
   queries++;const sql=args[args.indexOf('--command')+1];
+  assert.doesNotMatch(sql,/\bUNION\b/i,'D1 compound SELECT limit must not affect inspection');
   const results=(name==='neo-finance-one-staging'?source:restored).prepare(sql).all();
   return JSON.stringify([{success:true,results,meta:{}}]);
  };
@@ -32,7 +33,7 @@ function fixture(){
 test('restore helper checks each query separately, compares full schema and migrates only new restored database',async()=>{
  const f=fixture();try{
  const evidence=await rehearseReceiptReview({...f,request:async()=>new Response(migration),log:line=>f.logs.push(line),now:()=>1792123455000});
- assert.ok(evidence,f.logs.join('\n'));assert.equal(evidence.stagingMigrationApplied,false);assert.equal(f.writes,2);assert.equal(f.queries,12);
+ assert.ok(evidence,f.logs.join('\n'));assert.equal(evidence.stagingMigrationApplied,false);assert.equal(f.writes,2);assert.equal(f.queries,27);
  assert.equal(f.source.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'neo_fin_receipt_evidence_%'").get().n,0);
  assert.equal(f.restored.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'neo_fin_receipt_evidence_%'").get().n,9);
  assert.equal(JSON.parse(readFileSync(join(f.folder,'migration-13-rehearsal.json'),'utf8')).financialCountsUnchanged,true);
@@ -43,5 +44,13 @@ test('altered backup fails before creating a database or running any remote quer
  writeFileSync(join(f.folder,'staging-before-migration-13.sql'),'ALTERED');let called=false;
  const evidence=await rehearseReceiptReview({...f,runner:()=>{called=true;throw Error('Must not run');},log:()=>{}});
  assert.equal(evidence,null);assert.equal(called,false);
+ }finally{f.close();}
+});
+
+test('restore helper reports a fixed safe D1 diagnostic without exposing native logs',async()=>{
+ const f=fixture();try{
+ const logs=[];const error=Error('PRIVATE OPERATOR DETAILS too many terms in compound SELECT');
+ const result=await rehearseReceiptReview({...f,runner:()=>{throw error;},log:line=>logs.push(line)});
+ assert.equal(result,null);assert.ok(logs.includes('SAFE RESTORE CODE: D1_COMPOUND_SELECT_LIMIT'));assert.ok(!logs.join(' ').includes('PRIVATE OPERATOR DETAILS'));
  }finally{f.close();}
 });
