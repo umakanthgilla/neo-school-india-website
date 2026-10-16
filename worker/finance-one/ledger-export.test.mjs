@@ -12,7 +12,7 @@ test('ledger export includes every snapshot row once, excludes foreign businesse
  const f=fixture();try{
  for(let i=0;i<205;i++){f.insert('A','A'+i);f.insert('B','B'+i);}
  const first=await readLedgerExportPage({db:f.db,organizationId:'A'});
- assert.equal(first.entries.length,100);assert.equal(first.totalEntries,205);assert.ok(first.nextCursor);assert.equal(first.entries[0].export_position,undefined);
+ assert.equal(first.entries.length,100);assert.equal(first.totalEntries,205);assert.ok(first.nextCursor);assert.deepEqual(JSON.parse(first.nextCursor),['A','A204','A99']);assert.equal(first.snapshot,'A204');assert.equal(first.entries[0].export_position,undefined);
  f.insert('A','LATER');
  const second=await readLedgerExportPage({db:f.db,organizationId:'A',cursor:first.nextCursor});
  const third=await readLedgerExportPage({db:f.db,organizationId:'A',cursor:second.nextCursor});
@@ -24,6 +24,6 @@ test('ledger export rejects malformed, foreign and impossible cursors and suppor
  const f=fixture();try{
  assert.deepEqual((await readLedgerExportPage({db:f.db,organizationId:'A'})).entries,[]);
  f.insert('A','ONE');
- for(const cursor of ['B:1:1','A:2:1','A:1:2','A:1:0','A:1e2:1','A:9007199254740992:1','A:1:1:extra','A:01:1'])await assert.rejects(readLedgerExportPage({db:f.db,organizationId:'A',cursor}));
+ for(const cursor of ['invalid',JSON.stringify(['B','ONE','ONE']),JSON.stringify(['A','MISSING','ONE']),JSON.stringify(['A','ONE','MISSING']),JSON.stringify(['A',1,1]),JSON.stringify(['A','ONE','ONE','extra'])])await assert.rejects(readLedgerExportPage({db:f.db,organizationId:'A',cursor}));
  }finally{f.sql.close();}
 });

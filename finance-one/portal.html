@@ -334,7 +334,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    do{
     const page=await call(operationPath()+'/ledger-export'+(cursor?'?cursor='+encodeURIComponent(cursor):''));
     if(!isCurrent(session))return;
-    if(page.organizationId!==session.org||typeof page.snapshot!=='string'||!/^(0|[1-9]\d*)$/.test(page.snapshot)||!Array.isArray(page.entries)||!Number.isSafeInteger(page.totalEntries)||page.totalEntries<0||page.totalEntries>10000)throw Error('Export unavailable or exceeds 10,000 entries. No partial file downloaded.');
+    if(page.organizationId!==session.org||typeof page.snapshot!=='string'||page.snapshot.length>1000||!Array.isArray(page.entries)||!Number.isSafeInteger(page.totalEntries)||page.totalEntries<0||page.totalEntries>10000)throw Error('Export unavailable or exceeds 10,000 entries. No partial file downloaded.');
     if(snapshot===undefined){snapshot=page.snapshot;total=page.totalEntries;}
     if(page.snapshot!==snapshot||page.totalEntries!==total)throw Error('Ledger snapshot changed. Restart export.');
     for(const entry of page.entries){
