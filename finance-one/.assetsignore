@@ -1,0 +1,4 @@
+# Operator backups belong outside the deployed asset directory.
+*.before-*
+*.bak
+backups/

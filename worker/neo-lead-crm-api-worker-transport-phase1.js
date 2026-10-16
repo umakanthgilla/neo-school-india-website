@@ -1,4 +1,6 @@
 // @ts-nocheck
+// Finance ONE staging-only module. Disabled unless FINANCE_ONE_READ_API_ENABLED=true.
+import {financeOneWorkerGate} from './finance-one/worker-gate.mjs';
 const ALLOWED_ORIGINS = new Set([
   "https://neo-school-india-website.pages.dev",
   "https://neoschoolindia.com",
@@ -216,6 +218,11 @@ export default {
         headers: cors(request),
       });
     }
+
+    // Finance ONE: independent, dedicated finance identity and active membership.
+    // No impact on unrelated Neo School India routes or disabled deployments.
+    const financeOneResponse = await financeOneWorkerGate({request,env,corsHeaders:cors});
+    if (financeOneResponse) return financeOneResponse;
 
     const url = new URL(request.url);
     const staffRegistrationResponse = await staffRegistrationPortal(request, env, url);

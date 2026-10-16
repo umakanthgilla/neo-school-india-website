@@ -1,0 +1,72 @@
+CONTINUE NEO SCHOOL INDIA — FINANCE & PAYROLL ONE.
+Do not restart or rebuild completed modules. Client production remains NO GO.
+
+Repository: umakanthgilla/neo-school-india-website
+Branch: feature/finance-payroll-one-foundation
+Draft PR #26 MUST remain unmerged without explicit final authorization.
+Staging: https://neo-finance-one-staging.umakanthgilla.workers.dev/
+Finance staging D1: 17c1d0d7-aab1-4e4a-9afe-6b36554b8f93
+
+FIRST:
+Fetch current branch/PR and compare newer commits. Read repository instructions,
+the CURRENT table in docs/FINANCE_ONE_V1_ACCEPTANCE_MATRIX.md,
+docs/FINANCE_ONE_STAGING_EVIDENCE_2026-10-15.md,
+docs/FINANCE_ONE_V1_ACCESS_LOGIN.md and
+docs/FINANCE_ONE_V1_SEPARATE_SCHOOL_SOURCE.md.
+Read the artifact MANIFEST.txt for its exact pinned SHA; do not guess a final SHA.
+Older handover sections are historical, not current missing-feature instructions.
+
+COMPLETED IN SOURCE:
+- 12 migrations, including immutable full invoice/bill accrual reversal decisions
+  and append-only source operation request/attempt/outcome audits.
+- Separate Finance login/session/revocation and tenant permissions.
+- Optional signed Cloudflare Access application login with explicit one-person/
+  one-Finance-account subject mapping; active Finance membership still required.
+- Separate SELECT-only SCHOOL_SOURCE_DB adapter for invoices, receipts, payroll,
+  vendor/payroll/advance payouts and payroll journal recovery.
+- Explicit statutory review even for nil deductions.
+- Trial balance CSV and print, reconciliation and logout privacy.
+- 368 local tests passed for split-source candidate; browser fixture now uses two
+  databases and a query-only school connection. Verify exact-commit CI separately.
+- Empty-financial-data D1 backup restore and migrations 11/12 were remotely checked.
+- Maker/checker actual cloud read/isolation/logout suites passed. Reader login hit
+  a Worker resource-limit 503; full reader/HO/B suites remain incomplete.
+
+LAST REPORTED DEPLOYMENT:
+Source bda278e7e5272bacd37ef53b7e92d60cef581c5a deployed as Worker
+3586576f-d9c6-493e-9c0d-323a6f9ca4fb, with operation flags OFF. Source adapter
+code is included but separate-source binding remains OFF/unconfigured.
+Access login returned 401 with both normal and explicit assertion requests;
+Finance Access identity could not be verified. Runtime diagnosis is incomplete.
+Later ACCESS_* diagnostic changes need their own deployment verification.
+Do not rerun the old baseline rollout helper after targeted fixes: it pins bda.
+No cloud financial postings were accepted.
+Do not blindly rerun migrations or the existing Finance QA identity seed.
+
+CURRENT GATES:
+Verify the full Access application AUD, explicit subject/account links and outer
+Access policy; prove login reliability on the existing Free plan.
+Provision/verify a NEW isolated school-source staging D1 containing synthetic
+records only. Never bind neo-lead-crm live or a Finance/restore DB as source.
+Verify exact deployed bindings/revision and full isolated cloud financial journeys.
+Complete original-source approvals/evidence intake, required cash/refund/payroll
+corrections and remaining operations. Accrual reversal alone is not a cash refund.
+Obtain employer statutory inputs and accountant sign-off; do not invent rates.
+Rehearse populated financial Cloudflare D1 backup/restore; empty snapshot and local
+SQLite rehearsals do not prove this. Review production config separately: the
+current entrypoint intentionally rejects production.
+
+LOCKED:
+Center/HO ownership independent. Ledger report-only. Money In from Receipts,
+Money Out from Vouchers; no duplicate manual ledger postings. Preserve immutable
+postings and existing school workflows. Bank automatic matching can be deferred
+only while safe manual evidence/reconciliation is accepted end-to-end.
+No PR merge, production database write or production deployment without explicit
+final authorization identifying exact artifact/SHA, targets, migrations, backup
+and accepted UAT/security/accounting sign-offs.
+
+USER:
+Continue useful code/test work autonomously, minimize repeated approvals/messages,
+use simple Telugu and preserve the Free-plan constraint. Do not ask for passwords,
+OTPs, cookies or JWTs in chat. The Mac browser/OAuth session is not shared with the
+agent. Existing private rotated QA credentials remain only on the user's Mac.
