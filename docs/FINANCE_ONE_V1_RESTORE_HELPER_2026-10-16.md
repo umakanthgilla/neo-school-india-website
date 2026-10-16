@@ -1,0 +1,9 @@
+# Migration 13 restore rehearsal helper
+
+The operator backup folder is /Users/apple/neo-finance-before-review-8jbO0o. Backup checksum/size verification passed. Individual remote staging queries returned quick_check ok and zero foreign-key findings. The earlier combined-result inspection stopped before creating a restore database; its grouping assumption is no longer used.
+
+staging-receipt-review-rehearsal.mjs runs each inspection query separately and validates one confirmed results array per invocation. It checks the private backup hash, fixed staging account/UUID/environment and both posting flags OFF, compares original schema/counts to a newly created isolated restore DB, then downloads the exact checksum-pinned migration 13 from source 9dd49fb. It migrates only the newly created restored database and compares existing schema, integrity and financial counts afterward. It does not apply migration 13 to staging, change production, enable posting, invite a reviewer or delete a database.
+
+The helper refuses an existing restore config to avoid accumulating duplicate databases after an interrupted run. Preserve partial evidence and inspect the new DB before choosing a resume action. Source/restore JSON and backup SQL remain private. Safe output contains phase, new restore DB name/UUID and PASS summaries only.
+
+Two additional tests run real SQLite schema/restore/migration through an injected CLI runner, verify twelve separate queries, no staging writes and unchanged existing schema/counts; altered backup stops before any remote call. These are helper tests, not actual Cloudflare restore acceptance. Actual rehearsal output remains pending. The financial-data counts in the current backup are zero, so even a successful run will not constitute populated financial restore acceptance.
