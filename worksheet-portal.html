@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neo School India | Worksheet Studio</title>
+<meta name="theme-color" content="#071b52">
+<style>
+:root{--navy:#071b52;--blue:#118be8;--yellow:#f4c400;--ink:#182647;--muted:#64738d;--line:#dce7f5;--paper:#fff;--bg:#f3f7fd}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}body{background:radial-gradient(ellipse at 95% 0%,#dbeeff 0,transparent 32%),var(--bg)}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+.topline{height:6px;background:linear-gradient(90deg,#071b52,#118be8,#f4c400,#e8559a,#21a68a,#7658cc)}
+.shell{min-height:calc(100vh - 6px);display:grid;grid-template-columns:250px minmax(0,1fr)}
+.sidebar{background:linear-gradient(180deg,#071b52,#0a2d70 68%,#071b52);color:#fff;padding:24px 16px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 20px;border-bottom:1px solid #ffffff24}
+.brand-mark{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#118be8,#f4c400);color:#071b52;font-size:24px;font-weight:900;box-shadow:0 6px 16px #0003}
+.brand strong{display:block;font-size:15px;letter-spacing:.01em}.brand small{display:block;margin-top:4px;color:#c4d8f5;font-size:11px}
+.nav-label{padding:0 10px;color:#9ebbe4;font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+.nav{display:grid;gap:7px}.nav a{display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:11px;color:#dceaff;font-size:13px;font-weight:750;border:1px solid transparent}.nav a span{width:24px;text-align:center;font-size:18px}.nav a.active{background:linear-gradient(110deg,#ffffff20,#118be833);border-color:#7db9f866;color:#fff;box-shadow:inset 3px 0 #f4c400}.nav a:hover{background:#ffffff12}
+.sidebar-foot{margin-top:auto;padding:14px 10px;border-top:1px solid #ffffff24;color:#b9cbe7;font-size:11px;line-height:1.6}
+.main{min-width:0;padding:26px clamp(18px,3vw,44px) 40px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:30px}.crumb{font-size:12px;color:var(--muted);font-weight:750}.topbar h1{font-size:clamp(24px,3vw,34px);letter-spacing:-.04em;color:var(--navy);margin:7px 0 0}.topbar p{margin:8px 0 0;color:var(--muted);font-size:14px}.top-actions{display:flex;gap:9px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 15px;border-radius:11px;border:1px solid #b8d1ef;background:#fff;color:var(--navy);font-size:12px;font-weight:850;box-shadow:0 4px 12px #071b5209}.btn.primary{background:linear-gradient(120deg,#071b52,#1166b5 72%,#118be8);color:#fff;border-color:#0b4c9a;box-shadow:0 8px 18px #071b5225}.btn:hover{transform:translateY(-1px)}
+.welcome{display:flex;justify-content:space-between;align-items:center;gap:22px;padding:clamp(22px,3vw,36px);border-radius:22px;color:#fff;background:linear-gradient(115deg,#071b52 0%,#0b3d83 58%,#118be8 100%);box-shadow:0 18px 42px #071b5226;position:relative;overflow:hidden}.welcome:after{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff20;border-radius:50%;right:-85px;top:-130px;box-shadow:0 0 0 32px #ffffff08,0 0 0 68px #ffffff06}.welcome-copy{position:relative;z-index:1;max-width:700px}.welcome .eyebrow{color:#ffe27a;font-size:10px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}.welcome h2{font-size:clamp(22px,2.8vw,31px);letter-spacing:-.035em;line-height:1.15;margin:11px 0}.welcome p{max-width:650px;color:#d9e8ff;font-size:13px;line-height:1.7;margin:0}.welcome .btn{margin-top:20px}.hero-symbol{position:relative;z-index:1;flex:0 0 auto;width:112px;height:112px;border:1px solid #ffffff44;border-radius:28px;background:linear-gradient(145deg,#ffffff25,#ffffff08);display:grid;place-items:center;font-size:58px;box-shadow:inset 0 1px #ffffff3d}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:30px 0 14px}.section-head h2{margin:0;color:var(--navy);font-size:18px;letter-spacing:-.02em}.section-head p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:0 8px 24px #071b5208;display:flex;flex-direction:column;align-items:flex-start;min-height:218px;position:relative;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--card-accent,#118be8)}.card .icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--icon-bg,#eaf4ff);font-size:23px;margin-bottom:15px}.card h3{margin:0 0 8px;color:var(--navy);font-size:16px}.card p{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1.65;flex:1}.card .card-link{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:#096bc1}.card .card-link:hover{text-decoration:underline}
+.info-strip{display:flex;align-items:flex-start;gap:12px;padding:15px 17px;margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:12px;line-height:1.65}.info-strip b{color:var(--navy)}.info-strip .info-icon{font-size:20px}
+@media(max-width:1100px){.shell{grid-template-columns:210px minmax(0,1fr)}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-symbol{width:85px;height:85px;font-size:44px}}
+@media(max-width:720px){.shell{display:block}.sidebar{padding:13px;gap:13px}.brand{padding:2px 6px 12px}.nav{display:flex;overflow-x:auto;padding-bottom:3px}.nav-label,.sidebar-foot{display:none}.nav a{flex:0 0 auto;padding:9px 11px;font-size:11px}.nav a span{width:auto}.main{padding:20px 13px 30px}.topbar{align-items:flex-start;flex-direction:column;margin-bottom:20px}.welcome{padding:22px}.hero-symbol{display:none}.cards{grid-template-columns:1fr}.card{min-height:185px}.section-head{margin-top:24px}}
+</style>
+</head>
+<body><div class="topline"></div>
+<div class="shell">
+<aside class="sidebar">
+  <a class="brand" href="worksheet-portal.html"><span class="brand-mark">N</span><span><strong>NEO SCHOOL INDIA</strong><small>Academic Workspace</small></span></a>
+  <div class="nav-label">Workspace</div>
+  <nav class="nav" aria-label="Academic workspace">
+    <a class="active" href="worksheet-portal.html"><span>▦</span>Worksheet Studio</a>
+    <a href="worksheet-generator.html"><span>✎</span>Generate Worksheets</a>
+    <a href="curriculum-master.html"><span>▤</span>Master Curriculum</a>
+    <a href="schools.html"><span>⌂</span>School Portal</a>
+    <a href="admin.html"><span>◈</span>Head Office</a>
+  </nav>
+  <div class="sidebar-foot">NEO ACADEMIC SYSTEM<br>Independent worksheet workspace<br>Curriculum and worksheet tools stay separate.</div>
+</aside>
+<main class="main">
+  <header class="topbar"><div><div class="crumb">NEO / ACADEMICS / WORKSHEET STUDIO</div><h1>Worksheet Generation Portal</h1><p>A dedicated workspace to create, review and export preschool worksheets.</p></div><div class="top-actions"><a class="btn" href="curriculum-master.html">Master Curriculum ↗</a><a class="btn primary" href="worksheet-generator.html">＋ Create Worksheets</a></div></header>
+  <section class="welcome"><div class="welcome-copy"><div class="eyebrow">Dedicated Academic Tool</div><h2>One portal. One purpose.<br>Better worksheets for every child.</h2><p>Keep worksheet creation separate from Master Curriculum. Choose class, subject, topic and activities in the Worksheet Generator, review the A4 preview, then export a print-ready PDF.</p><a class="btn primary" href="worksheet-generator.html">Open Worksheet Generator <span>→</span></a></div><div class="hero-symbol" aria-hidden="true">✎</div></section>
+  <div class="section-head"><div><h2>Academic Workspaces</h2><p>Each major function has its own dedicated workspace.</p></div></div>
+  <section class="cards">
+    <article class="card" style="--card-accent:#118be8;--icon-bg:#eaf4ff"><div class="icon">✎</div><h3>Worksheet Generator</h3><p>Create topic-based worksheets with class/subject numbering, your school letterhead, large activity illustrations and PDF export.</p><a class="card-link" href="worksheet-generator.html">Launch generator <span>→</span></a></article>
+    <article class="card" style="--card-accent:#7658cc;--icon-bg:#f1ecff"><div class="icon">▤</div><h3>Master Curriculum</h3><p>Manage the curriculum as a separate academic system. Worksheet generation should not be nested inside curriculum screens.</p><a class="card-link" href="curriculum-master.html">Open curriculum master <span>→</span></a></article>
+    <article class="card" style="--card-accent:#21a68a;--icon-bg:#e7f8f2"><div class="icon">⌂</div><h3>School Portal</h3><p>Keep school operations and school-level workflows separate from central worksheet authoring.</p><a class="card-link" href="schools.html">Open school portal <span>→</span></a></article>
+  </section>
+  <div class="info-strip"><span class="info-icon">ⓘ</span><div><b>Architecture principle:</b> Worksheet Generator is a major standalone product area. Master Curriculum, School Portal and Head Office remain separate destinations connected through clear portal navigation. Existing worksheet-generation functionality is kept in its own file.</div></div>
+</main></div></body></html>
