@@ -208,7 +208,7 @@ body{padding:18px 20px 22px;overflow-x:hidden}
 .thinking-colour-card svg{width:100%;max-width:100px;height:auto}
 .thinking-colour-card span{font-size:11px;text-align:center;color:#173b63}
 @media(max-width:520px){.thinking-odd-grid,.thinking-colour-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.thinking-count-grid{grid-template-columns:1fr}.thinking-match-board{gap:10px}.thinking-match-item{font-size:10px;padding:6px}.thinking-match-emoji{font-size:20px;min-width:24px}.thinking-sequence{gap:4px}.thinking-sequence-cell span{font-size:23px}}
-</style></head>
+.thinking-sequence-long{grid-template-columns:repeat(9,minmax(0,1fr))}</style></head>
 <body><header class="studio-nav"><div><div class="nav-brand">NEO SCHOOL INDIA · WORKSHEET STUDIO</div><span class="nav-crumb">ACADEMICS / WORKSHEET GENERATOR</span></div><nav class="nav-links" aria-label="Workspace navigation"><a class="primary" href="worksheet-portal.html">← Back to Worksheet Studio</a></nav></header><div class="layout">
 <section class="card"><div class="eyebrow">Worksheet Studio · Setup</div><h2>Worksheet setup</h2><div class="settings-shell"><nav class="settings-tabs" aria-label="Worksheet settings"><button type="button" class="settings-tab active" data-tab="school">🏫<span>School</span></button><button type="button" class="settings-tab" data-tab="content">🖼️<span>Content</span></button><button type="button" class="settings-tab" data-tab="class">📚<span>Class & Subject</span></button><button type="button" class="settings-tab" data-tab="activities">✏️<span>Activities</span></button></nav><div class="settings-body">
 <div class="settings-panel active" data-panel="school"><label class="field"><span>School name</span><input id="school" value="Neo School India" maxlength="60"></label>
@@ -297,13 +297,16 @@ function thinkingActivity(act,topic,classCode,items){
  }
  if(act==='Colour'){
   const configs=[
-   {q:'Colour the shapes that are the SAME. Leave the different shape plain.',items:[['○','Circle'],['○','Circle'],['△','Triangle'],['○','Circle']],rule:'How many circles did you colour? ____'},
-   {q:'Colour all the things that can FLY. Leave the others plain.',items:[['🦋','Butterfly'],['🚗','Car'],['🐦','Bird'],['🚌','Bus']],rule:'Which two did you colour? __________________'},
-   {q:'Use one colour for shapes with 3 sides and another for shapes with 4 sides.',items:[['△','3 sides'],['□','4 sides'],['△','3 sides'],['▱','4 sides']],rule:'Triangles have ____ sides. Squares have ____ sides.'},
-   {q:'Colour the shapes that have a line of symmetry. Then draw the line.',items:[['○','Circle'],['△','Triangle'],['⬟','Pentagon'],['◐','Half-circle']],rule:'A line of symmetry makes two matching halves.'}
+   {q:'Colour the circles only. Leave the other shapes plain.',rule:'Which shape did you leave plain?',items:[['circle','Circle'],['circle','Circle'],['triangle','Triangle'],['circle','Circle']]},
+   {q:'Colour all the circles. Can you spot the shape that is different?',rule:'I found ____ circles and ____ different shape.',items:[['circle','Circle'],['square','Square'],['circle','Circle'],['circle','Circle']]},
+   {q:'Colour shapes with 3 sides one colour and shapes with 4 sides another colour.',rule:'A triangle has 3 sides. A square has 4 sides.',items:[['triangle','3 sides'],['square','4 sides'],['triangle','3 sides'],['diamond','4 sides']]},
+   {q:'Colour the shapes that have a line of symmetry. Then draw the line.',rule:'A line of symmetry divides a shape into two matching halves.',items:[['circle','Circle'],['triangle','Triangle'],['pentagon','Pentagon'],['half','Half-circle']]}
   ][level];
-  const shapes=configs.items.map((x,i)=>'<div class="thinking-colour-card"><svg viewBox="0 0 100 82" role="img" aria-label="'+x[1]+' outline"><g fill="white" stroke="#173b63" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+(i===0?(level===0?'<circle cx="50" cy="38" r="24"/>':level===1?'<path d="M50 12 L78 62 H22 Z"/>':level===2?'<path d="M50 10 L78 35 L68 66 H32 L22 35 Z"/>':'<circle cx="50" cy="38" r="24"/>'):i===1?'<rect x="25" y="14" width="50" height="48" rx="2"/>':i===2?'<path d="M50 12 L78 62 H22 Z"/>':'<path d="M25 14 H75 L88 38 L75 62 H25 L12 38 Z"/>')+'</g></svg><span>'+x[1]+'</span></div>').join('');
-  return '<p class="taskline">'+configs.q+'</p><div class="thinking-colour-grid">'+shapes+'</div><p class="taskline thinking-follow"><b>Think and tell:</b> '+configs.rule+'</p>';
+  const shapeSvg=kind=>{
+   const path={circle:'<circle cx="50" cy="40" r="25"/>',square:'<rect x="25" y="15" width="50" height="50"/>',triangle:'<path d="M50 12 L79 65 H21 Z"/>',diamond:'<path d="M50 10 L79 40 L50 70 L21 40 Z"/>',pentagon:'<path d="M50 10 L78 31 L67 65 H33 L22 31 Z"/>',half:'<path d="M25 64 A25 25 0 0 1 75 64 Z"/>'};
+   return '<svg viewBox="0 0 100 82" role="img" aria-label="'+kind+' outline"><g fill="#fff" stroke="#173b63" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+path[kind]+'</g></svg>';
+  };
+  return '<p class="taskline">'+configs.q+'</p><div class="thinking-colour-grid">'+configs.items.map(x=>'<div class="thinking-colour-card">'+shapeSvg(x[0])+'<span>'+x[1]+'</span></div>').join('')+'</div><p class="taskline thinking-follow"><b>Think and tell:</b> '+configs.rule+'</p>';
  }
  const tasks={Draw:[['Draw a solution: help a toy cross a little stream.','','Creative problem-solving'],['Complete the missing half of a picture symmetrically.','','Visual-spatial reasoning'],['Design a safe bridge for a toy car to cross a river.','','Plan, build and solve'],['Invent a repeating pattern with two rules and explain it.','','Create and explain']]};
  const t=tasks[act]?.[level]||tasks[act]?.[2];if(!t)return '';
