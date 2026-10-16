@@ -12,6 +12,7 @@ class FakeElement {
  addEventListener(type,fn){this.handlers[type]=fn;}
  appendChild(node){this.children.push(node);return node;}
  replaceChildren(){this.children=[];}
+ setAttribute(name,value){this[name]=value;}
  click(){}
 }
 function mount(fetchImpl){
@@ -24,7 +25,7 @@ function mount(fetchImpl){
  document.getElementById('dashboard-panel').hidden=true;
  const prints=[],downloads=[];
  const context=vm.createContext({document,window:{print(){prints.push({organization:document.getElementById('trial-context').textContent,rows:document.getElementById('trial-rows').children.length});}},location:{origin:'https://finance.example.invalid'},
-  fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent,Blob,URL:{createObjectURL(blob){downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},setTimeout(fn){fn();}});
+  fetch:fetchImpl,Intl,Error,String,Promise,encodeURIComponent,crypto,Blob,URL:{createObjectURL(blob){downloads.push(blob);return 'blob:test';},revokeObjectURL(){}},setTimeout(fn){fn();}});
  new vm.Script(script,{filename:'portal.html:inline-script'}).runInContext(context);
  const $=id=>document.getElementById(id);
  const login=(org,account='fin:alice')=>{
@@ -243,4 +244,17 @@ test('incomplete ledger pages never produce a partial CSV download',async()=>{
  });
  await app.login('CENTER_A');await app.$('ledger-export').handlers.click();
  assert.equal(app.downloads.length,0);assert.match(app.$('ledger-export-message').textContent,/incomplete/);
+});
+
+test('delayed receipt evidence history cannot restore archive references after logout',async()=>{
+ let finish;
+ const app=mount(async(url)=>{
+  if(url.endsWith('/session'))return json({token:'TEST',organizationId:'CENTER_A'});
+  if(url.endsWith('/session/logout'))return new Response(null,{status:204});
+  if(url.endsWith('/receipt-evidence'))return new Promise(resolve=>finish=resolve);
+  return json(bodyFor(url,'CENTER_A'));
+ });
+ await app.login('CENTER_A');const pending=app.$('evidence-open').handlers.click();await flush();await app.signOut();
+ finish(json({organizationId:'CENTER_A',requests:[{id:'private-case',archive_reference:'PRIVATE_ARCHIVE',evidence_sha256:'a'.repeat(64)}]}));await pending;
+ assert.equal(app.$('evidence-history').children.length,0);assert.equal(app.$('evidence-file').value,'');assert.equal(app.$('evidence-panel').hidden,true);
 });

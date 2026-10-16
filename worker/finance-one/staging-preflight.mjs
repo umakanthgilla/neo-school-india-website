@@ -1,3 +1,4 @@
+import {RECEIPT_EVIDENCE_SCHEMA} from './receipt-evidence-schema.mjs';
 import {CORRECTION_SCHEMA} from './corrections-schema.mjs';
 import {readOnlySchoolSource} from './school-source.mjs';
 /**
@@ -60,6 +61,10 @@ export async function financeOneStagingPreflight({db,env,phase='active'}) {
  for(const name of REQUIRED_TABLES)if(!names.table.has(name))blockers.push('Missing table '+name);
  for(const name of REQUIRED_VIEWS)if(!names.view.has(name))blockers.push('Missing view '+name);
  for(const name of REQUIRED_TRIGGERS)if(!names.trigger.has(name))blockers.push('Missing trigger '+name);
+ if(env?.FINANCE_ONE_EVIDENCE_OPERATIONS_ENABLED==='true'){
+  for(const [type,required] of Object.entries(RECEIPT_EVIDENCE_SCHEMA))for(const name of required)
+   if(!names[type].has(name))blockers.push('Missing '+type+' '+name);
+ }
  if(env?.FINANCE_ONE_OPERATIONS_ENABLED==='true'){
   for(const [type,required] of Object.entries(CORRECTION_SCHEMA))for(const name of required)
    if(!names[type].has(name))blockers.push('Missing '+type+' '+name);

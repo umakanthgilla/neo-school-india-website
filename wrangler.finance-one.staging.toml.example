@@ -14,6 +14,8 @@ FINANCE_ONE_READ_API_ENABLED = "false"
 FINANCE_ONE_OPERATIONS_ENABLED = "false"
 # Requires migration 12 and validated original sources; never certifies evidence.
 FINANCE_ONE_SOURCE_OPERATIONS_ENABLED = "false"
+# Requires migration 13, retained evidence and a different human checker.
+FINANCE_ONE_EVIDENCE_OPERATIONS_ENABLED = "false"
 # Optional separate school source binding. Keep OFF until isolated source QA.
 # See docs/FINANCE_ONE_V1_SEPARATE_SCHOOL_SOURCE.md. No migration required.
 FINANCE_ONE_SEPARATE_SOURCE_ENABLED = "false"

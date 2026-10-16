@@ -7,18 +7,18 @@ different states. This table supersedes the historical baseline below.
 |---|---|---|
 | Independent Center/HO books | Tenant permissions, immutable postings and source-only cash rules tested | Maker/checker own reads and cross-Center/HO denial passed; reader/HO full suites incomplete |
 | Authentication | Dedicated Finance sessions, rate limits, logout revocation; optional explicitly linked Access identity login added and tested | Access login runtime fix deployed as 3f1692d2; 29 protected cloud smoke checks passed for QA Center A owner, including logout replay denial; independent maker/checker and remaining role journeys still pending |
-| Schema | Migrations 1–12, fail-closed audit/correction guards tested | Migration 11/12 objects checked on staging and restore-check; quick_check passed |
-| Receipts / vouchers / ledger | Existing-source verifiers, settlement evidence prerequisites, no duplicate cash or school Ledger writes tested | Actual financial cloud journeys and evidence intake incomplete; operations remain OFF |
+| Schema | Migrations 1–13, fail-closed audit/correction/evidence guards tested | Migration 11/12 objects checked on staging and restore-check; migration 13 receipt evidence review is NOT remotely applied |
+| Receipts / vouchers / ledger | Existing-source verifiers, settlement evidence prerequisites, no duplicate cash or school Ledger writes tested | Manual receipt evidence request/independent approval and source import are implemented/synthetic-tested; payout evidence intake and financial cloud journeys incomplete; operations remain OFF |
 | School source integration | Separate read-only school binding supports invoices, receipts, payroll and all three payout types; two physical SQLite databases tested | New isolated source D1/binding and exact deployed code need verification; no live school binding authorized |
 | Payroll | Explicit statutory review including nil deductions, accrual/settlement/advance recovery and journal recovery tested | Employer inputs, calculations/applicability/filing evidence and accountant acceptance missing |
 | Corrections | Full invoice/bill accrual reversal with independent decision, atomic compensating journal and audit trail tested | Cloud maker/checker journey incomplete; cash refunds, payroll reversals, partial/source corrections remain incomplete |
 | Reports / operations UI | Read-only summary, reconciliation, trial-balance CSV/print and snapshot-paged cash ledger CSV (up to 10,000 entries); stale-response/logout privacy tested | Actual client financial/mobile/print acceptance incomplete |
 | Backup / restore | Populated disposable SQLite restore test; actual empty-financial-data D1 snapshot restored and matched | Populated financial Cloudflare D1 restore rehearsal still required |
-| Bank reconciliation | Manual reconciliation procedure written; automatic matching deferred | Manual evidence intake/reconciliation must pass end-to-end; written runbook alone is insufficient |
-| Build / handover | 384 local Node/SQLite tests passed for ledger export candidate; exact-commit CI tracks browser/build/handover | CI is synthetic evidence; neither a deployment nor client acceptance |
+| Bank reconciliation | Manual reconciliation procedure written; automatic matching deferred | Manual receipt evidence review implemented with retained-file fingerprint and independent checker; cloud/client evidence retention and period reconciliation acceptance still required |
+| Build / handover | 391 local Node/SQLite tests passed for receipt evidence review candidate; exact-commit CI tracks browser/build/handover | CI is synthetic evidence; neither a deployment nor client acceptance |
 | Production release | Current entrypoint intentionally rejects production; PR #26 stays draft | Review production configuration, accepted UAT/security/accounting checks, backup/rollback and exact final authorization required |
 
-Latest cloud proof: [16 October protected staging evidence](FINANCE_ONE_V1_STAGING_EVIDENCE_2026-10-16.md). Ledger export is source-tested only until its exact candidate is deployed and cloud accepted. No migration is required for this read-only export.
+Latest cloud proof: [16 October protected staging evidence](FINANCE_ONE_V1_STAGING_EVIDENCE_2026-10-16.md). Ledger export passed three empty-book cloud exports on version 20fc9813; populated multi-page cloud acceptance remains pending. Receipt evidence migration 13 and its separate feature flag remain OFF/not deployed. No migration is required for this read-only export.
 
 See [15 October remote evidence and blockers](FINANCE_ONE_STAGING_EVIDENCE_2026-10-15.md),
 [optional Access login](FINANCE_ONE_V1_ACCESS_LOGIN.md), and

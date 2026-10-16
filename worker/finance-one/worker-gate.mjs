@@ -1,3 +1,4 @@
+import {handleReceiptEvidenceApi} from './receipt-evidence-api.mjs';
 import {handleSourceOperations} from './source-operations.mjs';
 /**
  * Finance ONE Worker integration boundary (development branch only).
@@ -39,7 +40,8 @@ export async function financeOneWorkerGate({request,env,corsHeaders}){
  const accountId=session.accountId;
  const sourceDb=env.FINANCE_ONE_SEPARATE_SOURCE_ENABLED==='true'
   ?(env.FINANCE_ONE_SOURCE_ENVIRONMENT==='staging'&&env.SCHOOL_SOURCE_DB!==env.DB?(env.SCHOOL_SOURCE_DB||null):null):env.DB;
- const result=await handleSourceOperations({request,db:env.DB,sourceDb,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_SOURCE_OPERATIONS_ENABLED==='true'})
+ const result=await handleReceiptEvidenceApi({request,db:env.DB,sourceDb,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_EVIDENCE_OPERATIONS_ENABLED==='true'})
+  || await handleSourceOperations({request,db:env.DB,sourceDb,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_SOURCE_OPERATIONS_ENABLED==='true'})
   || await handleCorrectionsApi({request,db:env.DB,authenticatedAccountId:accountId,enabled:env.FINANCE_ONE_OPERATIONS_ENABLED==='true'})
   || await handleFinanceReadApi({request,db:env.DB,authenticatedAccountId:accountId});
  if(!result)return errorResponse('Not found',404,headers);

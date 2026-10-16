@@ -57,7 +57,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  <p class="note">Finance data stays separate for every Head Office and Center. No direct Daily Ledger editing is available. This preview is staging-only and requires separately authorized Finance credentials. It is not the live payroll system.</p>
 </section>
 <section id="dashboard-panel" hidden>
- <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="source-open" class="small-btn">Import source records</button><button type="button" id="corrections-open" class="small-btn">Corrections &amp; Approvals</button><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
+ <div class="dash-head"><div><h1>Finance Overview</h1><p class="meta">Organization: <strong id="org-label"></strong> · Cash ledger is read-only</p></div><div class="actions"><button type="button" id="evidence-open" class="small-btn">Receipt evidence review</button><button type="button" id="source-open" class="small-btn">Import source records</button><button type="button" id="corrections-open" class="small-btn">Corrections &amp; Approvals</button><button type="button" id="refresh" class="small-btn">Refresh</button><button type="button" id="sign-out" class="small-btn">Sign out</button></div></div>
  <p role="alert" class="alert" id="dash-error" aria-live="polite"></p>
  <p role="alert" class="alert" id="trial-warning" hidden>Accounting trial balance does not balance. Finance review required before relying on these figures.</p>
  <p role="alert" class="alert" id="cash-reconciliation-warning" hidden>Cash Ledger / Bank journal reconciliation has issues. Finance review required before relying on these figures.</p>
@@ -97,6 +97,21 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   <button id="trial-print" class="small-btn" type="button" disabled>Print / Save trial balance PDF</button>
   <div class="table-wrap"><table><thead><tr><th>Code</th><th>Account</th><th class="amount">Debits</th><th class="amount">Credits</th></tr></thead><tbody id="trial-rows"></tbody></table></div>
  </article>
+ <article id="evidence-panel" class="card accent section below-grid" hidden>
+  <h2>Receipt evidence review</h2>
+  <p class="caption">Keep the bank statement or signed cash-count record in your controlled evidence archive. Submit its archive reference and select the same file to calculate a fingerprint. Files stay on your computer and are not uploaded here. A different owner or Finance administrator must independently retrieve and review the archived file before approval. Approval creates verification evidence; use source import separately to post the receipt.</p>
+  <form id="evidence-form">
+   <label for="evidence-school">Receipt school ID</label><input id="evidence-school" maxlength="100" required>
+   <label for="evidence-payment">Original receipt payment record ID</label><input id="evidence-payment" maxlength="100" required>
+   <label for="evidence-reference">Bank transaction / signed cash-count reference</label><input id="evidence-reference" minlength="3" maxlength="200" required>
+   <label for="evidence-archive">Controlled evidence archive reference</label><input id="evidence-archive" minlength="8" maxlength="400" required>
+   <label for="evidence-settled">Settlement date and time (UTC)</label><input id="evidence-settled" placeholder="2026-10-16T08:00:00Z" required>
+   <label for="evidence-file">Archived evidence file (maximum 5 MB; fingerprint only)</label><input id="evidence-file" type="file" required>
+   <button id="evidence-submit" type="submit" class="primary">Submit receipt evidence for independent review</button>
+  </form>
+  <p id="evidence-message" role="status" aria-live="polite"></p>
+  <h3>Receipt evidence requests (latest 100)</h3><div id="evidence-history"></div>
+ </article>
  <article id="source-panel" class="card accent section below-grid" hidden>
   <h2>Import Original Source Records</h2>
   <p class="caption">Use the original record IDs. Invoice and payroll accruals create no cash movement. Receipt and payout imports require previously verified evidence. This screen does not approve sources, certify bank evidence or send payments.</p>
@@ -130,7 +145,7 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
  const base=(typeof window.FINANCE_ONE_API_BASE==='string'?window.FINANCE_ONE_API_BASE:location.origin).replace(/\/$/,'');
  const $=id=>document.getElementById(id);
  const state={token:null,org:null,sessionVersion:0,requestVersion:0};
- let trialSnapshot=null,sourceAttempt=null,sourceLoadVersion=0;
+ let trialSnapshot=null,sourceAttempt=null,sourceLoadVersion=0,evidenceAttempt=null,evidenceLoadVersion=0;
  const money=paise=>typeof paise==='number'&&Number.isFinite(paise)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(paise/100):'—';
  const text=(parent,value)=>{const node=document.createElement('td');node.textContent=String(value??'');parent.appendChild(node);return node;};
  function logout(){
@@ -140,6 +155,8 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
   for(const id of ['money-in','money-out','net','profit'])$(id).textContent='—';
   for(const id of ['ledger-rows','document-rows','settlement-rows','statutory-rows'])$(id).replaceChildren();
   $('statutory-review').hidden=true;
+  evidenceAttempt=null;evidenceLoadVersion++;$('evidence-panel').hidden=true;$('evidence-history').replaceChildren();$('evidence-message').textContent='';$('evidence-submit').disabled=false;
+  for(const id of ['evidence-school','evidence-payment','evidence-reference','evidence-archive','evidence-settled','evidence-file'])$(id).value='';
   $('ledger-export').disabled=true;$('ledger-export-message').textContent='';
   trialSnapshot=null;$('trial-rows').replaceChildren();$('trial-context').textContent='';$('trial-export').disabled=true;$('trial-print').disabled=true;
   $('source-submit').disabled=false;sourceAttempt=null;sourceLoadVersion++;$('source-panel').hidden=true;$('source-history').replaceChildren();$('source-message').textContent='';
@@ -325,6 +342,60 @@ input:focus{border-color:#2977bc;box-shadow:0 0 0 3px #dbeeff}.primary{backgroun
    if(isCurrent(session)){$('source-message').textContent='Import validated. Request '+result.requestId+'. Review the refreshed ledger and reconciliation warnings.';sourceAttempt=null;await loadSourceHistory();await load();if(isCurrent(session)&&!$('corrections-panel').hidden)await loadCorrections();}
   }catch(e){if(isCurrent(session)){$('source-message').textContent=e.message;await loadSourceHistory();await load();}}
   finally{if(isCurrent(session))$('source-submit').disabled=false;}
+ });
+ async function evidenceFileHash(input){
+  const file=input.files?.[0];
+  if(!file||file.size<=0||file.size>5*1024*1024)throw Error('Select the archived evidence file, between 1 byte and 5 MB.');
+  const hash=await crypto.subtle.digest('SHA-256',await file.arrayBuffer());
+  return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+ }
+ async function loadEvidence(){
+  const session=currentSession(),version=++evidenceLoadVersion;
+  if(!session.token)return;
+  $('evidence-panel').hidden=false;
+  try{
+   const result=await call(operationPath()+'/receipt-evidence');
+   if(!isCurrent(session)||version!==evidenceLoadVersion)return;
+   const list=$('evidence-history');list.replaceChildren();
+   for(const r of result.requests||[]){
+    const row=document.createElement('section');row.className='review-card';
+    for(const value of [r.id+' — '+r.status,r.school_id+' / '+r.payment_record_id+' / '+r.receipt_no+' / '+money(r.amount_paise),r.evidence_type+' / '+r.verification_reference,'Archive: '+r.archive_reference,'SHA-256: '+r.evidence_sha256,'Maker: '+r.requested_by+' / '+r.created_at,r.reviewed_by?'Reviewer: '+r.reviewed_by+' / '+r.review_note:'Independent review pending',r.status==='approved'?'Import verification ID: MANUAL_RECEIPT_'+r.id:'']){const p=document.createElement('p');p.textContent=value;row.appendChild(p);}
+    if(r.status==='pending'&&result.canReview&&r.requested_by!==result.accountId){
+     const file=document.createElement('input');file.type='file';file.setAttribute('aria-label','Independently retrieved evidence file for '+r.id);row.appendChild(file);
+     const note=document.createElement('textarea');note.maxLength=1000;note.setAttribute('aria-label','Receipt evidence review note for '+r.id);row.appendChild(note);
+     for(const decision of ['approved','rejected']){
+      const button=document.createElement('button');button.type='button';button.className='small-btn';button.textContent=decision==='approved'?'Approve reviewed receipt evidence':'Reject receipt evidence';
+      button.addEventListener('click',async()=>{
+       const active=currentSession();if(!isCurrent(session))return;
+       button.disabled=true;
+       try{
+        if(note.value.trim().length<10)throw Error('Enter a review note of at least 10 characters. Approval confirms you independently matched the archived bank/cash evidence to this receipt.');
+        const reviewedEvidenceSha256=await evidenceFileHash(file);
+        if(!isCurrent(active))return;
+        await call(operationPath()+'/receipt-evidence/'+encodeURIComponent(r.id)+'/decision',{method:'POST',body:JSON.stringify({decision,reviewNote:note.value.trim(),reviewedEvidenceSha256})});
+        if(isCurrent(active)){await loadEvidence();$('evidence-message').textContent='Receipt evidence '+decision+'. No cash posting was requested.';}
+       }catch(error){if(isCurrent(active))$('evidence-message').textContent=error.message;}
+       finally{if(isCurrent(active))button.disabled=false;}
+      });row.appendChild(button);
+     }
+    }
+    list.appendChild(row);
+   }
+  }catch(error){if(isCurrent(session)&&version===evidenceLoadVersion)$('evidence-message').textContent=error.message;}
+ }
+ $('evidence-open').addEventListener('click',()=>{revealOperationPanel('evidence-panel');return loadEvidence();});
+ $('evidence-form').addEventListener('submit',async event=>{
+  event.preventDefault();const session=currentSession();if(!session.token)return;
+  $('evidence-submit').disabled=true;
+  try{
+   const content={schoolId:$('evidence-school').value.trim(),paymentRecordId:$('evidence-payment').value.trim(),verificationReference:$('evidence-reference').value.trim(),archiveReference:$('evidence-archive').value.trim(),settledAt:$('evidence-settled').value.trim(),evidenceSha256:await evidenceFileHash($('evidence-file'))};
+   if(!isCurrent(session))return;
+   const key=JSON.stringify(content);
+   if(!evidenceAttempt||evidenceAttempt.key!==key)evidenceAttempt={key,requestId:crypto.randomUUID()};
+   await call(operationPath()+'/receipt-evidence',{method:'POST',body:JSON.stringify({requestId:evidenceAttempt.requestId,...content})});
+   if(isCurrent(session)){evidenceAttempt=null;await loadEvidence();$('evidence-message').textContent='Evidence submitted. A different authorized checker must review the retained file.';}
+  }catch(error){if(isCurrent(session))$('evidence-message').textContent=error.message;}
+  finally{if(isCurrent(session))$('evidence-submit').disabled=false;}
  });
  $('ledger-export').addEventListener('click',async()=>{
   const session=currentSession();if(!session.token)return;

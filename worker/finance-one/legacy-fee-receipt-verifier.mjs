@@ -1,3 +1,4 @@
+import {readReceiptEvidenceSource} from './receipt-evidence-source.mjs';
 import {isAccrualReversed} from './accrual-reversal-state.mjs';
 /**
  * Trusted, staging-only verifier for existing Neo School India fee payments.
@@ -24,6 +25,13 @@ export async function verifyLegacyFeeReceipt(db,request,sourceDb=db){
    !Number.isSafeInteger(evidence.amount_paise)||evidence.amount_paise<=0||
    typeof evidence.verified_by!=='string'||!evidence.verified_by.trim() ||
    typeof evidence.verification_reference!=='string'||!evidence.verification_reference.trim())return null;
+ if(sourceEventId.startsWith('MANUAL_RECEIPT_')){
+  try{
+   const reviewed=await db.prepare(`SELECT r.source_fingerprint,d.reviewed_by FROM neo_fin_receipt_evidence_requests r JOIN neo_fin_receipt_evidence_decisions d ON d.organization_id=r.organization_id AND d.request_id=r.id WHERE r.organization_id=? AND r.id=? AND d.decision='approved'`).bind(organizationId,sourceEventId.slice('MANUAL_RECEIPT_'.length)).first();
+   const original=await readReceiptEvidenceSource({db,sourceDb,organizationId,schoolId:evidence.school_id,paymentRecordId:sourceId});
+   if(!reviewed||reviewed.reviewed_by!==evidence.verified_by||reviewed.source_fingerprint!==original.fingerprint)return null;
+  }catch{return null;}
+ }
  const settled=new Date(evidence.settled_at),verified=new Date(evidence.verified_at);
  if(!Number.isFinite(settled.getTime())||!Number.isFinite(verified.getTime())||
    verified.getTime()<settled.getTime())return null;
