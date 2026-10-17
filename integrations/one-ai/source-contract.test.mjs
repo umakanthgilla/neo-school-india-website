@@ -19,3 +19,12 @@ test('Neo source retains the read-only admissions context tables and join keys',
  assert.match(source,/CREATE TABLE IF NOT EXISTS neo_portal_records\s*\(/);
  assert.match(source,/PRIMARY KEY\(school_id,kind,id\)/);
 });
+
+test('employee bearer sessions are signature-verified and rechecked against active school account',()=>{
+ assert.match(source,/async function employeeSession\(request,env\)/);
+ assert.match(source,/crypto\.subtle\.verify\('HMAC',await getSigningKey\(env\.ADMIN_PASSWORD\)/);
+ assert.match(source,/p\.role\s*!==\s*'employee'/);
+ assert.match(source,/p\.exp\s*<=\s*Date\.now\(\)/);
+ assert.match(source,/neo_employee_accounts e JOIN neo_schools s ON s\.school_id=e\.school_id/);
+ assert.match(source,/a\.password_hash\s*!==\s*p\.version/);
+});
