@@ -33,3 +33,12 @@ Re-run the website security checker and inspect the actual header values. A miss
 Revert the `_headers` addition and redeploy the previously verified Pages version. Browsers that already received HSTS may retain it for up to 24 hours. To explicitly clear it while HTTPS is still available, serve `Strict-Transport-Security: max-age=0`; removing the header alone does not immediately clear it. Do not disable HTTPS as rollback.
 
 Reference: https://developers.cloudflare.com/pages/configuration/headers/
+
+## Recorded preview verification — 2026-10-17
+
+Preview: https://0c0f572d.neo-school-india-website.pages.dev/ (commit c8c3664621a1e2305b9e21403bafba248315f1e1). Cloudflare Pages check completed successfully.
+
+- 20 HTTP checks passed: HEAD and GET for `/`, four portal aliases and their `.html` variants, plus `/neo-operations.js`. Canonical pages/assets returned 200 with the expected enforced and report-only headers; `.html` requests returned 308 redirects to the matching canonical aliases. Redirect responses were checked for routing, not header parity.
+- Browser smoke checks: homepage renders; admission and franchise dialogs open; Ask Neo panel opens; Admin, School, Teacher and Parent sign-in pages render. No credentials entered or forms submitted. YouTube playback/fullscreen, chatbot replies, document/photo previews, imports, exports and authenticated workflows remain unverified.
+- Admission branch list is unavailable in the preview. The read-only public branches API returned 200, but a request with the preview Origin received `Access-Control-Allow-Origin: https://neo-school-india-website.pages.dev`, which does not match the preview. The same endpoint with production Origin received `Access-Control-Allow-Origin: https://neoschoolindia.com`. This isolates an existing preview/API CORS boundary, rather than a CSP blocking finding. API allowlist was not changed.
+- The remaining release gate is an isolated test API/database with the exact preview origin allowed, plus authorized test-account workflow validation. Do not use real submissions to the production API for preview QA. Production header changes are not released by this PR's preview.
