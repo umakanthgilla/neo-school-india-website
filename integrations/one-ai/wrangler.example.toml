@@ -1,8 +1,10 @@
 # Copy to a local, ignored config and fill verified STAGING identifiers only.
 name = "neo-one-ai-context-staging"
-main = "worker.mjs"
+main = "./worker.mjs"
 compatibility_date = "2026-10-13"
 workers_dev = false
+# Bind this Worker privately from the ONE AI engine via a Cloudflare service binding.
+# No routes are configured here: do not expose /context publicly.
 preview_urls = false
 [vars]
 ENABLE_GROWTH_CONTEXT = "false"
