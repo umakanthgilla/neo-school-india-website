@@ -31,3 +31,30 @@ test('real SQLite admissions queries enforce branch ownership and return no pare
  env.ENABLE_GROWTH_CONTEXT='false';const beforeDisabled=queries;assert.equal((await call('growth:L1')).status,404);assert.equal(queries,beforeDisabled);env.ENABLE_GROWTH_CONTEXT='true';
  db.exec("UPDATE neo_schools SET active=0 WHERE school_id='A'");assert.equal((await call('growth:L1')).status,404);
 });
+
+test('context Worker rejects forged, expired, wrong-audience and missing credentials before querying',async()=>{
+ let queries=0;
+ const env={NEO_DB:{prepare(){queries++;throw Error('must not query');}},
+ ENGINE_AUDIENCE:'one-ai:neo:staging',CRM_TOKEN_SECRET:'test-crm-secret-'.repeat(3),
+ TENANT_SCHOOLS_JSON:'{"tenant-a":"A"}',ENABLE_GROWTH_CONTEXT:'true'};
+ const path='https://crm.internal/context/enquiry:E1';
+ const now=Math.floor(Date.now()/1000);
+ const base={iss:env.ENGINE_AUDIENCE,aud:'one-ai-crm',product:'neo-school-india',
+ tenantId:'tenant-a',sub:'staff',version:1,jti:'unique-1',leadId:'enquiry:E1',iat:now,exp:now+60};
+ const checks=[
+  {headers:{}},
+  {headers:{authorization:'Bearer forged.signature'}},
+  {claims:{...base,aud:'wrong'}},
+  {claims:{...base,iss:'wrong'}},
+  {claims:{...base,exp:now-1}},
+  {claims:{...base,iat:now-400,exp:now+1}},
+  {claims:{...base,leadId:'enquiry:OTHER'}}
+ ];
+ for(const check of checks){
+  const token=check.claims?await signClaims(check.claims,env.CRM_TOKEN_SECRET):null;
+  const headers=token?{authorization:'Bearer '+token}:check.headers;
+  const response=await worker.fetch(new Request(path,{headers}),env);
+  assert.equal(response.status,401);
+ }
+ assert.equal(queries,0);
+});
