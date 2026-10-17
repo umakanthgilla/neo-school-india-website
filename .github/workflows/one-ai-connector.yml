@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
   push:
-    branches: ['feature/one-ai-admissions-connector']
+    branches: ['feature/one-ai-admissions-connector', 'feature/one-ai-neo-current-main-integration']
     paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
 permissions:
   contents: read
