@@ -65,3 +65,14 @@ Staff enter the selected CRM reference (`enquiry:<id>` or `growth:<id>`), choose
 `review-panel.mjs` and `.css` are vendored unchanged from the existing engine integration, blob SHAs `911e79d572476f5bd0305e176f708074217a5ef0` and `944f98afa1ce395ead76061525e706d0bbb6273e`. Keep them synchronized with that shared component.
 
 Run `node --test integrations/one-ai/*.test.mjs` for unit/contract checks. `node integrations/one-ai/employee-review.browser.mjs` runs the synthetic browser contract checks when Playwright and Chromium are installed. It does not contact deployed services or verify real model output. Remove the staging HTML flag to disable the workspace; no production HTML was changed.
+
+
+## Verified local service-chain contract (2026-10-17)
+
+The context Worker decodes lead paths exactly once, then validates the entire route. This fixes real engine calls such as `/context/enquiry%3AE1`, which previously returned 404 even though isolated connector tests passed. Malformed encoding, encoded slash insertion, double encoding and mismatched signed lead IDs remain denied.
+
+`stack.integration.mjs` runs actual Neo employee login/password/session code, staging router, identity gateway, ONE AI engine and CRM connector against separate real in-memory SQLite databases. No application endpoint is stubbed; Workers AI is a fixed synthetic response. It verifies English/Telugu/Hindi requests, idempotent retry, staff submission, different manager approval, audit entries, cross-school denial, blocked send, account/password/school revocation, engine-principal revocation, forged scope, terminal/unknown statuses and provider failure without draft persistence. This is not a Cloudflare-runtime or deployed end-to-end acceptance result.
+
+CI pins engine commit `2e7fb308c77eac8a0948149cc4568ff4fb12469c` (engine PR #3). That version enforces closed-lead eligibility in the engine itself. Both this connector fix and that engine version are required for the release candidate. Advance the pinned revision only after reviewing the engine change and rerunning the chain checks.
+
+Local invocation: `ONE_AI_ENGINE_PATH=/absolute/path/to/engine/one-ai node --test integrations/one-ai/stack.integration.mjs`. Synthetic credentials and data exist only in process memory. Do not deploy test entrypoints. The connector/unit suite has 19 tests; the full chain adds 4 integration tests. Prior standalone browser checks now use the engine's actual `pending_approval` state label.

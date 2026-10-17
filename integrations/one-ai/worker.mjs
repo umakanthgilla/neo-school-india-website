@@ -4,7 +4,11 @@ const product='neo-school-india';
 const reply=(body,status=200)=>Response.json(body,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 export default {async fetch(request,env) {
  try {
-  const url=new URL(request.url),match=url.pathname.match(/^\/context\/([A-Za-z0-9_.:@-]{1,128})$/);
+  const url=new URL(request.url);let pathname;
+  // The engine encodes the lead reference as one URL segment (including ":").
+  // Decode exactly once, then validate; encoded separators cannot add routes.
+  try{pathname=decodeURIComponent(url.pathname);}catch{return reply({error:'Not found'},404);}
+  const match=pathname.match(/^\/context\/([A-Za-z0-9_.:@-]{1,128})$/);
   if(request.method!=='GET'||!match)return reply({error:'Not found'},404);
   if(!env.NEO_DB||!env.ENGINE_AUDIENCE||!env.CRM_TOKEN_SECRET||!env.TENANT_SCHOOLS_JSON)return reply({error:'Not configured'},503);
   const raw=request.headers.get('authorization')||'';

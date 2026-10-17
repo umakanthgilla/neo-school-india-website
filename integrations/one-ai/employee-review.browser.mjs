@@ -45,7 +45,7 @@ try{
    if(url.pathname.endsWith('/transition')){
     const body=req.postDataJSON();
     if(body.action==='approve')return json({error:'Separate manager approval required'},403);
-    draft={...draft,state:body.action==='submit'?'pending_review':'draft',version:draft.version+1,...(body.action==='edit'?{message:body.message}:{})};
+    draft={...draft,state:body.action==='submit'?'pending_approval':'draft',version:draft.version+1,...(body.action==='edit'?{message:body.message}:{})};
     return json(draft);
    }
    return json({drafts:draft?[draft]:[],nextCursor:null});
@@ -62,7 +62,7 @@ try{
  assert.equal(generations,1);
  assert.equal(await page.locator('.one-ai-panel img').count(),0);
  await page.getByRole('button',{name:'Submit for approval',exact:true}).click();
- await page.getByText('pending_review · Version 2.',{exact:false}).waitFor();
+ await page.getByText('pending_approval · Version 2.',{exact:false}).waitFor();
  await page.getByRole('button',{name:'Approve',exact:true}).click();
  await page.getByText('Separate manager approval required',{exact:true}).waitFor();
  const bounds=await page.locator('.one-ai-panel').boundingBox();

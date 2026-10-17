@@ -19,6 +19,17 @@ jobs:
       - run: node --check integrations/one-ai/staging-router.mjs
       - run: node --check employee-portal.js
       - run: node --test integrations/one-ai/*.test.mjs
+      - name: Checkout pinned ONE AI engine contract
+        uses: actions/checkout@v4
+        with:
+          repository: ushaone/usha-one-technologies
+          ref: 2e7fb308c77eac8a0948149cc4568ff4fb12469c
+          path: .one-ai-engine
+          persist-credentials: false
+      - name: Real employee and ONE AI service integration
+        env:
+          ONE_AI_ENGINE_PATH: ${{ github.workspace }}/.one-ai-engine/one-ai
+        run: node --test integrations/one-ai/stack.integration.mjs
       - name: Install browser test runtime
         run: npm install --prefix "$RUNNER_TEMP/one-ai-browser" --no-audit --no-fund playwright@1.62.1
       - name: Install Chromium

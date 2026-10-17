@@ -22,6 +22,7 @@ test('real SQLite admissions queries enforce branch ownership and return no pare
  }
  for(const leadId of ['growth:L1','enquiry:E1']) {
   const r=await call(leadId);assert.equal(r.status,200);assert.deepEqual(Object.keys(r.data).sort(),['leadId','product','status','tenantId']);
+  assert.equal((await call(leadId,'tenant-a',{},encodeURIComponent(leadId))).status,200);
   assert.equal((await call(leadId,'tenant-b')).status,404);
  }
  assert.equal((await call('growth:F1')).status,404);
@@ -66,6 +67,11 @@ test('context Worker rejects forged, expired, wrong-audience and missing credent
   const headers=token?{authorization:'Bearer '+token}:check.headers;
   const response=await worker.fetch(new Request(path,{headers}),env);
   assert.equal(response.status,401);
+ }
+ assert.equal(queries,0);
+ for(const suffix of ['enquiry%ZZ','enquiry%253AE1','enquiry%3AE1%2Fother']){
+  const response=await worker.fetch(new Request('https://crm.internal/context/'+suffix),env);
+  assert.ok([401,404].includes(response.status));
  }
  assert.equal(queries,0);
 });
