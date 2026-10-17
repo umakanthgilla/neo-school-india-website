@@ -16,4 +16,4 @@ jobs:
         with:
           node-version: '24'
       - run: node --check integrations/one-ai/worker.mjs
-      - run: node --test integrations/one-ai/worker.test.mjs
+      - run: node --test integrations/one-ai/*.test.mjs
