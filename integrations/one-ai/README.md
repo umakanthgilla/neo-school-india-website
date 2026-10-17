@@ -30,3 +30,13 @@ Vendored `auth.mjs` and `errors.mjs` implement protocol v1 from `ushaone/usha-on
 ## Identity gateway
 
 `one-ai/integrations/gateway-worker.mjs` in the engine PR reuses the existing employee bearer session through a private `NEO_APP` service binding. It does not share Neo ADMIN_PASSWORD with the engine. Configure a server-owned mapping keyed by the verified employee `account_id`, with `tenantId`, `schoolId`, `authVersion` and `active:true`; provision the same individual ID in the dedicated engine principal table. Nonprovisioned and shared accounts are denied. HR details returned by the legacy identity endpoint are discarded and never sent to the engine/model. The current deployed endpoint's school identity must be verified before staging activation.
+
+
+## Current-main source re-verification (2026-10-17)
+
+Inspected `worker/neo-lead-crm-api-worker-transport-phase1.js` directly on `main`, rather than relying on the archived finance ZIP. The current source **does** declare `neo_growth_lead_meta` (including `lead_id`, `branch_id`) in `GROWTH_CRM_SCHEMA`, defines `neo_schools` with `active`, and defines `neo_portal_records` with `school_id`, `kind`, `id`, `data`. Its `GET /api/employee/me` handler returns `account_id`, `school_id`, and `staff_id`. These source facts make the connector's intended joins and identity mapping plausible, **but do not prove** that the current production/staging D1 schema, Worker deployment, or session verification matches source.
+
+- Keep `ENABLE_GROWTH_CONTEXT=false` until a **staging clone** has been checked and the exact `leads` and growth meta join verified with synthetic test data.
+- The separate `draft-bridge.mjs` calls the authenticated ONE AI gateway to generate **drafts only**. It is a server-side integration helper, not a deployed CRM route or browser-accessible endpoint. No live outbound send exists.
+- The new `follow-up-plan.mjs` is a pure dry-run eligibility planner; closed statuses do not trigger drafts. Its tests and the draft-bridge tests are included in the connector CI workflow.
+- Next gate: verify current Worker identity/session handler, gateway private service binding and allowlist; stage end-to-end with isolated D1 and test principals; then enable human-reviewed pilots only after explicit authorization.
