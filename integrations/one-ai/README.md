@@ -52,3 +52,16 @@ Inspected `worker/neo-lead-crm-api-worker-transport-phase1.js` directly on `main
 - The separate `draft-bridge.mjs` calls the authenticated ONE AI gateway to generate **drafts only**. It is a server-side integration helper, not a deployed CRM route or browser-accessible endpoint. No live outbound send exists.
 - The new `follow-up-plan.mjs` is a pure dry-run eligibility planner; closed statuses do not trigger drafts. Its tests and the draft-bridge tests are included in the connector CI workflow.
 - Next gate: verify current Worker identity/session handler, gateway private service binding and allowlist; stage end-to-end with isolated D1 and test principals; then enable human-reviewed pilots only after explicit authorization.
+
+
+## Employee review integration candidate
+
+The existing Employee Portal can mount the existing engine review panel using its individual employee session. The integration is disabled by default; production hostnames explicitly reject the staging switch. In an isolated staging copy of `employees.html` only, set `<html lang="en" data-one-ai-staging="true">`. This switches employee login/identity/HR calls to same-origin `/api/employee/` and mounts the review workspace after successful identity loading. Never enable this flag unless the entire same-origin `/api/employee/` backend is the isolated staging app. The committed HTML remains unchanged.
+
+The staging origin must serve the existing portal assets and the new `integrations/one-ai/*.mjs` and CSS files; route `/api/one-ai/*` through the staging router and `/api/employee/*` to the isolated staging Neo app. Configure the private gateway with that exact `CRM_ORIGIN`, individual staff memberships and the isolated engine binding. No public CRM token or signing secret is needed in the browser.
+
+Staff enter the selected CRM reference (`enquiry:<id>` or `growth:<id>`), choose Telugu/English/Hindi and use the existing generate/edit/submit/approve/reject workflow. This manual reference entry is a staging usability bridge; automatic selection from an admissions lead card is still pending. Roles and separate-approver rules are enforced server-side; showing a button does not grant permission. Session changes invalidate delayed API responses, and logout clears the mounted panel. Approval never sends a message.
+
+`review-panel.mjs` and `.css` are vendored unchanged from the existing engine integration, blob SHAs `911e79d572476f5bd0305e176f708074217a5ef0` and `944f98afa1ce395ead76061525e706d0bbb6273e`. Keep them synchronized with that shared component.
+
+Run `node --test integrations/one-ai/*.test.mjs` for unit/contract checks. `node integrations/one-ai/employee-review.browser.mjs` runs the synthetic browser contract checks when Playwright and Chromium are installed. It does not contact deployed services or verify real model output. Remove the staging HTML flag to disable the workspace; no production HTML was changed.

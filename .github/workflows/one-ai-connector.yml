@@ -1,10 +1,10 @@
 name: ONE AI admissions connector checks
 on:
   pull_request:
-    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js']
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js', 'employee-portal.js']
   push:
     branches: ['feature/one-ai-admissions-connector', 'feature/one-ai-neo-current-main-integration']
-    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js']
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js', 'employee-portal.js']
 permissions:
   contents: read
 jobs:
@@ -17,4 +17,13 @@ jobs:
           node-version: '24'
       - run: node --check integrations/one-ai/worker.mjs
       - run: node --check integrations/one-ai/staging-router.mjs
+      - run: node --check employee-portal.js
       - run: node --test integrations/one-ai/*.test.mjs
+      - name: Install browser test runtime
+        run: npm install --prefix "$RUNNER_TEMP/one-ai-browser" --no-audit --no-fund playwright@1.62.1
+      - name: Install Chromium
+        run: node "$RUNNER_TEMP/one-ai-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Employee review browser contract
+        env:
+          CODEX_PRIMARY_RUNTIME_NODE_MODULES: ${{ runner.temp }}/one-ai-browser/node_modules
+        run: node integrations/one-ai/employee-review.browser.mjs
