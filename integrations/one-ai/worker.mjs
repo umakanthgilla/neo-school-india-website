@@ -25,6 +25,10 @@ export default {async fetch(request,env) {
   } else return reply({error:'Not found'},404);
   if(!row)return reply({error:'Not found'},404);
   const statuses=['New','Contacted','Follow-up','Interested','Visit / Meeting','Decision Pending','Converted','Lost'];
-  return reply({product,tenantId:claims.tenantId,leadId,status:statuses.includes(row.status)?row.status:'New'});
+  // The school portal uses this label; Growth CRM uses the canonical label.
+  const status=leadId.startsWith('enquiry:') && row.status==='Visit planned'?'Visit / Meeting':row.status;
+  // Never turn schema drift, missing values or unknown terminal states into a new lead.
+  if(!statuses.includes(status))return reply({error:'Unsupported admissions status'},409);
+  return reply({product,tenantId:claims.tenantId,leadId,status});
  }catch{return reply({error:'Context service unavailable'},503);}
 }};

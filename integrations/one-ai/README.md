@@ -1,5 +1,17 @@
 # ONE AI admissions connector — staging candidate, not deployed
 
+## Staging route candidate (2026-10-17)
+
+`staging-router.mjs` supplies the missing server-side `/api/one-ai/drafts` route boundary through the private `ONE_AI_GATEWAY` service. It is a separate staging entrypoint, disabled unless `ENABLE_ONE_AI=true`. Other requests pass to the existing isolated staging app through `NEO_APP`. The gateway must also bind `NEO_APP` to that original app (not back to the router), and still verifies the employee session and provisioned membership on every request. This does not install a staff UI or change the production Worker.
+
+Use `wrangler.router.example.toml` only after replacing the staging service names and exact browser origin. Keep the router private until a protected staging origin is explicitly configured. The origin must host or proxy both the CRM UI and API for same-origin browser use. Cookies and caller-supplied identity headers are not forwarded to ONE AI; only bearer identity, origin, content type and idempotency key are forwarded. Sending routes are denied.
+
+Context normalization maps the portal's actual `Visit planned` status to `Visit / Meeting`. Missing or unknown statuses now return 409 rather than incorrectly becoming `New`. Converted/Lost retain their terminal state.
+
+Validation: 16 Node tests pass locally, including real SQLite ownership/status queries and synthetic staging-router contract checks. Gateway services are mocked in router tests: these are not deployed end-to-end tests. Cloudflare credentials, isolated D1 IDs, real service bindings, staff provisioning, model quality, review UI integration and remote acceptance remain pending.
+
+Rollback: disable `ENABLE_ONE_AI` in the staging router to close all AI routes; legacy requests continue through `NEO_APP`. Reverting the separate staging router deployment restores its prior version. Do not modify or roll back the production app for this isolated candidate.
+
 This separate Worker reads only lead status from Neo Growth CRM or school enquiries. It does not alter the existing Worker, site, portals, finance, credentials or schema. The engine stores drafts in a separate ONE AI Neo database. USHA uses another deployment, database and key set.
 
 ## Verified source contract

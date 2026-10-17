@@ -29,6 +29,17 @@ test('real SQLite admissions queries enforce branch ownership and return no pare
  const count=queries;assert.equal((await call('growth:L1','tenant-a',{product:'usha-one'})).status,401);
  assert.equal((await call('growth:L1','tenant-a',{},'growth:OTHER')).status,401);assert.equal(queries,count);
  env.ENABLE_GROWTH_CONTEXT='false';const beforeDisabled=queries;assert.equal((await call('growth:L1')).status,404);assert.equal(queries,beforeDisabled);env.ENABLE_GROWTH_CONTEXT='true';
+ // Check every stored school status, including its distinct visit label.
+ for(const [stored,canonical] of [['New','New'],['Contacted','Contacted'],['Visit planned','Visit / Meeting'],['Converted','Converted'],['Lost','Lost']]){
+  db.prepare("UPDATE neo_portal_records SET data=? WHERE id='E1'").run(JSON.stringify({status:stored}));
+  const r=await call('enquiry:E1');assert.equal(r.status,200);assert.equal(r.data.status,canonical);
+ }
+ for(const invalid of [null,'','Unknown','Closed','Admitted']){
+  db.prepare("UPDATE neo_portal_records SET data=? WHERE id='E1'").run(JSON.stringify({status:invalid}));
+  const r=await call('enquiry:E1');assert.equal(r.status,409);assert.equal(Object.hasOwn(r.data,'status'),false);
+  db.prepare("UPDATE leads SET status=? WHERE lead_id='L1'").run(invalid);
+  assert.equal((await call('growth:L1')).status,409);
+ }
  db.exec("UPDATE neo_schools SET active=0 WHERE school_id='A'");assert.equal((await call('growth:L1')).status,404);
 });
 

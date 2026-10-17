@@ -1,10 +1,10 @@
 name: ONE AI admissions connector checks
 on:
   pull_request:
-    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js']
   push:
     branches: ['feature/one-ai-admissions-connector', 'feature/one-ai-neo-current-main-integration']
-    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml']
+    paths: ['integrations/one-ai/**', '.github/workflows/one-ai-connector.yml', 'worker/neo-lead-crm-api-worker-transport-phase1.js']
 permissions:
   contents: read
 jobs:
@@ -16,4 +16,5 @@ jobs:
         with:
           node-version: '24'
       - run: node --check integrations/one-ai/worker.mjs
+      - run: node --check integrations/one-ai/staging-router.mjs
       - run: node --test integrations/one-ai/*.test.mjs
