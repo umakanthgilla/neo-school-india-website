@@ -1,0 +1,17 @@
+# Separate staging router; never deploy with production routes or production bindings.
+name = "neo-one-ai-router-staging"
+main = "./staging-router.mjs"
+compatibility_date = "2026-10-13"
+workers_dev = false
+preview_urls = false
+[vars]
+ENABLE_ONE_AI = "false"
+CRM_ORIGIN = "https://REPLACE_VERIFIED_STAGING_ORIGIN.invalid"
+[[services]]
+binding = "NEO_APP"
+service = "REPLACE_ISOLATED_NEO_STAGING_WORKER"
+[[services]]
+binding = "ONE_AI_GATEWAY"
+service = "REPLACE_PRIVATE_NEO_GATEWAY_STAGING"
+# Gateway NEO_APP must target the original staging app, never this router.
+# Provision the engine gateway separately using the existing ONE AI engine code.
